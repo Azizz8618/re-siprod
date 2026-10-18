@@ -3,7 +3,8 @@
 #   make            DTRAN listings of all library modules + loader maps
 #   make dtran      <module>.dtran for every <module>.dtr (dubna, siprod.bin)
 #   make loadmaps   tests/siprod/loadmap-{dispak,dubna}.txt
-#   make recover    refresh build/ and recovered/ (decompiler, re-runs DTRAN)
+#   make recover    refresh build/ and recovered/ (decompiler, re-runs DTRAN);
+#                   the decompiler is unfinished: recovered/*.f lose control flow
 #   make test       unit tests, regression cases, wiki corpus
 #   make coverage   labels of static modules no regression case executes
 #   make clean      remove generated DTRAN listings
