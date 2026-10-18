@@ -1,0 +1,11 @@
+*RED
+*0STA*RG*254N*1RL*0MCS5 63
+*0STPИЫ.00110-01 33 01
+*2/*MD 6. CEPBИCHЫE ПPОГPAMMЫ
+*2S6.1. "CEPП".
+*2S6.1.1 ОБЩИE CBEДEHИЯ.
+*2S ДИAЛОГОBAЯ  CИCTEMA  "CEPП"  (CEPBИCHAЯ ПPОГPAMMA) ЯBЛЯETCЯ
+БAЗОBЫM CPEДCTBОM ДЛЯ CОПPОBОЖДEHИЯ ОC. ОHA ПОЗBОЛЯET BЫПОЛHЯTЬ
+PAЗЛИЧHЫE BCПОMОГATEЛЬHЫE PAБОTЫ, ПОTPEБHОCTЬ B KОTОPЫX ЧACTО
+*E
+*END

@@ -1,0 +1,46 @@
+         SCHEMA     01000                *VIE*    C 42546                VIAPUZ     50745                FT2*     E 56473
+         *BLO*    C 02011                *LNT*    C 42550                *LOL*    C 51146                KONV1*   E 56506
+         *RUSIS*  C 02012                WRIMAK     42551                RINT       51166                PRINT8     56602
+         *INS*    C 02013                READMK     42647                RCIF     E 51246                TTPRINT    56763
+         *NUSTA*  C 02046                COMANN     43042                WRINT    E 51274                BCDPUN     57022
+         *EGO*    C 02047                FILL       43120                STOP*      51306                EBCDPUN  E 57046
+         *NDAB*   C 34200                BEGPG      43233                EXIT     E 51307                ISOTCOSY   57231
+         *TXT*    C 34204                SEGTAB     44121                KONSTA     51335                ISOTCOS1 E 57302
+         *PAGE*   C 34210                TOKREZ     44742                SYTOBIN    51541                FMRTAPE    57322
+         *STR*    C 34216                STAATP     45071                I*PO*I     51634                OCTTDEC    60251
+         *STAND*  C 34251                NEWSTR     45326                I*PO*R   E 51645                LUNMUN   C 60304
+         *STANN*  C 34257                TITLE      45361                R*PO*R   E 51645                JERRIO*  C 60305
+         *STV*    C 34260                FILLS      45643                BCDREAD*   51650                R*PO*I     60306
+         *MKR*    C 34261                DOUBLE     45667                FT*521   E 51650                R*ST*I     60336
+         *SCANER* C 35247                BEGSTR     46203                BCDDEC*  E 51654                POWER      60346
+         *NUST*   C 35252                ENDSTR     46361                FT*531   E 51654                READ*      60415
+         *REGIM*  C 35264                NUSTA      46407                FT*541   E 51656                TTREAD     60443
+         *FOP*    C 35304                *KORT*   C 46736                *KOMA*   C 52145                *PAP*    C 60501
+         *RPT*    C 35305                *LYG*    C 46755                *NUNU*   C 52155                *SUT*    C 60502
+         *GOT*    C 35306                *DYD*    C 46763                *RMK*    C 52156                *STL*    C 60504
+         *FIN*    C 35307                *PLN*    C 46766                *LRE*    C 52550                *NDABL*  C 60506
+         SPAUD      35310                *SEK*    C 46767                *PUFOR*  C 52574                KOKSEK     60510
+         REDTXT     40463                BCDWRIT*   46773                *PUS*    C 52603                *ADR*    C 60553
+         ENDKOR     40523                FT*621   E 46773                *APJ*    C 52604                *SEP*    C 60557
+         WRIKOR     40611                BCDENC*  E 46777                WTBACK     52605                WRREM      60565
+         ENDPG      40700                FT*611   E 46777                RASPI      52673                KOKSON     60647
+         TOPAGE     41304                FT*571   E 47001                RASPS    E 52717                ADRSEK     61031
+         GOSTAS     41442                FT*561   E 47004                RASPS1   E 52760                RWBIT      61135
+         SYTINT     41502                NEXTLET* E 47011                COPYBI   E 53010                IBIT       61154
+         KLAIDA     41624                RK*      E 47053                *TAB*    C 53025                *BEN*    C 61164
+         RSYMB      41704                WSY*     E 47311                *ATV*    C 53032                TAMTXT     61203
+         RNSYMB   E 41730                I/O*ERR  E 47551                *SLY*    C 53034                TARPOZ     61555
+         SCAN       41752                IOCONT*    47576                *INF*    C 53036                CHAPAG     62001
+         GETSTR     42103                IOAC*    E 47627                RASTXT     53041                CARD2    C 62140
+         START      42336                FT*722   E 47642                ANATXT     53717                ISOICTTR   62165
+         I*DI*I     42375                FT*642   E 47642                LYGPAR     54113                REVCARD    62222
+         I*ST*L   E 42405                FT*002   E 47642                SEKDYD     54162                *ICHECK* C 62247
+         I*MU*I   E 42406                FD*642   E 47643                SEKGIR     54256                MONREAD*   62255
+         *FORMA*  C 42421                FD*722   E 47643                RWINF      55070                READ*ERR E 62335
+         *COMTIT* C 42441                FC*722   E 47643                SEKLYG     55142                PILDYK     62361
+         *NRD*    C 42456                FC*642   E 47643                *TEKST*  C 55355                *ПEPФOPA   62421
+         *RAI*    C 42507                FC*002   E 47643                STANDA     55437                KOД*CDC  E 62422
+         *ARPI*   C 42511                IOEND*   E 47650                I*MUI*     55571                DRUMTAP*   62462
+         *RAK*    C 42512                FT*643   E 47650                *DDR*    C 55577                COSYTISO   62513
+         *DAR*    C 42513                FT*723   E 47650                TAMPYK     55600                CHKWORD* C 62567
+         *MEDIUM* C 42544                FT*003   E 47650                FIRCAR     55665                CBOБOДHO   62570

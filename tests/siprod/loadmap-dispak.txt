@@ -1,0 +1,75 @@
+        SCHEMA     01000        NEXTLET* E 47011        *STL*    C 56571
+        *BLO*    C 02011        RK*      E 47026        *NDABL*  C 56573
+        *RUSIS*  C 02012        WSY*     E 47276        KOKSEK     56575
+        *INS*    C 02013        IOCONT*    47461        *ADR*    C 56640
+        *NUSTA*  C 02046        IOAC*    E 47513        *SEP*    C 56644
+        *EGO*    C 02047        FT*002   E 47526        WRREM      56652
+        *NDAB*   C 34200        FD*642   E 47527        KOKSON     56734
+        *TXT*    C 34204        FD*722   E 47527        ADRSEK     57116
+        *PAGE*   C 34210        FC*722   E 47527        RWBIT      57222
+        *STR*    C 34216        FC*642   E 47527        IBIT       57241
+        *STAND*  C 34251        FC*002   E 47527        *BEN*    C 57251
+        *STANN*  C 34257        IOEND*   E 47534        TAMTXT     57270
+        *STV*    C 34260        FT*003   E 47534        TARPOZ     57642
+        *MKR*    C 34261        IOSVFR   E 50043        CHAPAG     60066
+        *SCANER* C 35247        SUBPERR* E 50055        TABWT/*    60225
+        *NUST*   C 35252        NEWMAX     50457        RWTB/*     60232
+        *REGIM*  C 35264        VIAPUZ     50566        PRINT8     60315
+        *FOP*    C 35304        *LOL*    C 50767        PRINT80  E 60315
+        *RPT*    C 35305        RINT       51007        IOXXTTWT   60353
+        *GOT*    C 35306        RCIF     E 51067        TTPRINTD E 60357
+        *FIN*    C 35307        WRINT    E 51115        TTPRINT  E 60357
+        SPAUD      35310        STOP*      51127        TTPRIKS  E 60371
+        REDTXT     40463        KONSTA     51150        /IP*     E 60437
+        ENDKOR     40523        SYTOBIN    51354        TABRT/*    60453
+        WRIKOR     40611        I*PO*I     51447        PILDYK     60460
+        ENDPG      40700        R*PO*R   E 51462        IOXXFMR*   60520
+        TOPAGE     41304        I*PO*R   E 51462        IOXXFMW* E 60521
+        GOSTAS     41442        BCDREAD*   51465        IOXXER/M   61116
+        SYTINT     41502        FT*521   E 51465        IOXXER/O E 61117
+        KLAIDA     41624        BCDDEC*  E 51471        IOXXPKWT   61140
+        RSYMB      41704        FT*531   E 51471        BCDPUN   E 61141
+        RNSYMB   E 41730        FT*541   E 51473        COLPUNC* E 61142
+        SCAN       41752        *KOMA*   C 51743        COLPUNB* E 61177
+        GETSTR     42103        *NUNU*   C 51753        COLPUNE* E 61177
+        START      42336        *RMK*    C 51754        IBCDCTR* E 61204
+        I*DI*I     42375        *LRE*    C 52346        IOXXLPWT   61304
+        I*ST*L   E 42405        *PUFOR*  C 52372        ERRIOM     61307
+        I*MU*I   E 42406        *PUS*    C 52401        ERRLUN   E 61367
+        *FORMA*  C 42421        *APJ*    C 52402        HID/*      61445
+        *COMTIT* C 42441        WTBACK     52403        AHID/*   E 61450
+        *NRD*    C 42456        RASPI      52471        IOXGIVEM   61455
+        *RAI*    C 42507        RASPS    E 52515        GIVEMASK E 61456
+        *ARPI*   C 42511        RASPS1   E 52556        IOXXRPCK   61505
+        *RAK*    C 42512        COPYBI   E 52606        IOXXUPCK E 61506
+        *DAR*    C 42513        *TAB*    C 52623        MON*ITOR   61557
+        *MEDIUM* C 42544        *ATV*    C 52630        PLBEG    E 61566
+        *NRM*    C 42545        *SLY*    C 52632        PLCLO    E 61574
+        *VIE*    C 42546        *INF*    C 52634        ASAVE*   E 61602
+        *LNT*    C 42550        RASTXT     52637        SAVE*HID E 61607
+        WRIMAK     42551        ANATXT     53515        FOR*ALL  E 61624
+        READMK     42647        LYGPAR     53711        OH*      E 61626
+        COMANN     43042        SEKDYD     53760        OH*1     E 61633
+        FILL       43120        SEKGIR     54054        ISO/GOST   61642
+        BEGPG      43233        RWINF      54666        TSTATE*  C 61711
+        SEGTAB     44121        SEKLYG     54740        IOXXPKRT   61712
+        TOKREZ     44742        *TEKST*  C 55153        READ*    E 61714
+        STAATP     45071        STANDA     55235        IOXXTTRT   61746
+        NEWSTR     45326        I*MUI*     55367        TTREAD*  E 61752
+        TITLE      45361        *DDR*    C 55375        TTREAD*D E 61752
+        FILLS      45643        TAMPYK     55376        *ICHECK* C 62031
+        DOUBLE     45667        FIRCAR     55463        GIVELEXX   62037
+        BEGSTR     46203        BCDBEG*    55764        SAVELEXX E 62141
+        ENDSTR     46361        FT2*     E 56273        RD/BT      62161
+        NUSTA      46407        KONV1*   E 56306        WR/BT    E 62162
+        *KORT*   C 46736        SWRITT     56402        SDEC*      62201
+        *LYG*    C 46755        LUNMUN   C 56405        *IOXLSW* C 62241
+        *DYD*    C 46763        LUN*MON    56406        MONREAD*   62242
+        *PLN*    C 46766        OCTTDEC    56414        READ*ERR E 62317
+        *SEK*    C 46767        R*PO*I     56446        GOST/ISO   62335
+        BCDWRIT*   46773        R*ST*I     56476        CLEARLEX   62375
+        FT*621   E 46773        POWER      56506        DRUMTAP*   62407
+        BCDENC*  E 46777        IOSKIP*  C 56562        COSYTISO   62435
+        FT*611   E 46777        SREADT     56563        COZYTISO E 62435
+        FT*571   E 47001        *PAP*    C 56566        CHKWORD* C 62511
+        FT*561   E 47004        *SUT*    C 56567          CBOБOД   62512
