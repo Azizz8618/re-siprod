@@ -19,9 +19,10 @@ cat << EOF >> tmp$$
 *ee
 *end file
 EOF
-dubna tmp$$ | sed '/,NAME,/,/,END,/!d' > $fn.dtran
-if [ -s "$fn.dtran" ]; then
+mkdir -p build
+dubna tmp$$ | sed '/,NAME,/,/,END,/!d' > build/$fn.dtran
+if [ -s "build/$fn.dtran" ]; then
 	rm tmp$$
 else
-	mv tmp$$ $fn.err
+	mv tmp$$ build/$fn.err
 fi

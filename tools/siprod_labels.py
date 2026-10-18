@@ -4,7 +4,7 @@
 Usage: tools/siprod_labels.py [MODULE...]      (default: SPAUD FIRCAR STAATP COMANN)
 
 Runs every tests/siprod/cases/*.txt under dispak with coverage, unions the
-executed addresses, and prints each label of MODULE.dtran (lines "*NNNNB:")
+executed addresses, and prints each label of build/MODULE.dtran (lines "*NNNNB:")
 that was never executed.  Labels whose code calls KLAIDA within a few
 instructions are marked "error", as they are expected to be unreached by the
 non-error cases.  Overlay modules are not in the static load map and cannot
@@ -25,7 +25,7 @@ LABEL = re.compile(r"^ \*([0-7]{4})B:(.*)$")
 
 
 def labels(module: str) -> list[tuple[int, list[str]]]:
-    lines = (ROOT / f"{module}.dtran").read_text().splitlines()
+    lines = (ROOT / "build" / f"{module}.dtran").read_text().splitlines()
     res = []
     for i, line in enumerate(lines):
         m = LABEL.match(line)

@@ -1,11 +1,11 @@
 # SIPROD reverse engineering: generated artifacts and tests.
 #
 #   make            DTRAN listings of all library modules + loader maps
-#   make dtran      <module>.dtran for every dtr/<module>.dtr (dubna, siprod.bin)
+#   make dtran      build/<module>.dtran for every dtr/<module>.dtr (dubna, siprod.bin)
 #   make loadmaps   tests/siprod/loadmap-{dispak,dubna}.txt
 #   make test       regression cases, wiki corpus
 #   make coverage   labels of static modules no regression case executes
-#   make clean      remove generated DTRAN listings
+#   make clean      remove build/*.dtran (and build/*.err from failed runs)
 #
 # Needs dubna and dispak on PATH; the corpus test needs the besm6.github.io
 # wiki (WIKI=...), and is skipped if it is absent.
@@ -19,7 +19,7 @@ PYTHON ?= python3
 # https://github.com/besm6/besm6.github.io/blob/master/wiki/Dtran-instr.md
 HASH := \#
 DTR := $(wildcard dtr/*.dtr)
-DTRAN := $(patsubst dtr/%.dtr,%.dtran,$(DTR))
+DTRAN := $(patsubst dtr/%.dtr,build/%.dtran,$(DTR))
 
 .DELETE_ON_ERROR:
 
@@ -29,7 +29,7 @@ all: dtran loadmaps
 
 dtran: $(DTRAN)
 
-%.dtran: dtr/%.dtr siprod.bin dtran-siprod.sh
+build/%.dtran: dtr/%.dtr siprod.bin dtran-siprod.sh
 	./dtran-siprod.sh '$(subst _,/,$(subst $(HASH),*,$*))' 2>/dev/null
 	test -s '$@'
 
@@ -47,8 +47,8 @@ corpus:
 	@if [ -d '$(WIKI)' ]; then tests/siprod/corpus.sh '$(WIKI)'; \
 	else echo "corpus: $(WIKI) not found, skipped"; fi
 
-coverage:
+coverage: dtran
 	$(PYTHON) tools/siprod_labels.py
 
 clean:
-	rm -f $(foreach f,$(DTRAN),'$(f)')
+	rm -f build/*.dtran build/*.err
