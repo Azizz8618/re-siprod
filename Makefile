@@ -5,7 +5,7 @@
 #   make loadmaps   tests/siprod/loadmap-{dispak,dubna}.txt
 #   make test       regression cases, wiki corpus
 #   make coverage   labels of static modules no regression case executes
-#   make clean      remove build/*.dtran (and build/*.err from failed runs)
+#   make clean      remove build/
 #
 # Needs dubna and dispak on PATH; the corpus test needs the besm6.github.io
 # wiki (WIKI=...), and is skipped if it is absent.
@@ -51,4 +51,4 @@ coverage: dtran
 	$(PYTHON) tools/siprod_labels.py
 
 clean:
-	rm -f build/*.dtran build/*.err
+	rm -rf build
