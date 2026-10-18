@@ -1,7 +1,7 @@
 # SIPROD reverse engineering: generated artifacts and tests.
 #
 #   make            DTRAN listings of all library modules + loader maps
-#   make dtran      <module>.dtran for every <module>.dtr (dubna, siprod.bin)
+#   make dtran      <module>.dtran for every dtr/<module>.dtr (dubna, siprod.bin)
 #   make loadmaps   tests/siprod/loadmap-{dispak,dubna}.txt
 #   make test       regression cases, wiki corpus
 #   make coverage   labels of static modules no regression case executes
@@ -13,14 +13,13 @@
 WIKI ?= $(HOME)/git/besm6.github.io/wiki
 PYTHON ?= python3
 
-# Every module has a DTRAN directive file <name>.dtr; '*' and '/' in library
+# Every module has a DTRAN directive file dtr/<name>.dtr; '*' and '/' in library
 # names are spelled '#' and '_' in file names (*W24* -> #W24#).
 # The .dtr directive language is described in
 # https://github.com/besm6/besm6.github.io/blob/master/wiki/Dtran-instr.md
 HASH := \#
-NONMODULES := EXPR.dtr TEST.dtr TEST2.dtr schema.dtr
-DTR := $(filter-out $(NONMODULES),$(wildcard *.dtr))
-DTRAN := $(DTR:.dtr=.dtran)
+DTR := $(wildcard dtr/*.dtr)
+DTRAN := $(patsubst dtr/%.dtr,%.dtran,$(DTR))
 
 .DELETE_ON_ERROR:
 
@@ -30,7 +29,7 @@ all: dtran loadmaps
 
 dtran: $(DTRAN)
 
-%.dtran: %.dtr siprod.bin dtran-siprod.sh
+%.dtran: dtr/%.dtr siprod.bin dtran-siprod.sh
 	./dtran-siprod.sh '$(subst _,/,$(subst $(HASH),*,$*))' 2>/dev/null
 	test -s '$@'
 

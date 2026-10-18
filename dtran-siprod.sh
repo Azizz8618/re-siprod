@@ -9,8 +9,8 @@ cat << EOF > tmp$$
 *call setftn:one,long
 *call dtran:67($1)
 EOF
-if [ -f "$fn.dtr" ]; then
-	cat "$fn.dtr" >> tmp$$
+if [ -f "dtr/$fn.dtr" ]; then
+	cat "dtr/$fn.dtr" >> tmp$$
 fi
 cat << EOF >> tmp$$
 *edit

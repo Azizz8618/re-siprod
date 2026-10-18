@@ -340,7 +340,7 @@ k прямоугольников с номерами n.1 … n.k, соединё
 ## 8. Как это получено
 
 * `make dtran` — детрансляция всех модулей из `siprod.bin` по директивам
-  `<модуль>.dtr` (язык директив: [Dtran-instr.md](https://github.com/besm6/besm6.github.io/blob/master/wiki/Dtran-instr.md)).
+  `dtr/<модуль>.dtr` (язык директив: [Dtran-instr.md](https://github.com/besm6/besm6.github.io/blob/master/wiki/Dtran-instr.md)).
 * `tests/siprod/run.sh` — запуск СИПРОДа в dispak; `frag.sh` — быстрый опыт;
   `run_all.sh` — регрессия по `tests/siprod/cases/` (вход `.txt`, ожидаемая
   выдача `.out`).
