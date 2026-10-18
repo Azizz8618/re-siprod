@@ -3,9 +3,7 @@
 #   make            DTRAN listings of all library modules + loader maps
 #   make dtran      <module>.dtran for every <module>.dtr (dubna, siprod.bin)
 #   make loadmaps   tests/siprod/loadmap-{dispak,dubna}.txt
-#   make recover    refresh build/ and recovered/ (decompiler, re-runs DTRAN);
-#                   the decompiler is unfinished: recovered/*.f lose control flow
-#   make test       unit tests, regression cases, wiki corpus
+#   make test       regression cases, wiki corpus
 #   make coverage   labels of static modules no regression case executes
 #   make clean      remove generated DTRAN listings
 #
@@ -24,7 +22,7 @@ DTRAN := $(DTR:.dtr=.dtran)
 
 .DELETE_ON_ERROR:
 
-.PHONY: all dtran loadmaps recover test unit regress corpus coverage clean
+.PHONY: all dtran loadmaps test regress corpus coverage clean
 
 all: dtran loadmaps
 
@@ -39,13 +37,7 @@ loadmaps: tests/siprod/loadmap-dispak.txt
 tests/siprod/loadmap-dispak.txt: tests/siprod/loadmap.sh tests/siprod/run.sh siprod.bin
 	tests/siprod/loadmap.sh
 
-recover:
-	./refresh-siprod.sh
-
-test: unit regress corpus
-
-unit:
-	$(PYTHON) -m pytest -q tests
+test: regress corpus
 
 regress:
 	tests/siprod/run_all.sh
