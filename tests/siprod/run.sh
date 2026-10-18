@@ -2,23 +2,25 @@
 # Run SIPROD (personal library 67/2702 on disk 2248) on an input text under
 # the dispak emulator and print only SIPROD's printer output.
 #
-# Usage: tests/siprod/run.sh [-r] [-m] [-t] [-C COVFILE] INPUT
+# Usage: tests/siprod/run.sh [-r] [-m] [-t] [-C COVFILE] [-x DISPAKOPT] INPUT
 #   INPUT   file with SIPROD input (everything after *EXECUTE,
 #           e.g. "*RED" ... "*E" "*END")
 #   -r      raw: print the whole dispak output (banner, loader messages, end)
 #   -m      drop "*no lo" so the loader prints the load map (implies -r)
 #   -t      trace extracodes (dispak -t) to stderr
 #   -C F    write dispak PC coverage map to F (see tools/siprod_cov.py)
+#   -x O    pass option O to dispak (repeatable), e.g. -x --trace-e64
 set -eu
-usage() { sed -n '2,12s/^# \{0,1\}//p' "$0" >&2; exit 2; }
+usage() { sed -n '2,13s/^# \{0,1\}//p' "$0" >&2; exit 2; }
 raw=0 nolo='*no lo' opts=
-while getopts rmtC: o; do
+while getopts rmtC:x: o; do
     case $o in
     r) raw=1 ;;
     m) raw=1; nolo= ;;
     t) opts="$opts -t" ;;
     C) case $OPTARG in /*) c=$OPTARG ;; *) c=$(pwd)/$OPTARG ;; esac
        opts="$opts --coverage=$c" ;;
+    x) opts="$opts $OPTARG" ;;
     *) usage ;;
     esac
 done

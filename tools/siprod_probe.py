@@ -10,11 +10,14 @@ Usage:
   tools/siprod_probe.py FRAGMENT...      each FRAGMENT is *RED body text;
                                          "\\n" separates lines
   tools/siprod_probe.py -f FILE...       whole input files (incl. *RED/*END)
-  tools/siprod_probe.py -s PREFIX SUFFIX CHARS
+  tools/siprod_probe.py -s PREFIX SUFFIX CHARS [MODULE:LO-HI]
                                          sub-command sweep: for each char c in
                                          CHARS run PREFIX+c+SUFFIX and group
                                          chars by the code executed beyond
-                                         PREFIX+SUFFIX alone
+                                         PREFIX+SUFFIX alone; with a range
+                                         (octal, module-relative) group by the
+                                         code executed inside it and list the
+                                         starts of executed runs (labels)
 
 Example:
   tools/siprod_probe.py '*SТЕКСТ' '*PТЕКСТ'
@@ -60,9 +63,24 @@ def executed(bym) -> set[tuple[str, int]]:
     return {(m, o) for m, offs in bym.items() for o in offs}
 
 
-def sweep(prefix: str, suffix: str, chars: str) -> int:
+def run_starts(offs: set[int]) -> list[int]:
+    return sorted(o for o in offs if o - 1 not in offs)
+
+
+def sweep(prefix: str, suffix: str, chars: str, rng: str | None = None) -> int:
     def frag(t: str) -> str:
         return "*RED\n" + t.replace("\\n", "\n") + "\n*E\n*END\n"
+    if rng:
+        mod, span = rng.split(":")
+        lo, hi = (int(x, 8) for x in span.split("-"))
+        groups_r: dict[frozenset, list[str]] = {}
+        for c in chars:
+            offs = run(frag(prefix + c + suffix))[2].get(mod, {})
+            key = frozenset(o for o in offs if lo <= o < hi)
+            groups_r.setdefault(key, []).append(c)
+        for key, cs in sorted(groups_r.items(), key=lambda kv: sorted(kv[0])):
+            print(f"{''.join(cs):20} " + " ".join(f"{o:o}" for o in run_starts(set(key))))
+        return 0
     base = executed(run(frag(prefix + suffix))[2])
     groups: dict[frozenset, list[str]] = {}
     for c in chars:
@@ -81,7 +99,7 @@ def main(argv: list[str]) -> int:
         print(__doc__)
         return 2
     if argv[0] == "-s":
-        return sweep(*argv[1:4])
+        return sweep(*argv[1:5])
     files = argv[0] == "-f"
     base = run("*RED\n*E\n*END\n")[1]
     print(f"baseline cases: {sorted(base)}")
