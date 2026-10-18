@@ -1,0 +1,5 @@
+*RED
+Ж
+*E
+*XYZ
+*END
