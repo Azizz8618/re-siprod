@@ -15,6 +15,8 @@ PYTHON ?= python3
 
 # Every module has a DTRAN directive file <name>.dtr; '*' and '/' in library
 # names are spelled '#' and '_' in file names (*W24* -> #W24#).
+# The .dtr directive language is described in
+# https://github.com/besm6/besm6.github.io/blob/master/wiki/Dtran-instr.md
 HASH := \#
 NONMODULES := EXPR.dtr TEST.dtr TEST2.dtr schema.dtr
 DTR := $(filter-out $(NONMODULES),$(wildcard *.dtr))
