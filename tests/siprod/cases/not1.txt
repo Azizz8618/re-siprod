@@ -1,0 +1,13 @@
+*NOT
+BEGIN
+ПРОЧИТАТЬ КАРТУ
+IF КАРТА ПУСТА
+THEN ЗАВЕРШИТЬ
+ELSE ОБРАБОТАТЬ
+END
+DO WHILE ЕСТЬ КАРТЫ
+PERFORM ПЕЧАТЬ
+END
+END
+$
+*END
