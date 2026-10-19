@@ -54,6 +54,7 @@ tests/siprod/frag.sh 'строка' ...     # быстрый опыт с нес�
 tools/siprod_lib.py --dump SCAN       # что внутри модуля
 tools/siprod_dis.py SCAN              # -> dis/SCAN.asm
 tools/siprod_asm.py SCAN              # проверка обратной сборки
+tools/siprod_asm.py --emit=lib.bin    # пересборка библиотеки заново
 ```
 
 Язык директив DTRAN:

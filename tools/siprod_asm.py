@@ -144,12 +144,44 @@ def check_module(lib, name):
     return bad
 
 
+def assemble_module(lib, name):
+    """Пересборка раздела команд модуля из разобранных команд."""
+    s, h = lib.objects[name]
+    words = []
+    for i in range(h["cmd"]):
+        word = lib.words[s + 3 + i]
+        halves = []
+        for half in (word >> 24, word & 0xffffff):
+            halves.append(encode(decode(half)))
+        words.append((halves[0] << 24) | halves[1])
+    return words
+
+
+def emit_library(lib, path):
+    """Запись библиотеки, в которой разделы команд пересобраны заново."""
+    data = bytearray(lib.data)
+    for name, (s, h) in lib.objects.items():
+        words = assemble_module(lib, name)
+        for i, w in enumerate(words):
+            off = (s + 3 + i) * 6
+            data[off:off + 6] = w.to_bytes(6, "big")
+    with open(path, "wb") as f:
+        f.write(data)
+    return path
+
+
 def main():
     args = [a for a in sys.argv[1:] if not a.startswith("-")]
+    opts = [a for a in sys.argv[1:] if a.startswith("-")]
     path = "siprod.bin"
     if args and os.path.exists(args[0]):
         path = args.pop(0)
     lib = Library(path)
+    for o in opts:
+        if o.startswith("--emit="):
+            out = emit_library(lib, o[7:])
+            print("пересобранная библиотека: %s" % out)
+            return 0
     names = args if args else sorted(lib.objects)
     total = 0
     for name in names:
