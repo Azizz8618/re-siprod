@@ -67,7 +67,7 @@ def symbol_table(lib, name):
         elif kind == 0o46000000:          # метка
             symtab[i] = ("lp", sym_name(index))
         elif (w >> 15) & 0o777 == 0o410:  # относительный адрес
-            symtab[i] = ("rel", w & 0o77777)
+            symtab[i] = ("rel", w & 0o7777)
         elif (w >> 15) & 0o777 == 0o400:  # абсолютный адрес
             symtab[i] = ("abs", w & 0o77777)
         else:                             # ссылка на символ + смещение
@@ -102,10 +102,9 @@ def local_refs(code):
     refs = set()
     for w in code:
         for half in (w >> 24, w & 0xffffff):
-            if half & STRUCT_BIT:
-                v = half & 0o77777
-                if (v >> 12) & 7 == LOC_TAG:
-                    refs.add(v & 0o37777)
+            v = half & 0o77777
+            if (v >> 12) & 7 == LOC_TAG:
+                refs.add(v & 0o7777)
     return refs
 
 
@@ -130,6 +129,8 @@ def disassemble(lib, name, outdir, disbesm6="disbesm6"):
     # в таблице символов, получают автоматические имена
     for off in local_refs(code):
         labels.setdefault(off, "L%04o" % off)
+    # начало модуля - его точка входа
+    labels.setdefault(0, name)
 
     work = tempfile.mkdtemp(prefix="siprod-dis-")
     try:
@@ -208,9 +209,12 @@ def resolve(lib, name, listing, code, ext, labels, symtab):
 
 
 def subst(line, half, ext, labels):
-    """Замена операнда с перемещаемым адресом на имя символа."""
-    if not half & STRUCT_BIT:
-        return line
+    """Замена операнда с перемещаемым адресом на имя символа.
+
+    Адресное поле (15 бит) помечено битами 14..12: 4 - локальная метка
+    (смещение в командах от начала модуля), 7 - внешний символ (номер
+    записи в таблице символов).
+    """
     value = half & 0o77777
     tag = (value >> 12) & 7
     name = None
@@ -218,7 +222,7 @@ def subst(line, half, ext, labels):
         index = value & 0o3777
         name = ext.get(index, "СИМ%o" % index)
     elif tag == LOC_TAG:
-        off = value & 0o37777
+        off = value & 0o7777
         name = labels.get(off, "*%04oB" % off)
     if name is None:
         return line

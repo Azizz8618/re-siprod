@@ -3,6 +3,8 @@
 #   make            DTRAN listings of all library modules + loader maps
 #   make dtran      build/<module>.dtran for every dtr/<module>.dtr (dubna, siprod.bin)
 #   make dis        dis/<module>.asm - BESM-6 autocode of every module (disbesm6)
+#   make be         src/<module>.be - the same in BESM-6 source form with
+#                   comments (rules of re-dispak)
 #   make check      round-trip check: disassemble + assemble == original words
 #   make loadmaps   tests/siprod/loadmap-{dispak,dubna}.txt
 #   make test       regression cases, wiki corpus
@@ -27,9 +29,9 @@ HASH := \#
 DTR := $(wildcard dtr/*.dtr)
 DTRAN := $(patsubst dtr/%.dtr,build/%.dtran,$(DTR))
 
-.PHONY: all dtran dis check loadmaps test regress corpus test-perso coverage clean
+.PHONY: all dtran dis be check loadmaps test regress corpus test-perso coverage clean
 
-all: dis loadmaps
+all: dis be loadmaps
 
 dtran: $(DTRAN)
 
@@ -40,6 +42,10 @@ build/%.dtran: dtr/%.dtr siprod.bin dtran-siprod.sh
 # BESM-6 autocode of every module of the library (disbesm6)
 dis:
 	$(PYTHON) tools/siprod_dis.py
+
+# the same in BESM-6 source form with comments (rules of re-dispak)
+be:
+	$(PYTHON) tools/siprod_be.py
 
 # the disassembly must be exact: decode + encode == original words
 check:
