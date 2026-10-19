@@ -12,8 +12,8 @@
 ошибках.  Журнал опытов — [notes/commands.md](notes/commands.md).
 
 Программа СИПРОДа разобрана в автокод БЕМШ: листинги всех модулей лежат в
-[dis/](dis) (генерируются `make dis`), тексты модулей с комментариями - в
-[src/](src) (`make be`, правила оформления - как в проекте re-dispak).
+[dis/](dis) (генерируются `make dis`), откомментированные тексты модулей -
+в [text/](text) (`make be`, правила оформления - как в проекте re-dispak).
 
 ## Состав
 
@@ -36,7 +36,7 @@
 БЕМШ `disbesm6`.
 
 ```
-make            # листинги автокода dis/*.asm, тексты src/*.be, карты загрузки
+make            # листинги автокода dis/*.asm, тексты text/*.be, карты загрузки
 make check      # проверка: разбор команд и обратная сборка совпадают
 make test       # регрессионные примеры и документы вики (WIKI=каталог)
 make test-perso # СИПРОД из библиотеки, записанной заново в PERSO
@@ -55,7 +55,7 @@ tests/siprod/frag.sh 'строка' ...     # быстрый опыт с нес�
 ```
 tools/siprod_lib.py --dump SCAN       # что внутри модуля
 tools/siprod_dis.py SCAN              # -> dis/SCAN.asm
-tools/siprod_be.py SCAN               # -> src/SCAN.be
+tools/siprod_be.py SCAN               # -> text/SCAN.be
 tools/siprod_asm.py SCAN              # проверка обратной сборки
 tools/siprod_asm.py --emit=lib.bin    # пересборка библиотеки заново
 ```

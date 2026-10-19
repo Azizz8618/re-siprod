@@ -310,6 +310,92 @@ def block(lines):
     return out
 
 
+def sanitize(name, limit=6):
+    """Имя метки: только буквы и цифры, не длиннее limit знаков."""
+    s = "".join(c for c in name.upper() if c.isalnum())
+    if not s:
+        return None
+    if not s[0].isalpha():
+        s = "L" + s
+    return s[:limit]
+
+
+def label_names(insns, ext, labels, module):
+    """Осмысленные имена меток.
+
+    Блок команд от метки до следующего безусловного перехода разбирается
+    на: вызов внешней подпрограммы, обращение к общему блоку (с номером
+    элемента) или к локальной переменной модуля.  По этому метка и
+    называется; если ничего не найдено - по номеру смещения.
+    """
+    items = []
+    for off, half in insns:
+        dec = decode(half)
+        instr = (dec["name"] or "").upper()
+        op = operand_text(dec, ext, labels, module)
+        items.append((off, instr, op))
+    used = set()
+    result = {}
+    lastn = None            # последняя загрузка смещения в М7
+    for i, (off, instr, op) in enumerate(items):
+        if instr == "СЧ":
+            # смещение локальной переменной грузится в М7: "СЧ 9(М7)"
+            m = re.match(r"^(\d+)\(М7\)$", op)
+            if m:
+                lastn = m.group(1)
+        elif instr == "УИ" and op.startswith("М7"):
+            lastn = None
+        if off not in labels:
+            continue
+        # блок метки - команды до следующей метки
+        j = i + 1
+        while j < len(items) and items[j][0] not in labels:
+            j += 1
+        calls, commons, locals = [], [], []
+        for k in range(i, j):
+            _, ins, o = items[k]
+            if ins == "ПВ" and o:
+                calls.append(o.split("(")[0])
+            elif ins in ("МОДА", "МОД") and o:
+                if o.split("(")[0] == module:
+                    locals.append(lastn)
+                else:
+                    commons.append(o.split("(")[0])
+        base = None
+        if off == 0:
+            base = sanitize(module)
+        else:
+            for cand in calls:
+                base = sanitize(cand)
+                if base:
+                    break
+            if not base:
+                for cand in commons:
+                    base = sanitize(cand)
+                    if base:
+                        break
+            if not base:
+                for cand in locals:
+                    base = sanitize("V%s" % cand if cand else "")
+                    if base:
+                        break
+            if not base:
+                base = "L%04o" % off
+        name = None
+        for cand in [base] + [base + str(n) for n in range(2, 10)] \
+                + [base[:5] + chr(ord("A") + n) for n in range(26)] \
+                + ["L%04o" % off, "L%04o" % off + "2"]:
+            cand = cand[:6]
+            if cand not in used:
+                name = cand
+                break
+        if name is None:
+            name = "L%04o" % off
+        used.add(name)
+        result[off] = name
+    return result
+
+
 def module_text(lib, name, loadmap):
     """Текст БЕМШ модуля."""
     s, h = lib.objects[name]
@@ -344,6 +430,9 @@ def module_text(lib, name, loadmap):
             if base and base[0] in ("subp", "lc", "lp") and base[1] \
                     and e[2] != 0o77777:
                 offsets.setdefault(base[1], set()).add(e[2])
+    # осмысленные имена меток
+    names = label_names(insns, ext, labels, name)
+    labels = names
     lines = []
     for off, half in insns:
         dec = decode(half)
@@ -429,7 +518,7 @@ def main():
     path = "siprod.bin"
     if args and os.path.exists(args[0]):
         path = args.pop(0)
-    outdir = "src"
+    outdir = "text"
     for o in opts:
         if o.startswith("--out="):
             outdir = o[6:]
