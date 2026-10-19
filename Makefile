@@ -2,16 +2,22 @@
 #
 #   make            DTRAN listings of all library modules + loader maps
 #   make dtran      build/<module>.dtran for every dtr/<module>.dtr (dubna, siprod.bin)
+#   make dis        dis/<module>.asm - BESM-6 autocode of every module (disbesm6)
+#   make check      round-trip check: disassemble + assemble == original words
 #   make loadmaps   tests/siprod/loadmap-{dispak,dubna}.txt
 #   make test       regression cases, wiki corpus
+#   make test-perso SIPROD run from a re-recorded PERSO library
 #   make coverage   labels of static modules no regression case executes
 #   make clean      remove build/
 #
 # Needs dubna and dispak on PATH; the corpus test needs the besm6.github.io
-# wiki (WIKI=...), and is skipped if it is absent.
+# wiki (WIKI=...), and is skipped if it is absent.  The disassembly needs
+# disbesm6; recording a library into PERSO needs besmtool.
 
 WIKI ?= $(HOME)/git/besm6.github.io/wiki
 PYTHON ?= python3
+DISBESM6 ?= disbesm6
+ZONE ?= 3900
 
 # Every module has a DTRAN directive file dtr/<name>.dtr; '*' and '/' in library
 # names are spelled '#' and '_' in file names (*W24* -> #W24#).
@@ -21,17 +27,23 @@ HASH := \#
 DTR := $(wildcard dtr/*.dtr)
 DTRAN := $(patsubst dtr/%.dtr,build/%.dtran,$(DTR))
 
-.DELETE_ON_ERROR:
+.PHONY: all dtran dis check loadmaps test regress corpus test-perso coverage clean
 
-.PHONY: all dtran loadmaps test regress corpus coverage clean
-
-all: dtran loadmaps
+all: dis loadmaps
 
 dtran: $(DTRAN)
 
 build/%.dtran: dtr/%.dtr siprod.bin dtran-siprod.sh
 	./dtran-siprod.sh '$(subst _,/,$(subst $(HASH),*,$*))' 2>/dev/null
 	test -s '$@'
+
+# BESM-6 autocode of every module of the library (disbesm6)
+dis:
+	$(PYTHON) tools/siprod_dis.py
+
+# the disassembly must be exact: decode + encode == original words
+check:
+	$(PYTHON) tools/siprod_asm.py
 
 loadmaps: tests/siprod/loadmap-dispak.txt
 
@@ -46,6 +58,10 @@ regress:
 corpus:
 	@if [ -d '$(WIKI)' ]; then tests/siprod/corpus.sh '$(WIKI)'; \
 	else echo "corpus: $(WIKI) not found, skipped"; fi
+
+# SIPROD started from a PERSO library recorded by tools/siprod_perso.py
+test-perso:
+	ZONE=$(ZONE) tests/siprod/perso_test.sh
 
 coverage: dtran
 	$(PYTHON) tools/siprod_labels.py
