@@ -23,11 +23,50 @@ import tempfile
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from siprod_lib import Library, text_decode  # noqa: E402
+from siprod_asm import OPS  # noqa: E402
+
+# команды 1-й структуры: адресное поле - 15 бит, в нём же метка
+# перемещаемого адреса (биты 14..12: 4 - локальная, 7 - символ)
+STRUCT_CODES = set(c for _n, c, _m, _k in OPS if c & 0x80000)
+
+
+def is_struct(half):
+    """Команда 1-й структуры (длинный адрес)?"""
+    for _n, code, mask, _k in OPS:
+        if half & mask == code:
+            return code in STRUCT_CODES
+    return False
 
 # бит 21 адресного поля: адрес перемещаемый (формат DMS)
 STRUCT_BIT = 0x200000
 SYM_TAG = 0o7               # биты 14..12 адреса: ссылка на символ
 LOC_TAG = 0o4               # биты 14..12 адреса: локальная метка
+
+
+def sanitize(name, limit=6):
+    """Имя символа: буквы и цифры, без знака '*', не длиннее limit знаков,
+    не начинается с цифры."""
+    s = "".join(c for c in name.upper() if c.isalnum() and c != "*")
+    if not s:
+        return None
+    if not s[0].isalpha():
+        s = "L" + s
+    return s[:limit]
+
+
+def unique_name(base, used, limit=6, fallback=None):
+    """Свободное имя, отличное от уже занятых."""
+    if base not in used:
+        return base
+    for n in range(26):
+        cand = (base[:limit - 1] + chr(ord("A") + n))[:limit]
+        if cand != base and cand not in used:
+            return cand
+    for n in range(2, 100):
+        cand = (base + str(n))[:limit]
+        if cand != base and cand not in used:
+            return cand
+    return fallback if fallback else base
 
 
 def symbol_table(lib, name):
@@ -84,16 +123,49 @@ def symbol_table(lib, name):
             labels.setdefault(e[1], "L%04o" % e[1])
     # имена внешних символов нумеруются по номеру в таблице символов;
     # ссылка "символ + смещение" получает имя своего символа
+    def resolve(i, depth=0):
+        """Имя символа (с учётом цепочки ссылок) и суммарное смещение."""
+        if i >= len(symtab) or depth > 8:
+            return None, 0
+        e = symtab[i]
+        if e is None:
+            return None, 0
+        if e[0] in ("subp", "lc", "lp"):
+            return e[1], 0
+        if e[0] == "ref":
+            base, off = resolve(e[1], depth + 1)
+            if base:
+                return base, off + e[2]
+        return None, 0
     ext = {}
     for i, e in enumerate(symtab):
         if not e:
             continue
         if e[0] in ("subp", "lc", "lp") and e[1]:
-            ext[i] = e[1]
+            ext[i] = sanitize(e[1])
         elif e[0] == "ref":
-            base = symtab[e[1]] if e[1] < len(symtab) else None
-            if base and base[0] in ("subp", "lc", "lp") and base[1]:
-                ext[i] = "%s+%o" % (base[1], e[2])
+            base, off = resolve(i)
+            if base:
+                b = sanitize(base)
+                ext[i] = "%s%d" % (b, off) if off else b
+    # символы, на которые ссылаются команды, но без имени: помечаются
+    # номером записи в таблице символов
+    s, h = lib.objects[name]
+    for i in range(h["cmd"]):
+        word = lib.words[s + 3 + i]
+        for half in (word >> 24, word & 0xffffff):
+            if not is_struct(half):
+                continue
+            value = half & 0o77777
+            if (value >> 12) & 7 == SYM_TAG:
+                num = value & 0o3777
+                if num not in ext:
+                    ext[num] = "СИМ%o" % num
+    # одинаковые имена различаются добавлением буквы
+    used = set()
+    for num in sorted(ext):
+        ext[num] = unique_name(ext[num], used)
+        used.add(ext[num])
     return ext, labels, symtab
 
 
@@ -102,6 +174,8 @@ def local_refs(code):
     refs = set()
     for w in code:
         for half in (w >> 24, w & 0xffffff):
+            if not is_struct(half):
+                continue
             v = half & 0o77777
             if (v >> 12) & 7 == LOC_TAG:
                 refs.add(v & 0o7777)

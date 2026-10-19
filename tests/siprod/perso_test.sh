@@ -2,8 +2,8 @@
 # Сравнение работы СИПРОДа из исходной библиотеки (PERSO зоны 2702 тома
 # 2248) и из библиотеки, записанной заново tools/siprod_perso.py.
 #
-# Проверяются два образа: исходный siprod.bin и пересобранный
-# (tools/siprod_asm.py --emit: разделы команд разобраны и собраны заново).
+# Проверяются два образа: исходный siprod.bin и собранный из
+# откомментированных текстов (make build).
 # Для каждого примера tests/siprod/cases/ вывод должен совпасть байт в байт.
 set -eu
 ROOT=$(cd "$(dirname "$0")/../.." && pwd)
@@ -16,11 +16,15 @@ cp /usr/local/share/besm6/2248 "$work/2248"
 SIPROD_WORK=$work
 export SIPROD_WORK
 
-python3 "$ROOT/tools/siprod_asm.py" --emit="$work/rebuilt.bin" >/dev/null
+# библиотека, собранная из откомментированных текстов
+if [ ! -f "$ROOT/build/siprod.bin" ]; then
+    echo "нет build/siprod.bin - выполните make build" >&2
+    exit 1
+fi
 
 fail=0
 n=0
-for lib in "$ROOT/siprod.bin" "$work/rebuilt.bin"; do
+for lib in "$ROOT/siprod.bin" "$ROOT/build/siprod.bin"; do
     echo "== образ: $lib"
     for f in "$D"/cases/*.txt; do
         b=$(basename "$f" .txt)

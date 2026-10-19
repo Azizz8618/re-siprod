@@ -26,8 +26,11 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from siprod_asm import decode  # noqa: E402
-from siprod_dis import (LOC_TAG, STRUCT_BIT, SYM_TAG, local_refs,  # noqa: E402
-                         symbol_table)
+from siprod_dis import (LOC_TAG, STRUCT_BIT, SYM_TAG, is_struct,  # noqa: E402
+                         local_refs, sanitize, symbol_table, unique_name)
+
+SYM_MARK = "СИМВОЛЫ МОДУЛЯ"
+LOCAL_MARK = "ЛОКАЛЬНЫЕ СИМВОЛЫ"
 from siprod_lib import Library  # noqa: E402
 
 COL_COMMENT = 40       # столбец начала комментария
@@ -95,6 +98,8 @@ def ref_name(half, ext, labels):
     (смещение в командах от начала модуля), 7 - внешний символ (номер
     записи в таблице символов).
     """
+    if not is_struct(half):
+        return None
     value = half & 0o77777
     tag = (value >> 12) & 7
     if tag == SYM_TAG:
@@ -107,11 +112,11 @@ def ref_name(half, ext, labels):
 
 
 def addr_text(value, name, entry):
-    """Адрес в синтаксисе БЕМШ ('177', 177, START)."""
+    """Адрес в синтаксисе БЕМШ ('177', 177, 0)."""
     if name:
         return name
     if value == 0:
-        return entry
+        return "0"
     if value < 0o100:
         return "%d" % value
     if value >= 0o77700:
@@ -310,23 +315,14 @@ def block(lines):
     return out
 
 
-def sanitize(name, limit=6):
-    """Имя метки: только буквы и цифры, не длиннее limit знаков."""
-    s = "".join(c for c in name.upper() if c.isalnum())
-    if not s:
-        return None
-    if not s[0].isalpha():
-        s = "L" + s
-    return s[:limit]
-
-
-def label_names(insns, ext, labels, module):
+def label_names(insns, ext, labels, module, cmdwords, constwords):
     """Осмысленные имена меток.
 
-    Блок команд от метки до следующего безусловного перехода разбирается
-    на: вызов внешней подпрограммы, обращение к общему блоку (с номером
-    элемента) или к локальной переменной модуля.  По этому метка и
-    называется; если ничего не найдено - по номеру смещения.
+    Блок команд от метки до следующей метки разбирается на: вызов внешней
+    подпрограммы, обращение к общему блоку (с номером элемента) или к
+    локальной переменной модуля.  По этому метка и называется.  Ссылки на
+    константы (раздел const) и на переменные (раздел bss) именуются по
+    номеру слова: К<номер> и V<номер>.
     """
     items = []
     for off, half in insns:
@@ -334,7 +330,7 @@ def label_names(insns, ext, labels, module):
         instr = (dec["name"] or "").upper()
         op = operand_text(dec, ext, labels, module)
         items.append((off, instr, op))
-    used = set()
+    used = set(ext.values())   # имена внешних символов заняты
     result = {}
     lastn = None            # последняя загрузка смещения в М7
     for i, (off, instr, op) in enumerate(items):
@@ -357,13 +353,13 @@ def label_names(insns, ext, labels, module):
             if ins == "ПВ" and o:
                 calls.append(o.split("(")[0])
             elif ins in ("МОДА", "МОД") and o:
-                if o.split("(")[0] == module:
-                    locals.append(lastn)
+                if o.split("(")[0] in (module, "0"):
+                    locals.append(lastn)   # адрес своего кадра
                 else:
                     commons.append(o.split("(")[0])
         base = None
         if off == 0:
-            base = sanitize(module)
+            base = sanitize(module) or module
         else:
             for cand in calls:
                 base = sanitize(cand)
@@ -381,16 +377,19 @@ def label_names(insns, ext, labels, module):
                         break
             if not base:
                 base = "L%04o" % off
-        name = None
-        for cand in [base] + [base + str(n) for n in range(2, 10)] \
-                + [base[:5] + chr(ord("A") + n) for n in range(26)] \
-                + ["L%04o" % off, "L%04o" % off + "2"]:
-            cand = cand[:6]
-            if cand not in used:
-                name = cand
-                break
-        if name is None:
-            name = "L%04o" % off
+        name = unique_name(base, used, fallback="L%04o" % off)
+        used.add(name)
+        result[off] = name
+    # ссылки на константы и переменные (вне раздела команд) - по номеру
+    # слова в соответствующем разделе
+    for off in sorted(labels):
+        if off in result or off < 2 * cmdwords:
+            continue
+        if off < 2 * (cmdwords + constwords):
+            base = "К%d" % (off // 2 - cmdwords)
+        else:
+            base = "V%d" % (off // 2 - cmdwords - constwords)
+        name = unique_name(base, used, fallback="L%04o" % off)
         used.add(name)
         result[off] = name
     return result
@@ -402,7 +401,7 @@ def module_text(lib, name, loadmap):
     code = lib.words[s + 3:s + 3 + h["cmd"]]
     ext, labels, symtab = symbol_table(lib, name)
     # начало модуля - его точка входа
-    labels[0] = name
+    labels[0] = sanitize(name) or name
     # локальные метки, на которые ссылаются команды, но которые не названы
     # в таблице символов, получают автоматические имена
     for off in local_refs(code):
@@ -423,15 +422,16 @@ def module_text(lib, name, loadmap):
         if not e:
             continue
         if e[0] in ("subp", "lc", "lp") and e[1]:
-            if e[1] not in bases:
-                bases.append(e[1])
+            nm = sanitize(e[1])
+            if nm and nm not in bases:
+                bases.append(nm)
         elif e[0] == "ref" and e[1] < len(symtab):
             base = symtab[e[1]]
             if base and base[0] in ("subp", "lc", "lp") and base[1] \
                     and e[2] != 0o77777:
-                offsets.setdefault(base[1], set()).add(e[2])
+                offsets.setdefault(sanitize(base[1]), set()).add(e[2])
     # осмысленные имена меток
-    names = label_names(insns, ext, labels, name)
+    names = label_names(insns, ext, labels, name, h['cmd'], h['const'])
     labels = names
     lines = []
     for off, half in insns:
@@ -442,14 +442,13 @@ def module_text(lib, name, loadmap):
             regs.add(int(m.group(1), 8))
         lbl = ""
         if off in labels and off != 0:
-            lbl = labels[off][:6]
-        code_part = "%-8s%-7s%s" % (lbl, instr, op) if lbl \
-            else "        %-7s%s" % (instr, op)
+            lbl = labels[off]
+        code_part = "%-9s%-7s%s" % (lbl, instr, op)
         comment = gen_comment(instr, op, ext)
         if comment:
             comment = comment[:MAX_COMMENT]
         lines.append(with_comment(code_part.rstrip(), comment))
-    return lines, bases, offsets, sorted(regs), h
+    return lines, bases, offsets, sorted(regs), h, ext, labels
 
 
 def wrap_head(prefix, items, width=76):
@@ -467,7 +466,7 @@ def wrap_head(prefix, items, width=76):
 
 
 def write_module(lib, name, outdir, loadmap):
-    lines, bases, offsets, regs, h = module_text(lib, name, loadmap)
+    lines, bases, offsets, regs, h, ext, labels = module_text(lib, name, loadmap)
     s = lib.objects[name][0]
     addr = loadmap.get(name)
     head = []
@@ -490,7 +489,21 @@ def write_module(lib, name, outdir, loadmap):
                               ["М%o" % r for r in regs]))
     head.append("*" * 51)
     out = list(head)
-    out.append("%-8s%-7s%s" % (name[:6], "СТАРТ", "0"))
+    # таблица символов модуля - по ней сборщик находит внешние имена
+    out.append("*")
+    out.append("* %s (номер - имя):" % SYM_MARK)
+    for num, nm in sorted(ext.items()):
+        out.append("*   %03d %s" % (num, nm))
+    out.append("*")
+    # локальные символы вне раздела команд (ссылки на константы и
+    # переменные) - сборщику нужны их смещения
+    offs = [off for off in sorted(labels) if off >= 2 * h["cmd"]]
+    if offs:
+        out.append("* %s (имя - смещение):" % LOCAL_MARK)
+        for off in offs:
+            out.append("*   %-6s %o" % (labels[off], off))
+        out.append("*")
+    out.append("%-9s%-7s%s" % (labels.get(0, name), "СТАРТ", "0"))
     out.extend(lines)
     out.append("")
     os.makedirs(outdir, exist_ok=True)

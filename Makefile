@@ -5,6 +5,7 @@
 #   make dis        dis/<module>.asm - BESM-6 autocode of every module (disbesm6)
 #   make be         text/<module>.be - the same in BESM-6 source form with
 #                   comments (rules of re-dispak)
+#   make build      build/siprod.bin - the library assembled from the texts
 #   make check      round-trip check: disassemble + assemble == original words
 #   make loadmaps   tests/siprod/loadmap-{dispak,dubna}.txt
 #   make test       regression cases, wiki corpus
@@ -29,9 +30,10 @@ HASH := \#
 DTR := $(wildcard dtr/*.dtr)
 DTRAN := $(patsubst dtr/%.dtr,build/%.dtran,$(DTR))
 
-.PHONY: all dtran dis be check loadmaps test regress corpus test-perso coverage clean
+.PHONY: all dtran dis be build check loadmaps test regress corpus test-perso \
+	coverage clean
 
-all: dis be loadmaps
+all: dis be build loadmaps
 
 dtran: $(DTRAN)
 
@@ -46,6 +48,14 @@ dis:
 # the same in BESM-6 source form with comments (rules of re-dispak)
 be:
 	$(PYTHON) tools/siprod_be.py
+
+# the library assembled from the commented texts
+build: build/siprod.bin
+
+build/siprod.bin: $(wildcard text/*.be) siprod.bin tools/siprod_asm.py
+	@mkdir -p build
+	$(PYTHON) tools/siprod_asm.py --build=$@
+	cmp $@ siprod.bin && echo "сборка из текстов совпала с исходным образом"
 
 # the disassembly must be exact: decode + encode == original words
 check:
