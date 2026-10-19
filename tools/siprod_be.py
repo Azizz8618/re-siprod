@@ -28,6 +28,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from siprod_asm import decode  # noqa: E402
 from siprod_dis import (LOC_TAG, STRUCT_BIT, SYM_TAG, is_struct,  # noqa: E402
                          local_refs, sanitize, symbol_table, unique_name)
+from siprod_notes import LABEL_NOTES, MODULE_NOTES  # noqa: E402
 
 SYM_MARK = "СИМВОЛЫ МОДУЛЯ"
 LOCAL_MARK = "ЛОКАЛЬНЫЕ СИМВОЛЫ"
@@ -315,6 +316,30 @@ def block(lines):
     return out
 
 
+# назначение метки по роли первой команды блока, когда смысл оператора
+# Фортрана определить нельзя
+ROLE = {
+    "СЧИМ": "PUSH", "СЧМ": "PUSH", "УИМ": "POP", "РЖА": "WAIT",
+    "ПО": "CMP", "ПЕ": "CMP", "ПБ": "JMP", "УИА": "ADDR",
+    "СЧ": "GET", "ЗП": "PUT", "ЗПМ": "PUT", "СЛИА": "INC", "СЛИ": "INC",
+    "И": "AND", "ИЛИ": "OR", "НТЖ": "XOR", "ВЧ": "SUB", "ВЧОБ": "SUB",
+    "СЛ": "ADD", "СЛЦ": "ADD", "МОДА": "FRAME", "МОД": "FRAME",
+    "СЧИ": "GETR", "УИ": "SETR", "СЧРЖ": "GETW", "СЧМР": "MULR",
+    "СДА": "SHL", "ЗНАК": "NEG", "ДЕЛ": "DIV", "УМН": "MUL",
+    "СЧРЖ": "GETW", "РЖА": "WAIT", "Ц": "CYC",
+}
+
+
+AUTO_NAME = re.compile(r"^L[0-9]{3,4}$")
+
+
+def subject(cand):
+    """Имя, по которому можно назвать метку (автоматические имена не годятся)."""
+    if not cand or AUTO_NAME.match(cand):
+        return None
+    return sanitize(cand)
+
+
 def label_names(insns, ext, labels, module, cmdwords, constwords):
     """Осмысленные имена меток.
 
@@ -333,6 +358,12 @@ def label_names(insns, ext, labels, module, cmdwords, constwords):
     used = set(ext.values())   # имена внешних символов заняты
     result = {}
     lastn = None            # последняя загрузка смещения в М7
+    # обратные переходы - цели циклов
+    loops = set()
+    for i, (off, instr, op) in enumerate(items):
+        if instr in ("ПБ", "ПО", "ПЕ") and op in labels:
+            if labels[op] < off:
+                loops.add(labels[op])
     for i, (off, instr, op) in enumerate(items):
         if instr == "СЧ":
             # смещение локальной переменной грузится в М7: "СЧ 9(М7)"
@@ -343,12 +374,18 @@ def label_names(insns, ext, labels, module, cmdwords, constwords):
             lastn = None
         if off not in labels:
             continue
-        # блок метки - команды до следующей метки
+        # оператор Фортрана - от предыдущего безусловного перехода
+        # до следующего; метка может стоять в середине оператора
+        start = 0
+        for k in range(i - 1, -1, -1):
+            if items[k][1] in ("ПБ", "ПВ", "ВЫПР"):
+                start = k + 1
+                break
         j = i + 1
-        while j < len(items) and items[j][0] not in labels:
+        while j < len(items) and items[j][1] not in ("ПБ", "ПВ", "ВЫПР"):
             j += 1
         calls, commons, locals = [], [], []
-        for k in range(i, j):
+        for k in range(start, j):
             _, ins, o = items[k]
             if ins == "ПВ" and o:
                 calls.append(o.split("(")[0])
@@ -357,24 +394,33 @@ def label_names(insns, ext, labels, module, cmdwords, constwords):
                     locals.append(lastn)   # адрес своего кадра
                 else:
                     commons.append(o.split("(")[0])
+            elif ins in ("СЧ", "ЗП", "ЗПМ") and o:
+                m = re.match(r"^(\d+)\(М7\)$", o)
+                if m:
+                    locals.append(m.group(1))
         base = None
         if off == 0:
             base = sanitize(module) or module
         else:
             for cand in calls:
-                base = sanitize(cand)
+                base = subject(cand)
                 if base:
                     break
             if not base:
                 for cand in commons:
-                    base = sanitize(cand)
+                    base = subject(cand)
                     if base:
                         break
             if not base:
                 for cand in locals:
-                    base = sanitize("V%s" % cand if cand else "")
+                    base = subject("V%s" % cand if cand else "")
                     if base:
                         break
+            if not base and off in loops:
+                base = "LOOP"       # цель обратного перехода
+            if not base:
+                # роль команды: назначение метки по первой операции блока
+                base = ROLE.get(instr)
             if not base:
                 base = "L%04o" % off
         name = unique_name(base, used, fallback="L%04o" % off)
@@ -447,6 +493,9 @@ def module_text(lib, name, loadmap):
         comment = gen_comment(instr, op, ext)
         if comment:
             comment = comment[:MAX_COMMENT]
+        note = LABEL_NOTES.get(name, {}).get(off)
+        if note:
+            lines.append("* " + note)
         lines.append(with_comment(code_part.rstrip(), comment))
     return lines, bases, offsets, sorted(regs), h, ext, labels
 
@@ -479,6 +528,8 @@ def write_module(lib, name, outdir, loadmap):
     if addr:
         head.append("*   Адрес загрузки: %s(8)" % addr)
     head.append("*   Вход: %s" % name)
+    for note in MODULE_NOTES.get(name, []):
+        head.append("*   " + note)
     if bases:
         head.extend(wrap_head("*   Внешние: ", bases))
     for b, offs in sorted(offsets.items()):
@@ -503,6 +554,9 @@ def write_module(lib, name, outdir, loadmap):
         for off in offs:
             out.append("*   %-6s %o" % (labels[off], off))
         out.append("*")
+    note0 = LABEL_NOTES.get(name, {}).get(0)
+    if note0:
+        out.append("* " + note0)
     out.append("%-9s%-7s%s" % (labels.get(0, name), "СТАРТ", "0"))
     out.extend(lines)
     out.append("")

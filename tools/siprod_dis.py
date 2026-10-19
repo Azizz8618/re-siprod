@@ -63,7 +63,11 @@ def unique_name(base, used, limit=6, fallback=None):
         if cand != base and cand not in used:
             return cand
     for n in range(2, 100):
-        cand = (base + str(n))[:limit]
+        cand = (base[:limit - 1] + str(n))[:limit]
+        if cand != base and cand not in used:
+            return cand
+    for n in range(100):
+        cand = "%s%02d" % (base[:limit - 2], n)
         if cand != base and cand not in used:
             return cand
     return fallback if fallback else base
