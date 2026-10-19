@@ -596,10 +596,13 @@ def module_text(lib, name, loadmap):
         comment = gen_comment(instr, op, ext)
         if comment:
             comment = comment[:MAX_COMMENT]
-        note = LABEL_NOTES.get(name, {}).get(off)
+        note = LABEL_NOTES.get(name, {}).get(off) if off else None
         if note:
             lines.append("* " + note)
         lines.append(with_comment(code_part.rstrip(), comment))
+        if instr == "ПБ":
+            # конец базового блока - отделяем звёздочкой
+            lines.append("*")
     return lines, bases, offsets, sorted(regs), h, ext, labels, exits
 
 
@@ -660,8 +663,7 @@ def write_module(lib, name, outdir, loadmap):
     head.append("*" * 51)
     out = list(head)
     # таблица символов модуля - по ней сборщик находит внешние имена
-    out.append("*")
-    out.append("* %s (номер - имя):" % SYM_MARK)
+    out.append("*** %s" % SYM_MARK)
     for num, nm in sorted(ext.items()):
         out.append("*   %03d %s" % (num, nm))
     out.append("*")
@@ -673,6 +675,8 @@ def write_module(lib, name, outdir, loadmap):
         for off in offs:
             out.append("*   %-6s %o" % (labels[off], off))
         out.append("*")
+    out.append("*** КОД МОДУЛЯ")
+    out.append("*")
     note0 = LABEL_NOTES.get(name, {}).get(0)
     if note0:
         out.append("* " + note0)
