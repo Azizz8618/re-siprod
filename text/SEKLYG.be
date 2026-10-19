@@ -4,6 +4,7 @@
 *   том 2248), слово 18144 образа SIPROD.BIN
 *   Длина при загрузке: 139 слов, 260 команд
 *   Вход: SEKLYG
+*   Выход: смещение 376, через М12, смещение 403, через М10
 *   РАЗБОР СЕГМЕНТА ЛИСТА (СТРАНИЦЫ).
 *   Внешние: TAB, INF, ATV, DYD, APJ, LYG, SEK, LNT, STL, SLY, NUST, PLN, 
 *   PAGE, REGIM, TXT, NDAB, BEGPG, KLAIDA, RWINF, SEKGIR

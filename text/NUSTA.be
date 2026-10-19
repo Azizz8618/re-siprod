@@ -4,6 +4,7 @@
 *   том 2248), слово 14464 образа SIPROD.BIN
 *   Длина при загрузке: 215 слов, 354 команд
 *   Вход: NUSTA
+*   Выход: смещение 532, через М12, смещение 541, через М10
 *   Внешние: FORMA, REGIM, PAGE, STR, SCANER, INS, ARPI, NDAB, NUST, FOP, 
 *   BLO, LOL, BEGPG, RSYMB, FIRCAR, IDII
 *   Смещения в FORMA: 10, 11

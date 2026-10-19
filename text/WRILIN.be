@@ -4,6 +4,7 @@
 *   том 2248), слово 7552 образа SIPROD.BIN
 *   Длина при загрузке: 102 слов, 172 команд
 *   Вход: WRILIN
+*   Выход: смещение 246, через М12, смещение 253, через М10
 *   Внешние: PAGE, CEN, WHO, ONE, NUM, KOMA, KLAIDA, ENDKOR, HOWSMB, RASPS, 
 *   WRIKOR, ONESTR, IDII
 *   Смещения в KOMA: 2, 7

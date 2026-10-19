@@ -4,6 +4,7 @@
 *   том 2248), слово 8448 образа SIPROD.BIN
 *   Длина при загрузке: 109 слов, 188 команд
 *   Вход: APNOTF
+*   Выход: смещение 266, через М12, смещение 273, через М10
 *   Внешние: PAGE, INS, SCANER, TYPE, WHO, GOT, NAMENF, ENDKOR, HOWSMB, 
 *   RASPS, WRIKOR, WHATYP
 *   Смещения в INS: 24, 25, 26

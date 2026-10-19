@@ -4,6 +4,7 @@
 *   том 2248), слово 7264 образа SIPROD.BIN
 *   Длина при загрузке: 204 слов, 334 команд
 *   Вход: TWOPLA
+*   Выход: смещение 510, через М12, смещение 515, через М10
 *   Внешние: VER, PAGE, ONE, KORT, NUM, KOMA, INS, WRINUM, GETSTR, RASPS, 
 *   RNSYMB, WRIKOR, ENDKOR, IDII, IMUI
 *   Смещения в INS: 24, 25, 26

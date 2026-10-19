@@ -4,6 +4,7 @@
 *   том 2248), слово 9984 образа SIPROD.BIN
 *   Длина при загрузке: 581 слов, 976 команд
 *   Вход: PAPRAP
+*   Выход: смещение 1710, через М12, смещение 1717, через М10
 *   Внешние: COMCON, EGO, INS, RUSIS, SCANER, SPAUD, KLAIDA, RASPS1, 
 *   KORNET, RMAKR, MASVAL, TXTRED, SYTINT, RSYMB, Б7ЗФ, RNSYMB, GETSTR, 
 *   IMUI

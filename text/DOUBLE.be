@@ -4,6 +4,7 @@
 *   том 2248), слово 15264 образа SIPROD.BIN
 *   Длина при загрузке: 204 слов, 362 команд
 *   Вход: DOUBLE
+*   Выход: смещение 544, через М12, смещение 551, через М10
 *   Внешние: NDAB, SCANER, REGIM, DDR, TAB, NUST, STR, INS, ЦДMБ0, BEGSTR, 
 *   ENDSTR, TAMPYK, RNSYMB, RSYMB, IMUI
 *   Смещения в INS: 24, 25, 26

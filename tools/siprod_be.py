@@ -333,6 +333,28 @@ ROLE = {
 AUTO_NAME = re.compile(r"^L[0-9]{3,4}$")
 
 
+def exit_points(insns, ext, labels, module):
+    """Точки выхода модуля: косвенные переходы через регистр.
+
+    Компилятор Фортрана возвращает управление вызывающему прыжком
+    по адресу, сохранённому в регистре (обычно М10 или М15).
+    """
+    res = []
+    for off, half in insns:
+        dec = decode(half)
+        instr = (dec["name"] or "").upper()
+        if instr != "ПБ":
+            continue
+        op = operand_text(dec, ext, labels, module)
+        m = re.match(r"^0\(М(\d+)\)$", op)
+        if m:
+            res.append((off, "М%s" % m.group(1)))
+        elif op == "0":
+            # возврат по адресу из ячейки 0
+            res.append((off, "ячейка 0"))
+    return res
+
+
 def subject(cand):
     """Имя, по которому можно назвать метку (автоматические имена не годятся)."""
     if not cand or AUTO_NAME.match(cand):
@@ -460,6 +482,7 @@ def module_text(lib, name, loadmap):
         insns.append((i * 2, w >> 24))
         insns.append((i * 2 + 1, w & 0xffffff))
 
+    exits = exit_points(insns, ext, labels, name)
     regs = set()
     # внешние имена и смещения, с которыми на них ссылается модуль
     bases = []
@@ -497,7 +520,7 @@ def module_text(lib, name, loadmap):
         if note:
             lines.append("* " + note)
         lines.append(with_comment(code_part.rstrip(), comment))
-    return lines, bases, offsets, sorted(regs), h, ext, labels
+    return lines, bases, offsets, sorted(regs), h, ext, labels, exits
 
 
 def wrap_head(prefix, items, width=76):
@@ -515,7 +538,7 @@ def wrap_head(prefix, items, width=76):
 
 
 def write_module(lib, name, outdir, loadmap):
-    lines, bases, offsets, regs, h, ext, labels = module_text(lib, name, loadmap)
+    lines, bases, offsets, regs, h, ext, labels, exits = module_text(lib, name, loadmap)
     s = lib.objects[name][0]
     addr = loadmap.get(name)
     head = []
@@ -528,6 +551,13 @@ def write_module(lib, name, outdir, loadmap):
     if addr:
         head.append("*   Адрес загрузки: %s(8)" % addr)
     head.append("*   Вход: %s" % name)
+    if exits:
+        ex = ", ".join("%sсмещение %o, через %s"
+                        % (labels[off] + " " if off in labels else "", off, reg)
+                        for off, reg in exits)
+        head.extend(wrap_head("*   Выход: ", ex.split(", ")))
+    else:
+        head.append("*   Выход: нет (модуль не возвращает управление)")
     for note in MODULE_NOTES.get(name, []):
         head.append("*   " + note)
     if bases:

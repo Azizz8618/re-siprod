@@ -4,6 +4,7 @@
 *   том 2248), слово 13792 образа SIPROD.BIN
 *   Длина при загрузке: 438 слов, 780 команд
 *   Вход: BEGPG
+*   Выход: смещение 1405, через М12, смещение 1412, через М10
 *   НАЧАЛО СТРАНИЦЫ (РАЗМЕТКА).
 *   Внешние: NDAB, STR, COMTIT, NUST, DYD, PUFOR, STAND, LYG, SEK, PUS, 
 *   APJ, EGO, PAGE, REGIM, FT571, FT003, WTBACK, RASPS, RSYMB, BEGSTR, 

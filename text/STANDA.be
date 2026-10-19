@@ -4,6 +4,7 @@
 *   том 2248), слово 21472 образа SIPROD.BIN
 *   Длина при загрузке: 90 слов, 146 команд
 *   Вход: STANDA
+*   Выход: смещение 213, через М12, смещение 220, через М10
 *   Внешние: STAND, FORMA, PAGE, REGIM, LOL, NUST, NDAB, ARPI, BEGPG, 
 *   ENDPG, IDII, IMUI
 *   Смещения в FORMA: 7

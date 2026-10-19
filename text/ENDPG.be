@@ -4,6 +4,7 @@
 *   том 2248), слово 11680 образа SIPROD.BIN
 *   Длина при загрузке: 260 слов, 466 команд
 *   Вход: ENDPG
+*   Выход: смещение 713, через М12, смещение 720, через М10
 *   КОНЕЦ СТРАНИЦЫ: ВЫВОД ФОРМАТИРОВАННОГО ТЕКСТА.
 *   Внешние: EGO, PAGE, REGIM, NDAB, LYG, DYD, TXT, STAND, PLN, RPT, SEK, 
 *   NUST, FT571, FT003, FT002, NUSTA, NEWMAX, KLAIDA, TOPAGE, VIAPUZ, IDII, 
