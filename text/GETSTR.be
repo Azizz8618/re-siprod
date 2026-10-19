@@ -4,7 +4,11 @@
 *   том 2248), слово 15680 образа SIPROD.BIN
 *   Длина при загрузке: 155 слов, 268 команд
 *   Вход: GETSTR
-*   Выход: смещение 405, через М12, смещение 413, через М10
+*   Выход: FIRCAR:INS25A, KORNET:INS25A, NAMENF:INS26A, NOTFOR:INS25A, 
+*   ONEPLA:INS26A, PAPRAP:INS25A, READMK:MKR50P+1, SCHEMA:INS25A, 
+*   SEGTAB:INS25A, SPAUD:INS25A, SPAUD:SCAN90+1, TWOPLA:INS26A, 
+*   WRIIPO:INS25A, WRIIPO:V11C+1, PUSHB (возврат через М12), 
+*   PUSHB (возврат через М10)
 *   ЧТЕНИЕ СТРОКИ ВХОДНОГО ПОТОКА.
 *   Внешние: EGO, NUSTA, RUSIS, INS, FT541, FT002, FT003, RSYMB
 *   Смещения в EGO: 7200, 8600, 8601

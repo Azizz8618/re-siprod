@@ -4,7 +4,12 @@
 *   том 2248), слово 5344 образа SIPROD.BIN
 *   Длина при загрузке: 90 слов, 180 команд
 *   Вход: RASPI
-*   Выход: смещение 37, через М7, смещение 47, через ячейка 0
+*   Выход: APNOTF:PAGE1G+1, BEGPG:V13A+1, CSTRIN:PUSH, CSTRIN:PUSHD+1, 
+*   GOTOPO:ADDR, ONEPLA:ADDR, ONEPLA:KORT1A, PAPRAP:EGO39I, RASKOM:WAIT, 
+*   RASKOM:V1B, RMAKR:PAGE1L+1, TARNYB:V1F, TARNYB:V1P+1, TWOPLA:V15, 
+*   WRIHOR:PUSH, WRIHOR:ADDRE+1, WRILIN:V7, WRILIN:V7N+1, WRINUM:V0, 
+*   WRITUR:EGO41H+1, WRIVER:V3G, L20B (возврат через М7), 
+*   L12A (возврат через ячейка 0)
 *   Внешние: SYTOBI, KONSTA
 *   Смещения в SYTOBI: 1, 2, 3, 4, 5
 *   Регистры: М7, М10, М11, М12, М13, М14, М15, М16, М17

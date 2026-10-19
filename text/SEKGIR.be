@@ -4,7 +4,8 @@
 *   том 2248), слово 17664 образа SIPROD.BIN
 *   Длина при загрузке: 394 слов, 734 команд
 *   Вход: SEKGIR
-*   Выход: смещение 1327, через М12, смещение 1334, через М10
+*   Выход: RASTXT:V2, SEGTAB:V26A+1, SEGTAB:V26A+1, SEKLYG:SLYA, 
+*   INFE (возврат через М12), INFE (возврат через М10)
 *   РАЗБОР СЕГМЕНТА ГИРЛЯНДЫ (ПРОГОНА).
 *   Внешние: SEK, LRE, TAB, REGIM, SUT, LYG, SLY, DYD, NRD, INF, ADR, SEP, 
 *   PAGE, EGO, SEKDYD, RWINF, WRREM, KOKSON, ADRSEK, KOKSEK, IMUI

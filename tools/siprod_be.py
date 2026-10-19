@@ -355,6 +355,62 @@ def exit_points(insns, ext, labels, module):
     return res
 
 
+def call_sites(lib):
+    """Кто кого вызывает: модуль -> список (вызывающий, метка вызова).
+
+    Метка берётся ближайшая перед вызовом; вызов через оверлей
+    относится к базовому модулю.
+    """
+    import json
+    parent = {}
+    try:
+        with open("siprod.list") as f:
+            for line in f:
+                m = re.search(r"\(\s*([A-Z0-9*]+)\s*\)", line)
+                if m:
+                    parent[line.split()[0].strip("*")] = m.group(1)
+    except OSError:
+        pass
+    # имя модуля -> приведённое имя
+    mods = {}
+    for name in lib.catalog:
+        mods[sanitize(name)] = name
+    sites = {}
+    for name in sorted(lib.objects):
+        s, h = lib.objects[name]
+        ext, labels, _exits, _insns = info(lib, name)
+        known = sorted(labels)
+        for i in range(h["cmd"]):
+            w = lib.words[s + 3 + i]
+            for k, half in enumerate((w >> 24, w & 0xffffff)):
+                dec = decode(half)
+                if not dec["name"] or dec["name"].upper() != "ПВ":
+                    continue
+                if not is_struct(half):
+                    continue
+                v = half & 0o77777
+                if (v >> 12) & 7 != SYM_TAG:
+                    continue
+                sym = ext.get(v & 0o3777)
+                callee = mods.get(sym)
+                if not callee:
+                    continue
+                while callee in parent:
+                    callee = parent[callee]
+                off = i * 2 + k
+                # точка возврата - следующая метка вызывающего модуля
+                after = [x for x in known if x > off]
+                near = [x for x in known if x <= off]
+                if after:
+                    lab = labels[after[0]]
+                elif near:
+                    lab = labels[near[-1]] + "+1"
+                else:
+                    lab = "?"
+                sites.setdefault(callee, []).append((name, lab, off))
+    return sites
+
+
 def subject(cand):
     """Имя, по которому можно назвать метку (автоматические имена не годятся)."""
     if not cand or AUTO_NAME.match(cand):
@@ -463,6 +519,30 @@ def label_names(insns, ext, labels, module, cmdwords, constwords):
     return result
 
 
+MODINFO = {}
+
+
+def info(lib, name):
+    """Сведения о модуле: имена меток, символы, выходы (с кэшем)."""
+    if name in MODINFO:
+        return MODINFO[name]
+    s, h = lib.objects[name]
+    code = lib.words[s + 3:s + 3 + h["cmd"]]
+    ext, labels, symtab = symbol_table(lib, name)
+    labels[0] = sanitize(name) or name
+    for off in local_refs(code):
+        labels.setdefault(off, "L%04o" % off)
+    insns = []
+    for i, w in enumerate(code):
+        insns.append((i * 2, w >> 24))
+        insns.append((i * 2 + 1, w & 0xffffff))
+    names = label_names(insns, ext, labels, name, h["cmd"], h["const"])
+    labels = names
+    exits = exit_points(insns, ext, labels, name)
+    MODINFO[name] = (ext, labels, exits, insns)
+    return MODINFO[name]
+
+
 def module_text(lib, name, loadmap):
     """Текст БЕМШ модуля."""
     s, h = lib.objects[name]
@@ -537,8 +617,12 @@ def wrap_head(prefix, items, width=76):
     return out
 
 
+CALL_SITES = {}   # модуль -> список мест вызова
+
+
 def write_module(lib, name, outdir, loadmap):
     lines, bases, offsets, regs, h, ext, labels, exits = module_text(lib, name, loadmap)
+    sites = CALL_SITES
     s = lib.objects[name][0]
     addr = loadmap.get(name)
     head = []
@@ -551,11 +635,16 @@ def write_module(lib, name, outdir, loadmap):
     if addr:
         head.append("*   Адрес загрузки: %s(8)" % addr)
     head.append("*   Вход: %s" % name)
-    if exits:
-        ex = ", ".join("%sсмещение %o, через %s"
-                        % (labels[off] + " " if off in labels else "", off, reg)
-                        for off, reg in exits)
-        head.extend(wrap_head("*   Выход: ", ex.split(", ")))
+    if exits or sites.get(name):
+        items = []
+        for caller, lab, off in sites.get(name, []):
+            items.append("%s:%s" % (caller, lab))
+        known = sorted(labels)
+        for off, reg in exits:
+            near = [x for x in known if x <= off]
+            if near:
+                items.append("%s (возврат через %s)" % (labels[near[-1]], reg))
+        head.extend(wrap_head("*   Выход: ", items))
     else:
         head.append("*   Выход: нет (модуль не возвращает управление)")
     for note in MODULE_NOTES.get(name, []):
@@ -620,6 +709,8 @@ def main():
         if o.startswith("--out="):
             outdir = o[6:]
     lib = Library(path)
+    global CALL_SITES
+    CALL_SITES = call_sites(lib)
     loadmap = load_addresses("tests/siprod/loadmap-dispak.txt")
     names = args if args else sorted(lib.objects)
     for name in names:

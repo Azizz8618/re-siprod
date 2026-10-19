@@ -4,7 +4,8 @@
 *   том 2248), слово 7040 образа SIPROD.BIN
 *   Длина при загрузке: 170 слов, 294 команд
 *   Вход: WRIVER
-*   Выход: смещение 440, через М12, смещение 445, через М10
+*   Выход: WRITEH:WRIHOA+1, V3J (возврат через М12), 
+*   V3J (возврат через М10)
 *   Внешние: VER, PAGE, WHO, NUM, KOMA, CEN, HOWSMB, RASPS, RNSYMB, VERTIK, 
 *   WRIKOR, ENDKOR, IDII, IMUI
 *   Смещения в KOMA: 2, 7

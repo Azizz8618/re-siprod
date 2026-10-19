@@ -4,7 +4,11 @@
 *   том 2248), слово 11680 образа SIPROD.BIN
 *   Длина при загрузке: 260 слов, 466 команд
 *   Вход: ENDPG
-*   Выход: смещение 713, через М12, смещение 720, через М10
+*   Выход: ENDSTR:FRAME, HEADIN:TITLEA, HEADIN:REGIMA, HEADIN:INS26B+1, 
+*   RASTXT:TXTB+1, SCHEMA:TXT3B, SCHEMA:STANNE+1, SEGTAB:NDABD, SPAUD:V30A, 
+*   SPAUD:EGO327, SPAUD:SCAN90+1, SPAUD:SCAN90+1, SPAUD:SCAN90+1, 
+*   SPAUD:SCAN90+1, SPAUD:SCAN90+1, STANDA:STANDB, STANDA:STANDB, 
+*   TITLE:ENDSTA, V1 (возврат через М12), V1 (возврат через М10)
 *   КОНЕЦ СТРАНИЦЫ: ВЫВОД ФОРМАТИРОВАННОГО ТЕКСТА.
 *   Внешние: EGO, PAGE, REGIM, NDAB, LYG, DYD, TXT, STAND, PLN, RPT, SEK, 
 *   NUST, FT571, FT003, FT002, NUSTA, NEWMAX, KLAIDA, TOPAGE, VIAPUZ, IDII, 

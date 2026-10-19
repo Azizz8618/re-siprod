@@ -4,7 +4,9 @@
 *   том 2248), слово 14304 образа SIPROD.BIN
 *   Длина при загрузке: 94 слов, 170 команд
 *   Вход: TOPAGE
-*   Выход: смещение 243, через М12, смещение 250, через М10
+*   Выход: ENDPG:STANDG, ENDSTR:FRAMEA+1, SCHEMA:TXT3A, SPAUD:SCAN90+1, 
+*   VIAPUZ:STANDA, VIAPUZ:STANDE+1, EGO32C (возврат через М12), 
+*   EGO32C (возврат через М10)
 *   НАЧАЛО НОВОЙ СТРАНИЦЫ.
 *   Внешние: REGIM, SEK, TXT, EGO, NUST, STR, NDAB, RSYMB, RNSYMB, IMUI
 *   Смещения в EGO: 2400, 4800, 7200

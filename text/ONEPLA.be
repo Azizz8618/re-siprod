@@ -4,7 +4,8 @@
 *   том 2248), слово 6560 образа SIPROD.BIN
 *   Длина при загрузке: 139 слов, 222 команд
 *   Вход: ONEPLA
-*   Выход: смещение 330, через М12, смещение 335, через М10
+*   Выход: WRITEH:WRILIA, KORT1H (возврат через М12), 
+*   KORT1H (возврат через М10)
 *   Внешние: PAGE, ONE, INS, NUM, KORT, SCANER, KOMA, WRINUM, RASPS, 
 *   WRIKOR, ENDKOR, GETSTR, READNB, IDII
 *   Смещения в INS: 24, 25, 26

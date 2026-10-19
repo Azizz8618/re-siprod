@@ -4,7 +4,7 @@
 *   том 2248), слово 8960 образа SIPROD.BIN
 *   Длина при загрузке: 248 слов, 470 команд
 *   Вход: TARNYB
-*   Выход: смещение 720, через М12, смещение 725, через М10
+*   Выход: NOTFOR:TYPE1A, V1P (возврат через М12), V1P (возврат через М10)
 *   Внешние: PAGE, TYPE, KORT, NOTF, WHO, SAL, HOWSMB, RASPS, WHATYP, 
 *   GOTOPO, WRIKOR, CSTRIN, ENDKOR
 *   Смещения в KORT: 14

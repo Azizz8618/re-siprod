@@ -4,7 +4,8 @@
 *   том 2248), слово 8704 образа SIPROD.BIN
 *   Длина при загрузке: 230 слов, 376 команд
 *   Вход: WHATYP
-*   Выход: смещение 561, через М12, смещение 566, через М10
+*   Выход: APNOTF:V8, NOTFOR:V3, TARNYB:TYPE1D, TARNYB:V1P+1, 
+*   TYPE1K (возврат через М12), TYPE1K (возврат через М10)
 *   ОПОЗНАНИЕ КЛЮЧЕВОГО СЛОВА ПСЕВДОКОДА (DO, WHILE, IF,
 *   CASE, PERFORM, BEGIN, THEN, ELSE, END).
 *   Внешние: INS, SCANER, TYPE, SAL, RSYMB, RNSYMB, ЫЦБ7ЗГ

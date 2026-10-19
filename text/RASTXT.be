@@ -4,7 +4,8 @@
 *   том 2248), слово 16896 образа SIPROD.BIN
 *   Длина при загрузке: 430 слов, 772 команд
 *   Вход: RASTXT
-*   Выход: смещение 1375, через М12, смещение 1402, через М10
+*   Выход: SEGTAB:V26A+1, TXTB (возврат через М12), 
+*   TXTB (возврат через М10)
 *   РАЗБОР ТЕКСТОВОГО СЕГМЕНТА.
 *   Внешние: NRD, PUFOR, RAI, SEK, PUS, PAP, SUT, SLY, SCANER, DYD, PLN, 
 *   LNT, STL, APJ, REGIM, LYG, ATV, TXT, TAB, STR, NUST, NDAB, NDABL, EGO, 

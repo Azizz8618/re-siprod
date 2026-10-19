@@ -4,7 +4,11 @@
 *   том 2248), слово 12032 образа SIPROD.BIN
 *   Длина при загрузке: 22 слов, 42 команд
 *   Вход: ENDSTR
-*   Выход: смещение 44, через М12, смещение 51, через М10
+*   Выход: BEGPG:STR25F, DOUBLE:STR24J+1, DOUBLE:STR24J+1, FILL:STR24J+1, 
+*   HEADIN:NDABA, HEADIN:INS26B+1, NEWSTR:NDAB1C, RASTXT:NDAB1M, SEGTAB:V3, 
+*   SEGTAB:V26A+1, SPAUD:NDAB1D, SPAUD:NDAB1F, SPAUD:NDAB1K, 
+*   SPAUD:SCAN90+1, TITLE:V4A, TITLE:V15B+1, TITLE:V15B+1, 
+*   FRAMEA (возврат через М12), FRAMEA (возврат через М10)
 *   КОНЕЦ ТЕКСТОВОЙ СТРОКИ.
 *   Внешние: NDAB, PAGE, REGIM, TOPAGE, BEGPG, ENDPG
 *   Смещения в NDAB: 1

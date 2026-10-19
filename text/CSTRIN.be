@@ -4,7 +4,9 @@
 *   том 2248), слово 9248 образа SIPROD.BIN
 *   Длина при загрузке: 63 слов, 106 команд
 *   Вход: CSTRIN
-*   Выход: смещение 144, через М12, смещение 151, через М10
+*   Выход: NAMENF:V7, NOTFOR:V0, NOTFOR:NOTFD+1, NOTFOR:NOTFD+1, 
+*   TARNYB:NOTFA, TARNYB:V1, TARNYB:V1P+1, PUSHD (возврат через М12), 
+*   PUSHD (возврат через М10)
 *   Внешние: WHO, ENDKOR, HOWSMB, RASPS, WRIKOR
 *   Смещения в WHO: 1
 *   Регистры: М7, М10, М12, М15, М16

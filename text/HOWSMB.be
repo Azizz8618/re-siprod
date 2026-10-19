@@ -4,7 +4,10 @@
 *   том 2248), слово 6880 образа SIPROD.BIN
 *   Длина при загрузке: 37 слов, 58 команд
 *   Вход: HOWSMB
-*   Выход: смещение 65, через М12, смещение 71, через М10
+*   Выход: APNOTF:PAGE1G+1, CSTRIN:PUSH, CSTRIN:PUSHD+1, GOTOPO:WAIT, 
+*   RASKOM:V1F, TARNYB:V1K, TARNYB:V1P+1, WRIHOR:PUSH, WRIHOR:ADDRE+1, 
+*   WRILIN:V7, WRILIN:V7N+1, WRINUM:V0B, WRIVER:V3J, 
+*   WHO1H (возврат через М12), WHO1H (возврат через М10)
 *   Внешние: WHO, RSYMB
 *   Смещения в WHO: 1
 *   Регистры: М7, М10, М12, М15, М16, М17

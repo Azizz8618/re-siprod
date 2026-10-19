@@ -4,7 +4,12 @@
 *   том 2248), слово 15520 образа SIPROD.BIN
 *   Длина при загрузке: 110 слов, 202 команд
 *   Вход: BEGSTR
-*   Выход: смещение 304, через М12, смещение 311, через М10
+*   Выход: BEGPG:STR25F, BEGPG:V13A+1, BEGPG:V13A+1, DOUBLE:STR24J+1, 
+*   DOUBLE:STR24J+1, FILL:STR24J+1, HEADIN:NDABA, HEADIN:INS26B+1, 
+*   NEWSTR:V1+1, RASTXT:TAB3B, RASTXT:TXTB+1, SEGTAB:V3, SEGTAB:V26A+1, 
+*   SPAUD:REGIMA, SPAUD:V30, SPAUD:INS26L, SPAUD:SCAN90+1, SPAUD:SCAN90+1, 
+*   TITLE:STR26A, TITLE:V15B+1, TITLE:V15B+1, STR25E (возврат через М12), 
+*   STR25E (возврат через М10)
 *   НАЧАЛО ТЕКСТОВОЙ СТРОКИ.
 *   Внешние: REGIM, FORMA, NUST, STR, DAR, RAI, NDAB, RNSYMB, KLAIDA, IDII, 
 *   IMUI

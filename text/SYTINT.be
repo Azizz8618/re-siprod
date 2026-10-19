@@ -4,7 +4,10 @@
 *   том 2248), слово 15168 образа SIPROD.BIN
 *   Длина при загрузке: 82 слов, 132 команд
 *   Вход: SYTINT
-*   Выход: смещение 177, через М12, смещение 203, через М10
+*   Выход: ANATXT:SCANEE, CHAPAG:SCANEC, FIRCAR:SCANEG, PAPRAP:V1A, 
+*   READNB:NUM2H+1, SCHEMA:SCANEU, SEGTAB:SCANEI, SPAUD:SCAN81, 
+*   SPAUD:SCAN90+1, SPAUD:SCAN90+1, SPAUD:SCAN90+1, TOKREZ:SCANEJ, 
+*   WRIIPO:SCANEG, V2S (возврат через М12), V2S (возврат через М10)
 *   СИНХРОНИЗАЦИЯ ВЫВОДА С ТЕКСТОВЫМ ПОТОКОМ.
 *   Внешние: AAИ, RSYMB
 *   Регистры: М7, М10, М12, М15, М16

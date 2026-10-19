@@ -4,7 +4,8 @@
 *   том 2248), слово 16384 образа SIPROD.BIN
 *   Длина при загрузке: 401 слов, 728 команд
 *   Вход: SEGTAB
-*   Выход: смещение 1321, через М12, смещение 1326, через М10
+*   Выход: SPAUD:STR25A, V26A (возврат через М12), 
+*   V26A (возврат через М10)
 *   СЕГМЕНТЫ ТАБЛИЦЫ (ЯЧЕЙКИ, ЛИНЕЙКИ).
 *   Внешние: STR, INS, TXT, TAB, LYG, LRE, ATV, SLY, EGO, DYD, LNT, SEK, 
 *   INF, NRD, SCANER, NUST, RUSIS, NDAB, PAGE, REGIM, KLAIDA, RASTXT, 
