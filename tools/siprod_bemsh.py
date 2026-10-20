@@ -70,13 +70,14 @@ STRUCT_BIT = 0x80000
 
 
 def parse_be(path):
-    """Текст .be -> (локальные символы, метки, команды).
+    """Текст .be -> (локальные символы, метки, команды, объявления данных).
 
     Метки: имя -> (номер команды, смещение DMS в словах от начала модуля).
     Локальные символы: имя -> (смещение DMS в словах, значение константы
     или None для переменной bss).
+    Объявления данных - строки «КОНД»/«ПАМ» (в syntaxe МАКРО-БЕМШ).
     """
-    locsyms, labels, instrs = {}, {}, []
+    locsyms, labels, instrs, data = {}, {}, [], []
     mode = None
     for raw in open(path, encoding="utf-8"):
         line = raw.rstrip("\n")
@@ -100,6 +101,11 @@ def parse_be(path):
         parts = code.split(None, 1)
         first = parts[0]
         rest = parts[1].strip() if len(parts) > 1 else ""
+        if len(parts) > 1 and parts[1].split(None, 1)[0].upper() in ("КОНД", "ПАМ"):
+            data.append(code)      # объявление константы или переменной
+            continue
+        if first.upper() == "ФИНИШ":
+            continue
         if first.upper() == "СТАРТ":
             labels[first] = (len(instrs), len(instrs) // 2)
             continue
@@ -115,7 +121,7 @@ def parse_be(path):
                            p2[1].strip() if len(p2) > 1 else "", first))
             continue
         instrs.append((len(instrs), first.upper(), rest, None))
-    return locsyms, labels, instrs
+    return locsyms, labels, instrs, data
 
 
 def signed15(off):
@@ -222,10 +228,8 @@ def convert(lib, name, path):
     """Текст .be -> исходник МАКРО-БЕМШ."""
     global abs_syms
     s, h = lib.objects[name]
-    locsyms, labels, instrs = parse_be(path)
+    locsyms, labels, instrs, data = parse_be(path)
     ext = ext_names(lib, name)
-    # символы с абсолютным адресом - в исходнике обычные числа
-    abs_syms = {}
     _ext, _labels, symtab = symbol_table(lib, name)
     for i, e in enumerate(symtab):
         if e and e[0] == "abs":
@@ -251,15 +255,9 @@ def convert(lib, name, path):
         cmd = "\t%s\t%s" % (instr.lower(), operand) if operand \
             else "\t%s" % instr.lower()
         out.append(("%s\t" % label) + cmd.strip("\t"))
-    # объявления данных - в конце модуля: константы (с значениями из
-    # текста) и переменные
-    for nm in sorted(consts, key=lambda k: consts[k][0]):
-        _idx, val = consts[nm]
-        if val is None:
-            raise ValueError("%s: у константы %s нет значения" % (name, nm))
-        out.append("%s\tконд\tв'%012o'" % (nm, val))
-    for n in range(h["bss"]):
-        out.append("%s\tпам\t1" % bss_name(n))
+    # объявления данных - в конце модуля, как в re-dispak: константы
+    # (со значениями) и переменные; берутся из текста
+    out.extend(data)
     # внешние символы - объявление ВНЕШ (как в re-dispak).  Транслятор
     # 1978 г. обрезает строки длиннее 64 знаков, поэтому список
     # внешних имён разбивается на несколько директив.
@@ -274,6 +272,7 @@ def convert(lib, name, path):
         line += piece
     if line:
         out.append(label + line.rstrip(","))
+    out.append("\tФИНИШ")
     return "\n".join(out) + "\n"
 
 
@@ -383,7 +382,7 @@ def check_module(lib, name, path, verbose=False):
     # оригинал: команды и их коды
     s, h = lib.objects[name]
     code = lib.words[s + 3:s + 3 + h["cmd"]]
-    _locsyms, labels, instrs = parse_be(path)
+    _locsyms, labels, instrs, _data = parse_be(path)
     _ext, _labels, symtab = symbol_table(lib, name)
     cmds, symbols = parse_listing(text)
     result["code"] = code
@@ -469,7 +468,7 @@ def build_module(lib, name, path):
     s, h = lib.objects[name]
     orig = lib.words[s + 3:s + 3 + h["cmd"]]
     cmds, _symbols = parse_listing(text)
-    _locsyms, _labels, instrs = parse_be(path)
+    _locsyms, _labels, instrs, _data = parse_be(path)
     if len(cmds) != len(instrs):
         raise ValueError("%s: скомпилировано %d команд, в тексте %d"
                          % (name, len(cmds), len(instrs)))
@@ -570,7 +569,7 @@ def build_library(lib, textdir, out, stamp=None, version=VERSION):
             data[off:off + 6] = w.to_bytes(6, "big")
         # раздел констант - значения из текста модуля
         sec = lib.sections(name)
-        locsyms, _labels, _instrs = parse_be(path)
+        locsyms, _labels, _instrs, _data = parse_be(path)
         for nm, (off, val) in locsyms.items():
             if off < h["cmd"] or off >= h["cmd"] + h["const"] or val is None:
                 continue

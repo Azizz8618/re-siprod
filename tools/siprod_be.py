@@ -922,20 +922,13 @@ def write_module(lib, name, outdir, loadmap):
     out.append("*")
     # локальные символы вне раздела команд (ссылки на константы и
     # переменные) - сборщику нужны их смещения; смещение в словах
-    # от начала модуля (как его записывает загрузчик DMS).
-    # Для констант указывается и значение - чтобы текст был полным
-    # исходником, который можно собрать настоящим транслятором.
+    # от начала модуля (как его записывает загрузчик DMS)
     offs = [off for off in sorted(labels) if off >= 2 * h["cmd"]]
     if offs:
-        out.append("* %s (имя - смещение в словах от начала модуля;"
-                   " для констант - значение):" % LOCAL_MARK)
+        out.append("* %s (имя - смещение в словах от начала модуля):"
+                   % LOCAL_MARK)
         for off in offs:
-            w = off // 2
-            if w < h["cmd"] + h["const"]:
-                val = lib.words[sec["const"] + w - h["cmd"]]
-                out.append("*   %-6s %o    %012o" % (labels[off], w, val))
-            else:
-                out.append("*   %-6s %o" % (labels[off], w))
+            out.append("*   %-6s %o" % (labels[off], off // 2))
         out.append("*")
     out.append("*** КОД МОДУЛЯ")
     out.append("*")
@@ -944,6 +937,17 @@ def write_module(lib, name, outdir, loadmap):
         out.append("* " + note0)
     out.append("%-9s%-7s%s" % (labels.get(0, name), "СТАРТ", "0"))
     out.extend(lines)
+    # объявления данных - в конце модуля, как в re-dispak: константы
+    # (со значениями) и переменные bss
+    for off in offs:
+        w = off // 2
+        if w < h["cmd"] + h["const"]:
+            val = lib.words[sec["const"] + w - h["cmd"]]
+            out.append("%-9s%-7s%s" % (labels[off], "КОНД",
+                                       "В'%012o'" % val))
+    for n in range(h["bss"]):
+        out.append("%-9s%-7s%s" % ("V%d" % n, "ПАМ", "1"))
+    out.append("\tФИНИШ")
     out.append("")
     os.makedirs(outdir, exist_ok=True)
     path = os.path.join(outdir, name.replace("*", "#") + ".be")

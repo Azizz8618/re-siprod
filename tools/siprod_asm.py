@@ -236,6 +236,10 @@ def parse_text(path):
         parts = code.split(None, 1)
         first = parts[0]
         rest = parts[1].strip() if len(parts) > 1 else ""
+        if len(parts) > 1 and parts[1].split(None, 1)[0].upper() in ("КОНД", "ПАМ"):
+            continue                # объявление константы или переменной
+        if first.upper() == "ФИНИШ":
+            continue
         if first.upper() == "СТАРТ":
             # метка перед СТАРТ - вход в модулю
             labels[first] = len(instrs) // 2
