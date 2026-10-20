@@ -52,7 +52,9 @@ def object_words(lib, donor, name, cmd, head_len=1, debug_len=0):
     out = [w0, w1, w2] + list(cmd) + list(const) + list(data) + list(set_)
     out.append(text_encode(name))
     out += list(sym) + list(long_)
-    return out, len(cmd) + len(const)
+    # длина загрузки в словах: команды + константы + данные + переменные
+    load_len = len(cmd) + len(const) + len(data) + h["bss"]
+    return out, load_len
 
 
 def build_library(lib, name, cmd):
@@ -79,7 +81,6 @@ def build_library(lib, name, cmd):
     dates = [words[2 * i + 1] >> 24 for i in range(1, n)
              if text_decode(words[2 * i]).rstrip()]
     date = max(dates) if dates else 0
-    date = dates[96] if len(dates) > 96 else date
     words[2 * n + 1] = (date << 24) | ((load_len * 8) << 12)
     print("   дата записи: %o, длина загрузки: %d слов" % (date, load_len))
     # завершатель каталога - за новой записью

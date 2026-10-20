@@ -32,8 +32,11 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 sys.path.insert(0, HERE)
 from siprod_lib import Library                      # noqa: E402
-from siprod_dis import symbol_table                # noqa: E402
+from siprod_dis import symbol_table, sanitize     # noqa: E402
 from siprod_asm import decode                      # noqa: E402
+
+# адрес загрузки модуля в скомпилированном образе (источник без адреса)
+LOAD = 1
 
 # том, в котором лежит транслятор и личная библиотека
 VOL = "2248"
@@ -100,9 +103,28 @@ def ext_names(lib, name):
     """Внешние символы модуля: имя в тексте -> (имя блока, смещение).
 
     Имя общего блока в таблице символов DMS помечено звёздочками
-    ("*LYG*"), в исходнике МАКРО-БЕМШ их не пишут.
+    ("*LYG*"), в исходнике МАКРО-БЕМШ их не пишут.  Элемент общего блока
+    задаётся как ИМЯ+СМЕЩЕНИЕ, поэтому смещение отделяется от имени.
     """
     ext, _labels, symtab = symbol_table(lib, name)
+
+    def resolve(i, depth=0):
+        """Имя символа (с учётом цепочки ссылок) и суммарное смещение."""
+        if i >= len(symtab) or depth > 8:
+            return None, 0
+        if i == 0:
+            return name, 0        # запись 0 - имя самого модуля
+        e = symtab[i]
+        if e is None:
+            return None, 0
+        if e[0] in ("subp", "lc", "lp"):
+            return e[1].strip("*"), 0
+        if e[0] == "ref":
+            base, off = resolve(e[1], depth + 1)
+            if base:
+                return base, off + e[2]
+        return None, 0
+
     out = {}
     for i, e in enumerate(symtab):
         if not e:
@@ -111,13 +133,11 @@ def ext_names(lib, name):
         if nm is None:
             continue
         if e[0] in ("subp", "lc", "lp") and e[1]:
-            out[nm] = (e[1].strip("*"), 0)
+            out[nm] = (sanitize(e[1]), 0)
         elif e[0] == "ref":
-            base = symtab[e[1]] if e[1] < len(symtab) else None
-            if base and base[0] in ("subp", "lc", "lp") and base[1]:
-                off = e[2]
-                out[nm] = (base[1].strip("*"),
-                           off - 0o100000 if off >= 0o77700 else off)
+            base, off = resolve(i)
+            if base:
+                out[nm] = (sanitize(base), off)
     return out
 
 
@@ -125,15 +145,13 @@ def bemsh_name(name, dms):
     """Имя метки в синтаксисе МАКРО-БЕМШ: буква и цифры.
 
     Имена вида L12A транслятор не принимает, поэтому локальные метки
-    переименовываются в L<смещение>.
+    переименовываются в L<смещение>: по имени восстанавливается смещение
+    метки в скомпилированном модуле.
     """
-    if re.match(r"^[А-ЯЁA-Z]+$", name) or \
-            re.match(r"^[А-ЯЁA-Z][0-9]+$", name):
-        return name
     return "L%o" % dms
 
 
-def operand_text(op, ext, consts, bss, labels, fake=None):
+def operand_text(op, ext, consts, bss, labels):
     """Операнд команды в синтаксисе МАКРО-БЕМШ.
 
     В МАКРО-БЕМШ нулевое смещение не пишется, элемент общего блока
@@ -143,15 +161,13 @@ def operand_text(op, ext, consts, bss, labels, fake=None):
     op = op.strip()
     m = re.match(r"^(.*?)\(М(\d+)\)$", op)
     body, reg = (m.group(1), m.group(2)) if m else (op, None)
-    if fake and body in fake:
-        # внешний символ: транслятор 1978 г. знает только модули ДИСПАК,
-        # остальные подменяем фиктивной меткой (смысл кода от этого
-        # не меняется - проверяются локальные метки)
-        name = fake[body]
-    elif body in labels:
+    if body in labels:
         name = bemsh_name(body, labels[body][1])
     elif body in consts or body in bss:
         name = body
+    elif body in ext:
+        base, off = ext[body]
+        name = base if not off else "%s+%d" % (base, off)
     elif body in abs_syms:
         name = "%d" % abs_syms[body]
     elif body == "0":
@@ -170,6 +186,7 @@ def bss_name(n):
 
 # символы с абсолютным адресом (обычно отрицательные смещения)
 abs_syms = {}
+NFAKE = 0            # число фиктивных меток (вместо внешних символов)
 
 
 def convert(lib, name, path):
@@ -178,7 +195,7 @@ def convert(lib, name, path):
     s, h = lib.objects[name]
     sec = lib.sections(name)
     locsyms, labels, instrs = parse_be(path)
-    ext, _l, _st = symbol_table(lib, name)
+    ext = ext_names(lib, name)
     # символы с абсолютным адресом - в исходнике обычные числа
     abs_syms = {}
     _ext, _labels, symtab = symbol_table(lib, name)
@@ -187,12 +204,6 @@ def convert(lib, name, path):
             val = e[1]
             abs_syms[_ext.get(i, "A%d" % val)] = \
                 val - 0o100000 if val >= 0o77700 else val
-    # внешние символы, которых нет в библиотеке ДИСПАК, транслятор 1978 г.
-    # не знает - подменяем их фиктивными метками (на смысл кода не влияет)
-    fake = {}
-    for _num, nm in sorted(ext.items()):
-        if nm not in fake:
-            fake[nm] = "XEXT%d" % (len(fake) + 1)
     consts, bss = {}, {}
     for nm, off in locsyms.items():
         if off < h["cmd"]:
@@ -202,16 +213,13 @@ def convert(lib, name, path):
         else:
             bss[nm] = off - h["cmd"] - h["const"]
     out = ["%s\tСТАРТ" % name, "\tЕ", "\tМ"]
-    # внешние символы - объявление ВНЕШ (в конце модуля, как в re-dispak)
-    outside = [nm for _num, nm in sorted(ext.items())
-               if "*" not in nm and re.match(r"^[А-ЯЁA-Z0-9]+$", nm)]
     for off, instr, op, lab in instrs:
         label = ""
         for nm, (cmd, dms) in labels.items():
             if cmd == off and nm not in locsyms:
                 label = bemsh_name(nm, dms)
                 break
-        operand = operand_text(op, ext, consts, bss, labels, fake)
+        operand = operand_text(op, ext, consts, bss, labels)
         cmd = "\t%s\t%s" % (instr.lower(), operand) if operand \
             else "\t%s" % instr.lower()
         out.append(("%s\t" % label) + cmd.strip("\t"))
@@ -221,8 +229,10 @@ def convert(lib, name, path):
         out.append("%s\tконд\tв'%012o'" % (nm, word))
     for n in range(h["bss"]):
         out.append("%s\tпам\t1" % bss_name(n))
-    for nm in fake.values():
-        out.append("%s\tсч" % nm)
+    # внешние символы - объявление ВНЕШ (как в re-dispak)
+    outside = sorted(set(base for base, _off in ext.values()))
+    if outside:
+        out.append("%s\tВНЕШ\t%s" % (name, ",".join(outside)))
     return "\n".join(out) + "\n"
 
 
@@ -271,7 +281,7 @@ def run_translator(src, name):
     return out, errs
 
 
-RIGHT_COL = 48        # начало правой колонки листинга
+RIGHT_COL = 49        # начало правой колонки листинга
 
 # код команды в листинге: 1-я структура - "рег оп(2) адрес(5)",
 # 2-я структура - "рег оп(3) адрес(4)"
@@ -280,34 +290,28 @@ CODE_2ND = re.compile(r"(?:^|\s)(\d{2}) (\d{3}) (\d{4})\s*$")
 
 
 def parse_listing(text):
-    """Листинг транслятора -> (слова модуля, адреса исходных пунктов).
+    """Листинг транслятора -> (слова модуля, адреса данных, пункты исходника).
 
     Правая колонка: адрес, номер пункта, текст источника.
-    Левая колонка: слова скомпилированного модуля (сначала слова команд,
-    потом данные); у слова две команды - вторая половина на следующей строке.
+    Левая колонка: слова скомпилированного модуля; у слова две команды,
+    вторая половина - на следующей строке.
     """
     words = []          # [(левая половина, правая половина)]
     data = []           # адреса слов данных
     right = []          # [(адрес, текст) для каждого исходного пункта]
     for line in text.splitlines():
         left = line[:RIGHT_COL]
+        toks = left.split()
         if left[25:30].strip():
-            m = CODE_1ST.search(left) or CODE_2ND.search(left)
-            if m:
-                words.append(((m.group(1), m.group(2), m.group(3)), None))
-            else:                              # слово данных
-                m = re.search(r"(\d{4,5})\s+(\d{15,16})\s*$", left)
-                if m:
-                    try:
-                        data.append(int(m.group(1), 8))
-                    except ValueError:
-                        pass
+            # строка слова: номер слова и код его левой половины
+            if len(toks) >= 3 and re.match(r"^\d{2}$", toks[-3]):
+                words.append(((toks[-3], toks[-2], toks[-1]), None))
+            elif len(toks) >= 2 and re.match(r"^\d{15,16}$", toks[-1]):
+                data.append(int(toks[-2], 8))
         else:
-            m = re.match(r"^\s*(\d{2}) (\d{2}) (\d{5})\s*$", left) or \
-                re.match(r"^\s*(\d{2}) (\d{3}) (\d{4})\s*$", left)
-            if m and words:
-                words[-1] = (words[-1][0],
-                             (m.group(1), m.group(2), m.group(3)))
+            # продолжение - правая половина слова
+            if len(toks) == 3 and words:
+                words[-1] = (words[-1][0], (toks[0], toks[1], toks[2]))
                 continue
         r = line[RIGHT_COL:].rstrip()
         m = re.match(r"^(\d{4,5})\s+(\d{4,5})\s*(.*)$", r)
@@ -353,15 +357,8 @@ def check_module(lib, name, path, verbose=False):
     code = lib.words[s + 3:s + 3 + h["cmd"]]
     locsyms, labels, instrs = parse_be(path)
     words, daddr, right = parse_listing(text)
-    # слова команд: первое слово - первая пара команд модуля
-    first = 0
-    # адреса команд из правой колонки (без служебных пунктов и данных)
-    cmd_addr = [a for a, t in right
-                if t.strip() and t.strip() not in ("Е", "М")
-                and "КОНД" not in t and "ПАМ" not in t
-                and "ВНЕШ" not in t]
     for off, instr, op, _lab in instrs:
-        w = first + off // 2
+        w = off // 2
         if w >= len(words):
             break
         half = words[w][1] if off % 2 else words[w][0]
@@ -384,20 +381,10 @@ def check_module(lib, name, path, verbose=False):
             continue        # внешний символ - транслятор решает по каталогу
         target = field & 0o7777              # смещение метки в словах
         addr = cmd_addr_field(half)
-        # метка в разделе команд?
-        cand = [(nm, cmd) for nm, (cmd, dms) in labels.items()
-                if dms == target and nm not in locsyms]
-        if cand:
-            want = None
-            for nm, cmd in cand:
-                if cmd < len(cmd_addr):
-                    want = cmd_addr[cmd]
-                    break
-            if want is not None and want != addr:
-                result["mismatch"].append(
-                    "команда %d: ссылка на %o, метка %s на %o"
-                    % (off, addr, cand[0][0], want))
-            continue
+        if addr is not None and addr != (LOAD + target):
+            result["mismatch"].append(
+                "команда %d: ссылка на %o, метка со смещением %o -> %o"
+                % (off, addr, target, LOAD + target))
         # символ раздела данных
         cand = [(nm, dms) for nm, dms in locsyms.items() if dms == target]
         if cand:
