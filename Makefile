@@ -11,6 +11,7 @@
 #   make test       regression cases, wiki corpus
 #   make test-perso SIPROD run from a re-recorded PERSO library
 #   make coverage   labels of static modules no regression case executes
+#   make bemsh      compile the modules with the real MAKRO-BEMSH translator
 #   make clean      remove build/
 #
 # Needs dubna and dispak on PATH; the corpus test needs the besm6.github.io
@@ -31,7 +32,7 @@ DTR := $(wildcard dtr/*.dtr)
 DTRAN := $(patsubst dtr/%.dtr,build/%.dtran,$(DTR))
 
 .PHONY: all dtran dis be build check loadmaps test regress corpus test-perso \
-	coverage clean
+	coverage bemsh clean
 
 all: dis be build loadmaps
 
@@ -81,6 +82,10 @@ test-perso:
 
 coverage: dtran
 	$(PYTHON) tools/siprod_labels.py
+
+# сборка модулей настоящим транслятором МАКРО-БЕМШ (в эмуляторе)
+bemsh:
+	$(PYTHON) tools/siprod_bemsh.py
 
 clean:
 	rm -rf build

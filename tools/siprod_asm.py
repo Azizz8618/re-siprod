@@ -191,8 +191,15 @@ def parse_text(path):
 
     Возвращает (syms, labels, instrs):
       syms   - словарь номер символа -> имя;
-      labels - словарь имя метки -> смещение (в командах);
-      instrs - список (смещение, мнемоника, операнд).
+      labels - словарь имя метки -> смещение (в словах от начала
+               модуля, как его записывает загрузчик DMS);
+      instrs - список (смещение, мнемоника, операнд); смещение - номер
+               команды (в слове две команды).
+
+    Метки раздела команд стоят перед командой, номер которой вдвое
+    больше смещения DMS, поэтому смещение метки = номер команды // 2.
+    Смещения из раздела локальных символов уже заданы в словах и
+    берутся как есть.
     """
     syms = {}
     labels = {}
@@ -231,13 +238,17 @@ def parse_text(path):
         rest = parts[1].strip() if len(parts) > 1 else ""
         if first.upper() == "СТАРТ":
             # метка перед СТАРТ - вход в модулю
-            labels[first] = len(instrs)
+            labels[first] = len(instrs) // 2
             continue
         if first.upper() in OPCODE_BY_NAME:
             instrs.append((len(instrs), first.upper(), rest))
             continue
         # первое слово - метка
-        labels[first] = len(instrs)
+        if len(instrs) % 2:
+            # метка обязана стоять в начале слова: смещение DMS - слово
+            raise ValueError("метка %s: номер команды %d нечётный"
+                             % (first, len(instrs)))
+        labels[first] = len(instrs) // 2
         parts = rest.split(None, 1)
         if not parts:
             continue

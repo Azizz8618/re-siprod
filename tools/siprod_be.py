@@ -26,8 +26,9 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from siprod_asm import decode  # noqa: E402
-from siprod_dis import (LOC_TAG, STRUCT_BIT, SYM_TAG, is_struct,  # noqa: E402
-                         local_refs, sanitize, symbol_table, unique_name)
+from siprod_dis import (LOC_TAG, STRUCT_BIT, SYM_TAG, abs_symbols,  # noqa: E402
+                         is_struct, local_refs, sanitize, symbol_table,
+                         unique_name)
 from siprod_notes import LABEL_NOTES, MODULE_NOTES  # noqa: E402
 
 SYM_MARK = "СИМВОЛЫ МОДУЛЯ"
@@ -36,6 +37,124 @@ from siprod_lib import Library  # noqa: E402
 
 COL_COMMENT = 40       # столбец начала комментария
 MAX_COMMENT = 55       # предел длины строки комментария
+
+# Назначение регистров М1..М17 (по разбору текстов модулей и команд
+# эмулятора БЭСМ-6; подробно - notes/registers.md).
+# Ключ - значение ВОСЬМЕРИЧНОГО номера регистра (М12 -> 0o12 = 10).
+REG_ROLES = {
+    0o1:  "индекс: база модуля",
+    0o2:  "рабочий регистр",
+    0o3:  "рабочий регистр",
+    0o4:  "рабочий регистр",
+    0o5:  "рабочий регистр",
+    0o6:  "рабочий регистр",
+    0o7:  "указатель кадра",
+    0o10: "блок вызывающего",
+    0o11: "буфер, счётчик",
+    0o12: "магазин, кадр параметров ОС",
+    0o13: "счётчик",
+    0o14: "смещение в буфере",
+    0o15: "адрес возврата",
+    0o16: "модифицированный адрес",
+    0o17: "контекст задачи",
+}
+
+# Слоты кадра 0..10 - общие для всех модулей (рабочая область задачи),
+# выше - собственная область модуля.
+FRAME_COMMON = 10
+
+
+def ranges(nums):
+    """Список чисел -> сжатый вид: 0-3, 7, 9-12."""
+    out = []
+    nums = sorted(set(nums))
+    i = 0
+    while i < len(nums):
+        j = i
+        while j + 1 < len(nums) and nums[j + 1] == nums[j] + 1:
+            j += 1
+        if j - i >= 1:
+            out.append("%d-%d" % (nums[i], nums[j]))
+        else:
+            out.append("%d" % nums[i])
+        i = j + 1
+    return ", ".join(out)
+
+
+def dec_const(op):
+    """Операнд для комментария: восьмеричные константы -> десятичные.
+
+    В текстах числа без кавычек десятичные, в кавычках - восьмеричные
+    (так в МАКРО-БЕМШ).  В комментарии приводим к десятичным, чтобы
+    значение читалось однозначно: '4023' -> 2067.
+    """
+    def rep(m):
+        return "%d(М%s)" % (int(m.group(1), 8), m.group(2))
+    return re.sub(r"'([0-7]+)'\(М(\d+)\)", rep, op)
+
+
+# значения вне рабочей области задачи (>= 2048 = 0o4000) - элементы
+# каталога задачи Монитор-80 (CAT = PC+2048, см.
+# monitor80-re/permanent/newsyste.asm)
+OUTSIDE = 0o4000
+CATALOG = 2048
+
+# имена элементов каталога задачи, известные по исходникам Монитор-80
+CAT_NAMES = {
+    0:  "каталог томов",
+    1:  "нулевое слово",
+    2:  "каталог временной библиотеки",
+    16: "таблица страниц",
+    80: "LWW",
+    81: "SAV",
+    83: "SAV1",
+}
+
+# смысл смещения при регистре (ключ - восьмеричный номер регистра)
+OFFSET_MEANING = {
+    0o1:  "смещение в базе",
+    0o7:  "слот кадра",
+    0o10: "поле блока вызывающего",
+    0o11: "смещение в буфере",
+    0o12: "параметр вызова ОС",
+    0o13: "смещение в буфере",
+    0o14: "смещение в буфере",
+    0o15: "смещение в магазине",
+    0o16: "ячейка мод.адреса",
+    0o17: "поле контекста",
+}
+
+# режимы ожидания аккумулятора (РЖ): разряды задают условия переходов
+# и округление (см. ~/dispak/dispak/cu.c, set_mode)
+RZH_MODES = {
+    0o2:  "переходы по нулю, округление",
+    0o3:  "переходы по нулю",
+    0o6:  "обращение к ОС",
+    0o7:  "исключение, нормализация",
+    0o22: "переходы по знаку",
+}
+
+
+def op_meaning(op):
+    """Смысл операнда-константы: слот, смещение, адрес.
+
+    Возвращает None, если операнд - имя (ссылка на метку).
+    """
+    m = re.match(r"^(\d+)\(М(\d+)\)$", op)          # десятичное смещение
+    if m:
+        val, reg = int(m.group(1)), int(m.group(2), 8)
+    else:
+        m = re.match(r"^'([0-7]+)'\(М(\d+)\)$", op)   # восьмеричное смещение
+        if not m:
+            return None
+        val, reg = int(m.group(1), 8), int(m.group(2), 8)
+    if val >= OUTSIDE:
+        n = val - CATALOG
+        name = CAT_NAMES.get(n)
+        if name:
+            return "каталог задачи: %s" % name
+        return "каталог задачи: элемент %d" % n
+    return "%s %d" % (OFFSET_MEANING.get(reg, "смещение"), val)
 
 # КОП -> (МАДЛЕН, описание); таблица rukava.be (см. re-dispak)
 OPCODE_TABLE = {
@@ -92,12 +211,26 @@ OPCODE_TABLE = {
 }
 
 
+def local_offset(half):
+    """Смещение локальной метки (в словах) из адресного поля команды.
+
+    None, если команда не ссылается на локальную метку.
+    """
+    if not is_struct(half):
+        return None
+    value = half & 0o77777
+    if (value >> 12) & 7 != LOC_TAG:
+        return None
+    return value & 0o7777
+
+
 def ref_name(half, ext, labels):
     """Имя символа для перемещаемого адреса (None - адрес не перемещаемый).
 
     Адресное поле (15 бит) помечено битами 14..12: 4 - локальная метка
-    (смещение в командах от начала модуля), 7 - внешний символ (номер
-    записи в таблице символов).
+    (смещение в словах от начала модуля), 7 - внешний символ (номер
+    записи в таблице символов).  Смещение метки в словах, а словарь
+    меток ключуется номером команды (= 2 * смещение).
     """
     if not is_struct(half):
         return None
@@ -108,7 +241,7 @@ def ref_name(half, ext, labels):
         return ext.get(index, "СИМ%o" % index)
     if tag == LOC_TAG:
         off = value & 0o7777
-        return labels.get(off, "*%04oB" % off)
+        return labels.get(2 * off, "*%04oB" % off)
     return None
 
 
@@ -148,22 +281,74 @@ def operand_text(dec, ext, labels, entry):
     return s
 
 
-def gen_comment(instr, op, ext):
-    """Комментарий к команде: описание операции и операнда."""
+def gen_comment(instr, op, ext, mod=None):
+    """Комментарий к команде: описание операции и операнда.
+
+    mod - операнд предыдущей МОДА/МОД: адрес этой команды увеличивается
+    на мод.адрес (регистр М16).
+    """
     i = instr.upper().strip()
     o = op.strip()
+    mean = op_meaning(o)         # смысл константы (None для имён)
     desc = OPCODE_TABLE.get(i)
     if desc is None:
         return None
+    if i == "СДА":
+        return None              # сдвиг по адресу: смысл не восстановлен
+    # команда сразу после МОДА/МОД: её адрес увеличивается на мод.адрес
+    if mod:
+        kind, mop = mod
+        mm = re.match(r"^(.*?)\(М(\d+)\)$", mop)
+        base = mop if not mm else "%s+М%s" % (mm.group(1), mm.group(2))
+        body = o.split("(")[0]
+        if body == "0":
+            if i == "ЗП":
+                return "по адресу %s := СМ" % base
+            if i == "ЗПМ":
+                return "по адресу %s := СМ (в магазин)" % base
+            if i == "СЧ":
+                return "СМ := слово по адресу %s" % base
+            if i == "СЧМ":
+                return "в магазин; СМ := слово по адресу %s" % base
+            if i == "СЛ":
+                return "СМ += слово по адресу %s" % base
+            if i == "ВЧ":
+                return "СМ -= слово по адресу %s" % base
+            if i == "ВЧОБ":
+                return "СМ := слово по адресу %s - СМ" % base
+            if i == "И":
+                return "СМ &= слово по адресу %s" % base
+            if i == "ИЛИ":
+                return "СМ |= слово по адресу %s" % base
+            if i == "НТЖ":
+                return "СМ ^= слово по адресу %s" % base
+            if i == "УИА":
+                m = re.search(r"\(М(\d+)\)", o)
+                if m:
+                    if kind == "МОД":
+                        return "М%s := код из %s" % (m.group(1), base)
+                    return "М%s := адрес %s" % (m.group(1), base)
+        if i == "ПБ" and body == "0":
+            return "переход по адресу в мод.адресе"
     if i == "СЧ":
         if not o:
             return "загрузка вершины стека -> СМ"
         if o.startswith("(М"):
             return "СМ := (М%s) [косвенно]" % o[2:o.index(")")] \
                 if ")" in o else "СМ := (Мx) [косв.]"
-        return "СМ := %s" % o[:24]
+        return "СМ := %s" % (mean or o)[:40]
     if i == "ЗП":
-        return "(адрес) := СМ" if not o else "%s := СМ" % o.split("(")[0][:24]
+        if not o:
+            return "(адрес) := СМ"
+        if o == "0":
+            # адрес 0 - перемещаемый: адрес базы модуля
+            return "по адресу 0 := СМ"
+        m = re.match(r"^'?\d+'?\(М(\d+)\)$", o)
+        if m:
+            if mean:
+                return "%s := СМ" % mean
+            return "М%s+%s := СМ" % (m.group(1), o.split("(")[0].strip("'"))
+        return "%s := СМ" % o.split("(")[0][:24]
     if i == "СЧИ":
         m = re.search(r"М(\d+)", o)
         return "СМ := М%s" % m.group(1) if m else "СМ := ИР"
@@ -174,9 +359,14 @@ def gen_comment(instr, op, ext):
         ms = re.findall(r"М(\d+)", o)
         return "М%s := М%s" % (ms[0], ms[1]) if len(ms) >= 2 else "копия ИР"
     if i == "УИА":
+        # УИА задаёт индексный регистр АДРЕСОМ, а не содержимым памяти
         m = re.search(r"\(М(\d+)\)", o)
         val = o.split("(")[0].strip() or "0"
-        return "М%s := %s" % (m.group(1), val[:18]) if m else "ИР := %s" % val[:18]
+        if not m:
+            return "ИР := адрес %s" % val[:16]
+        if val == "0":
+            return "М%s := база модуля" % m.group(1)
+        return "М%s := адрес %s" % (m.group(1), val[:16])
     if i == "СЛИА":
         m = re.search(r"\(М(\d+)\)", o)
         val = o.split("(")[0].strip() or "0"
@@ -188,9 +378,10 @@ def gen_comment(instr, op, ext):
         return "М%s += М%s" % (ms[0], ms[1]) if len(ms) >= 2 else "сложение ИР"
     if i in ("СЛ", "СЛЦ"):
         tail = " [цикли.]" if i == "СЛЦ" else ""
-        return ("СМ += %s" % o[:20] + tail) if o else "СМ += (адрес)" + tail
+        return ("СМ += %s" % ((mean or o)[:40]) + tail) if o \
+            else "СМ += (адрес)" + tail
     if i == "ВЧ":
-        return "СМ -= %s" % o[:20] if o else "СМ -= (адрес)"
+        return "СМ -= %s" % ((mean or o)[:40]) if o else "СМ -= (адрес)"
     if i == "ВЧОБ":
         return "СМ := (адрес) - СМ"
     if i == "ВЧАБ":
@@ -198,21 +389,22 @@ def gen_comment(instr, op, ext):
     if i == "ЗНАК":
         return "СМ := -СМ (инверсия знака)"
     if i == "И":
-        return "СМ &= %s" % o[:18] if o else "СМ &= (адрес)"
+        return "СМ &= %s" % ((mean or o)[:40]) if o else "СМ &= (адрес)"
     if i == "ИЛИ":
-        return "СМ |= %s" % o[:18] if o else "СМ |= (адрес)"
+        return "СМ |= %s" % ((mean or o)[:40]) if o else "СМ |= (адрес)"
     if i == "НТЖ":
-        return "СМ ^= %s" % o[:18] if o else "СМ ^= (адрес)"
+        return "СМ ^= %s" % ((mean or o)[:40]) if o else "СМ ^= (адрес)"
     if i == "ДЕЛ":
-        return "СМ /= %s" % o[:15] if o else "деление"
+        return "СМ /= %s" % ((mean or o)[:40]) if o else "деление"
     if i == "УМН":
-        return "СМ *= %s" % o[:15] if o else "умножение"
+        return "СМ *= %s" % ((mean or o)[:40]) if o else "умножение"
     if i == "СБР":
-        return "сборка битов: %s" % o[:15] if o else "сборка битов"
+        return "сборка битов: %s" % ((mean or o)[:40]) if o else "сборка битов"
     if i == "РЗБ":
-        return "разборка битов: %s" % o[:15] if o else "разборка битов"
+        return "разборка битов: %s" % ((mean or o)[:40]) if o else "разборка битов"
     if i == "ЧЕД":
-        return "СМ := кол-во единиц в %s" % o[:12] if o else "число единиц"
+        return "СМ := кол-во единиц в %s" % ((mean or o)[:40]) if o \
+            else "число единиц"
     if i == "НЕД":
         return "СМ := № старш. единицы: %s" % o[:12] if o else "№ старш. единицы"
     if i == "СЛП":
@@ -222,16 +414,17 @@ def gen_comment(instr, op, ext):
     if i == "СД":
         m = re.search(r"М(\d+)", o)
         return "сдвиг СМ на М%s" % m.group(1) if m else "сдвиг СМ"
-    if i == "СДА":
-        if "64+" in o:
-            return "сдвиг СМ вправо на %s" % o.split("+")[1][:4]
-        if "64-" in o:
-            return "сдвиг СМ влево на %s" % o.split("-", 1)[1][:4]
-        return "сдвиг СМ на %s" % o[:10]
     if i == "РЖ":
         return "РЖ := СМ (режим ждущ.акк.)"
     if i == "РЖА":
-        return "РЖ := %s" % o[:15] if o else "РЖ по адресу"
+        if not o:
+            return "РЖ по адресу"
+        m = re.match(r"^'([0-7]+)'$", o)
+        if m:
+            v = int(m.group(1), 8)
+            mode = RZH_MODES.get(v)
+            return "РЖ := %d (%s)" % (v, mode) if mode else "РЖ := %d" % v
+        return "РЖ := %s" % o[:15]
     if i == "СЧРЖ":
         return "СМ := РЖ (режим ждущ.акк.)"
     if i == "СЧМР":
@@ -241,9 +434,15 @@ def gen_comment(instr, op, ext):
     if i == "ВЧПА":
         return "порядок -= %s" % o[:10] if o else "порядок -= N"
     if i == "МОДА":
-        return "мод.адрес +1: %s" % o[:12] if o else "мод.адрес +1"
+        # МОДА: регистр модифицированного адреса (М16) := адрес операнда;
+        # адрес следующей команды увеличивается на М16
+        if not o or o == "0":
+            return "мод.адрес := 0 (сброс модификации)"
+        return "мод.адрес := %s" % o[:20]
     if i == "МОД":
-        return "мод.адрес по коду: %s" % o[:12] if o else "мод.адрес по коду"
+        # МОД: М16 := код слова по адресу операнда; адрес следующей
+        # команды увеличивается на этот код
+        return "мод.адрес := код из %s" % o[:16] if o else "мод.адрес := код"
     if i == "ПО":
         return "если СМ=0 → %s" % o[:15] if o else "усл.пер. по 0"
     if i == "ПЕ":
@@ -274,12 +473,15 @@ def gen_comment(instr, op, ext):
     if i == "ЗПМ":
         return "ЗП + магазин: %s" % o[:15] if o else "запись + магазин"
     if i == "УИМ":
+        # УИМ: регистр := СМ, затем СМ := вершина магазина
         m = re.search(r"М(\d+)", o)
-        return "М%s := СМ + стек" % m.group(1) if m else "УИ + магазин"
+        return "М%s := СМ; СМ := из магазина" % m.group(1) if m \
+            else "ИР := СМ; СМ := из магазина"
     if i == "СЧИМ":
+        # СЧИМ: запись СМ в магазин, затем СМ := регистр
         m = re.search(r"М(\d+)", o)
-        return "стек := М%s, СМ := М%s" % (m.group(1), m.group(1)) if m \
-            else "СЧИ + магазин"
+        return "в магазин; СМ := М%s" % m.group(1) if m \
+            else "в магазин; СМ := ИР"
     if i == "РЕГ":
         return "спец.регистр: %s" % o[:15] if o else "спец.регистр"
     if i == "УВВ":
@@ -426,23 +628,39 @@ def label_names(insns, ext, labels, module, cmdwords, constwords):
     локальной переменной модуля.  По этому метка и называется.  Ссылки на
     константы (раздел const) и на переменные (раздел bss) именуются по
     номеру слова: К<номер> и V<номер>.
+
+    Словарь labels ключуется номером команды (в слове две команды), а
+    смещения DMS заданы в словах, поэтому номер команды = 2 * смещение.
     """
     items = []
     for off, half in insns:
         dec = decode(half)
         instr = (dec["name"] or "").upper()
         op = operand_text(dec, ext, labels, module)
-        items.append((off, instr, op))
+        items.append((off, instr, op, local_offset(half)))
     used = set(ext.values())   # имена внешних символов заняты
     result = {}
+    # ссылки на константы и переменные (вне раздела команд) - по номеру
+    # слова в соответствующем разделе; именуются первыми, чтобы имена
+    # вида К<n> и V<n> не достались меткам команд
+    for off in sorted(labels):
+        if off < 2 * cmdwords:
+            continue
+        if off < 2 * (cmdwords + constwords):
+            base = "К%d" % (off // 2 - cmdwords)
+        else:
+            base = "V%d" % (off // 2 - cmdwords - constwords)
+        name = unique_name(base, used, fallback="L%04o" % off)
+        used.add(name)
+        result[off] = name
     lastn = None            # последняя загрузка смещения в М7
     # обратные переходы - цели циклов
     loops = set()
-    for i, (off, instr, op) in enumerate(items):
-        if instr in ("ПБ", "ПО", "ПЕ") and op in labels:
-            if labels[op] < off:
-                loops.add(labels[op])
-    for i, (off, instr, op) in enumerate(items):
+    for i, (off, instr, op, ref) in enumerate(items):
+        if instr in ("ПБ", "ПО", "ПЕ") and ref is not None:
+            if 2 * ref < off:
+                loops.add(2 * ref)
+    for i, (off, instr, op, ref) in enumerate(items):
         if instr == "СЧ":
             # смещение локальной переменной грузится в М7: "СЧ 9(М7)"
             m = re.match(r"^(\d+)\(М7\)$", op)
@@ -464,7 +682,7 @@ def label_names(insns, ext, labels, module, cmdwords, constwords):
             j += 1
         calls, commons, locals = [], [], []
         for k in range(start, j):
-            _, ins, o = items[k]
+            _, ins, o, _r = items[k]
             if ins == "ПВ" and o:
                 calls.append(o.split("(")[0])
             elif ins in ("МОДА", "МОД") and o:
@@ -491,7 +709,7 @@ def label_names(insns, ext, labels, module, cmdwords, constwords):
                         break
             if not base:
                 for cand in locals:
-                    base = subject("V%s" % cand if cand else "")
+                    base = subject("F%s" % cand if cand else "")
                     if base:
                         break
             if not base and off in loops:
@@ -504,22 +722,27 @@ def label_names(insns, ext, labels, module, cmdwords, constwords):
         name = unique_name(base, used, fallback="L%04o" % off)
         used.add(name)
         result[off] = name
-    # ссылки на константы и переменные (вне раздела команд) - по номеру
-    # слова в соответствующем разделе
-    for off in sorted(labels):
-        if off in result or off < 2 * cmdwords:
-            continue
-        if off < 2 * (cmdwords + constwords):
-            base = "К%d" % (off // 2 - cmdwords)
-        else:
-            base = "V%d" % (off // 2 - cmdwords - constwords)
-        name = unique_name(base, used, fallback="L%04o" % off)
-        used.add(name)
-        result[off] = name
     return result
 
 
 MODINFO = {}
+
+
+def dms_labels(lib, name, code):
+    """Локальные метки модуля: номер команды -> имя.
+
+    Смещения в формате DMS - СЛОВА от начала модуля (записаны
+    восьмерично), а в слове две команды, поэтому номер команды
+    = 2 * смещение.  Смещения >= числа слов раздела команд относятся
+    к разделу констант и к bss.
+    """
+    ext, dms, symtab = symbol_table(lib, name)
+    labels = {2 * off: nm for off, nm in dms.items()}
+    # локальные метки, на которые ссылаются команды, но которые не названы
+    # в таблице символов, получают автоматические имена
+    for off in local_refs(code):
+        labels.setdefault(2 * off, "L%04o" % off)
+    return ext, labels, symtab
 
 
 def info(lib, name):
@@ -528,10 +751,8 @@ def info(lib, name):
         return MODINFO[name]
     s, h = lib.objects[name]
     code = lib.words[s + 3:s + 3 + h["cmd"]]
-    ext, labels, symtab = symbol_table(lib, name)
+    ext, labels, symtab = dms_labels(lib, name, code)
     labels[0] = sanitize(name) or name
-    for off in local_refs(code):
-        labels.setdefault(off, "L%04o" % off)
     insns = []
     for i, w in enumerate(code):
         insns.append((i * 2, w >> 24))
@@ -547,13 +768,9 @@ def module_text(lib, name, loadmap):
     """Текст БЕМШ модуля."""
     s, h = lib.objects[name]
     code = lib.words[s + 3:s + 3 + h["cmd"]]
-    ext, labels, symtab = symbol_table(lib, name)
+    ext, labels, symtab = dms_labels(lib, name, code)
     # начало модуля - его точка входа
     labels[0] = sanitize(name) or name
-    # локальные метки, на которые ссылаются команды, но которые не названы
-    # в таблице символов, получают автоматические имена
-    for off in local_refs(code):
-        labels.setdefault(off, "L%04o" % off)
     entry = name
 
     # команды модуля: в слове две, левая - старшие 24 бита
@@ -583,27 +800,38 @@ def module_text(lib, name, loadmap):
     names = label_names(insns, ext, labels, name, h['cmd'], h['const'])
     labels = names
     lines = []
+    frame = set()
+    mod = None            # операнд МОДА/МОД: адрес след. команды += М16
     for off, half in insns:
         dec = decode(half)
         instr = (dec["name"] or "???").upper()
         op = operand_text(dec, ext, labels, entry)
         for m in re.finditer(r"(?<![A-Za-zА-Яа-яЁё])М(\d+)", op):
             regs.add(int(m.group(1), 8))
+        for m in re.finditer(r"(\d+)\(М7\)", op):
+            frame.add(int(m.group(1)))
+        for m in re.finditer(r"'([0-7]+)'\(М7\)", op):
+            frame.add(int(m.group(1), 8))
         lbl = ""
         if off in labels and off != 0:
             lbl = labels[off]
         code_part = "%-9s%-7s%s" % (lbl, instr, op)
-        comment = gen_comment(instr, op, ext)
+        comment = gen_comment(instr, op, ext, mod)
         if comment:
             comment = comment[:MAX_COMMENT]
         note = LABEL_NOTES.get(name, {}).get(off) if off else None
         if note:
             lines.append("* " + note)
         lines.append(with_comment(code_part.rstrip(), comment))
+        # модификатор адреса действует на следующую команду
+        if instr in ("МОДА", "МОД"):
+            mod = (instr, op) if op and op != "0" else None
+        else:
+            mod = None
         if instr == "ПБ":
             # конец базового блока - отделяем звёздочкой
             lines.append("*")
-    return lines, bases, offsets, sorted(regs), h, ext, labels, exits
+    return lines, bases, offsets, sorted(regs), h, ext, labels, exits, sorted(frame)
 
 
 def wrap_head(prefix, items, width=76):
@@ -624,7 +852,8 @@ CALL_SITES = {}   # модуль -> список мест вызова
 
 
 def write_module(lib, name, outdir, loadmap):
-    lines, bases, offsets, regs, h, ext, labels, exits = module_text(lib, name, loadmap)
+    lines, bases, offsets, regs, h, ext, labels, exits, frame = module_text(
+        lib, name, loadmap)
     sites = CALL_SITES
     s = lib.objects[name][0]
     addr = loadmap.get(name)
@@ -657,9 +886,32 @@ def write_module(lib, name, outdir, loadmap):
     for b, offs in sorted(offsets.items()):
         head.extend(wrap_head("*   Смещения в %s: " % b,
                               [str(o) for o in sorted(offs)]))
+    absyms = abs_symbols(lib, name)
+    if absyms:
+        items = ["%s = %d" % (nm, val - 0o100000 if val >= 0o77700 else val)
+                 for nm, val in sorted(absyms.items())]
+        head.extend(wrap_head("*   Абсолютные символы: ", items))
+    if frame:
+        # слоты кадра: общие (0..10) и собственная область модуля;
+        # значения >= OUTSIDE - адреса вне кадра (системные области)
+        common = [x for x in frame if x <= FRAME_COMMON]
+        own = [x for x in frame if FRAME_COMMON < x < OUTSIDE]
+        out = [x for x in frame if x >= OUTSIDE]
+        items = []
+        if common:
+            items.append("общие %s" % ranges(common))
+        if own:
+            items.append("свои %s" % ranges(own))
+        if out:
+            items.append("вне кадра %s" % ranges(out))
+        head.extend(wrap_head("*   Смещения в кадре (М7): ", items))
     if regs:
         head.extend(wrap_head("*   Регистры: ",
-                              ["М%o" % r for r in regs]))
+                              ["М%o (%s)" % (r, REG_ROLES.get(r, "рабочий регистр"))
+                               for r in regs]))
+    if any("мод.адрес :=" in ln for ln in lines):
+        head.append("*   Модификатор адреса: МОДА/МОД задают М16, "
+                    "адрес следующей команды += М16")
     head.append("*" * 51)
     out = list(head)
     # таблица символов модуля - по ней сборщик находит внешние имена
@@ -668,12 +920,14 @@ def write_module(lib, name, outdir, loadmap):
         out.append("*   %03d %s" % (num, nm))
     out.append("*")
     # локальные символы вне раздела команд (ссылки на константы и
-    # переменные) - сборщику нужны их смещения
+    # переменные) - сборщику нужны их смещения; смещение в словах
+    # от начала модуля (как его записывает загрузчик DMS)
     offs = [off for off in sorted(labels) if off >= 2 * h["cmd"]]
     if offs:
-        out.append("* %s (имя - смещение):" % LOCAL_MARK)
+        out.append("* %s (имя - смещение в словах от начала модуля):"
+                   % LOCAL_MARK)
         for off in offs:
-            out.append("*   %-6s %o" % (labels[off], off))
+            out.append("*   %-6s %o" % (labels[off], off // 2))
         out.append("*")
     out.append("*** КОД МОДУЛЯ")
     out.append("*")
