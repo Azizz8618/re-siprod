@@ -26,6 +26,7 @@ fail=0
 n=0
 for lib in "$ROOT/siprod.bin" "$ROOT/build/siprod.bin"; do
     echo "== образ: $lib"
+    echo "   $(python3 "$ROOT/tools/siprod_bemsh.py" --version --image="$lib")"
     for f in "$D"/cases/*.txt; do
         b=$(basename "$f" .txt)
         "$D/run.sh" "$f" > "$work/a.txt" 2>&1

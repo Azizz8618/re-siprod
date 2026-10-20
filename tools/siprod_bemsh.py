@@ -4,21 +4,27 @@
 Тексты `text/<модуль>.be` - это результат дизассемблирования, а не исходники:
 их нельзя подать транслятору как есть.  Здесь они переводятся в исходный
 синтаксис МАКРО-БЕМШ (как в проекте re-dispak) и компилируются штатным
-транслятором, который работает в эмуляторе диспака.
+транслятором ИПМ МАКРО-БЕМШ ВЕР.06/78, который работает в эмуляторе диспака.
 
 Проверяется:
   * транслятор не выдаёт ошибок;
-  * мнемоники скомпилированных команд совпадают с оригиналом;
+  * мнемоники и регистры скомпилированных команд совпадают с оригиналом;
   * ссылки на локальные метки ведут туда же, куда ведут в оригинале
-    (т.е. метки в текстах стоят на нужных командах).
+    (т.е. метки в текстах стоят на нужных командах);
+  * ссылки на внешние символы указывают на те же элементы, что и в оригинале.
 
-Ограничение: транслятор 1978 г. знает только модули ДИСПАК, поэтому
-внешние символы СИПРОДа (общие блоки и вызовы других модулей) в исходнике
-подменяются фиктивными метками - на смысл локальных меток это не влияет.
+Сборка библиотеки: раздел команд каждого модуля берётся из скомпилированного
+кода, остальные разделы объекта (таблица символов, константы, каталог) - из
+исходного образа: транслятор 1978 г. пишет объект в формате ДИСПАК (с
+запакованным заголовком и своими кодами перемещений), а библиотеку СИПРОДа
+читает Монитор-80 (формат DMS).  Поэтому код пересобирается в формат DMS:
+адреса локальных меток - в смещения от начала модуля, ссылки на внешние
+символы - в номера записей таблицы символов.
 
 Запуск:
     tools/siprod_bemsh.py [МОДУЛЬ...]      # по умолчанию - все модули
     tools/siprod_bemsh.py -v МОДУЛЬ        # показать исходник и листинг
+    tools/siprod_bemsh.py --build=FILE     # собрать библиотеку
 """
 
 import argparse
@@ -27,16 +33,21 @@ import re
 import shutil
 import subprocess
 import sys
+import time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 sys.path.insert(0, HERE)
 from siprod_lib import Library                      # noqa: E402
 from siprod_dis import symbol_table, sanitize     # noqa: E402
-from siprod_asm import decode                      # noqa: E402
+from siprod_asm import decode, OPS as ASM_OPS     # noqa: E402
 
 # адрес загрузки модуля в скомпилированном образе (источник без адреса)
 LOAD = 1
+
+# номер версии библиотеки (счётчик в датах записей каталога DMS).
+# У исходной библиотеки СИПРОДа счётчик = 52.
+VERSION = 53
 
 # том, в котором лежит транслятор и личная библиотека
 VOL = "2248"
@@ -44,13 +55,18 @@ TAPE = "43"                 # лента зон PERSO
 WORK = os.environ.get("SIPROD_BEMSH_WORK", "/tmp/siprod-bemsh")
 ZONE = os.environ.get("SIPROD_BEMSH_ZONE", "3900")
 
-# команды МАКРО-БЕМШ, которые встречаются в модулях СИПРОДа
-OPS = set("""УИ УИМ УИА УИИ СЛИ СЛИА СЧ СЧМ СЧИ СЧИМ ЗП ЗПМ МОДА МОД ПО ПЕ ПБ ПВ
-РЖА РЖ СЛ ВЧ ВЧОБ И ИЛИ НТЖ ЧЕД ЦИКЛ ПИО ПИНО СДА СЛЦ ВЫПР""".split())
+# команды МАКРО-БЕМШ, которые встречаются в модулях СИПРОДа:
+# полный список кодов операций (таблица disbesm6)
+OPS = set(name.upper() for name, _c, _m, _k in ASM_OPS)
 
 # разбор адресного поля команды 1-й структуры: 15 бит, биты 14..12 - признак
 LOC_TAG = 0o4
 SYM_TAG = 0o7
+
+# признак перемещаемого адреса в формате DMS
+DMS_BIT = 0x200000
+# признак 1-й структуры
+STRUCT_BIT = 0x80000
 
 
 def parse_be(path):
@@ -99,12 +115,18 @@ def parse_be(path):
     return locsyms, labels, instrs
 
 
+def signed15(off):
+    """Смещение 15 бит со знаком: значения от 0o40000 - отрицательные."""
+    return off - 0o100000 if off >= 0o40000 else off
+
+
 def ext_names(lib, name):
     """Внешние символы модуля: имя в тексте -> (имя блока, смещение).
 
     Имя общего блока в таблице символов DMS помечено звёздочками
     ("*LYG*"), в исходнике МАКРО-БЕМШ их не пишут.  Элемент общего блока
     задаётся как ИМЯ+СМЕЩЕНИЕ, поэтому смещение отделяется от имени.
+    Смещения в ссылках - 15 бит со знаком (0o77777 = -1).
     """
     ext, _labels, symtab = symbol_table(lib, name)
 
@@ -122,7 +144,7 @@ def ext_names(lib, name):
         if e[0] == "ref":
             base, off = resolve(e[1], depth + 1)
             if base:
-                return base, off + e[2]
+                return base, off + signed15(e[2])
         return None, 0
 
     out = {}
@@ -167,7 +189,12 @@ def operand_text(op, ext, consts, bss, labels):
         name = body
     elif body in ext:
         base, off = ext[body]
-        name = base if not off else "%s+%d" % (base, off)
+        if not off:
+            name = base
+        elif off > 0:
+            name = "%s+%d" % (base, off)
+        else:
+            name = "%s%d" % (base, off)
     elif body in abs_syms:
         name = "%d" % abs_syms[body]
     elif body == "0":
@@ -186,7 +213,6 @@ def bss_name(n):
 
 # символы с абсолютным адресом (обычно отрицательные смещения)
 abs_syms = {}
-NFAKE = 0            # число фиктивных меток (вместо внешних символов)
 
 
 def convert(lib, name, path):
@@ -229,10 +255,20 @@ def convert(lib, name, path):
         out.append("%s\tконд\tв'%012o'" % (nm, word))
     for n in range(h["bss"]):
         out.append("%s\tпам\t1" % bss_name(n))
-    # внешние символы - объявление ВНЕШ (как в re-dispak)
+    # внешние символы - объявление ВНЕШ (как в re-dispak).  Транслятор
+    # 1978 г. обрезает строки длиннее 64 знаков, поэтому список
+    # внешних имён разбивается на несколько директив.
     outside = sorted(set(base for base, _off in ext.values()))
-    if outside:
-        out.append("%s\tВНЕШ\t%s" % (name, ",".join(outside)))
+    label = "%s\tВНЕШ\t" % name
+    line = ""
+    for nm in outside:
+        piece = nm + ","
+        if line and len(label) + len(line) + len(piece) > 64:
+            out.append(label + line.rstrip(","))
+            line = ""
+        line += piece
+    if line:
+        out.append(label + line.rstrip(","))
     return "\n".join(out) + "\n"
 
 
@@ -283,62 +319,49 @@ def run_translator(src, name):
 
 RIGHT_COL = 49        # начало правой колонки листинга
 
-# код команды в листинге: 1-я структура - "рег оп(2) адрес(5)",
-# 2-я структура - "рег оп(3) адрес(4)"
-CODE_1ST = re.compile(r"(?:^|\s)(\d{2}) (\d{2}) (\d{5})\s*$")
-CODE_2ND = re.compile(r"(?:^|\s)(\d{2}) (\d{3}) (\d{4})\s*$")
+# код команды в листинге: "рег оп(2) адрес(5)" для 1-й структуры
+# и "рег оп(3) адрес(4)" для 2-й; начинается с 31-й колонки
+CODE_RE = re.compile(r"(?:^|\s)(\d{2}) (\d{2,3}) +(\d{4,5})\s*$")
+
+# перемещение: "+ <номер символа>+<смещение>" в колонках 12..29
+RELOC_RE = re.compile(r"\+\s*(\d+)(?:\+(\d+))?")
 
 
 def parse_listing(text):
-    """Листинг транслятора -> (слова модуля, адреса данных, пункты исходника).
+    """Листинг транслятора -> (команды, символы).
 
-    Правая колонка: адрес, номер пункта, текст источника.
-    Левая колонка: слова скомпилированного модуля; у слова две команды,
-    вторая половина - на следующей строке.
+    команды - список (пункт исходника, регистр, код операции, адрес,
+    перемещение) в порядке пунктов; символы - словарь имя -> адрес
+    (из таблицы символов в конце листинга).
     """
-    words = []          # [(левая половина, правая половина)]
-    data = []           # адреса слов данных
-    right = []          # [(адрес, текст) для каждого исходного пункта]
+    cmds = []
+    symbols = {}
     for line in text.splitlines():
+        # таблица символов: имя и адрес (в конце листинга)
+        for name, addr in re.findall(r"(\S+)\s+(\d{5})", line):
+            symbols[name] = int(addr, 8)
         left = line[:RIGHT_COL]
-        toks = left.split()
-        if left[25:30].strip():
-            # строка слова: номер слова и код его левой половины
-            if len(toks) >= 3 and re.match(r"^\d{2}$", toks[-3]):
-                words.append(((toks[-3], toks[-2], toks[-1]), None))
-            elif len(toks) >= 2 and re.match(r"^\d{15,16}$", toks[-1]):
-                data.append(int(toks[-2], 8))
-        else:
-            # продолжение - правая половина слова
-            if len(toks) == 3 and words:
-                words[-1] = (words[-1][0], (toks[0], toks[1], toks[2]))
-                continue
         r = line[RIGHT_COL:].rstrip()
         m = re.match(r"^(\d{4,5})\s+(\d{4,5})\s*(.*)$", r)
-        if m:
-            try:
-                right.append((int(m.group(1), 8), m.group(3)))
-            except ValueError:
-                pass
-    return words, data, right
+        if not m:
+            continue
+        item = int(m.group(2))
+        code = CODE_RE.search(left)
+        if code:
+            reloc = RELOC_RE.search(left[12:30])
+            cmds.append((item, int(code.group(1), 8), int(code.group(2), 8),
+                         int(code.group(3), 8),
+                         (int(reloc.group(1)),
+                          int(reloc.group(2)) if reloc.group(2) else 0)
+                         if reloc else None))
+    return cmds, symbols
 
 
-def cmd_addr_field(fields):
-    """Адресное поле команды из полей листинга (1-я или 2-я структура)."""
-    if not fields:
-        return None
-    reg, op, addr = fields
-    if len(op) == 2:            # 1-я структура: бит 19 в коде операции
-        return int(addr, 8)
-    return int(addr, 8)
-
-
-def cmd_op_field(fields):
-    """Код операции команды из полей листинга."""
-    if not fields:
-        return None
-    reg, op, addr = fields
-    return int(op, 8) & 0o17 if len(op) == 2 else int(op, 8)
+def orig_op(half):
+    """Код операции команды в формате DMS (восьмеричное число)."""
+    if half & STRUCT_BIT:
+        return (half >> 15) & 0o37
+    return (half >> 12) & 0o77
 
 
 def check_module(lib, name, path, verbose=False):
@@ -349,55 +372,209 @@ def check_module(lib, name, path, verbose=False):
         print(src)
         print(text[-4000:])
     errors = [e for e in errs if "НЕОП" in e or "ЗАПР" in e]
-    result = dict(module=name, errors=errors, mismatch=[])
+    result = dict(module=name, errors=errors, mismatch=[], code=None)
     if errors:
         return result
     # оригинал: команды и их коды
     s, h = lib.objects[name]
     code = lib.words[s + 3:s + 3 + h["cmd"]]
     locsyms, labels, instrs = parse_be(path)
-    words, daddr, right = parse_listing(text)
-    for off, instr, op, _lab in instrs:
-        w = off // 2
-        if w >= len(words):
-            break
-        half = words[w][1] if off % 2 else words[w][0]
-        if half is None:
-            continue
-        orig = (code[off // 2] >> 24) if off % 2 == 0 else \
+    _ext, _labels, symtab = symbol_table(lib, name)
+    cmds, symbols = parse_listing(text)
+    result["code"] = code
+    if len(cmds) != len(instrs):
+        result["mismatch"].append(
+            "команд скомпилировано %d, в тексте %d" % (len(cmds), len(instrs)))
+        return result
+    for k, (off, instr, op, _lab) in enumerate(instrs):
+        item, reg, cop, addr, reloc = cmds[k]
+        half = (code[off // 2] >> 24) if off % 2 == 0 else \
             (code[off // 2] & 0xffffff)
         # код операции и регистр должны совпадать
-        dop = decode(orig)["name"]
-        oop = ((orig >> 15) & 0o17) if (orig & 0x80000) else ((orig >> 12) & 0o77)
-        if oop != cmd_op_field(half):
-            # транслятор 1978 г. кодирует некоторые команды иначе
+        dop = decode(half)["name"]
+        if orig_op(half) != cop:
             result["mismatch"].append(
-                "команда %d: код операции %s != %o"
-                % (off, dop, cmd_op_field(half)))
-        if not (orig & 0x80000):
-            continue
-        field = orig & 0o77777
-        if (field >> 12) & 7 != LOC_TAG:
-            continue        # внешний символ - транслятор решает по каталогу
-        target = field & 0o7777              # смещение метки в словах
-        addr = cmd_addr_field(half)
-        if addr is not None and addr != (LOAD + target):
+                "команда %d: код операции %s: %o != %o"
+                % (off, dop, orig_op(half), cop))
+        oreg = (half >> 20) & 0o17
+        if oreg != reg:
             result["mismatch"].append(
-                "команда %d: ссылка на %o, метка со смещением %o -> %o"
-                % (off, addr, target, LOAD + target))
-        # символ раздела данных
-        cand = [(nm, dms) for nm, dms in locsyms.items() if dms == target]
-        if cand:
-            nm = cand[0][0]
-            if nm.startswith("К"):
-                idx = int(nm[1:])
-            else:
-                idx = h["const"] + int(nm[1:])
-            if idx < len(daddr) and daddr[idx] != addr:
+                "команда %d: регистр %o != %o" % (off, oreg, reg))
+        # адресное поле
+        field = half & 0o77777
+        if not (half & STRUCT_BIT):
+            # 2-я структура: обычный адрес - должен совпасть
+            if addr != (half & 0o7777):
                 result["mismatch"].append(
-                    "команда %d: ссылка на %o, символ %s на %o"
-                    % (off, addr, nm, daddr[idx]))
+                    "команда %d: адрес %o != %o" % (off, addr, half & 0o7777))
+            continue
+        tag = (field >> 12) & 7
+        if tag == LOC_TAG:
+            target = field & 0o7777
+            if target < h["cmd"]:
+                # ссылка на локальную метку: адрес у метки в листинге
+                want = symbols.get("L%o" % target)
+                if want is None:
+                    result["mismatch"].append(
+                        "команда %d: нет метки L%o в листинге" % (off, target))
+                elif addr != want:
+                    result["mismatch"].append(
+                        "команда %d: ссылка на %o, метка L%o на %o"
+                        % (off, addr, target, want))
+            # символ раздела данных - адрес в DMS другой, пропускаем
+        elif tag == SYM_TAG:
+            # внешний символ: в листинге должно быть перемещение; если
+            # символ имеет абсолютный адрес, перемещения нет - адрес
+            # записан сразу в команде
+            if reloc is None:
+                index = field & 0o3777
+                e = symtab[index] if index < len(symtab) else None
+                if e and e[0] == "abs":
+                    want = signed15(e[1]) & 0o77777
+                    if addr != want:
+                        result["mismatch"].append(
+                            "команда %d: абсолютный адрес %o != %o"
+                            % (off, addr, want))
+                else:
+                    result["mismatch"].append(
+                        "команда %d: внешний символ без перемещения" % off)
+        else:
+            # обычный адрес
+            if addr != (field & 0o7777):
+                result["mismatch"].append(
+                    "команда %d: адрес %o != %o" % (off, addr, field & 0o7777))
     return result
+
+
+def build_module(lib, name, path):
+    """Код модуля в формате DMS по скомпилированному коду.
+
+    Транслятор 1978 г. кодирует адреса иначе, чем DMS: локальные метки -
+    абсолютными адресами, элементы общих блоков - «блок+смещение», внешние
+    символы - перемещениями.  Поэтому берём код операции и регистр из
+    скомпилированной команды, а адресное поле - из оригинала (там оно уже
+    в формате DMS); равенство адресов проверяется функцией check_module.
+    """
+    src = convert(lib, name, path)
+    text, errs = run_translator(src, name.replace("*", "#"))
+    errors = [e for e in errs if "НЕОП" in e or "ЗАПР" in e]
+    if errors:
+        raise ValueError("%s: ошибки транслятора: %s"
+                         % (name, errors[0].strip()))
+    s, h = lib.objects[name]
+    orig = lib.words[s + 3:s + 3 + h["cmd"]]
+    cmds, _symbols = parse_listing(text)
+    _locsyms, _labels, instrs = parse_be(path)
+    if len(cmds) != len(instrs):
+        raise ValueError("%s: скомпилировано %d команд, в тексте %d"
+                         % (name, len(cmds), len(instrs)))
+    out = []
+    for k, (off, instr, op, _lab) in enumerate(instrs):
+        _item, reg, cop, _addr, _reloc = cmds[k]
+        half = (orig[off // 2] >> 24) if off % 2 == 0 else \
+            (orig[off // 2] & 0xffffff)
+        struct = 1 if half & STRUCT_BIT else 0
+        new = (reg << 20) | (cop << (15 if struct else 12))
+        field = half & 0o77777
+        if struct:
+            new |= field & 0o77777
+        else:
+            new |= field & 0o7777
+            if field & 0o700000:
+                new |= 0o40000
+        out.append(new)
+    words = []
+    for i in range(0, len(out), 2):
+        hi = out[i]
+        lo = out[i + 1] if i + 1 < len(out) else 0
+        words.append((hi << 24) | lo)
+    return words
+
+
+def library_version(now=None, version=VERSION):
+    """Версия библиотеки - дата в записи каталога DMS.
+
+    В записи каталога биты 47..24 - дата: три поля по 6 бит (минуты,
+    секунды, счётчик) и запасное поле.  Счётчик - номер версии
+    библиотеки; минуты и секунды - время сборки.
+    """
+    t = time.localtime(now)
+    return ((t.tm_min & 0o77) << 18) | ((t.tm_sec & 0o77) << 12) \
+        | ((version & 0o77) << 6)
+
+
+def version_text(word):
+    """Дата из записи каталога -> строка «мин:сек, версия»."""
+    date = (word >> 24) & 0xffffff
+    minutes = (date >> 18) & 0o77
+    seconds = (date >> 12) & 0o77
+    version = (date >> 6) & 0o77
+    return "%02d:%02d, версия %d" % (minutes, seconds, version)
+
+
+def library_version_text(lib, path=None):
+    """Версия библиотеки.
+
+    Собранная библиотека хранит версию рядом с образом (файл
+    <образ>.version): даты в записях каталога проверяет загрузчик
+    Монитор-80, менять их нельзя.  У исходной библиотеки версия
+    берётся из счётчика в датах каталога.
+    """
+    if path:
+        try:
+            with open(path + ".version", encoding="utf-8") as f:
+                lines = f.read().splitlines()
+            return "%s (%s, %s)" % (lines[0].split(" ", 1)[1],
+                                   lines[1].split(" ", 1)[1],
+                                   lines[2].split(": ", 1)[1])
+        except (IOError, OSError, IndexError):
+            pass
+    return "%d (исходная библиотека СИПРОДа)" % ((lib.words[3] >> 30) & 0o77)
+
+
+def build_library(lib, textdir, out, stamp=None, version=VERSION):
+    """Сборка библиотеки: код модулей - из транслятора МАКРО-БЕМШ.
+
+    Остальные разделы объектов (таблица символов, константы) и каталог
+    берутся из исходного образа: их формат задаёт Монитор-80, а
+    транслятор 1978 г. пишет объект в формате ДИСПАК.
+
+    Даты в записях каталога не меняются: загрузчик Монитор-80 проверяет
+    их (при изменении библиотека не грузится).  Поэтому версия
+    библиотеки записывается рядом с образом - в файл <образ>.version.
+    """
+    data = bytearray(lib.data)
+    report = []
+    for name, (s, h) in sorted(lib.objects.items()):
+        path = os.path.join(textdir, name.replace("*", "#") + ".be")
+        if not os.path.exists(path):
+            report.append((name, "нет текста"))
+            continue
+        try:
+            words = build_module(lib, name, path)
+        except ValueError as e:
+            report.append((name, str(e)))
+            continue
+        if len(words) != h["cmd"]:
+            report.append((name, "команд %d вместо %d"
+                           % (len(words), h["cmd"])))
+            continue
+        same = all(words[i] == lib.words[s + 3 + i] for i in range(len(words)))
+        for i, w in enumerate(words):
+            off = (s + 3 + i) * 6
+            data[off:off + 6] = w.to_bytes(6, "big")
+        report.append((name, "собрано, совпадает" if same
+                       else "собрано, РАЗЛИЧАЕТСЯ"))
+    with open(out, "wb") as f:
+        f.write(data)
+    # версия библиотеки - в отдельный файл рядом с образом
+    t = time.localtime(stamp)
+    with open(out + ".version", "w", encoding="utf-8") as f:
+        f.write("версия %d\n" % version)
+        f.write("собрано %04d-%02d-%02d %02d:%02d\n"
+                % (t.tm_year, t.tm_mon, t.tm_mday, t.tm_hour, t.tm_min))
+        f.write("сборка: МАКРО-БЕМШ ВЕР.06/78\n")
+    return report
 
 
 def main():
@@ -405,8 +582,27 @@ def main():
     ap.add_argument("modules", nargs="*", help="модули (по умолчанию - все)")
     ap.add_argument("-v", "--verbose", action="store_true")
     ap.add_argument("--image", default=os.path.join(ROOT, "siprod.bin"))
+    ap.add_argument("--build", default=None,
+                    help="собрать библиотеку в этот файл")
+    ap.add_argument("--text", default=os.path.join(ROOT, "text"))
+    ap.add_argument("--version", action="store_true",
+                    help="показать версию библиотеки")
     args = ap.parse_args()
     lib = Library(args.image)
+    if args.version:
+        print("версия библиотеки: %s" % library_version_text(lib, args.image))
+        return 0
+    if args.build:
+        report = build_library(lib, args.text, args.build)
+        bad = 0
+        for name, msg in report:
+            if "РАЗЛИЧАЕТСЯ" in msg or "нет текста" in msg or "вместо" in msg \
+                    or "ошибки" in msg:
+                print("%-10s %s" % (name, msg))
+                bad += 1
+        print("собрано модулей: %d, расхождений: %d -> %s"
+              % (len(report) - bad, bad, args.build))
+        return 1 if bad else 0
     names = args.modules or sorted(lib.objects)
     bad = 0
     for name in names:

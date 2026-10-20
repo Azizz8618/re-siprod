@@ -5,11 +5,12 @@
 #   make dis        dis/<module>.asm - BESM-6 autocode of every module (disbesm6)
 #   make be         text/<module>.be - the same in BESM-6 source form with
 #                   comments (rules of re-dispak)
-#   make build      build/siprod.bin - the library assembled from the texts
+#   make build      build/siprod.bin - the library compiled by MAKRO-BEMSH
 #   make check      round-trip check: disassemble + assemble == original words
 #   make loadmaps   tests/siprod/loadmap-{dispak,dubna}.txt
 #   make test       regression cases, wiki corpus
 #   make test-perso SIPROD run from a re-recorded PERSO library
+#   make record     write the compiled library into the PERSO of volume 2248
 #   make coverage   labels of static modules no regression case executes
 #   make bemsh      compile the modules with the real MAKRO-BEMSH translator
 #   make clean      remove build/
@@ -22,6 +23,7 @@ WIKI ?= $(HOME)/git/besm6.github.io/wiki
 PYTHON ?= python3
 DISBESM6 ?= disbesm6
 ZONE ?= 3900
+PERSO_WORK ?= /tmp/siprod-bemsh
 
 # Every module has a DTRAN directive file dtr/<name>.dtr; '*' and '/' in library
 # names are spelled '#' and '_' in file names (*W24* -> #W24#).
@@ -32,7 +34,7 @@ DTR := $(wildcard dtr/*.dtr)
 DTRAN := $(patsubst dtr/%.dtr,build/%.dtran,$(DTR))
 
 .PHONY: all dtran dis be build check loadmaps test regress corpus test-perso \
-	coverage bemsh clean
+	coverage bemsh record clean
 
 all: dis be build loadmaps
 
@@ -53,10 +55,14 @@ be:
 # the library assembled from the commented texts
 build: build/siprod.bin
 
-build/siprod.bin: $(wildcard text/*.be) siprod.bin tools/siprod_asm.py
+build/siprod.bin: $(wildcard text/*.be) siprod.bin tools/siprod_bemsh.py
 	@mkdir -p build
-	$(PYTHON) tools/siprod_asm.py --build=$@
-	cmp $@ siprod.bin && echo "сборка из текстов совпала с исходным образом"
+	$(PYTHON) tools/siprod_bemsh.py --build=$@
+
+# запись собранной библиотеки в PERSO тома 2248
+record: build/siprod.bin
+	$(PYTHON) tools/siprod_perso.py --vol=2248 --zone=$(ZONE) \
+		--image=build/siprod.bin --work=$(PERSO_WORK)
 
 # the disassembly must be exact: decode + encode == original words
 check:
