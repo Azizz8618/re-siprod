@@ -73,7 +73,8 @@ def parse_be(path):
     """Текст .be -> (локальные символы, метки, команды).
 
     Метки: имя -> (номер команды, смещение DMS в словах от начала модуля).
-    Локальные символы: имя -> смещение DMS в словах (константы и bss).
+    Локальные символы: имя -> (смещение DMS в словах, значение константы
+    или None для переменной bss).
     """
     locsyms, labels, instrs = {}, {}, []
     mode = None
@@ -87,9 +88,11 @@ def parse_be(path):
                 mode = "ЛОКАЛЬНЫЕ"
                 continue
             if mode and "ЛОКАЛЬНЫЕ" in mode:
-                m = re.match(r"^\*\s+(\S+)\s+(\d+)\s*$", line)
+                m = re.match(r"^\*\s+(\S+)\s+(\d+)(?:\s+([0-7]+))?\s*$", line)
                 if m:
-                    locsyms[m.group(1)] = int(m.group(2), 8)
+                    locsyms[m.group(1)] = (int(m.group(2), 8),
+                                           int(m.group(3), 8)
+                                           if m.group(3) else None)
             continue
         code = re.sub(r"\s{2,},.*$", "", line).rstrip()
         if not code.strip():
@@ -219,7 +222,6 @@ def convert(lib, name, path):
     """Текст .be -> исходник МАКРО-БЕМШ."""
     global abs_syms
     s, h = lib.objects[name]
-    sec = lib.sections(name)
     locsyms, labels, instrs = parse_be(path)
     ext = ext_names(lib, name)
     # символы с абсолютным адресом - в исходнике обычные числа
@@ -231,11 +233,11 @@ def convert(lib, name, path):
             abs_syms[_ext.get(i, "A%d" % val)] = \
                 val - 0o100000 if val >= 0o77700 else val
     consts, bss = {}, {}
-    for nm, off in locsyms.items():
+    for nm, (off, val) in locsyms.items():
         if off < h["cmd"]:
             continue
         if off < h["cmd"] + h["const"]:
-            consts[nm] = off - h["cmd"]
+            consts[nm] = (off - h["cmd"], val)
         else:
             bss[nm] = off - h["cmd"] - h["const"]
     out = ["%s\tСТАРТ" % name, "\tЕ", "\tМ"]
@@ -249,10 +251,13 @@ def convert(lib, name, path):
         cmd = "\t%s\t%s" % (instr.lower(), operand) if operand \
             else "\t%s" % instr.lower()
         out.append(("%s\t" % label) + cmd.strip("\t"))
-    # объявления данных - в конце модуля: константы и переменные
-    for nm in sorted(consts, key=lambda k: consts[k]):
-        word = lib.words[sec["const"] + consts[nm]]
-        out.append("%s\tконд\tв'%012o'" % (nm, word))
+    # объявления данных - в конце модуля: константы (с значениями из
+    # текста) и переменные
+    for nm in sorted(consts, key=lambda k: consts[k][0]):
+        _idx, val = consts[nm]
+        if val is None:
+            raise ValueError("%s: у константы %s нет значения" % (name, nm))
+        out.append("%s\tконд\tв'%012o'" % (nm, val))
     for n in range(h["bss"]):
         out.append("%s\tпам\t1" % bss_name(n))
     # внешние символы - объявление ВНЕШ (как в re-dispak).  Транслятор
@@ -378,7 +383,7 @@ def check_module(lib, name, path, verbose=False):
     # оригинал: команды и их коды
     s, h = lib.objects[name]
     code = lib.words[s + 3:s + 3 + h["cmd"]]
-    locsyms, labels, instrs = parse_be(path)
+    _locsyms, labels, instrs = parse_be(path)
     _ext, _labels, symtab = symbol_table(lib, name)
     cmds, symbols = parse_listing(text)
     result["code"] = code
@@ -563,6 +568,15 @@ def build_library(lib, textdir, out, stamp=None, version=VERSION):
         for i, w in enumerate(words):
             off = (s + 3 + i) * 6
             data[off:off + 6] = w.to_bytes(6, "big")
+        # раздел констант - значения из текста модуля
+        sec = lib.sections(name)
+        locsyms, _labels, _instrs = parse_be(path)
+        for nm, (off, val) in locsyms.items():
+            if off < h["cmd"] or off >= h["cmd"] + h["const"] or val is None:
+                continue
+            idx = off - h["cmd"]
+            o = (sec["const"] + idx) * 6
+            data[o:o + 6] = val.to_bytes(6, "big")
         report.append((name, "собрано, совпадает" if same
                        else "собрано, РАЗЛИЧАЕТСЯ"))
     with open(out, "wb") as f:

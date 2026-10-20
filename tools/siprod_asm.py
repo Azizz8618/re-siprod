@@ -224,7 +224,7 @@ def parse_text(path):
                     continue
                 in_syms = False
             if in_locals:
-                m = re.match(r"^\*\s+(\S+)\s+(\d+)\s*$", line)
+                m = re.match(r"^\*\s+(\S+)\s+(\d+)(?:\s+([0-7]+))?\s*$", line)
                 if m:
                     labels[m.group(1)] = int(m.group(2), 8)
                     continue
