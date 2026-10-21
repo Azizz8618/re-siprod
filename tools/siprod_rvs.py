@@ -156,6 +156,8 @@ def main():
                     help="показать имя модуля в объектном модуле")
     ap.add_argument("--zones", action="store_true",
                     help="только собрать объектные модули, не связывать")
+    ap.add_argument("--out", default=None,
+                    help="куда записать полный вывод РВС")
     args = ap.parse_args()
 
     env = prepare(args.work)
@@ -204,6 +206,8 @@ def main():
         return 1 if bad else 0
     print("---- РВС ----")
     out = link(mods, args.work, env, args.out_zone)
+    if args.out:
+        open(args.out, "w", encoding="utf-8").write(out)
     lines = out.splitlines()
     print("\n".join(lines[:6]))
     net = [l.strip() for l in lines if "НЕТ МДЛ" in l]
