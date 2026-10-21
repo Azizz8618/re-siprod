@@ -56,14 +56,19 @@ def prepare(work):
 
 
 def compile_module(lib, name, zone, work, env, textdir):
-    """Скомпилировать модуль в зону ПЕРСО; вернуть (ошибки, имя в объекте)."""
+    """Скомпилировать модуль в зону ПЕРСО; вернуть (ошибки, число зон)."""
     src = sb.convert(lib, name, os.path.join(textdir,
                                              name.replace("*", "#") + ".be"))
     return compile_source(src, name, zone, work, env)
 
 
 def compile_source(src, name, zone, work, env):
-    """Скомпилировать исходник в зону ПЕРСО; вернуть список ошибок."""
+    """Скомпилировать исходник в зону ПЕРСО.
+
+    Возвращает (ошибки, число зон): объектный модуль может занимать
+    несколько зон (о том сообщает транслятор: «ЗАПИСАН В ЗОНЫ С ... ПО
+    ...»), и следующий модуль надо класть за ними.
+    """
     job = sb.make_job(src, zone=zone, vol=VOL)
     b6 = os.path.join(work, "comp_%s.b6" % name.replace("*", "#"))
     open(b6, "w", encoding="utf-8").write(job)
@@ -74,7 +79,11 @@ def compile_source(src, name, zone, work, env):
     m = re.search(r"ЧИСЛО ОШИБОК=(\d+)", out)
     if m and int(m.group(1)):
         errs.append("ошибок транслятора: %s" % m.group(1))
-    return errs
+    nzones = 1
+    m = re.search(r"ЗОНЫ С \S+ ПО (\S+)", out)
+    if m:
+        nzones = int(m.group(1).split()[-1], 8) - int(zone, 8) + 1
+    return errs, nzones
 
 
 def common_blocks(lib):
@@ -167,6 +176,25 @@ _$
     return r.stdout + r.stderr
 
 
+def save_mods(work, mods):
+    """Сохранить список модулей (для повторного связывания)."""
+    path = os.path.join(work, "mods.txt")
+    with open(path, "w", encoding="utf-8") as f:
+        for m in mods:
+            f.write("%s\t%s\t%o\t%d\t%d\n" % (m[0], m[1], m[2], m[3], m[4]))
+    return path
+
+
+def load_mods(work):
+    """Прочитать список модулей, сохранённый save_mods()."""
+    path = os.path.join(work, "mods.txt")
+    mods = []
+    for line in open(path, encoding="utf-8"):
+        nm, z, addr, nz, first = line.rstrip("\n").split("\t")
+        mods.append([nm, z, int(addr, 8), int(nz), int(first)])
+    return mods
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -205,11 +233,11 @@ def main():
     block_first = None
     i = 0
     for name in names:
-        z = "%04o" % (zone + i)
-        i += 1
-        errs = compile_module(lib, name, z, args.work, env, args.text)
+        z = "%04o" % zone
+        errs, nzones = compile_module(lib, name, z, args.work, env, args.text)
         if errs:
             bad.append((name, errs))
+        zone += nzones            # объектный модуль занимает nzones зон
         # длина модуля при загрузке - из исходной библиотеки
         s, h = lib.objects[name]
         length = h["cmd"] + h["const"] + h["bss"]
@@ -234,16 +262,17 @@ def main():
     blocks = common_blocks(lib)
     if args.blocks:
         for blk, size in sorted(blocks.items()):
-            z = "%04o" % (zone + i)
-            i += 1
-            errs = compile_source(block_source(blk, size), blk, z,
-                                  args.work, env)
+            z = "%04o" % zone
+            errs, nzones = compile_source(block_source(blk, size), blk, z,
+                                          args.work, env)
+            zone += nzones
             if errs:
                 bad.append((blk, errs))
             mods.append([blk, z, addr, 1, True])
             addr += size + 8
-    print("собрано модулей: %d, с ошибками: %d, блоков: %d, общих блоков: %d"
-          % (len(mods), len(bad), block_no, len(blocks) if args.blocks else 0))
+    print("собрано модулей: %d, с ошибками: %d, блоков: %d, общих блоков: %d, "
+          "зон ПЕРСО: %d" % (len(mods), len(bad), block_no,
+                             len(blocks) if args.blocks else 0, zone))
     for name, errs in bad:
         print("   %-10s %s" % (name, errs[:2]))
     if args.dump:
@@ -251,8 +280,10 @@ def main():
             print("   %-10s зона %s  имя в объекте: %r"
                   % (m[0], m[1], object_name(args.work, VOL, int(m[1], 8))))
     if args.zones:
+        save_mods(args.work, mods)
         return 1 if bad else 0
     print("---- РВС ----")
+    save_mods(args.work, mods)
     out = link(mods, args.work, env, args.out_zone)
     if args.out:
         open(args.out, "w", encoding="utf-8").write(out)
