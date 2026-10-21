@@ -30,7 +30,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 sys.path.insert(0, HERE)
 from siprod_lib import Library, TEXT                           # noqa: E402
-from siprod_dis import sanitize                               # noqa: E402
+from siprod_dis import sanitize, symbol_table                 # noqa: E402
 import siprod_bemsh as sb                                      # noqa: E402
 
 # том с ПЕРСО (рабочая копия) и том с линковщиком РВС
@@ -59,6 +59,11 @@ def compile_module(lib, name, zone, work, env, textdir):
     """Скомпилировать модуль в зону ПЕРСО; вернуть (ошибки, имя в объекте)."""
     src = sb.convert(lib, name, os.path.join(textdir,
                                              name.replace("*", "#") + ".be"))
+    return compile_source(src, name, zone, work, env)
+
+
+def compile_source(src, name, zone, work, env):
+    """Скомпилировать исходник в зону ПЕРСО; вернуть список ошибок."""
     job = sb.make_job(src, zone=zone, vol=VOL)
     b6 = os.path.join(work, "comp_%s.b6" % name.replace("*", "#"))
     open(b6, "w", encoding="utf-8").write(job)
@@ -70,6 +75,32 @@ def compile_module(lib, name, zone, work, env, textdir):
     if m and int(m.group(1)):
         errs.append("ошибок транслятора: %s" % m.group(1))
     return errs
+
+
+def common_blocks(lib):
+    """Общие блоки библиотеки: имя -> размер в словах.
+
+    В таблице символов модуля общий блок записан записью вида
+    ('lc', '*ИМЯ*', размер).  В исходной библиотеке (формат DMS) общие
+    блоки отдельных объектов не имеют, но для связывания достаточно
+    объявить их модулями с одними данными.
+    """
+    out = {}
+    for name in lib.objects:
+        _ext, _labels, symtab = symbol_table(lib, name)
+        for e in symtab:
+            if e and e[0] == "lc":
+                blk = e[1].strip("*")
+                size = e[2]
+                if blk and size and blk not in out:
+                    out[blk] = size
+    return out
+
+
+def block_source(name, size):
+    """Исходник модуля-общего блока: одна переменная в size слов."""
+    return "%s\tСТАРТ %d\n\tЕ\n\tМ\nV0\tПАМ\t%d\n\tФИНИШ\n" % (name, sb.LOAD,
+                                                                size)
 
 
 def object_name(work, vol, zone):
@@ -156,6 +187,8 @@ def main():
                     help="показать имя модуля в объектном модуле")
     ap.add_argument("--zones", action="store_true",
                     help="только собрать объектные модули, не связывать")
+    ap.add_argument("--no-blocks", dest="blocks", action="store_false",
+                    help="не собирать общие блоки")
     ap.add_argument("--out", default=None,
                     help="куда записать полный вывод РВС")
     args = ap.parse_args()
@@ -170,8 +203,10 @@ def main():
     block_len = 0
     block_no = 0
     block_first = None
-    for i, name in enumerate(names):
+    i = 0
+    for name in names:
         z = "%04o" % (zone + i)
+        i += 1
         errs = compile_module(lib, name, z, args.work, env, args.text)
         if errs:
             bad.append((name, errs))
@@ -194,8 +229,21 @@ def main():
             block_len = 0
     if block_len:
         mods[block_first][3] = (block_len + 1023) // 1024 + 1
-    print("собрано модулей: %d, с ошибками: %d, блоков: %d"
-          % (len(mods), len(bad), block_no))
+    # общие блоки - модули с одними данными: без них ссылки на блоки
+    # не разрешаются и связывание обрывается
+    blocks = common_blocks(lib)
+    if args.blocks:
+        for blk, size in sorted(blocks.items()):
+            z = "%04o" % (zone + i)
+            i += 1
+            errs = compile_source(block_source(blk, size), blk, z,
+                                  args.work, env)
+            if errs:
+                bad.append((blk, errs))
+            mods.append([blk, z, addr, 1, True])
+            addr += size + 8
+    print("собрано модулей: %d, с ошибками: %d, блоков: %d, общих блоков: %d"
+          % (len(mods), len(bad), block_no, len(blocks) if args.blocks else 0))
     for name, errs in bad:
         print("   %-10s %s" % (name, errs[:2]))
     if args.dump:
