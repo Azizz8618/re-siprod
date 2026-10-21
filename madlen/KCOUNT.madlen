@@ -1,0 +1,19 @@
+ KCOUNT  :,NAME, NEW DTRAN
+ ,ATI,9
+ ,NTR,3
+ 9,XTA,
+ ,UTC,*0011B
+ ,X-A,
+ ,STI,9
+ ,ATI,11
+ 9,UTM,1
+ ,XTA,
+ *0005B:11,XTS,
+ 15,ACX,
+ 11,UTM,1
+ 9,VLM,*0005B
+ ,UTC,*0011B
+ ,AOX,
+ 13,UJ,
+ *0011B:,INT,0
+ ,END,

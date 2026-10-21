@@ -1,0 +1,145 @@
+ ADRSEK  :,NAME, NEW DTRAN
+ *LYG*   :,LC,6
+ GAK/2:,EQU,*LYG*   +1
+ GAK/3:,EQU,*LYG*   +2
+ *ADR*   :,LC,4
+ GAK/5:,EQU,*ADR*   +1
+ GAK/6:,EQU,*ADR*   +2
+ GAK/7:,EQU,*ADR*   +3
+ *TAB*   :,LC,5
+ GAL/1:,EQU,*TAB*   +1
+ GAL/2:,EQU,*TAB*   +2
+ GAL/3:,EQU,*TAB*   +3
+ GAL/4:,EQU,*TAB*   +4
+ *NRD*   :,LC,25
+ GAL/6:,EQU,*NRD*   +24
+ *PAGE*  :,LC,6
+ GAM/0:,EQU,*PAGE*  +1
+ *NDAB*  :,LC,4
+ GAM/2:,EQU,*NDAB*  +1
+ *REGIM* :,LC,16
+ *NDABL* :,LC,2
+ GAM/5:,EQU,*NDABL* +1
+ RSYMB   :,SUBP,
+ GAM/7:,EQU,GAK/3+2
+ I*MU*I  :,SUBP,
+ 14,VTM,*0001B
+ ,UJ,*0064B
+ *0001B:7,XTA,
+ ,UTC,GAK/6
+ ,ATX,
+ ,NTR,3
+ 7,XTA,
+ ,UTC,GAK/7
+ ,ATX,
+ ,UTC,*TAB*   
+ ,XTA,
+ 7,A+X,1
+ 7,ATX,6
+ 14,VTM,*NRD*   
+ ,ITS,14
+ 14,VTM,*TAB*   
+ ,ITS,14
+ 14,VTM,GAK/6
+ ,ITS,14
+ 14,VTM,*0075B
+ ,ITS,14
+ ,NTR,22B
+ 13,VJM,RSYMB   
+ 14,VTM,*NRD*   
+ ,ITS,14
+ 14,VTM,*0101B
+ ,ITS,14
+ 14,VTM,GAK/7
+ ,ITS,14
+ 14,VTM,*0075B
+ ,ITS,14
+ 13,VJM,RSYMB   
+ ,NTR,3
+ ,NTR,22B
+ ,UTC,GAK/6
+ ,XTA,
+ ,NTR,3
+ ,UTC,*PAGE*  
+ ,A+X,
+ ,UTC,GAK/6
+ ,ATX,
+ ,UTC,GAK/7
+ ,XTA,
+ ,UTC,*PAGE*  
+ ,A+X,
+ ,UTC,GAK/7
+ ,ATX,
+ 7,XTA,1
+ ,ITS,
+ ,UTC,*REGIM* 
+ ,XTA,
+ ,NTR,22B
+ 15,AEX,
+ ,U1A,*0035B
+ ,UJ,*0036B
+ *0035B:,UJ,*0051B
+ *0036B:7,XTA,
+ ,ITS,
+ ,UTC,GAM/7
+ ,XTA,
+ 15,AEX,
+ ,UZA,*0042B
+ ,UJ,*0043B
+ *0042B:,UJ,*0051B
+ *0043B:,UTC,GAK/6
+ ,XTA,
+ ,NTR,3
+ 7,A+X,5
+ ,UTC,GAK/6
+ ,ATX,
+ ,UTC,GAK/7
+ ,XTA,
+ 7,A+X,5
+ ,UTC,GAK/7
+ ,ATX,
+ ,NTR,22B
+ *0051B:,UTC,*LYG*   
+ ,XTA,
+ 7,ATX,7
+ ,NTR,3
+ ,UTC,*NDAB*  
+ ,XTA,
+ 7,ATX,10B
+ 7,XTA,4
+ 14,VTM,*0102B
+ 13,VJM,I*MU*I  
+ 7,A-X,3
+ ,UTC,*ADR*   
+ ,ATX,
+ 7,XTA,4
+ 14,VTM,*0103B
+ 13,VJM,I*MU*I  
+ 7,A-X,3
+ ,UTC,GAK/5
+ ,ATX,
+ ,NTR,22B
+ ,UJ,*0071B
+ *0064B:7,MTJ,8
+ 14,MTJ,10
+ 7,VTM,*0073B
+ ,ITS,13
+ ,ITS,8
+ ,ITS,
+ ,NTR,3
+ ,NTR,2
+ 10,UJ,
+ *0071B:,STI,
+ ,STI,7
+ ,STI,8
+ 8,UJ,
+ *0073B:,INT,0
+ ,INT,1
+ *0075B:,INT,6
+ ,INT,21
+ ,INT,22
+ ,INT,64
+ *0101B:,BSS,1
+ *0102B:,BSS,1
+ *0103B:,BSS,1
+ ,END,

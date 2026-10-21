@@ -34,7 +34,7 @@ DTR := $(wildcard dtr/*.dtr)
 DTRAN := $(patsubst dtr/%.dtr,build/%.dtran,$(DTR))
 
 .PHONY: all dtran dis be build check loadmaps test regress corpus test-perso \
-	coverage bemsh rvs libs record clean
+	coverage bemsh rvs libs madlen record clean
 
 all: dis be build loadmaps
 
@@ -100,6 +100,10 @@ rvs:
 # библиотеки (формат DMS) в томах и их адреса
 libs:
 	$(PYTHON) tools/siprod_libs.py
+
+# дизассемблирование в автокод МАДЛЕН (дизассемблером dtran)
+madlen:
+	$(PYTHON) tools/siprod_madlen.py
 
 clean:
 	rm -rf build
