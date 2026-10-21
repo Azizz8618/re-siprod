@@ -4,10 +4,10 @@
 *   том 2248), слово 15264 образа SIPROD.BIN
 *   Длина при загрузке: 204 слов, 362 команд
 *   Вход: DOUBLE
-*   Выход: HEADIN:F1, SPAUD:SCANEJ, SPAUD:RAKA, SPAUD:TITLED, SPAUD:SCAN06, 
-*   SPAUD:TITLEG, SPAUD:SCAN55, SPAUD:SCAN56, F15A (возврат через М12), 
+*   Выход: HEADIN:F1, SPAUD:SCANEJ, SPAUD:RAKA, SPAUD:SCANC, SPAUD:SCAN06, 
+*   SPAUD:SCANF, SPAUD:SCAN55, SPAUD:SCAN56, F15A (возврат через М12), 
 *   F15B (возврат через М10)
-*   Внешние: NDAB, SCANER, REGIM, DDR, TAB, NUST, STR, INS, ЦДMБ0, BEGSTR, 
+*   Внешние: NDAB, SCANER, REGIM, DDR, TAB, NUST, STR, INS, SCAN, BEGSTR, 
 *   ENDSTR, TAMPYK, RNSYMB, RSYMB, IMUI
 *   Смещения в INS: 24, 25, 26
 *   Смещения в NDAB: 1, 2
@@ -43,7 +43,7 @@
 *   018 INS24
 *   019 INS25
 *   020 INS26
-*   021 ЦДMБ0
+*   021 SCAN
 *   022 BEGSTR
 *   023 ENDSTR
 *   024 TAMPYK
@@ -340,7 +340,7 @@ SCANEB   МОДА   SCANER                  ,мод.адрес := SCANER
          МОДА   SCANER                  ,мод.адрес := SCANER
          ЗП     0                       ,по адресу SCANER := СМ
          РЖА    '22'                    ,РЖ := 18 (переходы по знаку)
-         ПВ     ЦДMБ0(М15)              ,вызов через М15
+         ПВ     SCAN(М15)               ,вызов через М15
          СЧ     2(М7)                   ,СМ := слот кадра 2
          СЧИМ                           ,в магазин; СМ := ИР
          МОДА   SCANER1                 ,мод.адрес := SCANER1

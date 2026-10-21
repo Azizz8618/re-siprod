@@ -106,29 +106,32 @@ def symbol_table(lib, name):
     words = lib.words
     symtab = [None] * (h["head"] + h["sym"])
 
-    def sym_name(index):
-        """Имя по номеру: слово с именем в разделе длинных имён
-        (или короткое имя в старших битах слова таблицы символов)."""
-        if table_off + index >= lib.nwords:
-            return None
-        w = words[table_off + index]
-        if index >= h["head"] + h["sym"]:
-            # длинное имя: всё слово - 8 символов TEXT
-            return text_decode(w).rstrip() or None
+    def sym_name(index, w):
+        """Имя символа по его слову из таблицы символов.
+
+        Если в старших битах слова есть признак (бит 42) - имя короткое,
+        оно записано прямо в слове; иначе имя длинное, и оно лежит в
+        разделе длинных имён по номеру index.  Признак надо смотреть в
+        самом слове: по номеру нельзя - номер у записи с коротким именем
+        может быть больше длины таблицы символов.
+        """
         if w >> 42:                       # короткое имя в старших битах
             return text_decode(w & 0o77777777700000000).rstrip() or None
-        return text_decode(w).rstrip() or None
+        if table_off + index >= lib.nwords:
+            return None
+        # длинное имя: всё слово - 8 символов TEXT
+        return text_decode(words[table_off + index]).rstrip() or None
 
     for i in range(h["head"], h["head"] + h["sym"]):
         w = words[sec["sym"] - h["head"] + i]
         kind = w & 0o57000000
         index = (w >> 24) & 0o3777
         if kind == 0o43000000:             # внешняя подпрограмма
-            symtab[i] = ("subp", sym_name(index))
+            symtab[i] = ("subp", sym_name(index, w))
         elif kind == 0o47000000:          # общий блок
-            symtab[i] = ("lc", sym_name(index), w & 0o777777)
+            symtab[i] = ("lc", sym_name(index, w), w & 0o777777)
         elif kind == 0o46000000:          # метка
-            symtab[i] = ("lp", sym_name(index))
+            symtab[i] = ("lp", sym_name(index, w))
         elif (w >> 15) & 0o777 == 0o410:  # относительный адрес
             symtab[i] = ("rel", w & 0o7777)
         elif (w >> 15) & 0o777 == 0o400:  # абсолютный адрес

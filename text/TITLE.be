@@ -4,7 +4,7 @@
 *   том 2248), слово 15872 образа SIPROD.BIN
 *   Длина при загрузке: 178 слов, 316 команд
 *   Вход: TITLE
-*   Выход: HEADIN:ENDSTA, SPAUD:TITLEE, SPAUD:TITLEO, 
+*   Выход: HEADIN:ENDSTA, SPAUD:SCAND, SPAUD:SCANN, 
 *   F15C (возврат через М12), F15D (возврат через М10)
 *   ЗАГОЛОВОК ДОКУМЕНТА (ВЫВОД ЧЕРЕЗ BEGSTR/ENDSTR).
 *   Внешние: PAGE, NDAB, STR, INS, MEDIUM, RNSYMB, RSYMB, BEGSTR, ENDSTR, 

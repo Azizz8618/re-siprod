@@ -4,8 +4,8 @@
 *   том 2248), слово 15680 образа SIPROD.BIN
 *   Длина при загрузке: 155 слов, 268 команд
 *   Вход: GETSTR
-*   Выход: FIRCAR:WЗЛБ0A, KORNET:SCANEB, NAMENF:F1, NOTFOR:INS25A, 
-*   ONEPLA:PAGE1A, PAPRAP:INS25A, READMK:NRMA, SCHEMA:ЫЦA, SEGTAB:F7, 
+*   Выход: FIRCAR:SCANA, KORNET:SCANEB, NAMENF:F1, NOTFOR:INS25A, 
+*   ONEPLA:PAGE1A, PAPRAP:INS25A, READMK:NRMA, SCHEMA:SCANA, SEGTAB:F7, 
 *   SPAUD:INS25A, SPAUD:F0D, TWOPLA:F3, WRIIPO:SCANEA, WRIIPO:SCANEG, 
 *   F0A (возврат через М12), POP (возврат через М10)
 *   ЧТЕНИЕ СТРОКИ ВХОДНОГО ПОТОКА.

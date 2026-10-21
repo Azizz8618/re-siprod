@@ -4,7 +4,7 @@
 *   том 2248), слово 20864 образа SIPROD.BIN
 *   Длина при загрузке: 71 слов, 136 команд
 *   Вход: NEWMAX
-*   Выход: CHAPAG:F3, ENDPG:STANDD, RASTXT:NDAB1E, SEGTAB:TAB3A, 
+*   Выход: ENDPG:STANDD, RASTXT:NDAB1E, SEGTAB:TAB3A, 
 *   F0 (возврат через М12), POP (возврат через М10)
 *   Внешние: LYG, NDAB, SEK, REGIM
 *   Смещения в LYG: 1, 2

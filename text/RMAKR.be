@@ -5,7 +5,7 @@
 *   Длина при загрузке: 402 слов, 168 команд
 *   Вход: RMAKR
 *   Выход: PAPAPR:F5, PAPAPR:F5, PAPRAP:EGO86F, PAPRAP:INS25C, 
-*   PAPRAP:EGO86K, PAPRAP:EGO86K, PAPRAP:Б7ЗФA, F13 (возврат через М12), 
+*   PAPRAP:EGO86K, PAPRAP:EGO86K, PAPRAP:SCANA, F13 (возврат через М12), 
 *   POP (возврат через М10)
 *   ЗАГОТОВКА МАКРОСОВ 18 И 19: ШАБЛОНЫ ЗАГОЛОВКОВ И
 *   ТАБЛИЦА ПАРАМЕТРОВ ДЛЯ РЕЖИМА *SUB.

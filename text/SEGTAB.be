@@ -8,8 +8,8 @@
 *   СЕГМЕНТЫ ТАБЛИЦЫ (ЯЧЕЙКИ, ЛИНЕЙКИ).
 *   Внешние: STR, INS, TXT, TAB, LYG, LRE, ATV, SLY, EGO, DYD, LNT, SEK, 
 *   INF, NRD, SCANER, NUST, RUSIS, NDAB, PAGE, REGIM, KLAIDA, RASTXT, 
-*   ANATXT, LYGPAR, NEWMAX, SEKDYD, SEKGIR, RWINF, SYTINT, GETSTR, SEKLYG, 
-*   BEGPG, ENDPG, BEGSTR, ENDSTR, RSYMB, IMUI, IDII
+*   ANATXT, LYGPAR, NEWMAX, SEKDYD, SEKGIR, RWINF, SYTINT, SCAN, GETSTR, 
+*   SEKLYG, BEGPG, ENDPG, BEGSTR, ENDSTR, RSYMB, IMUI, IDII
 *   Смещения в ATV: 1
 *   Смещения в DYD: 1, 2
 *   Смещения в EGO: 2400, 4800, 7200
@@ -98,7 +98,7 @@
 *   060 SEKGIR
 *   061 RWINF
 *   062 SYTINT
-*   063 NRDA
+*   063 SCAN
 *   064 GETSTR
 *   065 SEKLYG
 *   066 BEGPG
@@ -426,7 +426,7 @@ F6A      УИА    V9(М16)                 ,М16 := адрес V9
          СЧ     0                       ,СМ := слово по адресу SCANER
          ЗП     29(М7)                  ,слот кадра 29 := СМ
          РЖА    '22'                    ,РЖ := 18 (переходы по знаку)
-         ПВ     NRDA(М15)               ,вызов через М15
+         ПВ     SCAN(М15)               ,вызов через М15
          МОДА   0                       ,мод.адрес := 0 (сброс модификации)
          СЧ     7(М7)                   ,СМ := слот кадра 7
          СЧИМ                           ,в магазин; СМ := ИР
@@ -478,7 +478,7 @@ SCANEB   МОДА   SCANER                  ,мод.адрес := SCANER
          ЗП     0                       ,по адресу SCANER := СМ
          РЖА    '3'                     ,РЖ := 3 (переходы по нулю)
          РЖА    '22'                    ,РЖ := 18 (переходы по знаку)
-         ПВ     NRDA(М15)               ,вызов через М15
+         ПВ     SCAN(М15)               ,вызов через М15
          СЧ     10(М7)                  ,СМ := слот кадра 10
          СЧИМ                           ,в магазин; СМ := ИР
          МОДА   SCANER1                 ,мод.адрес := SCANER1
