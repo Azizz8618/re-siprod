@@ -228,6 +228,33 @@ def bss_name(n):
 # символы с абсолютным адресом (обычно отрицательные смещения)
 abs_syms = {}
 
+# оверлеи библиотеки: имя -> (базовый модуль, смещение в словах).
+# Записи каталога с нулевой длиной - это оверлеи: дополнительные точки
+# входа внутри базового модуля (см. siprod.list).
+_overlays = None
+
+
+def overlays(path=None):
+    """Оверлеи библиотеки: имя -> (базовый модуль, смещение в словах)."""
+    global _overlays
+    if _overlays is None:
+        _overlays = {}
+        path = path or os.path.join(ROOT, "siprod.list")
+        try:
+            lines = open(path, encoding="utf-8").read().splitlines()
+        except IOError:
+            lines = []
+        for line in lines:
+            for m in re.finditer(r"(\S+)\s+\((\S+?)\s*\)\s+(\d+)", line):
+                _overlays[m.group(1)] = (m.group(2), int(m.group(3), 8))
+    return _overlays
+
+
+def overlay_owner(name):
+    """Владелец символа с таким именем: базовый модуль оверлея или он сам."""
+    ovl = overlays()
+    return ovl.get(name, (name, 0))[0]
+
 
 def convert(lib, name, path):
     """Текст .be -> исходник МАКРО-БЕМШ."""
@@ -256,12 +283,20 @@ def convert(lib, name, path):
     # поэтому оно приводится к тому же виду, что и имена внешних символов.
     sname = sanitize(name) or name
     out = ["%s\tСТАРТ %d" % (sname, LOAD), "\tЕ", "\tМ"]
+    # входные метки - оверлеи этого модуля: метка с именем оверлея на его
+    # адресе и директива ВХОД со списком имён
+    entries = {}
+    for ovl, (base, off) in overlays().items():
+        if base == name:
+            entries[off * 2] = ovl         # смещение задан словами
     for off, instr, op, lab in instrs:
         label = ""
         for nm, (cmd, dms) in labels.items():
             if cmd == off and nm not in locsyms:
                 label = bemsh_name(nm, dms)
                 break
+        if off in entries:
+            label = (label + "\t" if label else "") + entries[off]
         operand = operand_text(op, ext, consts, bss, labels)
         cmd = "\t%s\t%s" % (instr.lower(), operand) if operand \
             else "\t%s" % instr.lower()
@@ -274,15 +309,33 @@ def convert(lib, name, path):
     # составляется как «владелец.символ», поэтому каждый внешний символ
     # объявляется в своём модуле (для СИПРОДа это модуль с подпрограммой
     # или общий блок), а не в том, который на него ссылается.
+    # Владелец оверлея - его базовый модуль: оверлей - это дополнительная
+    # точка входа базового модуля, а не отдельный модуль.
     # Имя символа в списке - то же, что и имя владельца (ссылка на элемент
     # блока записывается как «ИМЯ+СМЕЩЕНИЕ»), и не длиннее шести знаков,
     # так что строка заведомо короче 64 знаков.
-    for owner in sorted(set(base for base, _off in ext.values())):
+    owners = {}
+    for base, _off in ext.values():
+        owners.setdefault(overlay_owner(base), set()).add(base)
+    for owner in sorted(owners):
         if owner == sname:
             # ссылка модуля на самого себя: имя модуля и так известно
             # транслятору, объявлять его внешним нельзя
             continue
-        out.append("%s\tВНЕШ\t%s" % (owner, owner))
+        for sym in sorted(owners[owner]):
+            out.append("%s\tВНЕШ\t%s" % (owner, sym))
+    # входные метки - директива ВХОД со списком имён оверлеев модуля
+    if entries:
+        names = [entries[k] for k in sorted(entries)]
+        line = ""
+        for nm in names:
+            piece = nm + ","
+            if line and len(line) + len(piece) > 60:
+                out.append("\tВХОД\t" + line.rstrip(","))
+                line = ""
+            line += piece
+        if line:
+            out.append("\tВХОД\t" + line.rstrip(","))
     out.append("\tФИНИШ")
     return "\n".join(out) + "\n"
 

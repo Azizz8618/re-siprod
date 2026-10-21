@@ -93,20 +93,24 @@ def object_name(work, vol, zone):
 
 
 def link(mods, work, env, outzone):
-    """mods: список (имя, зона ПЕРСО, адрес загрузки, число зон).
+    """mods: список (имя, зона ПЕРСО, адрес загрузки, число зон, начало блока).
 
     Имя в директиве `мдл` - ровно шесть знаков, как в объектном модуле:
-    не хватает - пробелами.  Каждый модуль - отдельная «группа», у своей
-    зоны для связанной программы (`зонгп`), иначе РВС пишет
-    «ПОВТОРНАЯ ЗАПИСЬ».
+    не хватает - пробелами.  Модули собираются в блоки - группы, которые
+    РВС размещает подряд, начиная с адреса, заданного директивой `наз`
+    (у первого модуля блока); у блока - своя зона для связанной программы
+    (`зонгп`), иначе РВС пишет «ПОВТОРНАЯ ЗАПИСЬ».
     """
     lines = []
     z = int(outzone, 8)
-    for name, zone, addr, nzones in mods:
+    for name, zone, addr, nzones, first in mods:
         sname = (sanitize(name) or name)[:6]
-        lines.append("мдл   %-6s%s%s^наз   %05o^зонгп 43%04o %6o^"
-                     % (sname, TAPE, zone, addr, z, nzones))
-        z += nzones
+        if first:
+            lines.append("мдл   %-6s%s%s^наз   %05o^зонгп 43%04o %6o^"
+                         % (sname, TAPE, zone, addr, z, nzones))
+            z += nzones
+        else:
+            lines.append("мдл   %-6s%s%s^" % (sname, TAPE, zone))
     job = """шифр 419999^
 лен 67(2248)42(%s)^
 лен 43(%s-зп)^
@@ -146,6 +150,8 @@ def main():
                     help="начальный адрес загрузки для РВС (5 знаков октально)")
     ap.add_argument("--out-zone", default="0700",
                     help="зона ПЕРСО для связанной программы")
+    ap.add_argument("--block", type=int, default=1024,
+                    help="размер блока модулей в словах (зона - 1024)")
     ap.add_argument("--dump", action="store_true",
                     help="показать имя модуля в объектном модуле")
     ap.add_argument("--zones", action="store_true",
@@ -159,6 +165,9 @@ def main():
     base = int(args.base, 8)
     mods, bad = [], []
     addr = base
+    block_len = 0
+    block_no = 0
+    block_first = None
     for i, name in enumerate(names):
         z = "%04o" % (zone + i)
         errs = compile_module(lib, name, z, args.work, env, args.text)
@@ -167,16 +176,30 @@ def main():
         # длина модуля при загрузке - из исходной библиотеки
         s, h = lib.objects[name]
         length = h["cmd"] + h["const"] + h["bss"]
-        # зона для связанной программы и ещё одна - под оглавление символов
-        mods.append((name, z, addr, (length + 1023) // 1024 + 1))
+        # блок - группа модулей, занимающая примерно зону (1024 слова);
+        # модули блока РВС размещает подряд, начиная с адреса блока
+        first = block_len == 0
+        if first:
+            block_no += 1
+            block_first = len(mods)
+        mods.append([name, z, addr, 0, first])
         addr += length + 8
-    print("собрано модулей: %d, с ошибками: %d" % (len(mods), len(bad)))
+        block_len += length + 8
+        if block_len >= args.block:
+            # блок заполнен: под него отводим зону программы и ещё одну -
+            # под оглавление символов
+            mods[block_first][3] = (block_len + 1023) // 1024 + 1
+            block_len = 0
+    if block_len:
+        mods[block_first][3] = (block_len + 1023) // 1024 + 1
+    print("собрано модулей: %d, с ошибками: %d, блоков: %d"
+          % (len(mods), len(bad), block_no))
     for name, errs in bad:
         print("   %-10s %s" % (name, errs[:2]))
     if args.dump:
-        for name, z, _addr, _nz in mods:
+        for m in mods:
             print("   %-10s зона %s  имя в объекте: %r"
-                  % (name, z, object_name(args.work, VOL, int(z, 8))))
+                  % (m[0], m[1], object_name(args.work, VOL, int(m[1], 8))))
     if args.zones:
         return 1 if bad else 0
     print("---- РВС ----")
