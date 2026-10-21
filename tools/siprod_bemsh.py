@@ -256,6 +256,52 @@ def overlay_owner(name):
     return ovl.get(name, (name, 0))[0]
 
 
+# карта загрузки мониторной системы: имя -> адрес
+_loadmap = None
+
+# кириллические буквы, совпадающие с латинскими, - как в карте загрузки
+TRANSLIT = str.maketrans("АВСЕНКМОРТХУавеснкморту",
+                         "ABCEHKMOPTXYabcehkmopty")
+
+
+def norm_name(name):
+    """Имя в сравнимом виде: без звёздочек, латинские буквы вместо
+    похожих кириллических, не длиннее шести знаков."""
+    return sanitize(name.translate(TRANSLIT)) or name
+
+
+def loadmap(path=None):
+    """Адреса модулей и общих блоков постоянной библиотеки монитора.
+
+    Карта (tests/siprod/loadmap-dispak.txt) — это карта памяти монитора
+    во время работы СИПРОДа: имя и адрес.  Имена со звёздочками — общие
+    блоки, без — модули.
+    """
+    global _loadmap
+    if _loadmap is None:
+        _loadmap = {}
+        path = path or os.path.join(ROOT, "tests/siprod/loadmap-dispak.txt")
+        try:
+            lines = open(path, encoding="utf-8").read().splitlines()
+        except IOError:
+            lines = []
+        for line in lines:
+            # в строке три записи, каждая - с начала своего поля
+            for i in range(0, len(line), 24):
+                m = re.match(r"\s*(\S+)\s+(?:[CE]\s+)?([0-7]{5})", line[i:i + 24])
+                if not m:
+                    continue
+                nm = norm_name(m.group(1))
+                if nm and nm not in _loadmap:
+                    _loadmap[nm] = int(m.group(2), 8)
+    return _loadmap
+
+
+def permanent_address(name):
+    """Адрес в постоянной библиотеке монитора (None, если нет)."""
+    return loadmap().get(norm_name(name))
+
+
 def convert(lib, name, path):
     """Текст .be -> исходник МАКРО-БЕМШ."""
     global abs_syms
@@ -316,7 +362,15 @@ def convert(lib, name, path):
     # так что строка заведомо короче 64 знаков.
     owners = {}
     for base, _off in ext.values():
-        owners.setdefault(overlay_owner(base), set()).add(base)
+        owner = overlay_owner(base)
+        if base in lib.objects or base in overlays():
+            # модуль СИПРОДа (или оверлей) - символ объявляется внешним
+            owners.setdefault(owner, set()).add(base)
+        elif permanent_address(base) is None:
+            # модуль постоянной библиотеки монитора, адрес неизвестен:
+            # объявляем внешним (линковщик его не найдёт, но и ошибки
+            # транслятора не будет)
+            owners.setdefault(owner, set()).add(base)
     for owner in sorted(owners):
         if owner == sname:
             # ссылка модуля на самого себя: имя модуля и так известно
@@ -324,6 +378,16 @@ def convert(lib, name, path):
             continue
         for sym in sorted(owners[owner]):
             out.append("%s\tВНЕШ\t%s" % (owner, sym))
+    # модули и общие блоки постоянной библиотеки монитора задаются локально:
+    # константой с адресом.  Глобальное имя «владелец.символ» для них не
+    # нужно - блок и модуль лежат по постоянному адресу.
+    for base in sorted(set(base for base, _off in ext.values())):
+        if base == sname or base in lib.objects or base in overlays():
+            continue
+        addr = permanent_address(base)
+        if addr is None:
+            continue
+        out.append("%s\tЭКВ '%o'" % (base, addr))
     # входные метки - директива ВХОД со списком имён оверлеев модуля
     if entries:
         names = [entries[k] for k in sorted(entries)]
@@ -522,8 +586,20 @@ def check_module(lib, name, path, verbose=False):
                                 "команда %d: ссылка на себя %o != %o"
                                 % (off, addr, want))
                     else:
-                        result["mismatch"].append(
-                            "команда %d: внешний символ без перемещения" % off)
+                        # символ постоянной библиотеки монитора задан
+                        # локально константой с адресом
+                        addr_want = permanent_address(base) \
+                            if base else None
+                        if addr_want is None:
+                            result["mismatch"].append(
+                                "команда %d: внешний символ без перемещения"
+                                % off)
+                        else:
+                            want = (addr_want + shift) & 0o77777
+                            if addr != want:
+                                result["mismatch"].append(
+                                    "команда %d: адрес %o != %o"
+                                    % (off, addr, want))
         else:
             # обычный адрес
             if addr != (field & 0o7777):

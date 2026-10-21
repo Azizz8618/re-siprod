@@ -34,7 +34,7 @@ DTR := $(wildcard dtr/*.dtr)
 DTRAN := $(patsubst dtr/%.dtr,build/%.dtran,$(DTR))
 
 .PHONY: all dtran dis be build check loadmaps test regress corpus test-perso \
-	coverage bemsh rvs record clean
+	coverage bemsh rvs libs record clean
 
 all: dis be build loadmaps
 
@@ -96,6 +96,10 @@ bemsh:
 # сборка модулей в ПЕРСО и связывание их линковщиком РВС
 rvs:
 	$(PYTHON) tools/siprod_rvs.py
+
+# библиотеки (формат DMS) в томах и их адреса
+libs:
+	$(PYTHON) tools/siprod_libs.py
 
 clean:
 	rm -rf build
