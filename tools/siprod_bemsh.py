@@ -129,6 +129,28 @@ def signed15(off):
     return off - 0o100000 if off >= 0o40000 else off
 
 
+def resolve_symbol(symtab, name, i, depth=0):
+    """Имя символа (с учётом цепочки ссылок) и суммарное смещение.
+
+    Запись 0 таблицы символов - имя самого модуля, поэтому ссылка модуля
+    на самого себя разрешается в имя модуля со смещением.
+    """
+    if i >= len(symtab) or depth > 8:
+        return None, 0
+    if i == 0:
+        return name, 0
+    e = symtab[i]
+    if e is None:
+        return None, 0
+    if e[0] in ("subp", "lc", "lp"):
+        return e[1].strip("*"), 0
+    if e[0] == "ref":
+        base, off = resolve_symbol(symtab, name, e[1], depth + 1)
+        if base:
+            return base, off + signed15(e[2])
+    return None, 0
+
+
 def ext_names(lib, name):
     """Внешние символы модуля: имя в тексте -> (имя блока, смещение).
 
@@ -138,23 +160,6 @@ def ext_names(lib, name):
     Смещения в ссылках - 15 бит со знаком (0o77777 = -1).
     """
     ext, _labels, symtab = symbol_table(lib, name)
-
-    def resolve(i, depth=0):
-        """Имя символа (с учётом цепочки ссылок) и суммарное смещение."""
-        if i >= len(symtab) or depth > 8:
-            return None, 0
-        if i == 0:
-            return name, 0        # запись 0 - имя самого модуля
-        e = symtab[i]
-        if e is None:
-            return None, 0
-        if e[0] in ("subp", "lc", "lp"):
-            return e[1].strip("*"), 0
-        if e[0] == "ref":
-            base, off = resolve(e[1], depth + 1)
-            if base:
-                return base, off + signed15(e[2])
-        return None, 0
 
     out = {}
     for i, e in enumerate(symtab):
@@ -166,7 +171,7 @@ def ext_names(lib, name):
         if e[0] in ("subp", "lc", "lp") and e[1]:
             out[nm] = (sanitize(e[1]), 0)
         elif e[0] == "ref":
-            base, off = resolve(i)
+            base, off = resolve_symbol(symtab, name, i)
             if base:
                 out[nm] = (sanitize(base), off)
     return out
@@ -244,7 +249,13 @@ def convert(lib, name, path):
             consts[nm] = (off - h["cmd"], val)
         else:
             bss[nm] = off - h["cmd"] - h["const"]
-    out = ["%s\tСТАРТ" % name, "\tЕ", "\tМ"]
+    # заголовок модуля: имя и базовый адрес.  Адрес указывать обязательно:
+    # без него транслятор не считает строку заголовком, имя модуля не
+    # попадает в объектный модуль, и линковщик РВС не находит модуль.
+    # Имя в объекте - не длиннее 6 знаков (транслятор иначе его не пишет),
+    # поэтому оно приводится к тому же виду, что и имена внешних символов.
+    sname = sanitize(name) or name
+    out = ["%s\tСТАРТ %d" % (sname, LOAD), "\tЕ", "\tМ"]
     for off, instr, op, lab in instrs:
         label = ""
         for nm, (cmd, dms) in labels.items():
@@ -258,31 +269,33 @@ def convert(lib, name, path):
     # объявления данных - в конце модуля, как в re-dispak: константы
     # (со значениями) и переменные; берутся из текста
     out.extend(data)
-    # внешние символы - объявление ВНЕШ (как в re-dispak).  Транслятор
-    # 1978 г. обрезает строки длиннее 64 знаков, поэтому список
-    # внешних имён разбивается на несколько директив.
-    outside = sorted(set(base for base, _off in ext.values()))
-    label = "%s\tВНЕШ\t" % name
-    line = ""
-    for nm in outside:
-        piece = nm + ","
-        if line and len(label) + len(line) + len(piece) > 64:
-            out.append(label + line.rstrip(","))
-            line = ""
-        line += piece
-    if line:
-        out.append(label + line.rstrip(","))
+    # внешние символы - объявление ВНЕШ (как в re-dispak).  Перед директивой
+    # указывается владелец символов: глобальное имя символа в МАКРО-БЕМШ
+    # составляется как «владелец.символ», поэтому каждый внешний символ
+    # объявляется в своём модуле (для СИПРОДа это модуль с подпрограммой
+    # или общий блок), а не в том, который на него ссылается.
+    # Имя символа в списке - то же, что и имя владельца (ссылка на элемент
+    # блока записывается как «ИМЯ+СМЕЩЕНИЕ»), и не длиннее шести знаков,
+    # так что строка заведомо короче 64 знаков.
+    for owner in sorted(set(base for base, _off in ext.values())):
+        if owner == sname:
+            # ссылка модуля на самого себя: имя модуля и так известно
+            # транслятору, объявлять его внешним нельзя
+            continue
+        out.append("%s\tВНЕШ\t%s" % (owner, owner))
     out.append("\tФИНИШ")
     return "\n".join(out) + "\n"
 
 
 def make_job(src, zone=ZONE, vol=VOL):
     """Исходник -> задание для транслятора МАКРО-БЕМШ."""
+    # «ВВД$$$^»: без завершающего «^» первая строка исходника (заголовок
+    # модуля с именем) поглощается командой «ВВД» и имя в объект не пишется.
     job = ["шифр 419999^", "трак 64^", "лент 30(2048-6200)^", "лент 42(2099)^",
            "лент %s(%s-ЗП)^" % (TAPE, vol), "ацп 40^", "росп 0^", "врем 240^",
            "лист 0-37^", "вход 4000^", "е", "в 4000", "к 00 010 4003",
            "к 15 24 04000", "к 00 066 0001 00 000 0100", "с 3000 67", "в 14000",
-           "а1", "ВВД$$$"]
+           "а1", "ВВД$$$^"]
     for line in src.rstrip("\n").split("\n"):
         job.append(line + "^")
     job += ["КВЧ$$$^", "ТРН$$$^", "ЧТКОМП420070^", "1-1^", "БТМАЛФ^",
@@ -316,8 +329,13 @@ def run_translator(src, name):
     out = r.stdout + r.stderr
     errs = []
     for line in out.splitlines():
-        if "НЕОП" in line or "ЗАПР" in line or "ОШИБКИ" in line:
-            errs.append(line.rstrip())
+        s = line.strip()
+        if s.startswith("ОШ ") or "НЕОП" in s or "ЗАПР" in s:
+            errs.append(s)
+    # итоговая строка листинга: число ошибок транслятора
+    m = re.search(r"ЧИСЛО ОШИБОК=(\d+)", out)
+    if m and int(m.group(1)):
+        errs.append("ошибок транслятора: %s" % m.group(1))
     return out, errs
 
 
@@ -375,7 +393,7 @@ def check_module(lib, name, path, verbose=False):
     if verbose:
         print(src)
         print(text[-4000:])
-    errors = [e for e in errs if "НЕОП" in e or "ЗАПР" in e]
+    errors = list(errs)
     result = dict(module=name, errors=errors, mismatch=[], code=None)
     if errors:
         return result
@@ -440,8 +458,19 @@ def check_module(lib, name, path, verbose=False):
                             "команда %d: абсолютный адрес %o != %o"
                             % (off, addr, want))
                 else:
-                    result["mismatch"].append(
-                        "команда %d: внешний символ без перемещения" % off)
+                    # ссылка модуля на самого себя: транслятор разрешает
+                    # её в «база модуля + смещение», перемещения нет
+                    base, shift = resolve_symbol(symtab, name, index) \
+                        if e else (None, 0)
+                    if base == name:
+                        want = (LOAD + shift) & 0o77777
+                        if addr != want:
+                            result["mismatch"].append(
+                                "команда %d: ссылка на себя %o != %o"
+                                % (off, addr, want))
+                    else:
+                        result["mismatch"].append(
+                            "команда %d: внешний символ без перемещения" % off)
         else:
             # обычный адрес
             if addr != (field & 0o7777):
@@ -461,7 +490,7 @@ def build_module(lib, name, path):
     """
     src = convert(lib, name, path)
     text, errs = run_translator(src, name.replace("*", "#"))
-    errors = [e for e in errs if "НЕОП" in e or "ЗАПР" in e]
+    errors = list(errs)
     if errors:
         raise ValueError("%s: ошибки транслятора: %s"
                          % (name, errors[0].strip()))
