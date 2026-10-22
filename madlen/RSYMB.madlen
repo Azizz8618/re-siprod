@@ -41,20 +41,15 @@ C
  M17:,EQU,17B
  KONSTA  :,SUBP,
  SYTOBIN :,SUBP,
- SYTOBI1:,EQU,SYTOBIN +1
- SYTOBI2:,EQU,SYTOBIN +2
- SYTOBI3:,EQU,SYTOBIN +3
- SYTOBI4:,EQU,SYTOBIN +4
- SYTOBI5:,EQU,SYTOBIN +5
- RSYMB:,ITS,7.в магазин; СМ := М7
- ,ITS,13.в магазин; СМ := М15
- M15,VJM,KONSTA.вызов через М15
- M12,STX,11B.ЗП + магазин: 9(М12)
- M12,STX,14B.ЗП + магазин: 12(М12)
- ,STI,11.М13 := СМ; СМ := из магазина
- ,ATI,14.М16 := СМ
- M13,XTA,.СМ := смещение в буфере 0
- M15,VJM,SYTOBI5.вызов через М15
+ RSYMB:,ITS,7                           .в магазин; СМ := М7
+ ,ITS,13                                .в магазин; СМ := М15
+ M15,VJM,KONSTA                         .вызов через М15
+ M12,STX,11B                            .ЗП + магазин: 9(М12)
+ M12,STX,14B                            .ЗП + магазин: 12(М12)
+ ,STI,11                                .М13 := СМ; СМ := из магазина
+ ,ATI,14                                .М16 := СМ
+ M13,XTA,                               .СМ := смещение в буфере 0
+ M15,VJM,SYTOBIN+5                      .вызов через М15
  M7,J+M,14
  ,ITA,7
  M11,UTM,-7
@@ -68,7 +63,7 @@ C
  ,STI,9
  ,ATI,12
  M11,XTA,
- M15,VJM,SYTOBI5
+ M15,VJM,SYTOBIN+5
  ,ITA,9
  M7,J+M,12
  ,X-A,
@@ -76,8 +71,8 @@ C
  ,ITA,7
  M10,AAX,4
  ,U1A,ВЫЗОВ_KONSTA
- M15,VJM,SYTOBI1
- M15,VJM,SYTOBI2
+ M15,VJM,SYTOBIN+1
+ M15,VJM,SYTOBIN+2
  ВЫЗОВ_KONSTA:M12,XTA,14B
  ,STI,7
  ,NTR,6
@@ -85,7 +80,7 @@ C
  ,UJ,
 C
   :,ITS,13
- M15,VJM,KONSTA  
+ M15,VJM,KONSTA
  ,STI,13
  ,NTR,3
  ,ATI,9
@@ -101,9 +96,9 @@ C
  M15,VJM,RSYMB
  M17,UTM,1
  LOOP:M6,VZM,PUSH
- M15,VJM,SYTOBI1
+ M15,VJM,SYTOBIN+1
  M6,UTM,1
- M15,VJM,SYTOBI2
+ M15,VJM,SYTOBIN+2
  ,UJ,LOOP
 C
   :13,UJ,

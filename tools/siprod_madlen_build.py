@@ -39,7 +39,7 @@ ROOT = os.path.dirname(HERE)
 sys.path.insert(0, HERE)
 
 from siprod_bemsh import OPS, parse_be                           # noqa: E402
-from siprod_labels import module_table                          # noqa: E402
+from siprod_labels import module_table, sanitize, unique      # noqa: E402
 from siprod_lib import Library                                  # noqa: E402
 from siprod_notes import LABEL_NOTES, MODULE_NOTES              # noqa: E402
 
@@ -317,6 +317,187 @@ def merge_arrays(text):
     return "\n".join(final)
 
 
+# Объявление элемента внешнего массива: FOR1:,EQU,*FOR* +1
+EQU_ARRAY = re.compile(
+    r"^(\s*)([A-Za-zА-ЯЁ][A-Za-zА-ЯЁ0-9_]*):,EQU,(\S+)\s*\+\s*(\d+)\s*$")
+
+
+def merge_equ_arrays(text):
+    """Убрать объявления элементов внешнего массива.
+
+    Внешний массив объявлен один раз (`*FOR* :,LC,8`), а его элементы
+    перечислены как `FOR1:,EQU,*FOR* +1`.  По соглашению элемент
+    адресуется смещением от начала массива (`*FOR*+1`), поэтому
+    отдельные объявления не нужны.
+    """
+    lines = text.splitlines()
+    repl = {}
+    out = []
+    for line in lines:
+        m = EQU_ARRAY.match(line)
+        if m:
+            repl[m.group(2)] = "%s+%s" % (m.group(3), m.group(4))
+            continue                       # объявление элемента не нужно
+        out.append(line)
+    if not repl:
+        return text
+    final = []
+    for line in out:
+        cut = line.find(".")
+        code, sep, tail = (line, "", "") if cut < 0 else (line[:cut], ".", line[cut:])
+        def sub(mo):
+            return repl.get(mo.group(0), mo.group(0))
+        final.append(re.sub(r"[A-Za-zА-ЯЁ][A-Za-zА-ЯЁ0-9_]*", sub, code) + sep + tail)
+    return "\n".join(final)
+
+
+# ------------------------------------------------------- имена данных
+
+# Числительные для имён констант
+NUMERALS = {
+    0: "НОЛЬ", 1: "ЕДИНИЦА", 2: "ДВОЙКА", 3: "ТРОЙКА", 4: "ЧЕТЫРЬ",
+    5: "ПЯТЬ", 6: "ШЕСТЬ", 7: "СЕМЬ", 8: "ВОСЕМЬ", 9: "ДЕВЯТЬ",
+    10: "ДЕСЯТЬ", 11: "ОДИННАДЦАТЬ", 12: "ДВЕНАДЦАТЬ", 13: "ТРИНАДЦАТЬ",
+    14: "ЧЕТЫРНАДЦАТЬ", 15: "ПЯТНАДЦАТЬ", 16: "ШЕСТНАДЦАТЬ",
+    17: "СЕМНАДЦАТЬ", 18: "ВОСЕМНАДЦАТЬ", 19: "ДЕВЯТНАДЦАТЬ",
+    20: "ДВАДЦАТЬ", 21: "ДВАДЦАТЬ_ОДИН", 22: "ДВАДЦАТЬ_ДВА",
+    23: "ДВАДЦАТЬ_ТРИ", 24: "ДВАДЦАТЬ_ЧЕТЫРЕ", 25: "ДВАДЦАТЬ_ПЯТЬ",
+    26: "ДВАДЦАТЬ_ШЕСТЬ", 27: "ДВАДЦАТЬ_СЕМЬ", 28: "ДВАДЦАТЬ_ВОСЕМЬ",
+    29: "ДВАДЦАТЬ_ДЕВЯТЬ", 30: "ТРИДЦАТЬ", 32: "ТРИДЦАТЬ_ДВА",
+    40: "СОРОК", 48: "СОРОК_ВОСЕМЬ", 50: "ПЯТЬДЕСЯТ",
+    64: "ШЕСТЬДЕСЯТ_ЧЕТЫРЕ", 80: "ВОСЕМЬДЕСЯТ", 100: "СТО",
+    128: "СТО_ДВАДЦАТЬ_ВОСЕМЬ", 2400: "ДВЕ_ТЫСЯЧИ_ЧЕТЫРЕСТА",
+    4000: "ЧЕТЫРЕ_ТЫСЯЧИ",
+}
+
+# Строка данных в разборе dtran: ",ТИП,ЗНАЧЕНИЕ" (без имени)
+DATA_LINE = re.compile(
+    r"^(\s*)(,)(BSS|ISO|INT|LOG|OCT|HEX|BIN)(?:,(.*))?$")
+
+
+def value_name(kind, val, used):
+    """Имя безымянного объявления данных - по его значению.
+
+    Константа называется по числу, маска - по набору признаков, строка
+    - по содержимому (пробелы, тире, точки и т.п.).
+    """
+    val = (val or "").strip()
+    if kind == "INT":
+        try:
+            num = int(val.split(".")[0])
+        except ValueError:
+            num = None
+        base = NUMERALS.get(
+            num, "КОНСТАНТА_%s" % (num if num is not None else "?"))
+    elif kind == "LOG":
+        base = "МАСКА_%s" % (val.split(".")[0].strip() or "ПУСТАЯ")
+    elif kind == "ISO":
+        text = val.split(".")[0]
+        m = re.search(r"\d+H(.*)$", text)     # у ISO-строки: 6H'текст'
+        body = m.group(1) if m else text
+        body = body.strip().strip("'")
+        if not body.strip():
+            base = "МАСКА_ПРОБЕЛОВ"
+        elif set(body) == {"-"}:
+            base = "МАСКА_ТИРЕ"
+        elif set(body) == {"."}:
+            base = "МАСКА_ТОЧЕК"
+        elif set(body) == {"I"}:
+            base = "МАСКА_ЗНАКА"
+        else:
+            clean = "".join(ch for ch in body.upper() if ch.isalnum())[:8]
+            base = "МАСКА_%s" % (clean or "ТЕКСТА")
+    else:
+        base = "%s_%s" % (kind, val.split(".")[0].strip() or "БЕЗ_ИМЕНИ")
+    return unique(sanitize(base), used)
+
+
+def be_data_names(module):
+    """Имена данных модуля из текста БЕМШ: (константы, переменные).
+
+    В тексте БЕМШ данные объявлены как `К0 КОНД В'...'` (константа)
+    и `V0 ПАМ 1` (переменная).  В разборе dtran переменные идут
+    блоком без имён, поэтому имена берём отсюда.
+    """
+    path = os.path.join(TXT, module.replace("*", "#") + ".be")
+    consts, vars_ = [], []
+    if not os.path.exists(path):
+        return consts, vars_
+    for line in open(path, encoding="utf-8"):
+        m = re.match(r"^\s*([A-Za-zА-ЯЁ][A-Za-zА-ЯЁ0-9_]*)\s+(КОНД|ПАМ)\b", line)
+        if not m:
+            continue
+        (consts if m.group(2) == "КОНД" else vars_).append(m.group(1))
+    return consts, vars_
+
+
+def name_data(text, module=""):
+    """Дать имена объявлениям данных, которым имён нет.
+
+    В разборе dtran продолжение раздела данных идёт без имени
+    (`,INT,3`, `,BSS,5`) - такие данные в тексте выглядят анонимно.
+    Имена даются по значению (константы), по содержимому (маски) и по
+    именам из текста БЕМШ (переменные); блок BSS разбивается на
+    отдельные переменные.
+    """
+    lines = text.splitlines()
+    used = set()
+    for line in lines:
+        m = re.match(r"^\s*([A-Za-zА-ЯЁ][A-Za-zА-ЯЁ0-9_+]*):,", line)
+        if m:
+            used.add(m.group(1))
+    _consts, varnames = be_data_names(module) if module else ([], [])
+    out = []
+    nvar = 0
+    for line in lines:
+        m = DATA_LINE.match(line)
+        if not m:
+            out.append(line)
+            continue
+        indent, kind, val = m.group(1), m.group(3), (m.group(4) or "").strip()
+        if kind == "BSS":
+            # блок неинициализированных данных - по одной переменной
+            try:
+                count = int(val.split(".")[0])
+            except ValueError:
+                count = 1
+            for _ in range(count):
+                nvar += 1
+                if nvar <= len(varnames):
+                    base = varnames[nvar - 1]
+                else:
+                    base = "ПЕРЕМЕННАЯ_%d" % nvar
+                nm = unique(sanitize(base), used)
+                used.add(nm)
+                out.append("%s%s:,BSS,1" % (indent, nm))
+            continue
+        nm = value_name(kind, val, used)
+        used.add(nm)
+        out.append("%s%s:,%s,%s" % (indent, nm, kind, val))
+    return "\n".join(out)
+
+
+# ------------------------------------------------------- выравнивание
+
+# Колонка, в которой начинается пояснение команды
+COMMENT_COLUMN = 40
+
+
+def align_line(line, note):
+    """Команда и её пояснение - в отдельных колонках.
+
+    Пояснение отделяется точкой, как и принято в МАДЛЕН; перед точкой
+    добавляется отступ до COMMENT_COLUMN, чтобы пояснения всех команд
+    стояли на одной вертикали.
+    """
+    code = line.rstrip()
+    if not note:
+        return code
+    if len(code) < COMMENT_COLUMN:
+        code = code.ljust(COMMENT_COLUMN)
+    return code + "." + note
+
+
 # ------------------------------------------------------- пояснения к командам
 
 # Соответствие мнемоник МАКРО-БЕМШ операциям МАДЛЕН (notes/registers.md).
@@ -335,14 +516,16 @@ BEM2MAD = {
 
 
 def be_commands(module):
-    """Команды модуля из текста БЕМШ: (мнемоника, пояснение).
+    """Команды модуля из текста БЕМШ: (мнемоника, операнд, пояснение).
 
     Пояснение берётся из самого файла (часть строки после запятой) -
     разборщик parse_be отдаёт только операнд, а пояснение команды
     («СМ := смещение в буфере 0») в операнд не входит.
 
     Разбор строк повторяет правила parse_be: строка «СТАРТ», объявления
-    «КОНД»/«ПАМ» и «ФИНИШ» командами не являются.
+    «КОНД»/«ПАМ» и «ФИНИШ» командами не являются.  Псевдокоманда
+    «МОДА 0» (сброс модификации) машинной команды не имеет - в коде её
+    нет, поэтому она пропускается.
     """
     path = os.path.join(TXT, module.replace("*", "#") + ".be")
     if not os.path.exists(path):
@@ -373,9 +556,14 @@ def be_commands(module):
             p2 = rest.split(None, 1)
             if p2[0].upper() == "СТАРТ":
                 continue
-            out.append((p2[0].upper(), comment))
-            continue
-        out.append((first.upper(), comment))
+            mnemonic = p2[0].upper()
+            operand = p2[1].strip() if len(p2) > 1 else ""
+        else:
+            mnemonic = first.upper()
+            operand = rest
+        if mnemonic == "МОДА" and operand.strip() == "0":
+            continue                       # сброс модификации - не команда
+        out.append((mnemonic, operand, comment))
     return out
 
 
@@ -409,13 +597,13 @@ def align_comments(lines, module):
         if op is None:
             continue
         while i < len(bem):
-            mnemonic, comment = bem[i]
+            mnemonic, _operand, _comment = bem[i]
             if BEM2MAD.get(mnemonic) == op:
                 break
             i += 1                       # псевдокоманда - её нет в коде
         if i >= len(bem):
             break
-        _mnemonic, comment = bem[i]
+        _mnemonic, _operand, comment = bem[i]
         if comment:
             out[idx] = comment
         i += 1
@@ -466,6 +654,8 @@ def build(lib, module):
     text, used = register_names(text)
     text = insert_defs(text, register_defs(used))
     text = merge_arrays(text)
+    text = merge_equ_arrays(text)
+    text = name_data(text, module)
     lines = text.splitlines()
 
     # пояснения к командам: комментарий отделяется точкой.
@@ -473,7 +663,7 @@ def build(lib, module):
     # строки БЕМШ и МАДЛЕН не совпадают построчно (см. align_comments).
     comments = align_comments(lines, module)
     if comments:
-        lines = [line.rstrip() + "." + comments[idx] if idx in comments else line
+        lines = [align_line(line, comments.get(idx))
                  for idx, line in enumerate(lines)]
 
     # шапка и пояснения к меткам
