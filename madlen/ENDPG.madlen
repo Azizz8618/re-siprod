@@ -195,7 +195,7 @@ C
 C
  NDAB1B:,UTC,NDAB1.'3'
  ,XTA,.'22'
- M16,VTM,К7.1(М7)
+ M16,VTM,ПАРАМ_СТРАН.1(М7)
  M15,VJM,I*DI*I  
  M7,ATX,15B.REGIM
  ,NTR,3.0
@@ -215,7 +215,7 @@ C
  ,XTA,.1(М7)
  ,ITS,
  M7,XTA,15B.NUST1
- M16,VTM,К7.0
+ M16,VTM,ПАРАМ_СТРАН.0
  M15,VJM,I*MU*I.'22'
  M17,AEX,.0(М17)
  ,U1A,NUST1B.SEK2A
@@ -248,7 +248,7 @@ C
 C
  NUST9B:,UTC,NUST9.0(М17)
  ,XTA,.SEK2C
- M16,VTM,К7.SEK2D
+ M16,VTM,ПАРАМ_СТРАН.SEK2D
  M15,VJM,I*DI*I.0
  M7,ATX,16B.0(М7)
  ,NTR,3.SEK2
@@ -256,7 +256,7 @@ C
  ,XTA,.0
  ,ITS,.PAGEC
  M7,XTA,16B.0
- M16,VTM,К7.0(М7)
+ M16,VTM,ПАРАМ_СТРАН.0(М7)
  M15,VJM,I*MU*I  
  ,NTR,22B.REGIM10
  M17,AEX,.0
@@ -316,7 +316,7 @@ C
  ,UZA,ADDR
  ,UJ,SEK3C.NUST1
 C
- ADDR:M16,VTM,К13.0
+ ADDR:M16,VTM,БУФЕР_СИМВОЛ.0
  ,ITS,14.'22'
  M15,VJM,KLAIDA.0(М17)
  SEK3C:,UTC,SEK3.SEK3A
@@ -343,7 +343,7 @@ C
  M7,ATX,21B.3(М7)
  ,NTR,3.'22'
  ,NTR,22B.ADDR
- RPTD:M16,VTM,К1.SEK3C
+ RPTD:M16,VTM,ФОРМАТ_ЯЧЕЙКИ.SEK3C
  ,ITS,14.К13(М16)
  M15,VJM,FT*571.М16
  M15,VJM,FT*003.KLAIDA(М15)
@@ -356,13 +356,13 @@ C
  ВЫЗОВ_IMUI:M7,XTA,22B.'22'
  ,NTR,3.RPTA
  M7,A-X,1.RPTB
- M16,VTM,К11.0
+ M16,VTM,ГРАН_ВЫВОДА.0
  M15,VJM,I*MU*I.PLNB
  M7,A+X,1.0
  M7,ATX,23B.1(М7)
  M7,A+X,5.17(М7)
  M7,ATX,24B.'3'
- M16,VTM,К2.RPT
+ M16,VTM,ФОРМАТ_СТРОКИ.RPT
  ,ITS,14.0
  ,NTR,22B.'22'
  M15,VJM,FT*571.RPTC
@@ -372,7 +372,7 @@ C
  ,NTR,22B.17(М7)
  ,UJ,ВЫЗОВ_FT003.'3'
 C
- EGO327:,WTC,V10.'22'
+ EGO327:,WTC,ЯЧ_РЕЗУЛЬТ.'22'
  M1,VTM,.0
  M1,UTC,EGO32767.К1(М16)
  M16,VTM,.М16
@@ -422,7 +422,7 @@ C
  M7,A+X,1.1(М7)
  ,UTC,*PLN*.21(М7)
  ,ATX,.'22'
- M16,VTM,К7.0
+ M16,VTM,ПАРАМ_СТРАН.0
  ,ITS,14.20(М7)
  ,NTR,22B.EGO327
  M15,VJM,NEWMAX.FT003(М15)
@@ -534,7 +534,7 @@ C
 C
  ВОЗВРАТ_В_ОС:M7,MTJ,8.'3'
  M16,MTJ,10.'22'
- M7,VTM,К5.0
+ M7,VTM,СЧЁТ_ВЫВОДА.0
  ,ITS,13.1(М7)
  ,ITS,1.STAND
  ,ITS,8.0
@@ -550,21 +550,21 @@ C
  M10,UJ,
 C
   :,ISO, 6H       . 040 040 040 040 040 040 
- К1:,ISO, 6H(1H1)  . 050 061 110 061 051 040 
- К2:,ISO, 6H(10(21 . 050 061 060 050 062 061 
+ ФОРМАТ_ЯЧЕЙКИ:,ISO, 6H(1H1)  . 050 061 110 061 051 040 
+ ФОРМАТ_СТРОКИ:,ISO, 6H(10(21 . 050 061 060 050 062 061 
  ,ISO, 6HA6,A2) . 101 066 054 101 062 051 
  ,ISO, 6H)      . 051 040 040 040 040 040 
- К5:,INT,0
+ СЧЁТ_ВЫВОДА:,INT,0
  ,INT,1
- К7:,INT,2
+ ПАРАМ_СТРАН:,INT,2
  ,INT,3
  ,INT,10
  ,INT,21
- К11:,INT,22
+ ГРАН_ВЫВОДА:,INT,22
  ,INT,63
- К13:,INT,65
+ БУФЕР_СИМВОЛ:,INT,65
  ,INT,66
  ,INT,127
  ,BSS,10
- V10:,BSS,1
+ ЯЧ_РЕЗУЛЬТ:,BSS,1
  ,END,.REGIM

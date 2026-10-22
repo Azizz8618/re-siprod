@@ -53,7 +53,7 @@ C
 C
  NRMB:,UTC,*NRM*.'22'
  ,XTA,.ADDR
- M16,VTM,К2.0
+ M16,VTM,СЧЁТ_2.0
  M15,VJM,I*MU*I.NRM
  ,NTR,3.0
  M7,A-X,1.К2(М16)
@@ -81,26 +81,26 @@ C
 C
  ВЫЗОВ_RNSYMB:M16,VTM,*RMK*.F1A
  ,ITS,14.0
- M16,VTM,V3.F1B
+ M16,VTM,ЯЧ_МАРК3.F1B
  ,ITS,14.0
  M16,VTM,*VIE*.F1C
  ,ITS,14.0
- M16,VTM,К3.RMK(М16)
+ M16,VTM,ГРАН_5_92.RMK(М16)
  ,ITS,14.М16
- M16,VTM,К2.V3(М16)
+ M16,VTM,СЧЁТ_2.V3(М16)
  ,ITS,14.М16
  M15,VJM,RNSYMB.VIE(М16)
  ,NTR,3.М16
  ,NTR,22B.К3(М16)
  ВЫЗОВ_RNSYMB_2:M16,VTM,*RMK*.М16
  ,ITS,14.К2(М16)
- M16,VTM,V2.М16
+ M16,VTM,ЯЧ_МАРК2.М16
  ,ITS,14.RNSYMB(М15)
  M16,VTM,VIE1.0
  ,ITS,14.'3'
- M16,VTM,К3.'22'
+ M16,VTM,ГРАН_5_92.'22'
  ,ITS,14.RMK(М16)
- M16,VTM,К2.М16
+ M16,VTM,СЧЁТ_2.М16
  ,ITS,14.V2(М16)
  M15,VJM,RNSYMB.М16
  ,NTR,3.VIE1(М16)
@@ -114,7 +114,7 @@ C
  ,NTR,22B.'3'
  ,UJ,ЦИКЛ_ПЕРЕХОД_4.'22'
 C
- ADDR:M16,VTM,V1.VIE
+ ADDR:M16,VTM,ЯЧ_МАРК1.VIE
  ,ITS,14.0
  M15,VJM,KLAIDA.'3'
  ,NTR,3.1(М7)
@@ -123,7 +123,7 @@ C
 C
  ВОЗВРАТ_В_ОС:M7,MTJ,8.'22'
  M16,MTJ,10.F1D
- M7,VTM,К0.V1(М16)
+ M7,VTM,СЧЁТ_0_1.V1(М16)
  ,ITS,13.М16
  ,ITS,8.KLAIDA(М15)
  ,ITS,.0
@@ -136,13 +136,13 @@ C
  ,STI,8.М12(М16)
  M10,UJ,.К0(М7)
 C
- К0:,INT,0
+ СЧЁТ_0_1:,INT,0
  ,INT,1
- К2:,INT,2
- К3:,INT,5
+ СЧЁТ_2:,INT,2
+ ГРАН_5_92:,INT,5
  ,INT,92
  ,BSS,1
- V1:,BSS,1
- V2:,BSS,1
- V3:,BSS,1
+ ЯЧ_МАРК1:,BSS,1
+ ЯЧ_МАРК2:,BSS,1
+ ЯЧ_МАРК3:,BSS,1
  ,END,.М15

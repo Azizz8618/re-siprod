@@ -126,6 +126,18 @@ LABEL_NAMES = {
     },
 }
 
+# Дополнительные ручные имена от субагентов (parts 0, 2, 4, 5).
+# Имена из основного LABEL_NAMES имеют приоритет; extras добавляют
+# только недостающие слова.
+from siprod_labels_extra import LABEL_NAMES_EXTRA  # noqa: E402
+for _mod, _labels in LABEL_NAMES_EXTRA.items():
+    if _mod not in LABEL_NAMES:
+        LABEL_NAMES[_mod] = dict(_labels)
+    else:
+        for _word, _name in _labels.items():
+            if _word not in LABEL_NAMES[_mod]:
+                LABEL_NAMES[_mod][_word] = _name
+
 
 def role_of(instr):
     """Роль операции в коде - по ней называется блок."""

@@ -68,14 +68,14 @@ C
  ,ATX,.0(М7)
  ,UTC,NDAB1.STAND1
  ,XTA,.0
- M16,VTM,К2.NDAB1
+ M16,VTM,СМЕЩ_СТАНД.NDAB1
  M15,VJM,I*DI*I.0
  M7,ATX,7.К2(М16)
  ,UTC,NDAB1.IDII(М15)
  ,XTA,.0
  ,ITS,.7(М7)
  M7,XTA,7.NDAB1
- M16,VTM,К2.0
+ M16,VTM,СМЕЩ_СТАНД.0
  M15,VJM,I*MU*I  
  ,NTR,22B.7(М7)
  M17,AEX,.К2(М16)
@@ -102,9 +102,9 @@ C
  M7,ATX,10B.BEGPG(М15)
  ,NTR,3.0
  ,NTR,22B.ENDPG(М15)
- STANDE:,WTC,V2.0
+ STANDE:,WTC,СЧЁТ_11.0
  M1,VTM,.6(М7)
- M1,UTC,V4.STAND1
+ M1,UTC,РАЗМ_ПОЛЯ.STAND1
  ,XTA,.0
  M1,UTC,PAGE32767.'3'
  ,ATX,.'22'
@@ -119,23 +119,23 @@ C
  M7,ATX,10B.0
  ,NTR,3.PAGE32767(М1)
  ,NTR,22B.0
- STANDF:,WTC,V2.8(М7)
+ STANDF:,WTC,СЧЁТ_11.8(М7)
  M1,VTM,.'3'
- M1,UTC,V2.1(М7)
+ M1,UTC,СЧЁТ_11.1(М7)
  ,XTA,.8(М7)
  M1,UTC,LOL32767.3(М7)
  ,ATX,.'22'
- ,WTC,V2.STANDE
+ ,WTC,СЧЁТ_11.STANDE
  M1,VTM,.1(М7)
- M1,UTC,V2.8(М7)
+ M1,UTC,СЧЁТ_11.8(М7)
  ,XTA,.'3'
  M1,UTC,FORMA32767.'22'
  ,ATX,.0
- M1,UTC,V2.V2
+ M1,UTC,СЧЁТ_11.V2
  ,XTA,.0(М1)
  M1,UTC,LOL7.V2(М1)
  ,ATX,.0
- M1,UTC,V2.LOL32767(М1)
+ M1,UTC,СЧЁТ_11.LOL32767(М1)
  ,XTA,.0
  M1,UTC,FORMA7.V2
  ,ATX,.0(М1)
@@ -170,7 +170,7 @@ C
 C
  ВОЗВРАТ_В_ОС:M7,MTJ,8.STAND
  M16,MTJ,10.0
- M7,VTM,К0.5(М7)
+ M7,VTM,СЧЁТ_0_1.5(М7)
  ,ITS,13
  ,ITS,1.ARPI
  ,ITS,8.0
@@ -185,22 +185,22 @@ C
  ,STI,8.POP
  M10,UJ,.0
 C
- К0:,INT,0
+ СЧЁТ_0_1:,INT,0
  ,INT,1
- К2:,INT,2
+ СМЕЩ_СТАНД:,INT,2
  ,INT,6
  ,INT,8
  ,INT,10
  ,BSS,11
  ,DATA,.М10(М7)
- V0:,INT,84
+ ЗНАК_ТФ:,INT,84
  ,INT,70
- V2:,INT,11
- V3:,INT,67
- V4:,INT,6
+ СЧЁТ_11:,INT,11
+ СЧЁТ_67:,INT,67
+ РАЗМ_ПОЛЯ:,INT,6
  ,INT,6
  ,INT,60
  ,INT,4
- M10,SET,V0.М12(М16)
- M1,   ,V3.К0(М7)
+ M10,SET,ЗНАК_ТФ.М12(М16)
+ M1,   ,СЧЁТ_67.К0(М7)
  ,END,.М15

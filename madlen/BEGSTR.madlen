@@ -126,12 +126,12 @@ C
  ,U1A,ADDR.FORMA10
  ,UJ,NDAB1A.0
 C
- ADDR:M16,VTM,К4.'3'
+ ADDR:M16,VTM,ПАРАМЕТР_НАЧА_СТРОКИ_4.'3'
  ,ITS,14.FORMA2
  M15,VJM,KLAIDA.0
  NDAB1A:,UTC,NDAB1.'22'
  ,XTA,.ADDR
- M16,VTM,К2.NDAB1A
+ M16,VTM,ПАРАМЕТР_НАЧА_СТРОКИ_3.NDAB1A
  M15,VJM,I*DI*I.К4(М16)
  M7,ATX,7.М16
  ,NTR,3.KLAIDA(М15)
@@ -155,7 +155,7 @@ C
  ,XTA,.0
  ,ITS,.'22'
  M7,XTA,7.0(М17)
- M16,VTM,К2.NDAB1B
+ M16,VTM,ПАРАМЕТР_НАЧА_СТРОКИ_3.NDAB1B
  M15,VJM,I*MU*I.NDAB1C
  M17,AEX,.0
  ,UZA,STR25A.STR25B
@@ -194,7 +194,7 @@ C
 C
  ADDRA:M16,VTM,*DAR*.'3'
  ,ITS,14.1(М7)
- M16,VTM,К1.NDAB
+ M16,VTM,ПАРАМЕТР_НАЧА_СТРОКИ_2.NDAB
  ,ITS,14.0
  M16,VTM,*STR*.0(М7)
  ,ITS,14
@@ -251,7 +251,7 @@ C
 C
  ВОЗВРАТ_В_ОС:M7,MTJ,8.'3'
  M16,MTJ,10.DAR24
- M7,VTM,К0.0
+ M7,VTM,ПАРАМЕТР_НАЧА_СТРОКИ_1.0
  ,ITS,13.8(М7)
  ,ITS,8.1(М7)
  ,ITS,.STR24
@@ -264,11 +264,11 @@ C
  ,STI,8.0
  M10,UJ,.'22'
 C
- К0:,INT,0
- К1:,INT,1
- К2:,INT,2
+ ПАРАМЕТР_НАЧА_СТРОКИ_1:,INT,0
+ ПАРАМЕТР_НАЧА_СТРОКИ_2:,INT,1
+ ПАРАМЕТР_НАЧА_СТРОКИ_3:,INT,2
  ,INT,10
- К4:,INT,30
+ ПАРАМЕТР_НАЧА_СТРОКИ_4:,INT,30
  ,INT,64
  ,BSS,3
  ,END,.F0

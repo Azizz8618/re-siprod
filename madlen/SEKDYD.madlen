@@ -92,7 +92,7 @@ C
  ЦИКЛ_ПЕРЕХОД:,UJ,ВЫЗОВ_IMUI_3.0
 C
  ВЫЗОВ_IMUI:M7,XTA,2.0(М17)
- M16,VTM,V0.F1
+ M16,VTM,ЗНАЧЕНИЕ_1.F1
  M15,VJM,I*MU*I.F2
  ,NTR,3.F2B
  M7,A+X,2.0
@@ -108,7 +108,7 @@ C
  ,UJ,DYDA
 C
  ВЫЗОВ_IMUI_2:M7,XTA,2.LYG4
- M16,VTM,V0.0
+ M16,VTM,ЗНАЧЕНИЕ_1.0
  M15,VJM,I*MU*I.'22'
  ,UTC,*DYD*.0(М17)
  ,ATX,.F2A
@@ -117,7 +117,7 @@ C
  DYDA:,UJ,DYDC.V0(М16)
 C
  ВЫЗОВ_IMUI_3:M7,XTA,2.IMUI(М15)
- M16,VTM,V0.0
+ M16,VTM,ЗНАЧЕНИЕ_1.0
  M15,VJM,I*MU*I.DYD
  ,NTR,3.0
  M7,A+X,1.'3'
@@ -136,7 +136,7 @@ C
 C
  ВОЗВРАТ_В_ОС:M7,MTJ,8.'22'
  M16,MTJ,10.DYDC
- M7,VTM,К0.3(М7)
+ M7,VTM,ПАРАМЕТР_1.3(М7)
  ,ITS,13.'3'
  ,ITS,8.1(М7)
  ,ITS,.DYD
@@ -149,8 +149,8 @@ C
  ,STI,8.М12(М16)
  M10,UJ,.К0(М7)
 C
- К0:,INT,0
+ ПАРАМЕТР_1:,INT,0
  ,INT,1
  ,INT,2
- V0:,BSS,1
+ ЗНАЧЕНИЕ_1:,BSS,1
  ,END,.М15

@@ -67,9 +67,9 @@ C
  ,ITS,14.М16
  M16,VTM,*SCANER*.SCANER(М16)
  ,ITS,14.М16
- M16,VTM,V1.V1(М16)
+ M16,VTM,ЯЧЕЙКА_ЗНАЧЕНИЯ.V1(М16)
  ,ITS,14.М16
- M16,VTM,К8.К8(М16)
+ M16,VTM,ШЕСТЬ.К8(М16)
  ,ITS,14.М16
  ,NTR,22B.'22'
  M15,VJM,RSYMB.RSYMB(М15)
@@ -83,13 +83,13 @@ C
  ВЫЗОВ_RSYMB_2:M7,XTA,11B.'22'
  M7,ATX,12B.0
  ,NTR,3.9(М7)
- M16,VTM,К0.10(М7)
+ M16,VTM,СТРОКА_КОДА_ОПЕРАЦИИ.10(М7)
  ,ITS,14.'3'
- M16,VTM,V2.К0(М16)
+ M16,VTM,ЯЧЕЙКА_СЧЁТА.К0(М16)
  ,ITS,14.М16
- M16,VTM,V0.V2(М16)
+ M16,VTM,ЯЧЕЙКА_АДРЕСА.V2(М16)
  ,ITS,14.М16
- M16,VTM,К8.V0(М16)
+ M16,VTM,ШЕСТЬ.V0(М16)
  ,ITS,14.М16
  ,NTR,22B.К8(М16)
  M15,VJM,RSYMB.М16
@@ -125,7 +125,7 @@ C
  ,UTC,INS24.STANDI
  ,ATX,.SCANER
  ,NTR,22B.0
- ,WTC,V3.'3'
+ ,WTC,ЯЧЕЙКА_СИМВОЛА.'3'
  SCANEB:,UJ,SCANEB.1(М7)
 C
   :,UJ,STANDB.SCANER
@@ -138,7 +138,7 @@ C
 C
   :,UJ,FRAME.'22'
 C
- STANDB:,WTC,V7.V3
+ STANDB:,WTC,ЯЧЕЙКА_РАБОЧАЯ.V3
  ,XTA,.SCANEB
  ,UTC,STAND1.0
  ,ATX,.STANDB
@@ -154,26 +154,26 @@ C
  M15,VJM,ВЫЗОВ_IMUI.0
  M7,XTA,.V7
  ,ITS,.0
- ,WTC,V7.STAND1
+ ,WTC,ЯЧЕЙКА_РАБОЧАЯ.STAND1
  ,XTA,.0
  ,NTR,22B.'3'
  M17,AEX,.'22'
  ,UZA,STAND3.STANDA(М15)
  ,UJ,STANDC.0
 C
- STAND3:,WTC,V7.STANDI
+ STAND3:,WTC,ЯЧЕЙКА_РАБОЧАЯ.STANDI
  ,XTA,.0
  ,NTR,3.10(М7)
  M7,A-X,1.'3'
- ,WTC,V7.1(М7)
+ ,WTC,ЯЧЕЙКА_РАБОЧАЯ.1(М7)
  ,ATX,.11(М7)
  ,NTR,22B.F9B(М15)
  STANDC:M7,XTA,5.0
- ,WTC,V4.0(М7)
+ ,WTC,БУФЕР_ТЕКСТА.0(М7)
  M1,VTM,
  M1,UTC,STAND32769.V7
  ,ATX,.0
- ,WTC,V7.'22'
+ ,WTC,ЯЧЕЙКА_РАБОЧАЯ.'22'
  ,XTA,.0(М17)
  M1,UTC,STAND32771.STAND3
  ,ATX,.STANDC
@@ -189,7 +189,7 @@ C
  M15,VJM,ПЕР_12.V4
  ,NTR,22B.0(М1)
  TEKST3:M7,XTA,-3.STAND32769(М1)
- ,WTC,К2.0
+ ,WTC,НОЛЬ.0
  M1,VTM,.V7
  M1,UTC,TEKST32743.0
  ,ATX,.STAND32771(М1)
@@ -205,14 +205,14 @@ C
  ,ITS,14.9(М7)
  M16,VTM,*SCANER*.F1A(М15)
  ,ITS,14.0
- ,WTC,К3.'22'
+ ,WTC,НОЛЬ_2.'22'
  M1,VTM,.0
  M1,UTC,TEKST32744.'4025'(М7)
  M16,VTM,.К2
  ,ITS,14.0(М1)
- M16,VTM,К5.TEKST32743(М1)
+ M16,VTM,ЕДИНИЦА.TEKST32743(М1)
  ,ITS,14.0
- ,WTC,V4.0
+ ,WTC,БУФЕР_ТЕКСТА.0
  M2,VTM,.9(М7)
  M2,UTC,TEKST32815.'3'
  M16,VTM,.1(М7)
@@ -250,7 +250,7 @@ C
  ,NTR,22B.0
  ,UJ,STANDI.INS26
 C
- FRAME:,WTC,V7.0
+ FRAME:,WTC,ЯЧЕЙКА_РАБОЧАЯ.0
  ,XTA,.1(М7)
  ,NTR,3.INS24
  ,X-A,.0
@@ -260,12 +260,12 @@ C
  ,UJ,STANDH.STAND
 C
  STANDG:M7,XTA,1.0
- ,WTC,V7.'3'
+ ,WTC,ЯЧЕЙКА_РАБОЧАЯ.'3'
  ,ATX,.0
  ,NTR,3.0(М7)
  ,NTR,22B.'22'
  STANDH:M7,XTA,.STANDE
- ,WTC,V7.STANDF
+ ,WTC,ЯЧЕЙКА_РАБОЧАЯ.STANDF
  ,WTC,.STANDI
  M1,VTM,.0
  M1,UTC,STAND32769.1(М7)
@@ -306,7 +306,7 @@ C
 C
  ПЕР_14:M7,MTJ,8.1(М7)
  M16,MTJ,10.12(М7)
- M7,VTM,К4.12(М7)
+ M7,VTM,НОЛЬ_3.12(М7)
  M7,STX,16B.0(М15)
  ,ITS,13.0
  ,ITS,1.F1
@@ -324,21 +324,21 @@ C
  ,STI,8.13(М7)
  M10,UJ,.6(М7)
 C
- К0:,ISO, 6HAPGON  . 101 120 107 117 116 040 
+ СТРОКА_КОДА_ОПЕРАЦИИ:,ISO, 6HAPGON  . 101 120 107 117 116 040 
  ,ISO, 6H       . 040 040 040 040 040 040 
- К2:,INT,0
- К3:,INT,0
- К4:,INT,0
- К5:,INT,1
+ НОЛЬ:,INT,0
+ НОЛЬ_2:,INT,0
+ НОЛЬ_3:,INT,0
+ ЕДИНИЦА:,INT,1
  ,INT,2
  ,INT,5
- К8:,INT,6
+ ШЕСТЬ:,INT,6
  ,INT,10
  ,INT,24
- V0:,BSS,1
- V1:,BSS,1
- V2:,BSS,1
- V3:,BSS,1
- V4:,BSS,3
- V7:,BSS,2
+ ЯЧЕЙКА_АДРЕСА:,BSS,1
+ ЯЧЕЙКА_ЗНАЧЕНИЯ:,BSS,1
+ ЯЧЕЙКА_СЧЁТА:,BSS,1
+ ЯЧЕЙКА_СИМВОЛА:,BSS,1
+ БУФЕР_ТЕКСТА:,BSS,3
+ ЯЧЕЙКА_РАБОЧАЯ:,BSS,2
  ,END,.IMUI(М16)

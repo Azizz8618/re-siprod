@@ -56,7 +56,7 @@ C
  ,UJ,ВОЗВРАТ_В_ОС.L0320
 C
  READNA:M15,VJM,READNB.READNB(М15)
- M16,VTM,V5.0
+ M16,VTM,СТРОКА_ВВОДА.0
  ,ITS,14.V5(М16)
  M15,VJM,GETSTR.М16
  ,UTC,INS26.GETSTR(М15)
@@ -70,7 +70,7 @@ C
  ,ATX,.3(М7)
  ,UTC,PAGE1.ONE1
  ,XTA,.0
- M16,VTM,К3.PAGE1
+ M16,VTM,ТРОЙКА.PAGE1
  M15,VJM,I*DI*I.0
  M7,A-X,11B.К3(М16)
  ,NTR,22B.IDII(М15)
@@ -79,7 +79,7 @@ C
 C
  PAGE1A:,UTC,PAGE1.'22'
  ,XTA,.PAGE1A
- M16,VTM,К3.ONE1A
+ M16,VTM,ТРОЙКА.ONE1A
  M15,VJM,I*DI*I.PAGE1
  ,UTC,ONE1.0
  ,ATX,.К3(М16)
@@ -87,14 +87,14 @@ C
  ,NTR,22B.ONE1
  ONE1A:,UTC,PAGE1.0
  ,XTA,.'3'
- M16,VTM,К5.'22'
+ M16,VTM,ДВОЙКА.'22'
  M15,VJM,I*DI*I.PAGE1
  M7,ATX,10B.0
  ,UTC,ONE1.К5(М16)
  ,XTA,.IDII(М15)
  ,NTR,3.8(М7)
  ,X-A,.ONE1
- M16,VTM,К5.0
+ M16,VTM,ДВОЙКА.0
  M15,VJM,I*DI*I.'3'
  M7,A+X,10B.0
  ,UTC,*ONE*.К5(М16)
@@ -107,29 +107,29 @@ C
  M15,VJM,ENDKOR.0
  M16,VTM,KOMA7.1(М7)
  ,ITS,14.10(М7)
- M16,VTM,К2.'22'
+ M16,VTM,ЕДИНИЦА.'22'
  ,ITS,14.ENDKOR(М15)
- M16,VTM,К2.0
+ M16,VTM,ЕДИНИЦА.0
  ,ITS,14.KOMA7(М16)
  M15,VJM,WRIKOR.М16
  M16,VTM,KOMA2.К2(М16)
  ,ITS,14.М16
- M16,VTM,К2.К2(М16)
+ M16,VTM,ЕДИНИЦА.К2(М16)
  ,ITS,14.М16
- M16,VTM,К5.WRIKOR(М15)
+ M16,VTM,ДВОЙКА.WRIKOR(М15)
  ,ITS,14.0
  M15,VJM,WRIKOR.KOMA2(М16)
  M16,VTM,*ONE*.М16
  ,ITS,14.К2(М16)
- M16,VTM,К8.М16
+ M16,VTM,ШЕСТНАДЦАТЬ.М16
  ,ITS,14.К5(М16)
- M16,VTM,К8.М16
+ M16,VTM,ШЕСТНАДЦАТЬ.М16
  ,ITS,14.WRIKOR(М15)
- M16,VTM,V3.0
+ M16,VTM,СЧЁТ_СКИПА.0
  ,ITS,14.ONE(М16)
- M16,VTM,К6.М16
+ M16,VTM,ПЯТЬ.М16
  ,ITS,14.К8(М16)
- M16,VTM,К5.М16
+ M16,VTM,ДВОЙКА.М16
  ,ITS,14.К8(М16)
  M15,VJM,RASPS.М16
  ,NTR,3.V3(М16)
@@ -140,27 +140,27 @@ C
  M7,A+X,1.М16
  ,UTC,KORT14.RASPS(М15)
  ,ATX,.0
- M16,VTM,V3.'3'
+ M16,VTM,СЧЁТ_СКИПА.'3'
  ,ITS,14.'22'
- M16,VTM,К6.KORT14
+ M16,VTM,ПЯТЬ.KORT14
  ,ITS,14.0
- M16,VTM,К5.'3'
+ M16,VTM,ДВОЙКА.'3'
  ,ITS,14.1(М7)
  ,NTR,22B.KORT14
  M15,VJM,WRIKOR.0
  ,NTR,3.V3(М16)
  ,NTR,22B.М16
- M16,VTM,V2.К6(М16)
+ M16,VTM,ЯЧЕЙКА_АДРЕСА.К6(М16)
  ,ITS,14.М16
- M16,VTM,К8.К5(М16)
+ M16,VTM,ШЕСТНАДЦАТЬ.К5(М16)
  ,ITS,14.М16
- M16,VTM,К8.'22'
+ M16,VTM,ШЕСТНАДЦАТЬ.'22'
  ,ITS,14.WRIKOR(М15)
- M16,VTM,V4.'3'
+ M16,VTM,СЧЁТ_ЦИКЛА.'3'
  ,ITS,14.'22'
- M16,VTM,К6.V2(М16)
+ M16,VTM,ПЯТЬ.V2(М16)
  ,ITS,14.М16
- M16,VTM,К5.К8(М16)
+ M16,VTM,ДВОЙКА.К8(М16)
  ,ITS,14.М16
  M15,VJM,RASPS.К8(М16)
  ,NTR,3.М16
@@ -171,11 +171,11 @@ C
  M7,A+X,1.К5(М16)
  ,UTC,KORT14.М16
  ,ATX,.RASPS(М15)
- M16,VTM,V4.0
+ M16,VTM,СЧЁТ_ЦИКЛА.0
  ,ITS,14.'3'
- M16,VTM,К6.'22'
+ M16,VTM,ПЯТЬ.'22'
  ,ITS,14.KORT14
- M16,VTM,К5.0
+ M16,VTM,ДВОЙКА.0
  ,ITS,14.'3'
  ,NTR,22B.1(М7)
  M15,VJM,WRIKOR.KORT14
@@ -184,23 +184,23 @@ C
  M15,VJM,ENDKOR.М16
  M16,VTM,*KOMA*.К6(М16)
  ,ITS,14.М16
- M16,VTM,К2.К5(М16)
+ M16,VTM,ЕДИНИЦА.К5(М16)
  ,ITS,14.М16
- M16,VTM,К2.'22'
+ M16,VTM,ЕДИНИЦА.'22'
  ,ITS,14.WRIKOR(М15)
  M15,VJM,WRIKOR.'3'
  M16,VTM,KOMA7.'22'
  ,ITS,14.ENDKOR(М15)
- M16,VTM,К5.0
+ M16,VTM,ДВОЙКА.0
  ,ITS,14.KOMA(М16)
- M16,VTM,К2.М16
+ M16,VTM,ЕДИНИЦА.М16
  ,ITS,14.К2(М16)
  M15,VJM,WRIKOR.М16
- M16,VTM,К0.К2(М16)
+ M16,VTM,СТРОКА_ВЫВОДА.К2(М16)
  ,ITS,14.М16
- M16,VTM,К2.WRIKOR(М15)
+ M16,VTM,ЕДИНИЦА.WRIKOR(М15)
  ,ITS,14.0
- M16,VTM,К7.KOMA7(М16)
+ M16,VTM,ШЕСТЬ.KOMA7(М16)
  ,ITS,14.М16
  M15,VJM,WRIKOR.К5(М16)
  ,NTR,3.М16
@@ -209,22 +209,22 @@ C
  ,ITS,14.WRIKOR(М15)
  M16,VTM,INS25.0
  ,ITS,14.К0(М16)
- M16,VTM,V1.М16
+ M16,VTM,СЧЁТЧИК_СКИПА.М16
  ,ITS,14.К2(М16)
  M15,VJM,WRIKOR.М16
  ,NTR,3.К7(М16)
  ,NTR,22B.М16
  M15,VJM,ENDKOR.WRIKOR(М15)
- M16,VTM,К0.0
+ M16,VTM,СТРОКА_ВЫВОДА.0
  ,ITS,14.'3'
- M16,VTM,К2.'22'
+ M16,VTM,ЕДИНИЦА.'22'
  ,ITS,14.INS(М16)
- M16,VTM,К3.М16
+ M16,VTM,ТРОЙКА.М16
  ,ITS,14.INS25(М16)
  M15,VJM,WRIKOR.М16
  ,NTR,3.V1(М16)
  ,NTR,22B.М16
- M16,VTM,К1.WRIKOR(М15)
+ M16,VTM,НОЛЬ.WRIKOR(М15)
  ,ITS,14.0
  M15,VJM,WRINUM.'3'
  ,UTC,KORT14.'22'
@@ -235,9 +235,9 @@ C
  ,ATX,.К2(М16)
  M16,VTM,KOMA7.М16
  ,ITS,14.К3(М16)
- M16,VTM,К3.М16
+ M16,VTM,ТРОЙКА.М16
  ,ITS,14.WRIKOR(М15)
- M16,VTM,К2.0
+ M16,VTM,ЕДИНИЦА.0
  ,ITS,14.'3'
  ,NTR,22B.'22'
  M15,VJM,WRIKOR.К1(М16)
@@ -246,7 +246,7 @@ C
 C
  ВОЗВРАТ_В_ОС:M7,MTJ,8.0
  M16,MTJ,10.KORT14
- M7,VTM,К1.0
+ M7,VTM,НОЛЬ.0
  ,ITS,13.'3'
  ,ITS,8.1(М7)
  ,ITS,.KORT14
@@ -259,19 +259,19 @@ C
  ,STI,8.К2(М16)
  M10,UJ,.М16
 C
- К0:,ISO, 6H*2/*MD . 052 062 057 052 115 104 
- К1:,INT,0
- К2:,INT,1
- К3:,INT,3
+ СТРОКА_ВЫВОДА:,ISO, 6H*2/*MD . 052 062 057 052 115 104 
+ НОЛЬ:,INT,0
+ ЕДИНИЦА:,INT,1
+ ТРОЙКА:,INT,3
  ,INT,4
- К5:,INT,2
- К6:,INT,5
- К7:,INT,6
- К8:,INT,16
+ ДВОЙКА:,INT,2
+ ПЯТЬ:,INT,5
+ ШЕСТЬ:,INT,6
+ ШЕСТНАДЦАТЬ:,INT,16
  ,BSS,1
- V1:,BSS,1
- V2:,BSS,1
- V3:,BSS,1
- V4:,BSS,1
- V5:,BSS,14
+ СЧЁТЧИК_СКИПА:,BSS,1
+ ЯЧЕЙКА_АДРЕСА:,BSS,1
+ СЧЁТ_СКИПА:,BSS,1
+ СЧЁТ_ЦИКЛА:,BSS,1
+ СТРОКА_ВВОДА:,BSS,14
  ,END,.'22'

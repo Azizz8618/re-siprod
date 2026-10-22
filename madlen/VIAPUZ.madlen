@@ -136,7 +136,7 @@ C
  ,NTR,3.3(М7)
  ,UTC,TEKST48.NDAB
  ,A-X,.0
- M16,VTM,К2.'3'
+ M16,VTM,ПАРАМЕТР_3.'3'
  M15,VJM,I*DI*I.'22'
  M7,A+X,11B.0
  ,UTC,STR25.6(М7)
@@ -148,7 +148,7 @@ C
  ,ATX,.9(М7)
  M16,VTM,*TEKST*.STR25
  ,ITS,14.0
- M16,VTM,К1.TEKST48
+ M16,VTM,ПАРАМЕТР_2.TEKST48
  ,ITS,14.0
  M16,VTM,*STR*.1(М7)
  ,ITS,14.STR26
@@ -221,7 +221,7 @@ C
  M7,XTA,6.2(М7)
  ,UTC,TEKST49.'22'
  ,A-X,.PUFORJ
- M16,VTM,К2.PUFORK
+ M16,VTM,ПАРАМЕТР_3.PUFORK
  M15,VJM,I*DI*I.STANDD
  M7,A+X,11B.0
  ,UTC,STR25.PUFOR3
@@ -233,7 +233,7 @@ C
  ,ATX,.NDAB
  M16,VTM,TEKST24.0
  ,ITS,14.6(М7)
- M16,VTM,К1.TEKST49
+ M16,VTM,ПАРАМЕТР_2.TEKST49
  ,ITS,14.0
  M16,VTM,*STR*.К2(М16)
  ,ITS,14.IDII(М15)
@@ -277,7 +277,7 @@ C
 C
  ВОЗВРАТ_В_ОС:M7,MTJ,8.STANDD
  M16,MTJ,10.0(М7)
- M7,VTM,К0.STAND3
+ M7,VTM,ПАРАМЕТР_1.STAND3
  ,ITS,13.0
  ,ITS,8.0
  ,ITS,.7(М7)
@@ -290,9 +290,9 @@ C
  ,STI,8.0
  M10,UJ,.9(М7)
 C
- К0:,INT,0
- К1:,INT,1
- К2:,INT,2
+ ПАРАМЕТР_1:,INT,0
+ ПАРАМЕТР_2:,INT,1
+ ПАРАМЕТР_3:,INT,2
  ,INT,3
  ,INT,10
  ,BSS,5

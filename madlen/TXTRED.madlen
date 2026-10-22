@@ -28,7 +28,7 @@ C
  M16,VTM,RPTA.RPTA(М16)
  ,UJ,ПЕР_5.F5
 C
- RPTA:,WTC,V2.V2
+ RPTA:,WTC,ЗНАЧЕНИЕ_3.V2
  ,XTA,.0
  ,UTC,*RPT*.RPT
  ,ATX,.0
@@ -51,9 +51,9 @@ C
  ,ATX,.RUSIS
  ,NTR,3.0
  ,NTR,22B.'3'
- RPTD:M16,VTM,V0.'22'
+ RPTD:M16,VTM,ЗНАЧЕНИЕ_1.'22'
  ,ITS,14.0
- M16,VTM,V1.V0(М16)
+ M16,VTM,ЗНАЧЕНИЕ_2.V0(М16)
  ,ITS,14.М16
  M15,VJM,SPAUD.V1(М16)
  ,NTR,3.М16
@@ -78,7 +78,7 @@ C
 C
  ПЕР_5:M7,MTJ,8.0
  M16,MTJ,10.'3'
- M7,VTM,К0.'22'
+ M7,VTM,ПАРАМЕТР_1.'22'
  M7,STX,5.POP
  ,ITS,13.М10(М7)
  ,ITS,8.М12(М16)
@@ -92,10 +92,10 @@ C
  ,STI,8.'2'
  M10,UJ,.0(М12)
 C
- К0:,INT,0
+ ПАРАМЕТР_1:,INT,0
  ,INT,1
  ,INT,10
- V0:,BSS,1
- V1:,BSS,1
- V2:,BSS,1
+ ЗНАЧЕНИЕ_1:,BSS,1
+ ЗНАЧЕНИЕ_2:,BSS,1
+ ЗНАЧЕНИЕ_3:,BSS,1
  ,END,

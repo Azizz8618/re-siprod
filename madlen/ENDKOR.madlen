@@ -62,12 +62,12 @@ C
  ,UZA,ВЫЗОВ_KLAIDA.2(М7)
  ,UJ,EGO86B.'22'
 C
- ВЫЗОВ_KLAIDA:M16,VTM,К4.F0
+ ВЫЗОВ_KLAIDA:M16,VTM,СЧЁТ_101.F0
  ,ITS,14.EGO86B
  M15,VJM,KLAIDA.0
  EGO86B:,UTC,EGO8600.К4(М16)
  ,XTA,.М16
- M16,VTM,К2.KLAIDA(М15)
+ M16,VTM,ТАБ_14_100.KLAIDA(М15)
  M15,VJM,I*MU*I.0
  M7,ATX,5.EGO8600
  ,NTR,3.0
@@ -78,16 +78,16 @@ C
  ,NTR,3.0(М7)
  M7,A+X,6.6(М7)
  M7,ATX,7.'22'
- ,WTC,V2.0
+ ,WTC,ЯЧ_БУФ1.0
  M1,VTM,.5(М7)
  M1,UTC,KORT32767.'3'
  ,XTA,.6(М7)
- ,WTC,V3.7(М7)
+ ,WTC,ЯЧ_БУФ2.7(М7)
  M2,VTM,.V2
  M2,UTC,EGO39967.0(М1)
  ,ATX,.KORT32767(М1)
  M7,XTA,-1.0
- ,WTC,V2.V3
+ ,WTC,ЯЧ_БУФ1.V3
  M1,VTM,.0(М2)
  M1,UTC,KORT32767.EGO39967(М2)
  ,ATX,.0
@@ -113,7 +113,7 @@ C
 C
  ВОЗВРАТ_В_ОС:M7,MTJ,8.0(М7)
  M16,MTJ,10.EGO8600
- M7,VTM,К1.0
+ M7,VTM,СЧЁТ_1.0
  ,ITS,13.'22'
  ,ITS,1.0
  ,ITS,2.F0B
@@ -131,11 +131,11 @@ C
  M10,UJ,.'2'
 C
  ,ISO, 6H       . 040 040 040 040 040 040 
- К1:,INT,1
- К2:,INT,14
+ СЧЁТ_1:,INT,1
+ ТАБ_14_100:,INT,14
  ,INT,100
- К4:,INT,101
+ СЧЁТ_101:,INT,101
  ,BSS,2
- V2:,BSS,1
- V3:,BSS,1
+ ЯЧ_БУФ1:,BSS,1
+ ЯЧ_БУФ2:,BSS,1
  ,END,.0(М12)

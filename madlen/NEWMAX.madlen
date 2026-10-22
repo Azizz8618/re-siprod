@@ -38,7 +38,7 @@ C
 C
  БЛОК_V0:M7,XTA,1.1(М7)
  ,ITS,
- ,WTC,V0.V0
+ ,WTC,ЗНАЧЕНИЕ_1.V0
  ,XTA,.0
  M17,AEX,.0(М17)
  ,UZA,NDABA.NDABA
@@ -90,7 +90,7 @@ C
 C
  БЛОК_V0_2:M7,XTA,1
  ,ITS,.REGIM
- ,WTC,V0.0
+ ,WTC,ЗНАЧЕНИЕ_1.0
  ,XTA,.0(М17)
  M17,AEX,.F1A
  ,UZA,REGIMC.REGIMD
@@ -130,7 +130,7 @@ C
 C
  БЛОК_V0_3:M7,XTA,1.LYG5A
  ,ITS,.LYG5B
- ,WTC,V0.LYG1B
+ ,WTC,ЗНАЧЕНИЕ_1.LYG1B
  ,XTA,.0
  M17,AEX,.LYG5
  ,UZA,NDABC.0
@@ -145,7 +145,7 @@ C
  ,NTR,3.1(М7)
  M7,XTA,1
  ,ITS,.V0
- ,WTC,V0.0
+ ,WTC,ЗНАЧЕНИЕ_1.0
  ,XTA,.0(М17)
  ,NTR,22B.NDABC
  M17,AEX,.NDABD
@@ -161,7 +161,7 @@ C
 C
  ПЕР_2:M7,MTJ,8.1(М7)
  M16,MTJ,10
- M7,VTM,К0.V0
+ M7,VTM,ПАРАМЕТР_1.V0
  M7,STX,2.0
  ,ITS,13.'22'
  ,ITS,8.0(М17)
@@ -175,7 +175,7 @@ C
  ,STI,8.'3'
  M10,UJ,.'22'
 C
- К0:,INT,1
+ ПАРАМЕТР_1:,INT,1
  ,INT,2
- V0:,BSS,1
+ ЗНАЧЕНИЕ_1:,BSS,1
  ,END,.0

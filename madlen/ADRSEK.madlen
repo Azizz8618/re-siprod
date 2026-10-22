@@ -70,17 +70,17 @@ C
  ,ITS,14.М16
  M16,VTM,ADR2.ADR2(М16)
  ,ITS,14.М16
- M16,VTM,К2.К2(М16)
+ M16,VTM,ГРАН_АДР.К2(М16)
  ,ITS,14.М16
  ,NTR,22B.'22'
  M15,VJM,RSYMB.RSYMB(М15)
  M16,VTM,*NRD*.0
  ,ITS,14.NRD(М16)
- M16,VTM,V0.М16
+ M16,VTM,ЯЧ_АДР1.М16
  ,ITS,14.V0(М16)
  M16,VTM,ADR3.М16
  ,ITS,14.ADR3(М16)
- M16,VTM,К2.М16
+ M16,VTM,ГРАН_АДР.М16
  ,ITS,14.К2(М16)
  M15,VJM,RSYMB.М16
  ,NTR,3.RSYMB(М15)
@@ -139,13 +139,13 @@ C
  ,XTA,.'22'
  M7,ATX,10B.LYG
  M7,XTA,4.0
- M16,VTM,V1.7(М7)
+ M16,VTM,ЯЧ_АДР2.7(М7)
  M15,VJM,I*MU*I.'3'
  M7,A-X,3.NDAB
  ,UTC,*ADR*.0
  ,ATX,.8(М7)
  M7,XTA,4.4(М7)
- M16,VTM,V2.V1(М16)
+ M16,VTM,ЯЧ_АДР3.V1(М16)
  M15,VJM,I*MU*I.IMUI(М15)
  M7,A-X,3.3(М7)
  ,UTC,ADR1.ADR
@@ -155,7 +155,7 @@ C
 C
  ВОЗВРАТ_В_ОС:M7,MTJ,8.IMUI(М15)
  M16,MTJ,10.3(М7)
- M7,VTM,К0.ADR1
+ M7,VTM,СЧЁТ_0_1.ADR1
  ,ITS,13.0
  ,ITS,8.'22'
  ,ITS,.F4A
@@ -168,13 +168,13 @@ C
  ,STI,8.М10
  M10,UJ,
 C
- К0:,INT,0
+ СЧЁТ_0_1:,INT,0
  ,INT,1
- К2:,INT,6
+ ГРАН_АДР:,INT,6
  ,INT,21
  ,INT,22
  ,INT,64
- V0:,BSS,1
- V1:,BSS,1
- V2:,BSS,1
+ ЯЧ_АДР1:,BSS,1
+ ЯЧ_АДР2:,BSS,1
+ ЯЧ_АДР3:,BSS,1
  ,END,.'3'

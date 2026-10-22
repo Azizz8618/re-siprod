@@ -74,7 +74,7 @@ C
  ,ATX,.NOTF2
  ,NTR,22B.0
  ENDKOA:M15,VJM,ENDKOR.'22'
- M16,VTM,V1.ENDKOR(М15)
+ M16,VTM,БУФЕР_РЕЖИМ.ENDKOR(М15)
  ,ITS,14.0
  M15,VJM,GETSTR.V1(М16)
  ,UTC,INS25.М16
@@ -138,11 +138,11 @@ C
  M16,VTM,NOTF2.NOTF1
  ,ITS,14.0
  M15,VJM,CSTRIN.1(М7)
- M16,VTM,К0.NOTF2
+ M16,VTM,ЗНАК_КОММ.NOTF2
  ,ITS,14.0
- M16,VTM,К2.'22'
+ M16,VTM,ТАБ_КОДОВ.'22'
  ,ITS,14.ENDKOR(М15)
- M16,VTM,К5.NOTF1(М16)
+ M16,VTM,СЧЁТ_2.NOTF1(М16)
  ,ITS,14.М16
  M15,VJM,WRIKOR.NOTF2(М16)
  ,NTR,3.М16
@@ -203,11 +203,11 @@ C
  ,ITS,14.F0
  ,NTR,22B.0
  M15,VJM,CSTRIN.NOTF
- M16,VTM,К0.0
+ M16,VTM,ЗНАК_КОММ.0
  ,ITS,14.'3'
- M16,VTM,К2.3(М7)
+ M16,VTM,ТАБ_КОДОВ.3(М7)
  ,ITS,14.NOTF1
- M16,VTM,К5.0
+ M16,VTM,СЧЁТ_2.0
  ,ITS,14.PAGE1
  M15,VJM,WRIKOR.0
  ,NTR,3.NOTF1
@@ -218,11 +218,11 @@ C
  M7,A+X,1.NOTF1(М16)
  ,UTC,KORT14.М16
  ,ATX,.NOTF2(М16)
- M16,VTM,К0.М16
+ M16,VTM,ЗНАК_КОММ.М16
  ,ITS,14.'22'
- M16,VTM,К2.CSTRIN(М15)
+ M16,VTM,ТАБ_КОДОВ.CSTRIN(М15)
  ,ITS,14.0
- M16,VTM,К5.К0(М16)
+ M16,VTM,СЧЁТ_2.К0(М16)
  ,ITS,14.М16
  ,NTR,22B.К2(М16)
  M15,VJM,WRIKOR.М16
@@ -231,9 +231,9 @@ C
  M15,VJM,ENDKOR.WRIKOR(М15)
  ВЫЗОВ_WRIKOR:M16,VTM,TYPE1.0
  ,ITS,14.'3'
- M16,VTM,К2.'22'
+ M16,VTM,ТАБ_КОДОВ.'22'
  ,ITS,14.KORT14
- M16,VTM,V0.0
+ M16,VTM,ЯЧ_РЕЖИМ.0
  ,ITS,14.'3'
  M15,VJM,WRIKOR.1(М7)
  ,NTR,3.KORT14
@@ -261,7 +261,7 @@ C
  M7,A+X,1.WRIKOR(М15)
  ,UTC,NOTF2.0
  ,ATX,.'3'
- M16,VTM,К6.'22'
+ M16,VTM,ТАБ_ПРЕДЕЛ.'22'
  ,ITS,14.0(М7)
  ,NTR,22B
  M15,VJM,GOTOPO.TYPE
@@ -277,7 +277,7 @@ C
 C
  ВОЗВРАТ_В_ОС:M7,MTJ,8.0
  M16,MTJ,10.'3'
- M7,VTM,К1.3(М7)
+ M7,VTM,СЧЁТ_0.3(М7)
  ,ITS,13.NOTF1
  ,ITS,8.0
  ,ITS,.PAGE1
@@ -290,15 +290,15 @@ C
  ,STI,8.0
  M10,UJ,.К6(М16)
 C
- К0:,ISO, 6H*/     . 052 057 040 040 040 040 
- К1:,INT,0
- К2:,INT,1
+ ЗНАК_КОММ:,ISO, 6H*/     . 052 057 040 040 040 040 
+ СЧЁТ_0:,INT,0
+ ТАБ_КОДОВ:,INT,1
  ,INT,3
  ,INT,4
- К5:,INT,2
- К6:,INT,5
+ СЧЁТ_2:,INT,2
+ ТАБ_ПРЕДЕЛ:,INT,5
  ,INT,10
  ,INT,11
- V0:,BSS,1
- V1:,BSS,14
+ ЯЧ_РЕЖИМ:,BSS,1
+ БУФЕР_РЕЖИМ:,BSS,14
  ,END,.М16

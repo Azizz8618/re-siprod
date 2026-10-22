@@ -58,7 +58,7 @@ C
  ,NTR,3.1(М7)
  ,NTR,22B.11(М7)
  EGO41B:M7,XTA,-1.'3'
- ,WTC,V1.'22'
+ ,WTC,ЯЧ_БЕГ1.'22'
  M1,VTM,.'4016'(М7)
  M1,UTC,EGO41368.V1
  ,ATX,.0(М1)
@@ -91,7 +91,7 @@ C
  ,NTR,3.F2
  ,NTR,22B.F2A
  ВЫЗОВ_IDII:M7,XTA,3.2(М7)
- M16,VTM,V2.12(М7)
+ M16,VTM,БУФЕР_БЕГ.12(М7)
  M15,VJM,I*DI*I.'3'
  M7,ATX,15B.'22'
  ,NTR,3.3(М7)
@@ -105,7 +105,7 @@ C
  ,U1A,ВЫЗОВ_KLAIDA.FOR
  ,UJ,FORA.0
 C
- ВЫЗОВ_KLAIDA:M16,VTM,К7.0
+ ВЫЗОВ_KLAIDA:M16,VTM,СМЕЩ_ЕГО.0
  ,ITS,14.13(М7)
  M15,VJM,KLAIDA.'22'
  FORA:,UTC,*FOR*.F0
@@ -141,9 +141,9 @@ C
 C
  FORC:,UTC,*FOR*.JAU1
  ,XTA,.0
- M16,VTM,К3.'22'
+ M16,VTM,ГРАН_БЕГ.'22'
  M15,VJM,I*DI*I.0(М17)
- M16,VTM,К3.FORB
+ M16,VTM,ГРАН_БЕГ.FORB
  M15,VJM,I*MU*I.FORC
  M7,ATX,17B.0
  ,NTR,3.FOR2B
@@ -172,7 +172,7 @@ C
 C
  ВОЗВРАТ_В_ОС:M7,MTJ,8.FOR2B
  M16,MTJ,10.0
- M7,VTM,К1.FOR2
+ M7,VTM,СЧЁТ_0_1.FOR2
  ,ITS,13.0
  ,ITS,1.'3'
  ,ITS,8.7(М7)
@@ -188,17 +188,17 @@ C
  M10,UJ,.К1(М7)
 C
   :,ISO, 6H       . 040 040 040 040 040 040 
- К1:,INT,0
+ СЧЁТ_0_1:,INT,0
  ,INT,1
- К3:,INT,2
+ ГРАН_БЕГ:,INT,2
  ,INT,4
  ,INT,10
  ,INT,64
- К7:,INT,101
+ СМЕЩ_ЕГО:,INT,101
  ,INT,128
  ,INT,2400
  ,INT,4800
  ,BSS,1
- V1:,BSS,1
- V2:,BSS,4
+ ЯЧ_БЕГ1:,BSS,1
+ БУФЕР_БЕГ:,BSS,4
  ,END,.М15

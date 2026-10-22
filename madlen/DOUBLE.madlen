@@ -82,7 +82,7 @@ C
  M7,ATX,7.1(М7)
  ,NTR,3.7(М7)
  ,NTR,22B.'3'
- INS26B:,WTC,V14.'22'
+ INS26B:,WTC,ЯЧ_ДВОЙ4.'22'
  ,XTA,.V14
  ,NTR,3.0
  ,X-A,.'3'
@@ -94,36 +94,36 @@ C
 C
  INS26C:,UTC,INS26.INS26D
  ,XTA,.0
- ,WTC,V14.INS26
+ ,WTC,ЯЧ_ДВОЙ4.INS26
  ,ATX,.0
  ,NTR,3.V14
  ,NTR,22B.0
- INS26D:,WTC,V14.'3'
+ INS26D:,WTC,ЯЧ_ДВОЙ4.'3'
  ,XTA,.'22'
  M7,ATX,10B.V14
  ,NTR,3.0
- ,WTC,V14.8(М7)
+ ,WTC,ЯЧ_ДВОЙ4.8(М7)
  ,XTA,.'3'
- ,WTC,V13.V14
+ ,WTC,ЯЧ_ДВОЙ3.V14
  ,A-X,.0
  M7,ATX,4.V13
  M7,XTA,7.0
  M7,A-X,1.4(М7)
  M7,ATX,5.7(М7)
  M7,XTA,4.1(М7)
- M16,VTM,V1.5(М7)
+ M16,VTM,ЯЧ_ДВОЙ1.5(М7)
  M15,VJM,I*MU*I.4(М7)
- ,WTC,V14.V1(М16)
+ ,WTC,ЯЧ_ДВОЙ4.V1(М16)
  ,A+X,.IMUI(М15)
- ,WTC,V14.0
+ ,WTC,ЯЧ_ДВОЙ4.0
  ,ATX,.V14
- ,WTC,V13.0
+ ,WTC,ЯЧ_ДВОЙ3.0
  ,XTA,.V14
  ,UTC,*DDR*.0
  ,ATX,.V13
- ,WTC,V14.0
+ ,WTC,ЯЧ_ДВОЙ4.0
  ,XTA,.DDR
- ,WTC,V13.0
+ ,WTC,ЯЧ_ДВОЙ3.0
  ,A-X,.V14
  ,NTR,22B.0
  ,U1A,DDRA.V13
@@ -131,7 +131,7 @@ C
 C
  DDRA:,UJ,ВОЗВРАТ_В_БЛОК.'22'
 C
- DDRB:,WTC,V14.DDRA
+ DDRB:,WTC,ЯЧ_ДВОЙ4.DDRA
  ,XTA,.DDRB
  M7,ATX,11B.0
  ,NTR,3.F15B
@@ -155,7 +155,7 @@ C
  M7,ATX,5.0
  M7,XTA,4.'3'
  ,X-A,.1(М7)
- M16,VTM,V1.4(М7)
+ M16,VTM,ЯЧ_ДВОЙ1.4(М7)
  M15,VJM,I*MU*I.7(М7)
  M7,A+X,11B.1(М7)
  ,UTC,*DDR*.5(М7)
@@ -253,7 +253,7 @@ C
  ,ITS,14.'22'
  M16,VTM,STR24.F14
  ,ITS,14.F14A
- M16,VTM,V8.STR24A
+ M16,VTM,ЯЧ_ДВОЙ2.STR24A
  ,ITS,14.0
  M15,VJM,RNSYMB.F1B
  ,NTR,3.0
@@ -404,7 +404,7 @@ C
 C
  ПЕР_18:M7,MTJ,8.DDRI
  M16,MTJ,10.0
- M7,VTM,К4.F15
+ M7,VTM,ФОРМАТ_ДВОЙН.F15
  M7,STX,22B.0
  M7,STX,21B.DDR
  ,ITS,13.0
@@ -423,13 +423,13 @@ C
  ,ISO, 6HDUBLIU . 104 125 102 114 111 125 
  ,ISO, 6HOJU'47',1 . 117 112 125 047 054 061 
  ,ISO, 6H0I6)   . 060 111 066 051 040 040 
- К4:,INT,0
+ ФОРМАТ_ДВОЙН:,INT,0
  ,INT,1
  ,INT,8
  ,INT,10
  ,BSS,1
- V1:,BSS,7
- V8:,BSS,5
- V13:,BSS,1
- V14:,BSS,1
+ ЯЧ_ДВОЙ1:,BSS,7
+ ЯЧ_ДВОЙ2:,BSS,5
+ ЯЧ_ДВОЙ3:,BSS,1
+ ЯЧ_ДВОЙ4:,BSS,1
  ,END,.0

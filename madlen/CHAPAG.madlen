@@ -46,7 +46,7 @@ C
  REGIMA:M7,XTA,2.2(М7)
  ,UTC,REGIM9.REGIM9
  ,ATX,.0
- ,WTC,V6.V6
+ ,WTC,ЯЧ_ЗАГОЛ3.V6
  ,XTA,.0
  ,UTC,NUST7.NUST7
  ,ATX,.0
@@ -78,7 +78,7 @@ C
  ,U1A,ВЫЗОВ_KLAIDA.0
  ,UJ,SCANEA.0(М17)
 C
- ВЫЗОВ_KLAIDA:M16,VTM,К4.F3
+ ВЫЗОВ_KLAIDA:M16,VTM,СЧЁТ_20.F3
  ,ITS,14.SCANEA
  M15,VJM,KLAIDA.0
  SCANEA:,UTC,*SCANER*.К4(М16)
@@ -88,9 +88,9 @@ C
  M7,ATX,13B.SCANER
  M16,VTM,*INS*.0
  ,ITS,14.'3'
- M16,VTM,V2.1(М7)
+ M16,VTM,ЯЧ_ЗАГОЛ1.1(М7)
  ,ITS,14.11(М7)
- M16,VTM,V3.INS(М16)
+ M16,VTM,ЯЧ_ЗАГОЛ2.INS(М16)
  ,ITS,14.М16
  ,NTR,22B.V2(М16)
  M15,VJM,SYTINT.М16
@@ -156,7 +156,7 @@ C
  ,U1A,ADDR.ADDR
  ,UJ,SCANEB.0
 C
- ADDR:M16,VTM,К5.NUST6
+ ADDR:M16,VTM,ГРАН_ЗАГОЛ.NUST6
  ,ITS,14.0
  M15,VJM,KLAIDA.'3'
  SCANEB:M7,XTA,13B.0
@@ -184,7 +184,7 @@ C
 C
  ПЕР_15:M7,MTJ,8.SCANED
  M16,MTJ,10.0
- M7,VTM,К0.SCANER
+ M7,VTM,ТАБ_ЗАГОЛ.SCANER
  M7,STX,17B.0
  ,ITS,13.'3'
  ,ITS,8.1(М7)
@@ -198,17 +198,17 @@ C
  ,STI,8.М10(М7)
  M10,UJ,.М12(М16)
 C
- К0:,INT,0
+ ТАБ_ЗАГОЛ:,INT,0
  ,INT,1
  ,INT,10
  ,INT,19
- К4:,INT,20
- К5:,INT,40
+ СЧЁТ_20:,INT,20
+ ГРАН_ЗАГОЛ:,INT,40
  ,INT,64
  ,INT,66
  ,INT,128
  ,BSS,2
- V2:,BSS,1
- V3:,BSS,3
- V6:,BSS,1
+ ЯЧ_ЗАГОЛ1:,BSS,1
+ ЯЧ_ЗАГОЛ2:,BSS,3
+ ЯЧ_ЗАГОЛ3:,BSS,1
  ,END,.К0(М7)

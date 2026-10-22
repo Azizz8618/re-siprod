@@ -261,7 +261,7 @@ C
  ,U1A,ВЫЗОВ_KLAIDA.LYG3
  ,UJ,SEK3A.0
 C
- ВЫЗОВ_KLAIDA:M16,VTM,К6.LYG2
+ ВЫЗОВ_KLAIDA:M16,VTM,ПАРАМЕТР_ЛИСТА_2.LYG2
  ,ITS,14.0
  M15,VJM,KLAIDA.SEK3
  SEK3A:M7,XTA,1.0
@@ -321,7 +321,7 @@ C
 C
  ВОЗВРАТ_В_ОС:M7,MTJ,8.0
  M16,MTJ,10.LYG1
- M7,VTM,К0.0
+ M7,VTM,ПАРАМЕТР_ЛИСТА_1.0
  ,ITS,13.'22'
  ,ITS,8.0
  ,ITS,.LYG
@@ -334,12 +334,12 @@ C
  ,STI,8.0
  M10,UJ,.SLY1
 C
- К0:,LOG,0
+ ПАРАМЕТР_ЛИСТА_1:,LOG,0
  ,INT,0
  ,INT,1
  ,INT,2
  ,INT,10
  ,INT,64
- К6:,INT,65
+ ПАРАМЕТР_ЛИСТА_2:,INT,65
  ,BSS,2
  ,END,.0
