@@ -25,7 +25,7 @@ C
  RASPS   :,SUBP,
  WRIKOR  :,SUBP,
  M16,VTM,ADDR.ADDR(М16)
- ,UJ,ПЕР_5.F5
+ ,UJ,ПЕР+5.F5
 C
  ADDR:M16,VTM,МЕТКА_ПЕРЕХ.К0(М16)
  ,ITS,14.М16
@@ -77,7 +77,7 @@ C
  ,NTR,22B.М16
  ,UJ,POP.WRIKOR(М15)
 C
- ПЕР_5:M7,MTJ,8.0
+ ПЕР+5:M7,MTJ,8.0
  M16,MTJ,10.'3'
  M7,VTM,СЧЁТ_1.'22'
  M7,STX,5.POP
@@ -88,6 +88,7 @@ C
  ,NTR,2.5(М7)
  M12,UJ,.М15
 C
+C ВОЗВРАТ В ВЫЗЫВАЮЩИЙ БЛОК
  POP:,STI,.М10
  ,STI,7
  ,STI,8.'3'

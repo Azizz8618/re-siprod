@@ -182,6 +182,7 @@ C
 C
  ARPIA:,UJ,REGIMB.0
 C
+C ЗАПОМНЕНИЕ НАСТРОЕК И ВЫЗОВ РАСЧЁТА ПАРАМЕТРОВ
  ARPIB:M7,XTA,11B.0(М17)
  ,UTC,*ARPI*.ARPIA
  ,ATX,.ARPIB
@@ -232,6 +233,7 @@ C
  ,UTC,*SCANER*.SCANEA
  ,ATX,.SCANEB
  ,NTR,22B.SCANER
+C СОХРАНЕНИЕ НАЧАЛА СТРОКИ И ПРОВЕРКА ЕЁ КОНЦА
  SCANEB:,UTC,*SCANER*.0
  ,XTA,.'3'
  ,UTC,INS24.1(М7)
@@ -257,6 +259,7 @@ C
 C
  SCANEC:,UJ,NDABB.0
 C
+C УСТАНОВКА УКАЗАТЕЛЯ ЧТЕНИЯ И ПРОВЕРКА ПРИЗНАКА
  SCANED:M7,XTA,1.1(М7)
  ,UTC,*SCANER*
  ,ATX,.REGIM6
@@ -412,11 +415,11 @@ C
  ,XTA,.SCAN17
  M17,AEX,.0
  ,U1A,ЦИКЛ_ПЕРЕХОД_3.SCANJ
- ,UJ,ПЕР_9.0
+ ,UJ,ПЕР+9.0
 C
  ЦИКЛ_ПЕРЕХОД_3:,UJ,SCANEN.SCANN
 C
- ПЕР_9:M7,XTA,11B.0
+ ПЕР+9:M7,XTA,11B.0
  ,ITS,.STANDA
  M7,XTA,37B.0
  M17,AEX,.NUST4C
@@ -425,6 +428,7 @@ C
 C
  INS24A:,UJ,SCANEN.0
 C
+C РАСЧЁТ ШИРИНЫ ЗАПОЛНЕНИЯ И ПРОВЕРКА ПРИЗНАКА
  INS24B:M7,XTA,40B.REGIMW
  ,NTR,3.0
  M7,A-X,1.SCANER
@@ -453,6 +457,7 @@ C
 C
  SCANEJ:,UJ,INS26A.SCANEH
 C
+C УСТАНОВКА УКАЗАТЕЛЯ ЧТЕНИЯ ИЗ БУФЕРА
  SCANEK:M7,XTA,43B.SCANEI
  ,UTC,*SCANER*.0
  ,ATX,.SCANEP
@@ -460,6 +465,7 @@ C
  ,NTR,22B.17(М7)
  ,UJ,SCANEG
 C
+C ЗАПОМНЕНИЕ НОМЕРА СТРОКИ И ПРОВЕРКА КОНЦА СТРОКИ
  INS26A:M7,XTA,.SCANER1
  M7,ATX,37B.0
  ,NTR,3.0(М17)
@@ -740,6 +746,7 @@ C
 C
  SCANE4:,UJ,LNTD.0
 C
+C НАЧАЛО НОВОЙ СТРОКИ И ПРОВЕРКА ЕЁ ЗАВЕРШЕНИЯ
  SCANE5:,UTC,*SCANER*.STANDA
  ,XTA,.0
  ,NTR,3.NUST4C
@@ -761,6 +768,7 @@ C
 C
  INS26B:,UJ,ВЕТКА_S.'3'
 C
+C ПРОВЕРКА ДОСТИЖЕНИЯ КОНЦА ВХОДНОЙ СТРОКИ
  INS26C:,UTC,INS26.'22'
  ,XTA,.SCANER
  ,ITS,.0
@@ -815,6 +823,7 @@ C
  ВЫЗОВ_KLAIDA_5:M16,VTM,КОНСТАНТА_2733.0
  ,ITS,14.'22'
  M15,VJM,KLAIDA.0
+C РАЗБОР ТОКЕНА РЕЗУЛЬТАТА И ПРОВЕРКА ПРИЗНАКА
  ВЫЗОВ_TOKREZ:M16,VTM,*NRD*.SCANEG
  ,ITS,14.0
  M16,VTM,ПЕРЕМЕННАЯ_2755.SCANER
@@ -837,6 +846,7 @@ C
 C
  ЦИКЛ_ПЕРЕХОД_5:,UJ,SEGTAA.SCANE2
 C
+C ПРЕОБРАЗОВАНИЕ ЗНАЧЕНИЯ В ЧИСЛО И СВЕРКА
  ВЫЗОВ_IDII:M7,XTA,47B.SCANE3
  M16,VTM,КОНСТАНТА_2710.0
  M15,VJM,I*DI*I.SCANE6
@@ -860,6 +870,7 @@ C
  SEGTAA:M15,VJM,SEGTAB.0
  ,UJ,SCANEG.'22'
 C
+C ЗАПОМНЕНИЕ ПРИЗНАКА ПЕРЕНОСА СТРОКИ
  LNTD:M7,XTA,1.NEWSTR(М15)
  ,UTC,*LNT*.'127'(М7)
  ,ATX,.'3'
@@ -894,6 +905,7 @@ C
  ,UJ,ЦИКЛ_ЧТЕНИЕ.'22'
 C
  BEGSTB:M15,VJM,BEGSTR.0
+C ЧТЕНИЕ СИМВОЛА ВХОДНОЙ СТРОКИ
  ЦИКЛ_ЧТЕНИЕ:M7,XTA,127B.SCANEG
  ,NTR,3.0
  M7,A-X,1.SCANER
@@ -907,6 +919,7 @@ C
 C
  INS26F:,UJ,NDAB1D.'3'
 C
+C ПРОВЕРКА ДОСТИЖЕНИЯ КОНЦА ВХОДНОЙ СТРОКИ
  INS26G:,UTC,INS26.'22'
  ,XTA,.SCANER
  ,ITS,.0
@@ -942,6 +955,7 @@ C ВЕТВЬ *G: УСТАНОВКА ФОРМАТА (ПОЛЯ, РАМКА).
 C
  RAI1A:,UJ,INS26J.NRD(М16)
 C
+C ЗАПОМНЕНИЕ ГРАНИЦ ТЕКСТА И ПРОВЕРКА ИХ СОВПАДЕНИЯ
  RAI1B:M7,XTA,50B.М16
  ,UTC,RAI1.V10(М16)
  ,ATX,.М16
@@ -974,6 +988,7 @@ C
  ,UJ,INS26J.'3'
 C
  BEGSTC:M15,VJM,BEGSTR.39(М7)
+C ПРОВЕРКА КОНЦА ВХОДНОЙ СТРОКИ
  INS26J:,UTC,INS26
  ,XTA,.NRD24
  ,ITS,.0
@@ -1008,6 +1023,7 @@ C ВЕТВЬ *P: КОНЕЦ СТРАНИЦЫ (ENDPG).
 C
  INS26M:,UJ,ВЕТКА_P.0
 C
+C ПРОВЕРКА КОНЦА ВХОДНОЙ СТРОКИ
  INS26N:,UTC,INS26.0(М17)
  ,XTA,.NDAB1C
  ,ITS,.NDAB1D
@@ -1026,6 +1042,7 @@ C
  ,NTR,22B.0
  SCANE8:,UJ,SCANEG.0(М17)
 C
+C УСТАНОВКА НАЧАЛА ТЕКСТА И ВОЗВРАТ К РАЗБОРУ
  SCANE9:,UTC,*SCANER*.BEGSTB
  ,XTA,.F30
  ,NTR,3.0
@@ -1240,6 +1257,7 @@ C
 C
  REGIMD:,UJ,REGIMF.К20(М16)
 C
+C ЗАПОМНЕНИЕ НОМЕРА СТРАНИЦЫ В РЕЖИМ
  REGIME:M7,XTA,.М16
  ,UTC,REGIM4.KLAIDA(М15)
  ,ATX,.0
@@ -1257,6 +1275,7 @@ C
  ,UTC,REGIM4.INS(М16)
  ,ATX,.М16
  ,NTR,22B.SCANER(М16)
+C ПРОВЕРКА КОНЦА ВХОДНОЙ СТРОКИ
  REGIMG:,UTC,INS26.М16
  ,XTA,.V59(М16)
  ,ITS,.М16
@@ -1358,6 +1377,7 @@ C
  M7,ATX,53B.0
  ,NTR,3.'22'
  ,NTR,22B.0
+C СБОР ПАРАМЕТРОВ РЕЖИМА В ТАБЛИЦУ EGO
  EGO327:M7,XTA,-8.SCANEG
  ,WTC,ПЕРЕМЕННАЯ_2761.0
  M1,VTM,.9(М7)
@@ -1414,6 +1434,7 @@ C
  M7,ATX,60B.REGIMD
  ,NTR,3.REGIME
  ,NTR,22B.0
+C ВЫВОД СИМВОЛОВ ЧЕРЕЗ RSYMB И СВЕРКА ПРИЗНАКА
  ВЫЗОВ_RSYMB:M16,VTM,ПЕРЕМЕННАЯ_3062.REGIMF
  ,ITS,14.0
  M16,VTM,ПЕРЕМЕННАЯ_2766.0(М7)
@@ -1432,7 +1453,7 @@ C
  ,U1A,ЦИКЛ_ПЕРЕХОД_9.REGIM4
  ,UJ,БЛОК_V19.0
 C
- ЦИКЛ_ПЕРЕХОД_9:,UJ,ПЕР_48.'22'
+ ЦИКЛ_ПЕРЕХОД_9:,UJ,ПЕР+48.'22'
 C
  БЛОК_V19:,WTC,ПЕРЕМЕННАЯ_2766.INS26
  M1,VTM,.0
@@ -1442,7 +1463,7 @@ C
  ,ATX,.0(М17)
  ,UJ,SCAN16.SCAN09
 C
- ПЕР_48:M7,XTA,60B.SCAN10
+ ПЕР+48:M7,XTA,60B.SCAN10
  ,NTR,3.SCANER
  M7,A+X,1.0
  M7,ATX,60B.'3'
@@ -1613,6 +1634,7 @@ C
  ,NTR,22B.'22'
  ,UJ,SCANL.RSYMB(М15)
 C
+C ПРОВЕРКА ГРАНИЦ ФОРМАТА И РАСЧЁТ ПОЗИЦИИ
  FORMA1:M7,XTA,127B.0
  ,UTC,FORMA11.'3'
  ,ATX,.'22'
@@ -1633,6 +1655,7 @@ C
  ADDRB:M16,VTM,КОНСТАНТА_2731.0
  ,ITS,14.'3'
  M15,VJM,KLAIDA.'22'
+C УСТАНОВКА ПОЗИЦИИ ВЫВОДА И ПРОВЕРКА ПРИЗНАКА
  SCAN19:M7,XTA,64B.47(М7)
  ,UTC,*SCANER*
  ,ATX,.45(М7)
@@ -1670,6 +1693,7 @@ C
  M7,A+X,27B.35(М7)
  M7,ATX,65B.'3'
  ,NTR,22B.'127'(М7)
+C ПРОВЕРКА ГРАНИЦ ВЫВОДИМОГО ТЕКСТА
  STR25D:,UTC,STR25.32(М7)
  ,XTA,.9(М7)
  ,ITS,.31(М7)
@@ -1681,6 +1705,7 @@ C
 C
  STR24A:,UJ,PAGEC.'22'
 C
+C УСТАНОВКА ГРАНИЦ ТЕКСТА И УМЕНЬШЕНИЕ СЧЁТЧИКА
  STR24B:M7,XTA,65B.SCAN15
  ,UTC,STR24.1(М7)
  ,ATX,
@@ -1696,6 +1721,7 @@ C
  ,NTR,22B.V19
  ,UJ,NUST2B.0(М1)
 C
+C ПРОВЕРКА ПРИЗНАКА НОВОЙ СТРАНИЦЫ
  PAGEC:,UTC,*PAGE*.V62(М1)
  ,XTA,.0
  ,ITS,.V81(М1)
@@ -1731,6 +1757,7 @@ C
  ,ATX,.М16
  ,NTR,3.'22'
  ,NTR,22B.RNSYMB(М15)
+C ПРОВЕРКА КОНЦА ВХОДНОЙ СТРОКИ
  STR26B:,UTC,INS26.0
  ,XTA,.POP
  ,ITS,.0
@@ -1841,11 +1868,13 @@ C
 C
  NUST5A:,UJ,NUST6A.0
 C
+C ЗАПОМНЕНИЕ ПОЗИЦИИ И ПЕРЕХОД К РАЗБОРУ
  NUST5B:M7,XTA,127B.'3'
  ,UTC,NUST5.0
  ,ATX,.FORMA11
  ,UJ,SCANM.0
 C
+C ПРОВЕРКА ВЫХОДА ЗА ГРАНИЦЫ СТРАНИЦЫ
  NUST6A:M7,XTA,127B.PAGE
  ,UTC,NUST6.0
  ,ATX,.PAGE1
@@ -1927,6 +1956,7 @@ C
 C
  NRMA:,UJ,SCAN34.NUST2B
 C
+C ВЫВОД НОМЕРА СТРАНИЦЫ И ПРОВЕРКА ПРИЗНАКА
  NRMB:M7,XTA,127B.PAGE
  ,UTC,*NRM*.0
  ,ATX,
@@ -1958,6 +1988,7 @@ C
 C
  ЦИКЛ_ПЕРЕХОД_14:,UJ,INS327.STR26B
 C
+C ЧТЕНИЕ СЛЕДУЮЩЕЙ КАРТЫ И ПРОВЕРКА КОНЦА СТРОКИ
  READMA:M15,VJM,READMK.0
  ,UTC,INS26.55(М7)
  ,XTA,.STR26
@@ -1981,6 +2012,7 @@ C
  M7,ATX,73B.1(М7)
  ,NTR,3.SCANER
  ,NTR,22B.0
+C ВСТАВКА ТЕКСТА МАКРОСА (*M)
  INS32A:,WTC,ПЕРЕМЕННАЯ_3001.'22'
  M1,VTM,.0
  M1,UTC,INS32767.SCANEG
@@ -2094,6 +2126,7 @@ C
 C
  INS26S:,UJ,POP.PAGE
 C
+C ПРОВЕРКА КОНЦА ВХОДНОЙ СТРОКИ
  INS26T:,UTC,INS26.0
  ,XTA,.'3'
  ,ITS,.PAGE1
@@ -2177,6 +2210,7 @@ C
 C
  REGIMP:,UJ,SCAN40.0(М17)
 C
+C ЗАПОМНЕНИЕ РЕЖИМА И ПРОВЕРКА КОНЦА СТРОКИ
  REGIMQ:M7,XTA,127B.NRMA
  ,NTR,3.NRMB
  M7,A+X,1.0
@@ -2211,6 +2245,7 @@ C
 C
  REGIMR:,UJ,SCAN43.58(М7)
 C
+C ЗАПОМНЕНИЕ РЕЖИМА И ПРОВЕРКА КОНЦА СТРОКИ
  REGIMS:M7,XTA,127B.0(М17)
  ,NTR,3.F58
  M7,A+X,1.READMA
@@ -2255,6 +2290,7 @@ C
 C
  NDAB1G:,UJ,SCANEG.0(М1)
 C
+C ПРОВЕРКА ПРИЗНАКА КОНЦА ТЕКСТА
  NDAB1H:,UTC,NDAB1.INS32767(М1)
  ,XTA,.0
  M16,VTM,КОНСТАНТА_2710.0
@@ -2276,6 +2312,7 @@ C
 C
  ENDPGC:M15,VJM,ENDPG.61(М7)
  M15,VJM,BEGPG.INS26
+C ВЫЗОВ ОФОРМЛЕНИЯ КОНЦА СТРАНИЦЫ И ПРОВЕРКА
  ENDPGD:M15,VJM,ENDPG.0
  ,UTC,*NUST*.62(М7)
  ,XTA,.'22'
@@ -2476,6 +2513,7 @@ C
  ENDPGE:M15,VJM,ENDPG.0
  M15,VJM,BEGPG.'22'
  ENDPGF:M15,VJM,ENDPG.0(М17)
+C ЗАПОМНЕНИЕ КОДА ЗАВЕРШЕНИЯ И ВОЗВРАТ В БЛОК
  FINF:M7,XTA,1.SCAN38
  ,UTC,*FIN*.SCAN39
  ,ATX,.SCANER
@@ -2537,6 +2575,7 @@ C
  M7,A-X,1.SCAN45
  M7,ATX,110B.0
  ,NTR,22B.9(М7)
+C ВЫВОД СИМВОЛА С ПРОВЕРКОЙ СЧЁТЧИКА
  SCAN54:M7,XTA,106B
  ,ASN,64-7.REGIM
  ,UZA,SCAN55.0
@@ -2556,6 +2595,7 @@ C
  ,NTR,22B.0
  ,UJ,SCAN54
 C
+C ВЫВОД СИМВОЛА И ПЕРЕХОД К СЛЕДУЮЩЕЙ ПОЗИЦИИ
  SCAN55:,UTC,*SCANER*.'101'(М7)
  ,XTA,.К13(М16)
  ,NTR,3.IMUI(М15)
@@ -2590,6 +2630,7 @@ C
  ,UTC,*SCANER*.SCAN44
  ,ATX,.BEGPG(М15)
  ,NTR,22B.0
+C ЗАПОМНЕНИЕ НОМЕРА СТРАНИЦЫ И ВОЗВРАТ К РАЗБОРУ
  SCAN57:M7,XTA,.SCANEG
  ,UTC,NUST4.0
  ,ATX,.1(М7)
@@ -2638,22 +2679,23 @@ C ВЫХОД ИЗ SPAUD: ВОЗВРАТ В SCHEMA.
  ,XTA,.'3'
  M17,AEX,.STR24
  ,UZA,BEGSTD.0
- ,UJ,ПЕР_1.1(М7)
+ ,UJ,ПЕР+1.1(М7)
 C
  BEGSTD:M15,VJM,BEGSTR.'103'(М7)
- ПЕР_1:M7,XTA,1.0(М7)
+ ПЕР+1:M7,XTA,1.0(М7)
  ,ITS,.'104'(М7)
  M7,XTA,127B.INS(М16)
  M17,AEX,.М16
- ,U1A,ПЕР_0.SCANER(М16)
+ ,U1A,ПЕР+0.SCANER(М16)
  ,UJ,NDABA.М16
 C
- ПЕР_0:M7,XTA,.V39(М16)
+ ПЕР+0:M7,XTA,.V39(М16)
  M7,ATX,127B.М16
  ,NTR,3.К16(М16)
  ,NTR,22B.М16
  NDABA:,UJ,POP.'22'
 C
+C ПРОВЕРКА ПОЗИЦИИ НАДПИСИ НА СТРАНИЦЕ
  NDABB:,UTC,*NDAB*.RSYMB(М15)
  ,XTA,.'3'
  ,NTR,3.'22'
@@ -2669,6 +2711,7 @@ C
 C
  ENDPGG:M15,VJM,ENDPG.SCANER
  M15,VJM,BEGPG.0
+C ЧТЕНИЕ СЛЕДУЮЩЕЙ КАРТЫ И ВЫВОД СИМВОЛА
  ВЫЗОВ_GETSTR_2:M16,VTM,ПЕРЕМЕННАЯ_3020.'3'
  ,ITS,14.1(М7)
  M15,VJM,GETSTR.SCANER
@@ -2707,6 +2750,7 @@ C
 C
  ЦИКЛ_ПЕРЕХОД_18:,UJ,REGIM3.М16
 C
+C ВЫВОД СИМВОЛА ПО НОМЕРУ ЧЕРЕЗ RNSYMB
  ВЫЗОВ_RNSYMB:M7,XTA,.KLAIDA(М15)
  M7,ATX,114B.0
  ,NTR,3.1(М7)
@@ -2735,6 +2779,7 @@ C
  M7,ATX,114B.0(М7)
  ,NTR,3.STAND
  ,NTR,22B.0
+C ПРОВЕРКА ПРИЗНАКА КОНЦА ТЕКСТА
  NDAB1L:M7,XTA,.'3'
  M7,ATX,115B.1(М7)
  ,NTR,3
@@ -2772,6 +2817,7 @@ C
  M7,ATX,116B.0
  ,NTR,3
  ,NTR,22B.'105'(М7)
+C РАСЧЁТ ПОЗИЦИИ И РАЗМЕРОВ ТЕКСТА
  ВЫЗОВ_IMUI:M7,XTA,27B.К13(М16)
  M16,VTM,ПЕРЕМЕННАЯ_3023.IMUI(М15)
  M15,VJM,I*MU*I.'22'
@@ -2826,6 +2872,7 @@ C
  ,UTC,STR25.52(М7)
  ,ATX,.INS(М16)
  ,NTR,22B.М16
+C ПРОВЕРКА ГРАНИЦ ВЫВОДИМОГО ТЕКСТА
  PAGEE:,UTC,STR25.V23(М16)
  ,XTA,.М16
  ,NTR,3.V58(М16)
@@ -2866,6 +2913,7 @@ C
 C
  ЦИКЛ_ПЕРЕХОД_19:,UJ,STR26E.0
 C
+C СВЕРКА ЗНАЧЕНИЯ С ПРИЗНАКОМ КОНЦА
  ПЕР_0_3:M7,XTA,.SCANER(М16)
  ,ITS,.М16
  M7,XTA,125B.V43(М16)
@@ -2897,6 +2945,7 @@ C
  ,UTC,STR26.'110'(М7)
  ,ATX,.'3'
  ,NTR,22B.1(М7)
+C ВЫВОД ТЕКСТА СТРОКИ ЧЕРЕЗ RNSYMB
  STR26E:M16,VTM,*INS*.SCANER
  ,ITS,14.0
  M16,VTM,ПЕРЕМЕННАЯ_3031.INS26
@@ -2924,6 +2973,7 @@ C
  ,UTC,STR25.SCANER
  ,ATX,.0
  ,NTR,22B.52(М7)
+C СОХРАНЕНИЕ СОСТОЯНИЯ И НАЧАЛО НОВОЙ СТРАНИЦЫ
  STR25H:M7,XTA,.'3'
  M7,ATX,126B.1(М7)
  ,NTR,3.46(М7)
@@ -3012,6 +3062,7 @@ C
  M15,VJM,BEGSTR.1(М7)
  ,UJ,RAKA.INS26
 C
+C СООБЩЕНИЕ ОБ ОШИБКЕ 19 И ЗАВЕРШЕНИЕ РАЗБОРА
  ВЫЗОВ_KLAIDA_19:M16,VTM,ПЕРЕМЕННАЯ_2767.0
  ,ITS,14.'22'
  M15,VJM,KLAIDA.0
@@ -3021,6 +3072,7 @@ C
 C
  ,UJ,POP.INS(М16)
 C
+C ВОЗВРАТ В ОС
  ВОЗВРАТ_В_ОС:M7,MTJ,8.М16
  M16,MTJ,10.К12(М16)
  M7,VTM,КОНСТАНТА_2706.М16

@@ -48,9 +48,9 @@ C
  REGIM4:,EQU,*REGIM* +4
  REGIM7:,EQU,*REGIM* +7
  M16,VTM,ADDR.ADDR(М16)
- ,UJ,ВОЗВРАТ_В_ОС.L0456
+ ,UJ,ЗАВЕРШЕНИЕ_МОДУЛЯ.L0456
 C
- ADDR:M16,VTM,V10.V10(М16)
+ ADDR:M16,VTM,ВХОДНАЯ_СТРОКА.V10(М16)
  ,ITS,14.М16
  M15,VJM,GETSTR.GETSTR(М15)
  ,UTC,INS25.0
@@ -78,12 +78,13 @@ C
  ,UTC,SCANER1.0
  ,XTA,.SCANA
  M17,AEX,.0
- ,U1A,ЦИКЛ_ПЕРЕХОД.4(М7)
- ,UJ,ВЫЗОВ_SCAN
+ ,U1A,КОНЕЦ_РАЗБОРА_КАРТЫ.4(М7)
+ ,UJ,ЧТЕНИЕ_СИМВОЛА_КАРТЫ
 C
- ЦИКЛ_ПЕРЕХОД:,UJ,SCANES.SCANER1
+ КОНЕЦ_РАЗБОРА_КАРТЫ:,UJ,SCANES.SCANER1
 C
- ВЫЗОВ_SCAN:M7,XTA,1.0
+C ВЫЗОВ СКАНЕРА И СРАВНЕНИЕ ТИПА СИМВОЛА С ОБРАЗЦОМ
+ ЧТЕНИЕ_СИМВОЛА_КАРТЫ:M7,XTA,1.0
  M7,ATX,13B.0(М17)
  ,NTR,3.F4
  ,NTR,22B.F1
@@ -107,11 +108,12 @@ C
  ,ITS,14
  M16,VTM,*SCANER*.SCANER1
  ,ITS,14.0
- M16,VTM,V2.'22'
+ M16,VTM,ПОЛЕ_СКАНЕРА+1.'22'
  ,ITS,14.0(М17)
  M15,VJM,SYTINT.ADDRA
  ,NTR,3.SCANEC
  ,NTR,22B.INS(М16)
+C ВЫВОД ИМЕНИ ЭЛЕМЕНТА И ПРОВЕРКА ПРИЗНАКА
  SCANEC:,UTC,SCANER1.М16
  ,XTA,.SCANER(М16)
  M7,ATX,14B.М16
@@ -122,11 +124,11 @@ C
  ,ITS,14.'3'
  M16,VTM,*SCANER*.'22'
  ,ITS,14.SCANER1
- M16,VTM,V4.0
+ M16,VTM,ПОЛЕ_СКАНЕРА+2.0
  ,ITS,14.12(М7)
- M16,VTM,К3.'3'
+ M16,VTM,ВТОРОЕ_ПОЛЕ.'3'
  ,ITS,14.'4023'(М7)
- M16,VTM,К4.13(М7)
+ M16,VTM,ТРЕТЬЕ_ПОЛЕ.13(М7)
  ,ITS,14.INS(М16)
  ,NTR,22B.М16
  M15,VJM,RNSYMB.SCANER(М16)
@@ -139,7 +141,7 @@ C
  ,U1A,SCANED.М16
  ,UJ,SCANEE.'22'
 C
- SCANED:,UJ,ВЫЗОВ_SCAN_2.RNSYMB(М15)
+ SCANED:,UJ,ЧТЕНИЕ_СИМВОЛА_КАРТЫ_2.RNSYMB(М15)
 C
  SCANEE:,UTC,*SCANER*.'3'
  ,XTA,.'22'
@@ -148,7 +150,7 @@ C
  ,UTC,*SCANER*.13(М7)
  ,ATX,.0(М17)
  M7,ATX,16B.SCANED
- M16,VTM,V2.SCANEE
+ M16,VTM,ПОЛЕ_СКАНЕРА+1.SCANEE
  ,ITS,14.F11
  ,NTR,22B.0
  M15,VJM,STAATP.SCANER
@@ -159,14 +161,14 @@ C
  ,ITS,.0
  M7,XTA,16B.14(М7)
  M17,AEX,.V2(М16)
- ,UZA,ЦИКЛ_ПЕРЕХОД_2.М16
- ,UJ,ЦИКЛ_ПЕРЕХОД_3.'22'
+ ,UZA,ЗАВЕРШЕНИЕ_РАЗБОРА.М16
+ ,UJ,ПРОДОЛЖЕНИЕ_РАЗБОРА.'22'
 C
- ЦИКЛ_ПЕРЕХОД_2:,UJ,SCANES.STAATP(М15)
+ ЗАВЕРШЕНИЕ_РАЗБОРА:,UJ,SCANES.STAATP(М15)
 C
- ЦИКЛ_ПЕРЕХОД_3:,UJ,SCANEP.0
+ ПРОДОЛЖЕНИЕ_РАЗБОРА:,UJ,SCANEP.0
 C
- ВЫЗОВ_SCAN_2:M7,XTA,13B.'3'
+ ЧТЕНИЕ_СИМВОЛА_КАРТЫ_2:M7,XTA,13B.'3'
  M7,ATX,17B.'22'
  ,NTR,3.SCANER
  M7,XTA,-2.0
@@ -178,10 +180,10 @@ C
  ,UTC,SCANER1.0
  ,XTA,.SCANES
  M17,AEX,.0
- ,U1A,ЦИКЛ_ПЕРЕХОД_4.SCANEP
+ ,U1A,ВОССТАНОВЛЕНИЕ_СИМВОЛА.SCANEP
  ,UJ,SCANB.0
 C
- ЦИКЛ_ПЕРЕХОД_4:,UJ,SCANEF.11(М7)
+ ВОССТАНОВЛЕНИЕ_СИМВОЛА:,UJ,SCANEF.11(М7)
 C
  SCANB:M15,VJM,SCAN.15(М7)
  M7,XTA,7.'3'
@@ -194,11 +196,13 @@ C
 C
  REGIMA:,UJ,NDAB1A
 C
+C ЗАПОМНЕНИЕ НОМЕРА СТРАНИЦЫ В РЕЖИМ
  REGIMB:M7,XTA,.SCANER1
  ,UTC,REGIM4.0
  ,ATX,.0(М17)
  ,UJ,SCANEP.F7
 C
+C ЗАПОМНЕНИЕ АДРЕСА НАЧАЛА БЛОКА И СДВИГ УКАЗАТЕЛЯ
  NDAB1A:M7,XTA,13B.SCANB
  ,NTR,3.0
  M7,A-X,1.SCANEF
@@ -212,6 +216,7 @@ C
  ,NTR,22B.0(М17)
  ,UJ,SCANEP.REGIMA
 C
+C ВОССТАНОВЛЕНИЕ СИМВОЛА И СРАВНЕНИЕ С ОБРАЗЦОМ
  SCANEF:M7,XTA,14B.REGIMB
  ,UTC,SCANER1.0
  ,ATX,.NDAB1A
@@ -227,6 +232,7 @@ C
 C
  SCANEG:,UJ,SCANEK.0
 C
+C ВЫВОД СИМВОЛА ЗАГОЛОВКА И СРАВНЕНИЕ ПРИЗНАКОВ
  SCANEH:,UTC,*SCANER*.SCANER
  ,XTA,.0
  ,NTR,3.1(М7)
@@ -237,11 +243,11 @@ C
  ,ITS,14.12(М7)
  M16,VTM,*SCANER*.SCANER1
  ,ITS,14.0
- M16,VTM,V4.'3'
+ M16,VTM,ПОЛЕ_СКАНЕРА+2.'3'
  ,ITS,14.8(М7)
- M16,VTM,К3
+ M16,VTM,ВТОРОЕ_ПОЛЕ
  ,ITS,14.SCANER1
- M16,VTM,К5.0
+ M16,VTM,ТРЕТЬЕ_ПОЛЕ+2.0
  ,ITS,14.'22'
  ,NTR,22B.0(М17)
  M15,VJM,RNSYMB.SCANEG
@@ -262,7 +268,7 @@ C
  M7,A+X,3.М16
  ,UTC,*SCANER*.V4(М16)
  ,ATX,.М16
- M16,VTM,V6.К3(М16)
+ M16,VTM,ПОЛЕ_СКАНЕРА+3.К3(М16)
  ,ITS,14.М16
  ,NTR,22B.К5(М16)
  M15,VJM,CHAPAG.М16
@@ -270,6 +276,7 @@ C
  ,NTR,22B.RNSYMB(М15)
  ,UJ,SCANEP.'3'
 C
+C ВЫВОД СИМВОЛА ЗАГОЛОВКА И ВЫБОР РЕЖИМА
  SCANEK:,UTC,*SCANER*.'22'
  ,XTA,.18(М7)
  ,NTR,3
@@ -277,13 +284,13 @@ C
  M7,ATX,11B.0(М17)
  M16,VTM,*INS*.SCANEI
  ,ITS,14.SCANEJ
- M16,VTM,V0.SCANES
+ M16,VTM,ПЕРВОЕ_ЗНАЧЕНИЕ.SCANES
  ,ITS,14.0
- M16,VTM,V4.SCANER
+ M16,VTM,ПОЛЕ_СКАНЕРА+2.SCANER
  ,ITS,14.0
- M16,VTM,К3.'3'
+ M16,VTM,ВТОРОЕ_ПОЛЕ.'3'
  ,ITS,14.3(М7)
- M16,VTM,К4.SCANER
+ M16,VTM,ТРЕТЬЕ_ПОЛЕ.SCANER
  ,ITS,14.0
  ,NTR,22B.V6(М16)
  M15,VJM,RNSYMB.М16
@@ -296,7 +303,7 @@ C
  ,U1A,SCANEL.SCANER
  ,UJ,SCANEM.0
 C
- SCANEL:,UJ,ПЕР_17.'3'
+ SCANEL:,UJ,ПРОВЕРКА_ПРИЗНАКА.'3'
 C
  SCANEM:,UTC,*SCANER*.1(М7)
  ,XTA,.9(М7)
@@ -310,7 +317,8 @@ C
  ,NTR,22B.М16
  ,UJ,SCANEP.К4(М16)
 C
- ПЕР_17:M7,XTA,21B.М16
+C ПРОВЕРКА ПРИЗНАКА ОКОНЧАНИЯ РАЗБОРА ЗАГОЛОВКА
+ ПРОВЕРКА_ПРИЗНАКА:M7,XTA,21B.М16
  ,ITS,.'22'
  M7,XTA,15B.RNSYMB(М15)
  M17,AEX,.0
@@ -343,16 +351,17 @@ C
 C
  SCANEQ:,UJ,SCANA.13(М7)
 C
+C ВОССТАНОВЛЕНИЕ УКАЗАТЕЛЯ ЧТЕНИЯ И ВОЗВРАТ В БЛОК
  SCANES:M7,XTA,12B.0(М17)
  ,UTC,*SCANER*.SCANEN
  ,ATX,.SCANEO
  ,NTR,3.SCANES
  ,NTR,22B.0
- ,UJ,ВОЗВРАТ_В_БЛОК.SCANER
+ ,UJ,ВОССТАНОВЛЕНИЕ_КАДРА.SCANER
 C
- ВОЗВРАТ_В_ОС:M7,MTJ,8.0
+ ЗАВЕРШЕНИЕ_МОДУЛЯ:M7,MTJ,8.0
  M16,MTJ,10.'3'
- M7,VTM,К2.1(М7)
+ M7,VTM,КОД_ЗАВЕРШЕНИЯ.1(М7)
  ,ITS,13.SCANER
  ,ITS,8.0
  ,ITS,.6(М7)
@@ -360,31 +369,32 @@ C
  ,NTR,2.0
  M12,UJ,.'22'
 C
- ВОЗВРАТ_В_БЛОК:,STI,.SCANER
+C ВОЗВРАТ В ВЫЗЫВАЮЩИЙ БЛОК
+ ВОССТАНОВЛЕНИЕ_КАДРА:,STI,.SCANER
  ,STI,7.0
  ,STI,8.10(М7)
  M10,UJ,.'3'
 C
  ,ISO, 6H       . 040 040 040 040 040 040 
  ,ISO, 6HST     . 123 124 040 040 040 040 
- К2:,INT,0
- К3:,INT,1
- К4:,INT,2
- К5:,INT,3
+ КОД_ЗАВЕРШЕНИЯ:,INT,0
+ ВТОРОЕ_ПОЛЕ:,INT,1
+ ТРЕТЬЕ_ПОЛЕ:,INT,2
+ ТРЕТЬЕ_ПОЛЕ+2:,INT,3
  ,INT,7
  ,INT,8
  ,INT,10
  ,INT,12
  ,INT,19
  ,BSS,4
- V4:,BSS,2
- V6:,BSS,1
- V7:,BSS,3
- V10:,BSS,14
+ ПОЛЕ_СКАНЕРА+2:,BSS,2
+ ПОЛЕ_СКАНЕРА+3:,BSS,1
+ РЕЗЕРВ_ПЕРЕМЕННАЯ:,BSS,3
+ ВХОДНАЯ_СТРОКА:,BSS,14
  ,DATA,.SCANER
- V0:,ISO, 6HRG     . 122 107 040 040 040 040 
+ ПЕРВОЕ_ЗНАЧЕНИЕ:,ISO, 6HRG     . 122 107 040 040 040 040 
  ,ISO, 6HRU     . 122 125 040 040 040 040 
- V2:,ISO, 6HMCP    . 115 103 120 040 040 040 
- M3,SET,V0.0
- M1,   ,V7.INS26
+ ПОЛЕ_СКАНЕРА+1:,ISO, 6HMCP    . 115 103 120 040 040 040 
+ M3,SET,ПЕРВОЕ_ЗНАЧЕНИЕ.0
+ M1,   ,РЕЗЕРВ_ПЕРЕМЕННАЯ.INS26
  ,END,.0

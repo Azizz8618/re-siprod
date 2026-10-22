@@ -155,9 +155,9 @@ C
  ,ITS,14.12(М7)
  M16,VTM,TAB1.NRD(М16)
  ,ITS,14.М16
- M16,VTM,V1.TAB1(М16)
+ M16,VTM,ПЕРЕМЕННАЯ_616.TAB1(М16)
  ,ITS,14.М16
- M16,VTM,К6.V1(М16)
+ M16,VTM,ШЕСТЬ.V1(М16)
  ,ITS,14.М16
  ,NTR,22B.К6(М16)
  M15,VJM,RSYMB.М16
@@ -167,9 +167,9 @@ C
  ,ITS,14.'22'
  M16,VTM,TAB2.NRD(М16)
  ,ITS,14.М16
- M16,VTM,V2.TAB2(М16)
+ M16,VTM,ПЕРЕМЕННАЯ_617.TAB2(М16)
  ,ITS,14.М16
- M16,VTM,К6.V2(М16)
+ M16,VTM,ШЕСТЬ.V2(М16)
  ,ITS,14.М16
  M15,VJM,RSYMB.К6(М16)
  ,NTR,3.М16
@@ -180,11 +180,11 @@ C
  ,XTA,.2(М7)
  M17,AEX,
  ,U1A,ЦИКЛ_ПЕРЕХОД.LNT
- ,UJ,ПЕР_11.0
+ ,UJ,ПЕР+11.0
 C
  ЦИКЛ_ПЕРЕХОД:,UJ,TXT2A.0(М17)
 C
- ПЕР_11:M7,XTA,13B.F2
+ ПЕР+11:M7,XTA,13B.F2
  ,NTR,3.F11
  M7,A+X,3.0
  M7,ATX,13B.TXT2A
@@ -198,7 +198,7 @@ C
  ,U1A,ВЫЗОВ_KLAIDA.12(М7)
  ,UJ,TXT2A.11(М7)
 C
- ВЫЗОВ_KLAIDA:M16,VTM,К8.0
+ ВЫЗОВ_KLAIDA:M16,VTM,КОНСТАНТА_612.0
  ,ITS,14.12(М7)
  M15,VJM,KLAIDA.'22'
  TXT2A:,UTC,TXT2.F11A
@@ -317,6 +317,7 @@ C
  ,UJ,INS25A
 C
  KOKSEA:M15,VJM,KOKSEK.TXT2
+C ОБРАБОТКА СЕГМЕНТА ЧЕРЕЗ SPAUD СО СМЕНОЙ УКАЗАТЕЛЕЙ
  INS25A:,UTC,INS25.0
  ,XTA,.0(М17)
  M7,ATX,17B.TAB4B
@@ -336,9 +337,9 @@ C
  M7,A+X,2.0
  ,UTC,INS26.INS25
  ,ATX,.0
- M16,VTM,V19.15(М7)
+ M16,VTM,ПЕРЕМЕННАЯ_640.15(М7)
  ,ITS,14.'3'
- M16,VTM,V8.INS26
+ M16,VTM,ПЕРЕМЕННАЯ_625.INS26
  ,ITS,14.0
  ,NTR,22B.16(М7)
  M15,VJM,SPAUD.SCANER
@@ -385,6 +386,7 @@ C
 C
  STR25B:,UJ,TAB3B.STR24B
 C
+C ПРОВЕРКА ПРИЗНАКА STR24 В КОНТЕКСТЕ ЗАДАЧИ
  STR25C:,UTC,STR25.STR24B
  ,XTA,.0
  ,ITS,.STR24
@@ -396,6 +398,7 @@ C
 C
  STR25D:,UJ,TAB3B.'22'
 C
+C СОХРАНЕНИЕ УКАЗАТЕЛЯ СТРОКИ STR25 В СЛОТ КАДРА
  STR25E:,UTC,STR25.TAB3A
  ,XTA,.STR25C
  M7,ATX,23B.0
@@ -403,13 +406,14 @@ C
  ,NTR,22B
  ,UJ,STR24E.TAB3
 C
+C РАЗБОР СИМВОЛА ТЕКСТА ЧЕРЕЗ RSYMB
  LOOP:M16,VTM,*STR*.0
  ,ITS,14.0(М17)
- M16,VTM,V9.STR25B
+ M16,VTM,ПЕРЕМЕННАЯ_626.STR25B
  ,ITS,14.STR25C
- M16,VTM,К0.0
+ M16,VTM,МАСКА_ПРОБЕЛОВ.0
  ,ITS,14.TAB3B
- M16,VTM,К6.0
+ M16,VTM,ШЕСТЬ.0
  ,ITS,14.STR25
  M15,VJM,RSYMB.0
  ,NTR,3
@@ -428,6 +432,7 @@ C
  M7,A+X,2.'3'
  M7,ATX,23B.'22'
  ,NTR,22B.STR24E
+C ПРОВЕРКА ОКОНЧАНИЯ ТЕКСТОВОГО СЕГМЕНТА
  STR24E:,UTC,STR24.STR(М16)
  ,X-A,.М16
  ,UZA,LOOP.V9(М16)
@@ -468,7 +473,7 @@ C
 C
  SEKGIA:M15,VJM,SEKGIR.'3'
  SEKDYA:M15,VJM,SEKDYD.'22'
- M16,VTM,К3.ENDSTR(М15)
+ M16,VTM,ЕДИНИЦА.ENDSTR(М15)
  ,ITS,14.20(М7)
  M15,VJM,NEWMAX  
  M15,VJM,LYGPAR.NDAB1
@@ -552,6 +557,7 @@ C
 C
  ЦИКЛ_ПЕРЕХОД_2:,UJ,TAB4E.0
 C
+C ВЫЗОВ SEKLYG И УСТАНОВКА УКАЗАТЕЛЕЙ ТАБЛИЦЫ
  SEKLYA:M15,VJM,SEKLYG.0(М17)
  ,UTC,DYD2.TAB3C
  ,XTA,.TAB3D
@@ -613,6 +619,7 @@ C
  ,NTR,22B.'3'
  ,UJ,STR25F.1(М7)
 C
+C УСТАНОВКА УКАЗАТЕЛЯ ТАБЛИЦЫ TAB4
  TAB4F:M7,XTA,6.TAB4
  ,UTC,TAB4.0
  ,ATX,.2(М7)
@@ -620,6 +627,7 @@ C
  ,NTR,22B.TXT3
  ,UJ,STR25F.0
 C
+C УСТАНОВКА УКАЗАТЕЛЕЙ ТЕКСТА TXT3 И NUST8
  TXT3B:M7,XTA,6.'22'
  ,UTC,TXT3.0(М17)
  ,ATX,.F2B
@@ -653,7 +661,7 @@ C
  M7,ATX,27B.0
  ,NTR,3.'3'
  ,NTR,22B.DYD
- EGO35B:,WTC,V13.0
+ EGO35B:,WTC,ПЕРЕМЕННАЯ_632.0
  M1,VTM,.2(М7)
  M1,UTC,EGO35167.NDAB1
  ,XTA,.0
@@ -687,9 +695,10 @@ C
 C
  NDABLA:,UJ,BEGPGA.0
 C
+C ПРОВЕРКА ПЕРЕХОДА К СЛЕДУЮЩЕМУ АБЗАЦУ
  NDABLB:,UTC,NDABL1.1(М7)
  ,XTA,.21(М7)
- M16,VTM,К4.1(М7)
+ M16,VTM,ДВОЙКА.1(М7)
  M15,VJM,I*DI*I.22(М7)
  M7,ATX,31B.1(М7)
  ,NTR,3
@@ -697,7 +706,7 @@ C
  ,XTA,.0
  ,ITS,.'22'
  M7,XTA,31B.0(М17)
- M16,VTM,К4.F1
+ M16,VTM,ДВОЙКА.F1
  M15,VJM,I*MU*I.EGO351
  ,NTR,22B.APJC
  M17,AEX,.0
@@ -720,11 +729,11 @@ C
  ,XTA,.2(М7)
  M17,AEX,.23(М7)
  ,U1A,ЦИКЛ_ПЕРЕХОД_5.8(М7)
- ,UJ,ПЕР_24.'22'
+ ,UJ,ПЕР+24.'22'
 C
  ЦИКЛ_ПЕРЕХОД_5:,UJ,APJB.EGO35B
 C
- ПЕР_24:M7,XTA,30B.2(М7)
+ ПЕР+24:M7,XTA,30B.2(М7)
  ,NTR,3.24(М7)
  M7,A+X,2.'3'
  M7,ATX,30B.6(М7)
@@ -737,6 +746,7 @@ C
 C
  APJA:,UJ,BEGPGA.2(М7)
 C
+C СОХРАНЕНИЕ ПОЗИЦИИ АБЗАЦА В APJ И ПРОВЕРКА LYG3
  APJB:M7,XTA,1
  ,UTC,*APJ*.REGIM
  ,ATX,.0
@@ -752,6 +762,7 @@ C
 C
  LYG3A:,UJ,APJC.К4(М16)
 C
+C ВЫЗОВ ENDPG СО СБРОСОМ И ВОССТАНОВЛЕНИЕМ LYG3
  LYG3B:,UTC,LYG3.IDII(М15)
  ,XTA,.25(М7)
  M7,ATX,32B.'3'
@@ -782,7 +793,7 @@ C
  M7,ATX,33B.2(М7)
  ,NTR,3
  ,NTR,22B.REGIM
- EGO37B:,WTC,V17.0
+ EGO37B:,WTC,ПЕРЕМЕННАЯ_636.0
  M1,VTM,.0(М17)
  M1,UTC,EGO37567.F2C
  ,XTA,.F24
@@ -836,12 +847,12 @@ C
  M7,ATX,34B.22(М7)
  ,NTR,22B.2(М7)
  APJD:M7,XTA,1
- ,WTC,V18.22(М7)
+ ,WTC,ПЕРЕМЕННАЯ_637.22(М7)
  M1,VTM,.'22'
  M1,UTC,LYG32769.0(М17)
  ,ATX,.EGO375
  M7,XTA,1.EGO37A
- ,WTC,V18.EGO35A
+ ,WTC,ПЕРЕМЕННАЯ_637.EGO35A
  M1,VTM,.0
  M1,UTC,SEK32767.2(М7)
  ,ATX,.27(М7)
@@ -878,9 +889,10 @@ C
  ,ATX,.APJC
  STR25F:,UJ,POP.0
 C
+C ВОЗВРАТ В ОС
  ВОЗВРАТ_В_ОС:M7,MTJ,8.BEGPG(М15)
  M16,MTJ,10.0
- M7,VTM,К1.1(М7)
+ M7,VTM,НОЛЬ.1(М7)
  ,ITS,13.APJ
  ,ITS,1.0
  ,ITS,8.'3'
@@ -895,24 +907,24 @@ C
  ,STI,8.0
  M10,UJ,.NDAB1
 C
- К0:,ISO, 6H       . 040 040 040 040 040 040 
- К1:,LOG,0
+ МАСКА_ПРОБЕЛОВ:,ISO, 6H       . 040 040 040 040 040 040 
+ НОЛЬ:,LOG,0
  ,INT,0
- К3:,INT,1
- К4:,INT,2
+ ЕДИНИЦА:,INT,1
+ ДВОЙКА:,INT,2
  ,INT,4
- К6:,INT,6
+ ШЕСТЬ:,INT,6
  ,INT,10
- К8:,INT,68
+ КОНСТАНТА_612:,INT,68
  ,INT,2400
  ,ISO, 6H       . 040 040 040 040 040 040 
  ,BSS,1
- V1:,BSS,1
- V2:,BSS,6
- V8:,BSS,1
- V9:,BSS,4
- V13:,BSS,4
- V17:,BSS,1
- V18:,BSS,1
- V19:,BSS,14
+ ПЕРЕМЕННАЯ_616:,BSS,1
+ ПЕРЕМЕННАЯ_617:,BSS,6
+ ПЕРЕМЕННАЯ_625:,BSS,1
+ ПЕРЕМЕННАЯ_626:,BSS,4
+ ПЕРЕМЕННАЯ_632:,BSS,4
+ ПЕРЕМЕННАЯ_636:,BSS,1
+ ПЕРЕМЕННАЯ_637:,BSS,1
+ ПЕРЕМЕННАЯ_640:,BSS,14
  ,END,.0

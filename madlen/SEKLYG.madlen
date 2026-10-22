@@ -112,6 +112,7 @@ C
  ,ATX,.1(М7)
  ,NTR,3.SLY
  ,NTR,22B.0
+C ЧТЕНИЕ СИМВОЛА СТРАНИЦЫ ЧЕРЕЗ RWINF И ПРОВЕРКА ПОЗИЦИИ
  SLYC:M7,XTA,1.'3'
  ,UTC,*PLN*.'22'
  ,ATX,.0
@@ -157,6 +158,7 @@ C
 C
  NUST8A:,UJ,APJD.'22'
 C
+C ПРОВЕРКА ВМЕСТИМОСТИ ТЕКСТА НА СТРАНИЦЕ
  NUST8B:,UTC,NUST8.NUST8A
  ,XTA,.NUST8B
  ,NTR,3.APJD
@@ -188,6 +190,7 @@ C
 C
  LYG4A:,UJ,LYG2B.0
 C
+C СДВИГ УКАЗАТЕЛЯ СТРОКИ СТРАНИЦЫ НА ДЛИНУ ПОЛЯ
  LYG4B:,UTC,LYG4.0(М17)
  ,XTA,.LYG4A
  ,NTR,3.LYG4B
@@ -261,7 +264,7 @@ C
  ,U1A,ВЫЗОВ_KLAIDA.LYG3
  ,UJ,SEK3A.0
 C
- ВЫЗОВ_KLAIDA:M16,VTM,ПАРАМЕТР_ЛИСТА_2.LYG2
+ ВЫЗОВ_KLAIDA:M16,VTM,ПАРАМЕТР_ЛИСТА+2.LYG2
  ,ITS,14.0
  M15,VJM,KLAIDA.SEK3
  SEK3A:M7,XTA,1.0
@@ -304,6 +307,7 @@ C
  ,UTC,LYG1.4(М7)
  ,ATX,.APJ
  ,NTR,22B.0
+C ЗАПИСЬ АДРЕСА НОВОЙ СТРОКИ В БЛОК NDAB
  APJD:,UTC,*LYG*.'3'
  ,XTA,.'22'
  ,NTR,3.BEGPG(М15)
@@ -321,7 +325,7 @@ C
 C
  ВОЗВРАТ_В_ОС:M7,MTJ,8.0
  M16,MTJ,10.LYG1
- M7,VTM,ПАРАМЕТР_ЛИСТА_1.0
+ M7,VTM,ПАРАМЕТР_ЛИСТА+1.0
  ,ITS,13.'22'
  ,ITS,8.0
  ,ITS,.LYG
@@ -329,17 +333,18 @@ C
  ,NTR,2.'3'
  M12,UJ,.LNT
 C
+C ВОЗВРАТ В ВЫЗЫВАЮЩИЙ БЛОК
  ВОЗВРАТ_В_БЛОК:,STI,.0
  ,STI,7.NDAB
  ,STI,8.0
  M10,UJ,.SLY1
 C
- ПАРАМЕТР_ЛИСТА_1:,LOG,0
+ ПАРАМЕТР_ЛИСТА+1:,LOG,0
  ,INT,0
  ,INT,1
  ,INT,2
  ,INT,10
  ,INT,64
- ПАРАМЕТР_ЛИСТА_2:,INT,65
+ ПАРАМЕТР_ЛИСТА+2:,INT,65
  ,BSS,2
  ,END,.0

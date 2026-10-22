@@ -56,7 +56,7 @@ C
  TEKST32743:,EQU,*TEKST* -32743
  TEKST32744:,EQU,*TEKST* -32744
  M16,VTM,ВЫЗОВ_RSYMB.F7(М16)
- ,UJ,ПЕР_14.F11
+ ,UJ,ПЕР+14.F11
 C
  ВЫЗОВ_RSYMB:M7,XTA,-3.'4025'(М7)
  M7,ATX,7.7(М7)
@@ -78,7 +78,7 @@ C
  M7,XTA,1.'22'
  M7,ATX,11B.1(М7)
  ,NTR,3.9(М7)
- M15,VJM,ПЕР_12.'3'
+ M15,VJM,ПЕР+12.'3'
  ,NTR,22B.F1A(М15)
  ВЫЗОВ_RSYMB_2:M7,XTA,11B.'22'
  M7,ATX,12B.0
@@ -95,7 +95,7 @@ C
  M15,VJM,RSYMB.М16
  ,NTR,3.'22'
  M7,XTA,11B.RSYMB(М15)
- M15,VJM,ПЕР_12.0
+ M15,VJM,ПЕР+12.0
  ,NTR,22B.'3'
  M7,XTA,10B.9(М7)
  ,ITS,.F1A(М15)
@@ -106,11 +106,12 @@ C
 C
  ЦИКЛ_ПЕРЕХОД:,UJ,SCANEA.7(М7)
 C
+C СДВИГ УКАЗАТЕЛЯ ТЕКСТА И УЧЕТ ТЕКУЩЕЙ ПОЗИЦИИ
  ВЫЗОВ_F1A:M7,XTA,11B.0(М17)
  ,NTR,3.F7A
  M7,A+X,1.F9A
  M7,ATX,11B.0
- M15,VJM,ПЕР_12.SCANEA
+ M15,VJM,ПЕР+12.SCANEA
  M7,X-A,3.0
  ,NTR,22B.9(М7)
  ,UZA,ВЫЗОВ_RSYMB_2.'3'
@@ -147,6 +148,7 @@ C
  M15,VJM,STANDA.0
  ,UJ,STANDI.F10
 C
+C РАСЧЕТ КОЛОНКИ ВЫВОДА И ВЫЗОВ F9B
  ВЫЗОВ_F9B:M7,XTA,12B.0
  ,NTR,3.STANDD
  M7,A-X,1.0
@@ -186,7 +188,7 @@ C
  ,ATX,.'22'
  M7,XTA,1.0
  M7,ATX,11B.5(М7)
- M15,VJM,ПЕР_12.V4
+ M15,VJM,ПЕР+12.V4
  ,NTR,22B.0(М1)
  TEKST3:M7,XTA,-3.STAND32769(М1)
  ,WTC,НОЛЬ.0
@@ -197,7 +199,7 @@ C
  ,NTR,3.INS26
  M7,A+X,1.0
  M7,ATX,11B.'3'
- M15,VJM,ПЕР_12.SCANER
+ M15,VJM,ПЕР+12.SCANER
  M7,X-A,6.0
  ,NTR,22B.TEKST32815(М1)
  ,UZA,TEKST3.0
@@ -232,6 +234,7 @@ C
  ,NTR,22B.0(М16)
  ,UJ,STANDI.М16
 C
+C ПРОВЕРКА РАВЕНСТВА СТАНДАРТА И ТЕКУЩЕГО ЗНАЧЕНИЯ
  STANDD:,UTC,*STAND*.К5(М16)
  ,XTA,.М16
  ,NTR,3.V4
@@ -243,6 +246,7 @@ C
 C
  STANDE:,UJ,STANDI.INS26
 C
+C ЗАПИСЬ ТЕКУЩЕГО ОТСТУПА В STAND1
  STANDF:M7,XTA,1.0
  ,UTC,STAND1.'3'
  ,ATX,.1(М7)
@@ -250,6 +254,7 @@ C
  ,NTR,22B.0
  ,UJ,STANDI.INS26
 C
+C ПРОВЕРКА ДОСТИЖЕНИЯ ГРАНИЦЫ РАМКИ
  FRAME:,WTC,ЯЧЕЙКА_РАБОЧАЯ.0
  ,XTA,.1(М7)
  ,NTR,3.INS24
@@ -272,7 +277,7 @@ C
  ,ATX,.STAND1
  STANDI:,UJ,POP.0
 C
- ПЕР_1:M7,XTA,1.'3'
+ ПЕР+1:M7,XTA,1.'3'
  M7,A+X,-2.'22'
  M7,ATX,-2.STANDI
  M7,XTA,1.V7
@@ -280,9 +285,9 @@ C
  M7,ATX,14B.'3'
  M15,UJ,.0
 C
-  :,UJ,ПЕР_1.2(М7)
+  :,UJ,ПЕР+1.2(М7)
 C
- ПЕР_12:M7,A-X,14B.'22'
+ ПЕР+12:M7,A-X,14B.'22'
  M7,ATX,14B.STANDG
  M7,A+X,-2.STANDH
  M7,ATX,-2.1(М7)
@@ -304,7 +309,7 @@ C
  M7,ATX,15B.'4033'(М7)
  M15,UJ,.'4033'(М7)
 C
- ПЕР_14:M7,MTJ,8.1(М7)
+ ПЕР+14:M7,MTJ,8.1(М7)
  M16,MTJ,10.12(М7)
  M7,VTM,НОЛЬ_3.12(М7)
  M7,STX,16B.0(М15)
@@ -317,6 +322,7 @@ C
  ,NTR,2.'4033'(М7)
  M12,UJ,.9(М7)
 C
+C ВОЗВРАТ В ВЫЗЫВАЮЩИЙ БЛОК
  POP:,STI,.12(М7)
  ,STI,7.0(М15)
  ,STI,2.0

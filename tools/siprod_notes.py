@@ -12,6 +12,11 @@
 установить не удалось, пояснения нет.
 """
 
+import os
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
 MODULE_NOTES = {
     "SCHEMA": [
         "ГЛАВНАЯ ПРОГРАММА СИПРОДА: ЧИТАЕТ ВХОДНОЙ ПОТОК,",
@@ -200,3 +205,14 @@ LABEL_NOTES = {
         0: "НАЧАЛО ОБРАБОТКИ ВХОДНОГО ПОТОКА.",
     },
 }
+
+# Пояснения, подготовленные субагентами (по всем процедурам модулей).
+# Основные пояснения выше имеют приоритет.
+from siprod_notes_extra import LABEL_NOTES_EXTRA  # noqa: E402
+for _mod, _notes in LABEL_NOTES_EXTRA.items():
+    if _mod not in LABEL_NOTES:
+        LABEL_NOTES[_mod] = dict(_notes)
+    else:
+        for _cmd, _note in _notes.items():
+            if _cmd not in LABEL_NOTES[_mod]:
+                LABEL_NOTES[_mod][_cmd] = _note

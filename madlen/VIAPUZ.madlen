@@ -77,6 +77,7 @@ C
 C
  PUFORB:,UJ,STANDB.0
 C
+C ПРОВЕРКА ЗНАКА ПОЗИЦИИ В ФОРМАТЕ И ВЫБОР ВЕТВИ
  PUFORC:,UTC,PUFOR3.STANDB
  ,XTA,.0
  ,NTR,3.PUFOR3
@@ -98,6 +99,7 @@ C
 C
  PUFORD:,UJ,STANDB.'22'
 C
+C ЗАПИСЬ НАЧАЛА АБЗАЦА И ПРОВЕРКА ПРИЗНАКА ФОРМАТА
  PUFORE:,UTC,PUFOR3.PUFORD
  ,XTA,.PUFORE
  ,NTR,3.0
@@ -132,11 +134,12 @@ C
  ,ATX,.'22'
  ,NTR,3.NDABA
  ,NTR,22B.NDABB
+C РАСЧЁТ ГРАНИЦ ТЕКСТА И ВЫЗОВ РАЗБОРА СИМВОЛОВ
  NDABB:M7,XTA,6.0
  ,NTR,3.3(М7)
  ,UTC,TEKST48.NDAB
  ,A-X,.0
- M16,VTM,ПАРАМЕТР_3.'3'
+ M16,VTM,ПАРАМЕТР+3.'3'
  M15,VJM,I*DI*I.'22'
  M7,A+X,11B.0
  ,UTC,STR25.6(М7)
@@ -148,7 +151,7 @@ C
  ,ATX,.9(М7)
  M16,VTM,*TEKST*.STR25
  ,ITS,14.0
- M16,VTM,ПАРАМЕТР_2.TEKST48
+ M16,VTM,ПАРАМЕТР+2.TEKST48
  ,ITS,14.0
  M16,VTM,*STR*.1(М7)
  ,ITS,14.STR26
@@ -199,6 +202,7 @@ C
 C
  PUFORH:,UJ,STANDD.TEKSTC
 C
+C ПРОВЕРКА ЗНАКА ПОЗИЦИИ И ВЫБОР ВЕТВИ ОБРАБОТКИ
  PUFORI:,UTC,PUFOR5.0
  ,XTA,.STANDD
  ,NTR,3.0
@@ -210,6 +214,7 @@ C
 C
  PUFORJ:,UJ,STANDD.PUFORH
 C
+C РАСЧЁТ ПОЗИЦИИ НАЧАЛА АБЗАЦА И ПОДГОТОВКА ТЕКСТА
  PUFORK:,UTC,PUFOR3.PUFORI
  ,XTA,.0
  ,NTR,3.STANDD
@@ -221,7 +226,7 @@ C
  M7,XTA,6.2(М7)
  ,UTC,TEKST49.'22'
  ,A-X,.PUFORJ
- M16,VTM,ПАРАМЕТР_3.PUFORK
+ M16,VTM,ПАРАМЕТР+3.PUFORK
  M15,VJM,I*DI*I.STANDD
  M7,A+X,11B.0
  ,UTC,STR25.PUFOR3
@@ -233,7 +238,7 @@ C
  ,ATX,.NDAB
  M16,VTM,TEKST24.0
  ,ITS,14.6(М7)
- M16,VTM,ПАРАМЕТР_2.TEKST49
+ M16,VTM,ПАРАМЕТР+2.TEKST49
  ,ITS,14.0
  M16,VTM,*STR*.К2(М16)
  ,ITS,14.IDII(М15)
@@ -262,6 +267,7 @@ C
  STANDC:M7,XTA,.TOPAGE(М15)
  ,UTC,STAND3.0
  ,ATX,.STAND5
+C ЗАПИСЬ ГРАНИЦ ТЕКСТА И АБЗАЦА В СЛУЖЕБНЫЕ ПОЛЯ
  STANDD:M7,XTA,7.0
  ,UTC,*NDAB*.'3'
  ,ATX,.1(М7)
@@ -277,7 +283,7 @@ C
 C
  ВОЗВРАТ_В_ОС:M7,MTJ,8.STANDD
  M16,MTJ,10.0(М7)
- M7,VTM,ПАРАМЕТР_1.STAND3
+ M7,VTM,ПАРАМЕТР+1.STAND3
  ,ITS,13.0
  ,ITS,8.0
  ,ITS,.7(М7)
@@ -285,14 +291,15 @@ C
  ,NTR,2.0
  M12,UJ,.'3'
 C
+C ВОЗВРАТ В ВЫЗЫВАЮЩИЙ БЛОК
  ВОЗВРАТ_В_БЛОК:,STI,.8(М7)
  ,STI,7.STR26
  ,STI,8.0
  M10,UJ,.9(М7)
 C
- ПАРАМЕТР_1:,INT,0
- ПАРАМЕТР_2:,INT,1
- ПАРАМЕТР_3:,INT,2
+ ПАРАМЕТР+1:,INT,0
+ ПАРАМЕТР+2:,INT,1
+ ПАРАМЕТР+3:,INT,2
  ,INT,3
  ,INT,10
  ,BSS,5

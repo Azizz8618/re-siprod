@@ -93,6 +93,7 @@ C
  M16,VTM,PAGE3A.PAGE3A(М16)
  ,UJ,ВОЗВРАТ_В_ОС.L0702
 C
+C РАСЧЕТ ПОЗИЦИИ НА СТРАНИЦЕ И ПРОВЕРКА ПРИЗНАКА ТЕКСТА
  PAGE3A:,UTC,PAGE3.PAGE3
  ,XTA,.0
  ,NTR,3.'3'
@@ -127,6 +128,7 @@ C
  VIAPUA:M15,VJM,VIAPUZ.NDABA
  NDABA:,UJ,PAGED.0
 C
+C ПРОВЕРКА ГРАНИЦЫ СТРАНИЦЫ И ПЕРЕХОД К НОВОЙ СТРАНИЦЕ
  NDABB:,UTC,*NDAB*.VIAPUZ(М15)
  ,XTA,.0
  ,NTR,3.PAGED
@@ -193,6 +195,7 @@ C
 C
  NDAB1A:,UJ,PAGED.0
 C
+C РАСЧЕТ ПАРАМЕТРА СЕГМЕНТА И ПРОВЕРКА ЕГО ПРИЗНАКА
  NDAB1B:,UTC,NDAB1.'3'
  ,XTA,.'22'
  M16,VTM,ПАРАМ_СТРАН.1(М7)
@@ -246,6 +249,7 @@ C
 C
  NUST9A:,UJ,PLNB.0
 C
+C РАСЧЕТ ПОЗИЦИИ В СПИСКЕ И ПРОВЕРКА ЕЕ ПРИЗНАКА
  NUST9B:,UTC,NUST9.0(М17)
  ,XTA,.SEK2C
  M16,VTM,ПАРАМ_СТРАН.SEK2D
@@ -305,6 +309,7 @@ C
 C
  SEK3A:,UJ,RPTB.PAGE3
 C
+C ПРОДВИГ УКАЗАТЕЛЯ СЕГМЕНТА И ПРОВЕРКА ЕГО ГРАНИЦЫ
  SEK3B:,UTC,SEK3.0
  ,XTA,.'3'
  ,NTR,3.PAGE4
@@ -329,6 +334,7 @@ C
 C
  RPTA:,UJ,PLNB.SEK3A
 C
+C СОХРАНЕНИЕ СЧЕТЧИКА СТРОК И ПРОВЕРКА ИХ ЧИСЛА
  RPTB:M7,XTA,1.SEK3B
  M7,ATX,21B.0
  ,NTR,3.RPTB
@@ -351,7 +357,7 @@ C
  M7,ATX,22B.SEK3
  ,NTR,3.0
  ,NTR,22B.'3'
- ,UJ,ПЕР_17.1(М7)
+ ,UJ,ПЕР+17.1(М7)
 C
  ВЫЗОВ_IMUI:M7,XTA,22B.'22'
  ,NTR,3.RPTA
@@ -391,7 +397,7 @@ C
  M7,A+X,1.1(М7)
  M7,ATX,22B.К11(М16)
  ,NTR,22B.IMUI(М15)
- ПЕР_17:M7,X-A,20B.0
+ ПЕР+17:M7,X-A,20B.0
  ,UZA,ВЫЗОВ_IMUI.1(М7)
  M7,XTA,21B.19(М7)
  ,NTR,3.5(М7)
@@ -426,6 +432,7 @@ C
  ,ITS,14.20(М7)
  ,NTR,22B.EGO327
  M15,VJM,NEWMAX.FT003(М15)
+C УМЕНЬШЕНИЕ СЧЕТЧИКА СТАНДАРТНЫХ СТРОК И ПРОВЕРКА ПРИЗНАКА
  STANDD:,UTC,STAND1.0
  ,XTA,.18(М7)
  ,NTR,3.'3'
@@ -484,6 +491,7 @@ C
  ,ATX,
  ,NTR,3.STAND1
  ,NTR,22B.0
+C СОХРАНЕНИЕ ПАРАМЕТРОВ РЕЖИМА И ПРОВЕРКА ЕГО ПРИЗНАКА
  REGIMD:M7,XTA,1.'22'
  ,UTC,*STAND*.0(М17)
  ,ATX,.REGIMA
@@ -527,11 +535,13 @@ C
  ,ATX,.0(М17)
  ,NTR,3.REGIMC
  ,NTR,22B.REGIMD
+C СОХРАНЕНИЕ НОМЕРА СТРОКИ И ВОЗВРАТ В ВЫЗЫВАЮЩИЙ БЛОК
  NUST9D:M7,XTA,1.0
  ,UTC,REGIM10.1(М7)
  ,ATX,.REGIM
  ,UJ,POP.0
 C
+C ВОЗВРАТ В ОС
  ВОЗВРАТ_В_ОС:M7,MTJ,8.'3'
  M16,MTJ,10.'22'
  M7,VTM,СЧЁТ_ВЫВОДА.0

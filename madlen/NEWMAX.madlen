@@ -34,11 +34,11 @@ C
  SEK2:,EQU,*SEK*   +2
  LYG5:,EQU,LYG2+3
  M16,VTM,БЛОК_V0.F1(М16)
- ,UJ,ПЕР_2.F0
+ ,UJ,ПЕР+2.F0
 C
  БЛОК_V0:M7,XTA,1.1(М7)
  ,ITS,
- ,WTC,ЗНАЧЕНИЕ_1.V0
+ ,WTC,ЗНАЧЕНИЕ+1.V0
  ,XTA,.0
  M17,AEX,.0(М17)
  ,UZA,NDABA.NDABA
@@ -58,6 +58,7 @@ C
 C
  SEK3A:,UJ,LYG1B.SEK3A
 C
+C СРАВНЕНИЕ ДЛИНЫ СЕГМЕНТА С МАКСИМАЛЬНОЙ ШИРИНОЙ
  SEK3B:,UTC,SEK3.SEK3B
  ,XTA,.0
  ,NTR,3.LYG1B
@@ -69,6 +70,7 @@ C
 C
  LYG3A:,UJ,LYG1B.0
 C
+C ПРОВЕРКА ФЛАГА ОБНОВЛЕНИЯ МАКСИМАЛЬНОЙ ШИРИНЫ
  LYG3B:,UTC,LYG3.'22'
  ,XTA,.LYG3A
  ,ITS,.LYG3B
@@ -90,7 +92,7 @@ C
 C
  БЛОК_V0_2:M7,XTA,1
  ,ITS,.REGIM
- ,WTC,ЗНАЧЕНИЕ_1.0
+ ,WTC,ЗНАЧЕНИЕ+1.0
  ,XTA,.0(М17)
  M17,AEX,.F1A
  ,UZA,REGIMC.REGIMD
@@ -108,6 +110,7 @@ C
 C
  SEK2A:,UJ,NDABD.LYG1B
 C
+C СРАВНЕНИЕ ВТОРОГО СЕГМЕНТА С МАКСИМАЛЬНОЙ ШИРИНОЙ
  SEK2B:,UTC,SEK2.0
  ,XTA,.0(М7)
  ,NTR,3
@@ -119,6 +122,7 @@ C
 C
  LYG5A:,UJ,LYG1B.0
 C
+C ПРОВЕРКА ФЛАГА ОБНОВЛЕНИЯ ШИРИНЫ ПО ВТОРОМУ СЕГМЕНТУ
  LYG5B:,UTC,LYG5.NDABD
  ,XTA,.0
  ,ITS,.SEK2
@@ -130,7 +134,7 @@ C
 C
  БЛОК_V0_3:M7,XTA,1.LYG5A
  ,ITS,.LYG5B
- ,WTC,ЗНАЧЕНИЕ_1.LYG1B
+ ,WTC,ЗНАЧЕНИЕ+1.LYG1B
  ,XTA,.0
  M17,AEX,.LYG5
  ,UZA,NDABC.0
@@ -145,7 +149,7 @@ C
  ,NTR,3.1(М7)
  M7,XTA,1
  ,ITS,.V0
- ,WTC,ЗНАЧЕНИЕ_1.0
+ ,WTC,ЗНАЧЕНИЕ+1.0
  ,XTA,.0(М17)
  ,NTR,22B.NDABC
  M17,AEX,.NDABD
@@ -159,9 +163,9 @@ C
  ,NTR,22B.0
  LYG1B:,UJ,POP.'3'
 C
- ПЕР_2:M7,MTJ,8.1(М7)
+ ПЕР+2:M7,MTJ,8.1(М7)
  M16,MTJ,10
- M7,VTM,ПАРАМЕТР_1.V0
+ M7,VTM,ПАРАМЕТР+1.V0
  M7,STX,2.0
  ,ITS,13.'22'
  ,ITS,8.0(М17)
@@ -170,12 +174,13 @@ C
  ,NTR,2.0
  M12,UJ,.0(М7)
 C
+C ВОЗВРАТ В ВЫЗЫВАЮЩИЙ МОДУЛЬ
  POP:,STI,.LYG1
  ,STI,7.0
  ,STI,8.'3'
  M10,UJ,.'22'
 C
- ПАРАМЕТР_1:,INT,1
+ ПАРАМЕТР+1:,INT,1
  ,INT,2
- ЗНАЧЕНИЕ_1:,BSS,1
+ ЗНАЧЕНИЕ+1:,BSS,1
  ,END,.0

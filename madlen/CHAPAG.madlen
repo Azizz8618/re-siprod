@@ -41,12 +41,13 @@ C
  NUST5:,EQU,*NUST*  +5
  NUST6:,EQU,*NUST*  +6
  M16,VTM,REGIMA.REGIMA(М16)
- ,UJ,ПЕР_15.F11
+ ,UJ,ПЕР+15.F11
 C
+C ЗАПОМНЕНИЕ РЕЖИМА И ЧТЕНИЕ СИМВОЛА ЗАГОЛОВКА
  REGIMA:M7,XTA,2.2(М7)
  ,UTC,REGIM9.REGIM9
  ,ATX,.0
- ,WTC,ЯЧ_ЗАГОЛ3.V6
+ ,WTC,ЯЧ_ЗАГОЛ+3.V6
  ,XTA,.0
  ,UTC,NUST7.NUST7
  ,ATX,.0
@@ -88,9 +89,9 @@ C
  M7,ATX,13B.SCANER
  M16,VTM,*INS*.0
  ,ITS,14.'3'
- M16,VTM,ЯЧ_ЗАГОЛ1.1(М7)
+ M16,VTM,ЯЧ_ЗАГОЛ+1.1(М7)
  ,ITS,14.11(М7)
- M16,VTM,ЯЧ_ЗАГОЛ2.INS(М16)
+ M16,VTM,ЯЧ_ЗАГОЛ+2.INS(М16)
  ,ITS,14.М16
  ,NTR,22B.V2(М16)
  M15,VJM,SYTINT.М16
@@ -114,11 +115,13 @@ C
 C
  NUST5A:,UJ,NUST6A.10(М7)
 C
+C ЗАПОМНЕНИЕ СМЕЩЕНИЯ NUST5 И ПРОДОЛЖЕНИЕ РАЗБОРА
  NUST5B:M7,XTA,14B.'22'
  ,UTC,NUST5.0(М17)
  ,ATX,.NUST5A
  ,UJ,SCANA.NUST5B
 C
+C ЗАПОМНЕНИЕ ВТОРОГО СМЕЩЕНИЯ И ПРОВЕРКА РЕЖИМА
  NUST6A:M7,XTA,14B.0
  ,UTC,NUST6.NUST6A
  ,ATX,.0
@@ -138,6 +141,7 @@ C
  M7,ATX,15B.REGIM
  ,NTR,3.0
  ,NTR,22B.'22'
+C ПРОВЕРКА ВЫХОДА ЗАГОЛОВКА ЗА ГРАНИЦЫ ПОЛЯ
  NUST5D:M7,XTA,7.0(М17)
  M7,ATX,16B.NUST5C
  ,NTR,3.NUST5D
@@ -182,7 +186,7 @@ C
  ,NTR,22B.0(М17)
  SCANED:,UJ,POP.SCANEC
 C
- ПЕР_15:M7,MTJ,8.SCANED
+ ПЕР+15:M7,MTJ,8.SCANED
  M16,MTJ,10.0
  M7,VTM,ТАБ_ЗАГОЛ.SCANER
  M7,STX,17B.0
@@ -193,6 +197,7 @@ C
  ,NTR,2.'22'
  M12,UJ,.0
 C
+C ВОЗВРАТ В ВЫЗЫВАЮЩИЙ БЛОК
  POP:,STI,.POP
  ,STI,7.0
  ,STI,8.М10(М7)
@@ -208,7 +213,7 @@ C
  ,INT,66
  ,INT,128
  ,BSS,2
- ЯЧ_ЗАГОЛ1:,BSS,1
- ЯЧ_ЗАГОЛ2:,BSS,3
- ЯЧ_ЗАГОЛ3:,BSS,1
+ ЯЧ_ЗАГОЛ+1:,BSS,1
+ ЯЧ_ЗАГОЛ+2:,BSS,3
+ ЯЧ_ЗАГОЛ+3:,BSS,1
  ,END,.К0(М7)

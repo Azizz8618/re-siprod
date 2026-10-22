@@ -55,10 +55,12 @@ C
  M16,UTM,-1.N1(М16)
  ,UJ,WДЛИHC.WДЛИHC
 C
+C ПЕРЕДАЧА ПРИЗНАКА ИЗ БУФЕРА В РЕЗУЛЬТАТ
  LOOP:M14,XTA,46B.0
  ,UJ,LOOPB.38(М14)
 C
  LOOPA:M14,XTA,50B.LOOPB
+C ВОЗВРАТ В ВЫЗЫВАЮЩИЙ МОДУЛЬ
  LOOPB:,NTR,22B.40(М14)
  M15,UJ,.0
 C
@@ -91,6 +93,7 @@ C
  M14,XTA,47B.LOOP
  ,UJ,LOOPB.39(М14)
 C
+C ЗАПИСЬ СИМВОЛА В МАГАЗИН С МАСКИРОВАНИЕМ КОДА
  WДЛИHF:,WTC,WДЛИHA2.LOOPA
  M16,VTM,.39(М14)
  M11,XTA,.LOOPB

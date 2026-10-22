@@ -33,7 +33,7 @@ C
  ENDSTR  :,SUBP,
  RSYMB   :,SUBP,
  M16,VTM,STR26A.STR26A(М16)
- ,UJ,ПЕР_10.F3C
+ ,UJ,ПЕР+10.F3C
 C
  STR26A:,WTC,ЯЧ_СЧЁТ.V6
  ,XTA,.0
@@ -112,7 +112,7 @@ C
  ,UZA,NDAB1A.0
  ,UJ,NDAB1B.0
 C
- NDAB1A:,UJ,ПЕР_3.STR26
+ NDAB1A:,UJ,ПЕР+3.STR26
 C
  NDAB1B:,UTC,NDAB1.0
  ,XTA,.'22'
@@ -126,10 +126,10 @@ C
  ,XTA,.8(М7)
  M17,AEX,.'3'
  ,UZA,BEGSTA.'22'
- ,UJ,ПЕР_3.ENDSTR(М15)
+ ,UJ,ПЕР+3.ENDSTR(М15)
 C
  BEGSTA:M15,VJM,BEGSTR.8(М7)
- ПЕР_3:M7,XTA,3
+ ПЕР+3:M7,XTA,3
  ,NTR,3.NDAB1
  ,X-A,.0
  M7,A+X,.0(М17)
@@ -141,7 +141,7 @@ C
 C
  ЦИКЛ_ПЕРЕХОД_2:,UJ,ВОЗВРАТ_В_БЛОК.0
 C
- ПЕР_10:M7,MTJ,8.3(М7)
+ ПЕР+10:M7,MTJ,8.3(М7)
  M16,MTJ,10.'3'
  M7,VTM,СЧЁТ_0_1.0
  M7,STX,12B.0(М7)
@@ -153,6 +153,7 @@ C
  ,NTR,2.0
  M12,UJ,.F3D
 C
+C ВОЗВРАТ В ВЫЗЫВАЮЩИЙ БЛОК
  ВОЗВРАТ_В_БЛОК:,STI,.0
  ,STI,7.М10(М7)
  ,STI,8.М12(М16)

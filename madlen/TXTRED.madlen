@@ -26,9 +26,10 @@ C
  *RUSIS* :,LC,1
  SPAUD   :,SUBP,
  M16,VTM,RPTA.RPTA(М16)
- ,UJ,ПЕР_5.F5
+ ,UJ,ПЕР+5.F5
 C
- RPTA:,WTC,ЗНАЧЕНИЕ_3.V2
+C УСТАНОВКА УКАЗАТЕЛЕЙ ТЕКСТА RPT И RUSIS
+ RPTA:,WTC,ЗНАЧЕНИЕ+3.V2
  ,XTA,.0
  ,UTC,*RPT*.RPT
  ,ATX,.0
@@ -51,9 +52,10 @@ C
  ,ATX,.RUSIS
  ,NTR,3.0
  ,NTR,22B.'3'
- RPTD:M16,VTM,ЗНАЧЕНИЕ_1.'22'
+C ОБРАБОТКА ТЕКСТА ОТЧЕТА ЧЕРЕЗ SPAUD
+ RPTD:M16,VTM,ЗНАЧЕНИЕ+1.'22'
  ,ITS,14.0
- M16,VTM,ЗНАЧЕНИЕ_2.V0(М16)
+ M16,VTM,ЗНАЧЕНИЕ+2.V0(М16)
  ,ITS,14.М16
  M15,VJM,SPAUD.V1(М16)
  ,NTR,3.М16
@@ -69,6 +71,7 @@ C
 C
  RUSISA:,UJ,RPTD.'22'
 C
+C ЗАПИСЬ УКАЗАТЕЛЯ RUSIS ПОСЛЕ ОБРАБОТКИ ТЕКСТА
  RUSISB:M7,XTA,.RUSISA
  ,UTC,*RUSIS*.RUSISB
  ,ATX,.RPTD
@@ -76,9 +79,9 @@ C
  ,NTR,22B.0(М7)
  ,UJ,POP.RUSIS
 C
- ПЕР_5:M7,MTJ,8.0
+ ПЕР+5:M7,MTJ,8.0
  M16,MTJ,10.'3'
- M7,VTM,ПАРАМЕТР_1.'22'
+ M7,VTM,ПАРАМЕТР+1.'22'
  M7,STX,5.POP
  ,ITS,13.М10(М7)
  ,ITS,8.М12(М16)
@@ -87,15 +90,16 @@ C
  ,NTR,2.М15
  M12,UJ,.М10
 C
+C ВОЗВРАТ В ВЫЗЫВАЮЩИЙ БЛОК
  POP:,STI,
  ,STI,7.'3'
  ,STI,8.'2'
  M10,UJ,.0(М12)
 C
- ПАРАМЕТР_1:,INT,0
+ ПАРАМЕТР+1:,INT,0
  ,INT,1
  ,INT,10
- ЗНАЧЕНИЕ_1:,BSS,1
- ЗНАЧЕНИЕ_2:,BSS,1
- ЗНАЧЕНИЕ_3:,BSS,1
+ ЗНАЧЕНИЕ+1:,BSS,1
+ ЗНАЧЕНИЕ+2:,BSS,1
+ ЗНАЧЕНИЕ+3:,BSS,1
  ,END,
