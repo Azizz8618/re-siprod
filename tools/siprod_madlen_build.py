@@ -370,9 +370,10 @@ NUMERALS = {
     4000: "ЧЕТЫРЕ_ТЫСЯЧИ",
 }
 
-# Строка данных в разборе dtran: ",ТИП,ЗНАЧЕНИЕ" (без имени)
+# Строка данных в разборе dtran: ",ТИП,ЗНАЧЕНИЕ" либо "  :,ТИП,ЗНАЧЕНИЕ"
 DATA_LINE = re.compile(
-    r"^(\s*)(,)(BSS|ISO|INT|LOG|OCT|HEX|BIN)(?:,(.*))?$")
+    r"^(\s*)(?:([A-Za-zА-ЯЁ*][A-Za-zА-ЯЁ0-9_+*]*)?:)?,?"
+    r"(BSS|ISO|INT|LOG|OCT|HEX|BIN)(?:,(.*))?$")
 
 
 def value_name(kind, val, used):
@@ -454,7 +455,11 @@ def name_data(text, module=""):
         if not m:
             out.append(line)
             continue
-        indent, kind, val = m.group(1), m.group(3), (m.group(4) or "").strip()
+        indent, name0, kind = m.group(1), m.group(2), m.group(3)
+        val = (m.group(4) or "").strip()
+        if name0:
+            out.append(line)             # имя уже есть
+            continue
         if kind == "BSS":
             # блок неинициализированных данных - по одной переменной
             try:
