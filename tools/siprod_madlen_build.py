@@ -39,7 +39,8 @@ ROOT = os.path.dirname(HERE)
 sys.path.insert(0, HERE)
 
 from siprod_bemsh import OPS, parse_be                           # noqa: E402
-from siprod_labels import module_table, sanitize, unique      # noqa: E402
+from siprod_labels import (AREA_NOTES, DATA_AREA_NAMES, module_table,   # noqa: E402
+                        sanitize, unique)
 from siprod_lib import Library                                  # noqa: E402
 from siprod_notes import LABEL_NOTES, MODULE_NOTES              # noqa: E402
 
@@ -365,15 +366,18 @@ NUMERALS = {
     26: "ДВАДЦАТЬ_ШЕСТЬ", 27: "ДВАДЦАТЬ_СЕМЬ", 28: "ДВАДЦАТЬ_ВОСЕМЬ",
     29: "ДВАДЦАТЬ_ДЕВЯТЬ", 30: "ТРИДЦАТЬ", 32: "ТРИДЦАТЬ_ДВА",
     40: "СОРОК", 48: "СОРОК_ВОСЕМЬ", 50: "ПЯТЬДЕСЯТ",
-    64: "ШЕСТЬДЕСЯТ_ЧЕТЫРЕ", 80: "ВОСЕМЬДЕСЯТ", 100: "СТО",
-    128: "СТО_ДВАДЦАТЬ_ВОСЕМЬ", 2400: "ДВЕ_ТЫСЯЧИ_ЧЕТЫРЕСТА",
-    4000: "ЧЕТЫРЕ_ТЫСЯЧИ",
+    60: "ШЕСТЬДЕСЯТ", 64: "ШЕСТЬДЕСЯТ_ЧЕТЫРЕ", 80: "ВОСЕМЬДЕСЯТ",
+    95: "ДЕВЯНОСТО_ПЯТЬ", 100: "СТО", 104: "СТО_ЧЕТЫРЕ",
+    128: "СТО_ДВАДЦАТЬ_ВОСЕМЬ", 1400: "ТЫСЯЧА_ЧЕТЫРЕСТА",
+    2400: "ДВЕ_ТЫСЯЧИ_ЧЕТЫРЕСТА", 4000: "ЧЕТЫРЕ_ТЫСЯЧИ",
 }
 
 # Строка данных в разборе dtran: ",ТИП,ЗНАЧЕНИЕ" либо "  :,ТИП,ЗНАЧЕНИЕ"
 DATA_LINE = re.compile(
     r"^(\s*)(?:([A-Za-zА-ЯЁ*][A-Za-zА-ЯЁ0-9_+*]*)?:)?,?"
     r"(BSS|ISO|INT|LOG|OCT|HEX|BIN)(?:,(.*))?$")
+# Имя, выданное по номеру слова, ничего не значит - заменяем его
+GENERIC_DATA = re.compile(r"^(КОНСТАНТА|ПЕРЕМЕННАЯ)_\d+$")
 
 
 def value_name(kind, val, used):
@@ -407,7 +411,11 @@ def value_name(kind, val, used):
             base = "МАСКА_ЗНАКА"
         else:
             clean = "".join(ch for ch in body.upper() if ch.isalnum())[:8]
-            base = "МАСКА_%s" % (clean or "ТЕКСТА")
+            if body.startswith("*"):
+                # командная строка СИПРОДа: *0STA, *RED, ...
+                base = "КОМАНДА_%s" % (clean or "ЗВЕЗДА")
+            else:
+                base = "МАСКА_%s" % (clean or "ТЕКСТА")
     else:
         base = "%s_%s" % (kind, val.split(".")[0].strip() or "БЕЗ_ИМЕНИ")
     return unique(sanitize(base), used)
@@ -450,6 +458,8 @@ def name_data(text, module=""):
     _consts, varnames = be_data_names(module) if module else ([], [])
     out = []
     nvar = 0
+    narea = 0
+    renamed = {}                 # старое имя -> новое (для раздела SET)
     for line in lines:
         m = DATA_LINE.match(line)
         if not m:
@@ -457,28 +467,50 @@ def name_data(text, module=""):
             continue
         indent, name0, kind = m.group(1), m.group(2), m.group(3)
         val = (m.group(4) or "").strip()
-        if name0:
+        if name0 and not GENERIC_DATA.match(name0):
             out.append(line)             # имя уже есть
             continue
+        # имя по номеру слова (КОНСТАНТА_656) ничего не значит -
+        # называем по значению
         if kind == "BSS":
-            # блок неинициализированных данных - по одной переменной
+            # блок неинициализированных данных - одна область
             try:
                 count = int(val.split(".")[0])
             except ValueError:
                 count = 1
-            for _ in range(count):
-                nvar += 1
-                if nvar <= len(varnames):
-                    base = varnames[nvar - 1]
-                else:
-                    base = "ПЕРЕМЕННАЯ_%d" % nvar
-                nm = unique(sanitize(base), used)
-                used.add(nm)
-                out.append("%s%s:,BSS,1" % (indent, nm))
+            narea += 1
+            base = DATA_AREA_NAMES.get("%s#%d" % (module, narea))
+            if base is None and count == 1 and nvar < len(varnames):
+                base = varnames[nvar]      # имя из текста БЕМШ
+            if base is None:
+                base = "ОБЛАСТЬ_МОДУЛЯ"
+            nm = unique(sanitize(base), used)
+            used.add(nm)
+            note = AREA_NOTES.get("%s#%d" % (module, narea))
+            if note:
+                out.append(comment(" " + note))
+            out.append("%s%s:,BSS,%d" % (indent, nm, count))
+            if name0:
+                renamed[name0] = nm
+            nvar += count
             continue
         nm = value_name(kind, val, used)
         used.add(nm)
         out.append("%s%s:,%s,%s" % (indent, nm, kind, val))
+        if name0:
+            renamed[name0] = nm
+    # раздел SET ссылается на данные прежними именами - обновляем
+    if renamed:
+        final = []
+        for line in out:
+            parts = line.split(",")
+            if len(parts) >= 3 and parts[1].strip() in ("SET", ""):
+                old = parts[2].strip()
+                if old in renamed:
+                    parts[2] = renamed[old]
+                    line = ",".join(parts)
+            final.append(line)
+        out = final
     return "\n".join(out)
 
 
