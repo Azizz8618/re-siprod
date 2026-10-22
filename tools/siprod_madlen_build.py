@@ -838,6 +838,98 @@ def madlen_commands(lines, lib, module):
 
 # ---------------------------------------------------------------- сборка
 
+# объявления модуля: вид -> (заголовок, пояснение)
+DECL_SECTIONS = [
+    ("РЕГИСТРЫ", "КОДЫ РЕГИСТРОВ МАШИНЫ, ИСПОЛЬЗУЕМЫХ В МОДУЛЕ"),
+    ("ВНЕШНИЕ ОБЛАСТИ", "ОБЩИЕ ДЛЯ ВСЕХ МОДУЛЕЙ ОБЛАСТИ ПАМЯТИ"),
+    ("ВНЕШНИЕ МОДУЛИ", "ВЫЗЫВАЕМЫЕ ПРОЦЕДУРЫ"),
+    ("КОНСТАНТЫ", "СМЕЩЕНИЯ В ОБЩИХ ОБЛАСТЯХ И ДРУГИЕ КОНСТАНТЫ"),
+]
+REG_DECL = re.compile(r"^(\s*)M(\d+)\s*:,EQU,(\d+)B\s*$")
+LC_DECL = re.compile(r"^(\s*)(\*[^*]+\*)\s*:,LC,(\d+)\s*$")
+SUBP_DECL = re.compile(r"^(\s*)([A-Za-zА-ЯЁ*][A-Za-zА-ЯЁ0-9_*]*)\s*:,SUBP,.*$")
+EQU_DECL = re.compile(r"^(\s*)([A-Za-zА-ЯЁ][A-Za-zА-ЯЁ0-9_]*)\s*:,EQU,(.*)$")
+
+
+def group_declarations(lines):
+    """Разбить объявления модуля на секции с заголовками.
+
+    Объявления идут подряд после строки NAME: сначала коды регистров,
+    потом внешние области памяти, внешние модули и константы.  Каждая
+    группа получает свой заголовок, и объявления переставляются по
+    группам (внутри группы порядок сохраняется).
+    """
+    start = None
+    for i, line in enumerate(lines):
+        if line.strip().endswith(":,NAME,") or ",NAME," in line:
+            start = i + 1
+            break
+    if start is None:
+        return lines
+    groups = {name: [] for name, _ in DECL_SECTIONS}
+    other = []
+    end = start
+    for i in range(start, len(lines)):
+        st = lines[i].strip()
+        if not st:
+            break
+        if REG_DECL.match(st):
+            groups["РЕГИСТРЫ"].append(lines[i])
+        elif LC_DECL.match(st):
+            groups["ВНЕШНИЕ ОБЛАСТИ"].append(lines[i])
+        elif SUBP_DECL.match(st):
+            groups["ВНЕШНИЕ МОДУЛИ"].append(lines[i])
+        elif EQU_DECL.match(st):
+            groups["КОНСТАНТЫ"].append(lines[i])
+        else:
+            break
+        end = i + 1
+    if not any(groups.values()):
+        return lines
+    out = lines[:start]
+    for name, note in DECL_SECTIONS:
+        items = groups[name]
+        if not items:
+            continue
+        out.append(comment(" %s: %s" % (name, note)))
+        for item in items:
+            note = decl_note(item)
+            if note:
+                out.append(comment(" " + note))
+            out.append(item)
+    out.extend(lines[end:])
+    return out
+
+
+def plural(n, one, few, many):
+    """Числительное по-русски: 1 слово, 2 слова, 5 слов."""
+    if n % 10 == 1 and n % 100 != 11:
+        return "%d %s" % (n, one)
+    if 2 <= n % 10 <= 4 and not 12 <= n % 100 <= 14:
+        return "%d %s" % (n, few)
+    return "%d %s" % (n, many)
+
+
+def decl_note(line):
+    """Пояснение к отдельному объявлению модуля."""
+    st = line.strip()
+    m = LC_DECL.match(st)
+    if m:
+        return "ОБЛАСТЬ %s, %s" % (m.group(2).strip("*"),
+                                  plural(int(m.group(3)), "СЛОВО", "СЛОВА", "СЛОВ"))
+    m = EQU_DECL.match(st)
+    if m and not REG_DECL.match(st):
+        expr = m.group(3).strip()
+        e = re.match(r"^\*([^*]+)\*\s*\+\s*(\d+)", expr)
+        if e:
+            return "СМЕЩЕНИЕ %s В ОБЛАСТИ %s" % (e.group(2), e.group(1))
+        e = re.match(r"^\*([^*]+)\*\s*$", expr)
+        if e:
+            return "НАЧАЛО ОБЛАСТИ %s" % e.group(1)
+        return "КОНСТАНТА, ВЫРАЖЕНИЕ: %s" % expr
+    return None
+
+
 def build(lib, module):
     """Текст МАДЛЕН: имена меток, шапка, пояснения."""
     gen = os.path.join(GEN, module.replace("*", "#") + ".madlen")
@@ -860,6 +952,9 @@ def build(lib, module):
     if comments:
         lines = [align_line(line, comments.get(idx))
                  for idx, line in enumerate(lines)]
+
+    # объявления модуля - по секциям
+    lines = group_declarations(lines)
 
     # шапка и пояснения к меткам
     notes = label_notes(lib, module, table)
