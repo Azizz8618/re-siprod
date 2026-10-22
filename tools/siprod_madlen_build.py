@@ -40,7 +40,8 @@ sys.path.insert(0, HERE)
 
 from siprod_bemsh import OPS, parse_be                           # noqa: E402
 from siprod_areas import AREA_SIZES                          # noqa: E402
-from siprod_data_sections import group_of, section_text         # noqa: E402
+from siprod_data_sections import (group_of, section_text,        # noqa: E402
+                               KIND_NUM)
 from siprod_labels import (AREA_NOTES, DATA_AREA_NAMES, module_table,   # noqa: E402
                         sanitize, unique)
 from siprod_lib import Library                                  # noqa: E402
@@ -577,30 +578,32 @@ def name_data(text, module=""):
     runs = int_runs(lines)
     if runs:
         out2 = []
+        kod = 0                       # нумерация элементов по модулю
         for idx, line in enumerate(out):
             run = runs.get(src[idx]) if idx < len(src) else None
             if run:
                 start, pos = run
-                if pos == 0:
+                if pos == 0 and KIND_NUM not in seen_groups:
                     out2.append(comment(" " + int_run_purpose(module)))
-                m = re.match(r"^\s*[А-ЯЁA-Z_0-9]+:,INT,", line)
+                m = re.match(r"^\s*([А-ЯЁA-Z_0-9]+):,INT,", line)
                 if m:
+                    kod += 1
+                    new_name = unique(sanitize("КОД_%d" % kod), used)
+                    renamed[m.group(1)] = new_name
                     line = re.sub(r"^\s*[А-ЯЁA-Z_0-9]+:",
-                                 " %s:" % unique(sanitize("КОД_%d" % (pos + 1)), used),
-                                 line)
+                                 " %s:" % new_name, line)
             out2.append(line)
         out = out2
     if renamed:
-        final = []
-        for line in out:
-            parts = line.split(",")
-            if len(parts) >= 3 and parts[1].strip() in ("SET", ""):
-                old = parts[2].strip()
-                if old in renamed:
-                    parts[2] = renamed[old]
-                    line = ",".join(parts)
-            final.append(line)
-        out = final
+        # старое имя -> новое: ссылки и в коде, и в разделе SET
+        pat = re.compile("(?<![A-Za-zА-ЯЁ0-9_])(%s)(?![A-Za-zА-ЯЁ0-9_])"
+                         % "|".join(re.escape(k)
+                                   for k in sorted(renamed, key=len, reverse=True)))
+
+        def repl(mo):
+            return renamed[mo.group(1)]
+
+        out = [pat.sub(repl, line) for line in out]
     return "\n".join(out)
 
 
