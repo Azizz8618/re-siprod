@@ -54,6 +54,8 @@ def data_items(module):
     word = None
     for line in open(path, encoding="utf-8"):
         st = line.strip()
+        if st.startswith(",DATA"):
+            break                         # конец раздела данных
         m = DATA_RE.match(st)
         if not m:
             continue

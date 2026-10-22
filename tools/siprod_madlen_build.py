@@ -39,6 +39,7 @@ ROOT = os.path.dirname(HERE)
 sys.path.insert(0, HERE)
 
 from siprod_bemsh import OPS, parse_be                           # noqa: E402
+from siprod_areas import AREA_SIZES                          # noqa: E402
 from siprod_labels import (AREA_NOTES, DATA_AREA_NAMES, module_table,   # noqa: E402
                         sanitize, unique)
 from siprod_lib import Library                                  # noqa: E402
@@ -377,7 +378,7 @@ DATA_LINE = re.compile(
     r"^(\s*)(?:([A-Za-zА-ЯЁ*][A-Za-zА-ЯЁ0-9_+*]*)?:)?,?"
     r"(BSS|ISO|INT|LOG|OCT|HEX|BIN)(?:,(.*))?$")
 # Имя, выданное по номеру слова, ничего не значит - заменяем его
-GENERIC_DATA = re.compile(r"^(КОНСТАНТА|ПЕРЕМЕННАЯ)_\d+$")
+GENERIC_DATA = re.compile(r"^(КОНСТАНТА|ПЕРЕМЕННАЯ)(_|\+)\d+$")
 
 
 def value_name(kind, val, used):
@@ -459,6 +460,7 @@ def name_data(text, module=""):
     out = []
     nvar = 0
     narea = 0
+    used_keys = set()
     renamed = {}                 # старое имя -> новое (для раздела SET)
     for line in lines:
         m = DATA_LINE.match(line)
@@ -479,14 +481,32 @@ def name_data(text, module=""):
             except ValueError:
                 count = 1
             narea += 1
-            base = DATA_AREA_NAMES.get("%s#%d" % (module, narea))
+            # имя области подбирается по её размеру: отчёты считают
+            # области иначе, чем сборщик
+            base = None
+            key = None
+            for k, nm2 in DATA_AREA_NAMES.items():
+                if not k.startswith(module + "#") or k in used_keys:
+                    continue
+                if AREA_SIZES.get(k) == count:
+                    base, key = nm2, k
+                    used_keys.add(k)
+                    break
+            if base is None:
+                # размер области неизвестен - назначаем по порядку
+                for k, nm2 in DATA_AREA_NAMES.items():
+                    if not k.startswith(module + "#") or k in used_keys:
+                        continue
+                    base, key = nm2, k
+                    used_keys.add(k)
+                    break
             if base is None and count == 1 and nvar < len(varnames):
                 base = varnames[nvar]      # имя из текста БЕМШ
             if base is None:
                 base = "ОБЛАСТЬ_МОДУЛЯ"
             nm = unique(sanitize(base), used)
             used.add(nm)
-            note = AREA_NOTES.get("%s#%d" % (module, narea))
+            note = AREA_NOTES.get(key) if key else None
             if note:
                 out.append(comment(" " + note))
             out.append("%s%s:,BSS,%d" % (indent, nm, count))

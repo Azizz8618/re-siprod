@@ -143,10 +143,7 @@ for _mod, _labels in LABEL_NAMES_EXTRA.items():
 # (свои переменные модуля, адресуются через кадр) объявляется одним
 # словом, как в Монитор-80 (`ИМЯ:,BSS,N`).  Имя отражает назначение
 # области; определяется по тому, что модуль в ней хранит.
-DATA_AREA_NAMES = {}
-
-# Пояснения к областям данных (комментарий перед объявлением)
-AREA_NOTES = {}
+from siprod_areas import AREA_NOTES, DATA_AREA_NAMES  # noqa: E402
 
 
 def role_of(instr):
@@ -241,9 +238,15 @@ def array_offsets(names):
     одинаковой ролью, СЧЁТ_1 - константа со значением 1) не меняются.
     """
     out = {}
+    # сперва считаем, у каких оснований несколько элементов
+    bases = {}
     for word, nm in names.items():
         m = ARRAY_RE.match(nm)
-        if m and m.group(1).split("_")[0] in ARRAY_BASES:
+        if m:
+            bases.setdefault(m.group(1), []).append((word, m.group(2)))
+    for word, nm in names.items():
+        m = ARRAY_RE.match(nm)
+        if m and len(bases[m.group(1)]) >= 2:
             nm = "%s+%s" % (m.group(1), m.group(2))
         out[word] = nm
     # имена должны остаться различными
