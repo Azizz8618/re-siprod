@@ -10,8 +10,10 @@
 #   -t      trace extracodes (dispak -t) to stderr
 #   -C F    write dispak PC coverage map to F (see tools/siprod_cov.py)
 #   -x O    pass option O to dispak (repeatable), e.g. -x --trace-e64
+# Environment: SIPROD_LIB selects the library card (default '*perso:672702',
+#   the personal library on disk 2248; '*libra:20' is the copy on disk 2048)
 set -eu
-usage() { sed -n '2,13s/^# \{0,1\}//p' "$0" >&2; exit 2; }
+usage() { sed -n '2,15s/^# \{0,1\}//p' "$0" >&2; exit 2; }
 raw=0 nolo='*no lo' opts=
 while getopts rmtC:x: o; do
     case $o in
@@ -33,7 +35,7 @@ trap 'rm -rf "$work"' EXIT
     echo 'ШИФР 419900ЗС5^ОЗУ 32^ТРА 100^АЦП 64^ЛЕН 67(2248)^ЕЕВ1А3'
     echo '*name'
     [ -n "$nolo" ] && echo "$nolo"
-    echo '*perso:672702'
+    echo "${SIPROD_LIB:-*perso:672702}"
     echo '*call yesmemory'
     echo '*main schema'
     echo '*execute'
