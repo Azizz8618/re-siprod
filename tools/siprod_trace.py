@@ -45,6 +45,8 @@ REF_RE = re.compile(r"^([A-Za-zА-ЯЁ][A-Za-zА-ЯЁ0-9_]*)(?:\+([0-7]+))?$")
 OPS = set("""UTC XTA NTR ITS VTM ATX UJ VJM A+X AEX UZA A-X STI U1A WTC
 X-A MTJ STX UTM ATI AOX XTS AAX ASN ITA VZM VLM V1M ARX ASX A/X A*X E-N
 E+N SUBP""".split())
+# раздел SET - указания загрузчику, но там тоже ссылки на данные
+OPS_SET = set(["SET"])
 
 
 def built_items(path):
@@ -60,6 +62,32 @@ def built_items(path):
 
 def st_is_comment(line):
     return line.lstrip().startswith("C")
+
+
+def resolve(operand, byname):
+    """Слово, на которое ссылается операнд (None - не ссылка на данные).
+
+    Ссылка бывает трёх видов: по имени элемента («КОД_5», «СЧЁТ+101»),
+    по базовой метке с смещением («КОНСТАНТА+662») и по имени с
+    модификатором («ПОЛЕ+3.М16»).
+    """
+    base = operand.split(".")[0].strip()
+    if not base:
+        return None
+    if base in byname:
+        return byname[base]
+    m = re.match(r"^\*([0-7]+)B$", base)
+    if m:                       # абсолютный адрес слова
+        return int(m.group(1), 8)
+    m = REF_RE.match(base)
+    if not m:
+        return None
+    name, off = m.group(1), m.group(2)
+    if name in byname:
+        return byname[name] + (int(off, 8) if off else 0)
+    if name in ("КОНСТАНТА", "ПЕРЕМЕННАЯ"):
+        return int(off, 8) if off else 0
+    return None
 
 
 def collect(module):
@@ -95,10 +123,81 @@ def parse_cmd(line):
         return None
     lab = parts[0].strip()
     op = parts[1].strip()
-    if op not in OPS:
-        return None
+    if op not in OPS and op not in OPS_SET and op:
+        return None                # не команда и не раздел SET
     operand = parts[2].strip() if len(parts) > 2 else ""
     return lab, op, operand, comment
+
+
+def local_symbols(module):
+    """Локальные символы модуля из текста БЕМШ: {смещение: имя}.
+
+    Смещение записано восьмерично и совпадает с номером слова модуля.
+    """
+    path = os.path.join(ROOT, "text", module.replace("*", "#") + ".be")
+    out = {}
+    if not os.path.exists(path):
+        return out
+    inside = False
+    for line in open(path, encoding="utf-8"):
+        if "ЛОКАЛЬНЫЕ СИМВОЛЫ" in line:
+            inside = True
+            continue
+        if inside:
+            if not line.startswith("*"):
+                break
+            parts = line.split()
+            if len(parts) >= 3 and parts[2].isdigit():
+                out[int(parts[2], 8)] = parts[1]
+    return out
+
+
+def validate_all():
+    """Сверка трассировки с таблицей символов модулей.
+
+    В исходной библиотеке символ имеют только те константы, на которые
+    ссылается код.  Значит, константа без символа точно не используется,
+    а константа с символом должна найтись в трассировке (иначе пропущен
+    вид ссылки).
+    """
+    lib = Library(IMAGE)
+    bad = []
+    total_sym = total_ref = 0
+    for name in sorted(lib.objects):
+        module = name.replace("*", "#")
+        table, lines = collect(module)
+        if not table:
+            continue
+        syms = local_symbols(module)
+        byname = {}
+        for word, (nm, _k, _v) in table.items():
+            byname.setdefault(nm, word)
+        refs = {}
+        for idx, line in enumerate(lines):
+            cmd = parse_cmd(line)
+            if cmd is None:
+                continue
+            _lab, _op, operand, _cmt = cmd
+            word = resolve(operand, byname)
+            if word is None:
+                continue
+            refs.setdefault(word, []).append(idx)
+        for word, nm in sorted(syms.items()):
+            if word not in table:
+                continue           # символ на область, а не на константу
+            if not nm.startswith("К"):
+                continue           # V* - ячейки кадра, на них символы
+            total_sym += 1
+            if word in refs:
+                total_ref += 1
+            else:
+                bad.append("%s: символ %s (слово 0o%o) без ссылки"
+                           % (module, nm, word))
+    print("символов констант: %d, найдено ссылок: %d, расхождений: %d"
+          % (total_sym, total_ref, len(bad)))
+    for b in bad[:40]:
+        print("   ", b)
+    return 0 if not bad else 1
 
 
 def show_draft(cmds, table, refs, args):
@@ -169,6 +268,8 @@ def main():
                     help="показывать и неиспользуемые элементы")
     ap.add_argument("--calls", action="store_true",
                     help="показать параметры каждого вызова")
+    ap.add_argument("--validate", action="store_true",
+                    help="проверить трассировку по таблице символов модулей")
     ap.add_argument("--draft", action="store_true",
                     help="черновик пояснений к элементам данных")
     ap.add_argument("--params", type=int, default=8,
@@ -196,21 +297,17 @@ def main():
             continue
         lab, op, operand, comment = cmd
         cmds.append((idx, lab, op, operand, comment))
-        m = REF_RE.match(operand.split(".")[0].strip())
-        if not m:
-            continue
-        base, off = m.group(1), m.group(2)
-        if base in ("КОНСТАНТА", "ПЕРЕМЕННАЯ"):
-            word = int(off, 8) if off else 0
-        elif base in byname:
-            word = byname[base] + (int(off, 8) if off else 0)
-        else:
+        word = resolve(operand, byname)
+        if word is None:
             continue
         refs.setdefault(word, []).append((idx, operand, op))
 
     if args.calls:
         show_calls(cmds, table, args)
         return 0
+
+    if args.validate:
+        return validate_all()
 
     if args.draft:
         show_draft(cmds, table, refs, args)

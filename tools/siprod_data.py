@@ -50,8 +50,7 @@ def data_items(module):
     path = os.path.join(GEN, module.replace("*", "#") + ".madlen")
     if not os.path.exists(path):
         return []
-    out = []
-    word = None
+    raw = []                      # (слово или None, имя, тип, значение)
     for line in open(path, encoding="utf-8"):
         st = line.strip()
         if st.startswith(",DATA"):
@@ -61,11 +60,26 @@ def data_items(module):
             continue
         name, kind, val = m.group(1), m.group(2), m.group(3)
         lm = re.match(r"^\*([0-7]+)B", st)
-        if lm:
-            word = int(lm.group(1), 8)
+        word = int(lm.group(1), 8) if lm else None
+        raw.append((word, name, kind, (val or "").strip()))
+    # слова без номера (продолжение предыдущей декларации) занимают
+    # слова после неё; безымянные декларации в начале раздела стоят
+    # перед первой помеченной - занимают слова перед ней
+    first = next((i for i, it in enumerate(raw) if it[0] is not None), None)
+    if first:
+        w = raw[first][0] - first
+        for i in range(first):
+            name, kind, val = raw[i][1], raw[i][2], raw[i][3]
+            raw[i] = (w, name, kind, val)
+            w += 1
+    out = []
+    word = None
+    for w, name, kind, val in raw:
+        if w is not None:
+            word = w
         elif word is None:
-            continue                  # данные без номера слова
-        out.append((word, name, kind, (val or "").strip()))
+            continue                  # нет номера - слово неизвестно
+        out.append((word, name, kind, val))
         word += 1
     return out
 

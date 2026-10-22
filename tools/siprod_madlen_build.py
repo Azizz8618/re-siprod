@@ -265,15 +265,29 @@ def merge_arrays(text):
             continue
         base, num = m.group(2), int(m.group(3))
         groups.setdefault(base, []).append(num)
-    # оставляем только группы с последовательными номерами
+    # оставляем только группы с последовательными номерами, начинающиеся
+    # с единицы: это элементы массива, объявленные со смещением от
+    # начала.  Нумерация с двойки - разные константы с одинаковым
+    # значением (имя отличается номером по порядку, а не смещением),
+    # и объединять их нельзя: основание уже занято.
     groups = {b: ns for b, ns in groups.items()
-              if len(ns) >= 2 and ns == list(range(ns[0], ns[0] + len(ns)))}
+              if len(ns) >= 2 and ns[0] == 1
+              and ns == list(range(ns[0], ns[0] + len(ns)))}
     if not groups:
         return text
     shift = {}
     for base, ns in groups.items():
         for i, num in enumerate(ns):
             shift[(base, num)] = i          # 0 - начало массива, 1, 2, ...
+    # основание не должно быть объявлено отдельно (иначе получится
+    # два объявления с одним именем)
+    plain = set()
+    for line in lines:
+        m = re.match(r"^\s*([A-Za-zА-ЯЁ][A-Za-zА-ЯЁ0-9_]*)\s*[:,]", line)
+        if m and not ARRAY_DECL.match(line):
+            plain.add(m.group(1))
+    groups = {b: ns for b, ns in groups.items() if b not in plain}
+
     # 1. объявления: первый элемент - начало массива, остальные убираем
     out = []
     skip = set()
@@ -616,7 +630,7 @@ def name_data(text, module=""):
                 start, pos = run
                 if pos == 0 and KIND_NUM not in seen_groups:
                     out2.append(comment(" " + int_run_purpose(module)))
-                m = re.match(r"^\s*([А-ЯЁA-Z_0-9]+):,INT,", line)
+                m = re.match(r"^\s*([А-ЯЁA-Z_0-9+]+):,INT,", line)
                 if m:
                     kod += 1
                     new_name = unique(sanitize("КОД_%d" % kod), used)
