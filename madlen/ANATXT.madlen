@@ -48,235 +48,235 @@ C
  RWINF   :,SUBP,
  SYTINT  :,SUBP,
  SCAN    :,SUBP,
- M16,VTM,TXT1A.TXT1A(М16)
- ,UJ,ВОЗВРАТ_В_ОС.F0
+ M16,VTM,TXT1A.М16 := адрес TXT1A
+ ,UJ,ВОЗВРАТ_В_ОС.переход на F0
 C
- TXT1A:M7,XTA,.0(М7)
- ,UTC,TXT1.TXT1
- ,ATX,.0
- ,NTR,3.'3'
- M7,XTA,.0(М7)
- ,UTC,*TXT*.TXT
- ,ATX,.0
- M7,XTA,.0(М7)
- ,UTC,TXT3.TXT3
- ,ATX,.0
- M7,XTA,.0(М7)
- M7,ATX,7.7(М7)
- ,NTR,22B.'22'
- SCANA:M15,VJM,SCAN.0
- M7,XTA,4.SCAN(М15)
- ,ITS,.0
- ,UTC,SCANER1.4(М7)
- ,XTA,
- M17,AEX,.SCANER1
- ,U1A,SCANEA.0
- ,UJ,SCANEB.0(М17)
+ TXT1A:M7,XTA,.СМ := слот кадра 0
+ ,UTC,TXT1.мод.адрес := TXT1
+ ,ATX,.по адресу TXT1 := СМ
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ M7,XTA,.СМ := слот кадра 0
+ ,UTC,*TXT*.мод.адрес := TXT
+ ,ATX,.по адресу TXT := СМ
+ M7,XTA,.СМ := слот кадра 0
+ ,UTC,TXT3.мод.адрес := TXT3
+ ,ATX,.по адресу TXT3 := СМ
+ M7,XTA,.СМ := слот кадра 0
+ M7,ATX,7.слот кадра 7 := СМ
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ SCANA:M15,VJM,SCAN.вызов через М15
+ M7,XTA,4.СМ := слот кадра 4
+ ,ITS,.в магазин; СМ := ИР
+ ,UTC,SCANER1.мод.адрес := SCANER1
+ ,XTA,.СМ := слово по адресу SCANER1
+ M17,AEX,.СМ ^= поле контекста 0
+ ,U1A,SCANEA.если СМ≠0 → SCANEA
+ ,UJ,SCANEB.переход на SCANEB
 C
- SCANEA:,UJ,SCANEC.SCANEA
+ SCANEA:,UJ,SCANEC.переход на SCANEC
 C
- SCANEB:,UTC,*SCANER*.SCANEB
- ,XTA,.0
- ,NTR,3.SCANEC
- M7,A-X,1.0
- M7,ATX,10B.SCANER
- M7,ATX,11B.0
- M16,VTM,*INS*.'3'
- ,ITS,14.1(М7)
- M16,VTM,ЗНАЧЕНИЕ_АНАЛИЗА+1.8(М7)
- ,ITS,14.9(М7)
- M16,VTM,ЗНАЧЕНИЕ_АНАЛИЗА+2.INS(М16)
- ,ITS,14.М16
- ,NTR,22B.V2(М16)
- M15,VJM,SYTINT.М16
- ,NTR,3.V3(М16)
- ,NTR,22B.М16
- M7,XTA,11B.'22'
- ,UTC,*SCANER*.SYTINT(М15)
- ,ATX,.'3'
- ,NTR,3.'22'
- ,NTR,22B.9(М7)
- M15,VJM,SCAN.SCANER
- M7,XTA,6.0
- ,ITS,.'3'
- ,UTC,SCANER1.'22'
- ,XTA,.SCAN(М15)
- M17,AEX,.6(М7)
- ,UZA,TXT1B
- ,UJ,TXT1C.SCANER1
+ SCANEB:,UTC,*SCANER*.мод.адрес := 0 (сброс модификации)
+ ,XTA,.СМ := слово по адресу SCANER
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ M7,A-X,1.СМ -= слот кадра 1
+ M7,ATX,10B.слот кадра 8 := СМ
+ M7,ATX,11B.слот кадра 9 := СМ
+ M16,VTM,*INS*.М16 := адрес INS
+ ,ITS,14.в магазин; СМ := М16
+ M16,VTM,ЗНАЧЕНИЕ_АНАЛИЗА.М16 := адрес V2
+ ,ITS,14.в магазин; СМ := М16
+ M16,VTM,ЗНАЧЕНИЕ_АНАЛИЗА+1.М16 := адрес V3
+ ,ITS,14.в магазин; СМ := М16
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ M15,VJM,SYTINT.вызов через М15
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ M7,XTA,11B.СМ := слот кадра 9
+ ,UTC,*SCANER*.мод.адрес := SCANER
+ ,ATX,.по адресу SCANER := СМ
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ M15,VJM,SCAN.вызов через М15
+ M7,XTA,6.СМ := слот кадра 6
+ ,ITS,.в магазин; СМ := ИР
+ ,UTC,SCANER1.мод.адрес := SCANER1
+ ,XTA,.СМ := слово по адресу SCANER1
+ M17,AEX,.СМ ^= поле контекста 0
+ ,UZA,TXT1B.если СМ=0 → TXT1B
+ ,UJ,TXT1C.переход на TXT1C
 C
- TXT1B:,UJ,TXTA.0
+ TXT1B:,UJ,TXTA.переход на TXTA
 C
- TXT1C:M7,XTA,.0(М17)
- ,ITS,.TXT1B
- ,UTC,TXT1.TXT1C
- ,XTA,.0
- M17,AEX,.TXTA
- ,UZA,TXT1D.0
- ,UJ,TXT1E.0(М7)
+ TXT1C:M7,XTA,.СМ := слот кадра 0
+ ,ITS,.в магазин; СМ := ИР
+ ,UTC,TXT1.мод.адрес := TXT1
+ ,XTA,.СМ := слово по адресу TXT1
+ M17,AEX,.СМ ^= поле контекста 0
+ ,UZA,TXT1D.если СМ=0 → TXT1D
+ ,UJ,TXT1E.переход на TXT1E
 C
- TXT1D:M7,XTA,10B
- ,UTC,TXT1.TXT1
- ,ATX,.0
- ,NTR,3.0(М17)
- ,NTR,22B.TXT1D
+ TXT1D:M7,XTA,10B.СМ := слот кадра 8
+ ,UTC,TXT1.мод.адрес := TXT1
+ ,ATX,.по адресу TXT1 := СМ
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
 C СОХРАНЕНИЕ ПОЗИЦИИ ТЕКСТА И СДВИГ УКАЗАТЕЛЯ
- TXT1E:M7,XTA,.TXT1E
- M7,ATX,7.0
- ,NTR,3.8(М7)
- ,UTC,*SCANER*.TXT1
- ,XTA,.0
- M7,A-X,1.'3'
- ,UTC,*SCANER*.'22'
- ,ATX,.0
- ,NTR,22B.0(М7)
- ,UJ,SCANEJ.7(М7)
+ TXT1E:M7,XTA,.СМ := слот кадра 0
+ M7,ATX,7.слот кадра 7 := СМ
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ ,UTC,*SCANER*.мод.адрес := SCANER
+ ,XTA,.СМ := слово по адресу SCANER
+ M7,A-X,1.СМ -= слот кадра 1
+ ,UTC,*SCANER*.мод.адрес := SCANER
+ ,ATX,.по адресу SCANER := СМ
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ ,UJ,SCANEJ.переход на SCANEJ
 C
- TXTA:M7,XTA,12B.'3'
- ,UTC,*TXT*.SCANER
- ,ATX,.0
- ,NTR,3.1(М7)
- M7,XTA,10B.SCANER
- M7,A-X,7.0
- M7,A-X,1.'22'
- ,UTC,TXT2.SCANEJ
- ,ATX,.10(М7)
- ,UTC,*ATV*.TXT
- ,XTA,.0
- ,UTC,*INF*.'3'
- ,ATX,.8(М7)
- ,UTC,*TXT*.7(М7)
- ,XTA,.1(М7)
- ,UTC,INF1.TXT2
- ,ATX,.0
- ,NTR,22B.ATV
- M15,VJM,RWINF.0
- ,UTC,*INF*.INF
- ,XTA,.0
- ,UTC,*ATV*.TXT
- ,ATX,.0
- ,NTR,3.INF1
- ,UTC,INF2.0
- ,XTA,.'22'
- ,UTC,ATV1.RWINF(М15)
- ,ATX,.0
- ,NTR,22B.INF
- ,UJ,SCANEM.0
+ TXTA:M7,XTA,12B.СМ := слот кадра 10
+ ,UTC,*TXT*.мод.адрес := TXT
+ ,ATX,.по адресу TXT := СМ
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ M7,XTA,10B.СМ := слот кадра 8
+ M7,A-X,7.СМ -= слот кадра 7
+ M7,A-X,1.СМ -= слот кадра 1
+ ,UTC,TXT2.мод.адрес := TXT2
+ ,ATX,.по адресу TXT2 := СМ
+ ,UTC,*ATV*.мод.адрес := ATV
+ ,XTA,.СМ := слово по адресу ATV
+ ,UTC,*INF*.мод.адрес := INF
+ ,ATX,.по адресу INF := СМ
+ ,UTC,*TXT*.мод.адрес := TXT
+ ,XTA,.СМ := слово по адресу TXT
+ ,UTC,INF1.мод.адрес := INF1
+ ,ATX,.по адресу INF1 := СМ
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ M15,VJM,RWINF.вызов через М15
+ ,UTC,*INF*.мод.адрес := 0 (сброс модификации)
+ ,XTA,.СМ := слово по адресу INF
+ ,UTC,*ATV*.мод.адрес := ATV
+ ,ATX,.по адресу ATV := СМ
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ ,UTC,INF2.мод.адрес := INF2
+ ,XTA,.СМ := слово по адресу INF2
+ ,UTC,ATV1.мод.адрес := ATV1
+ ,ATX,.по адресу ATV1 := СМ
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ ,UJ,SCANEM.переход на SCANEM
 C
- SCANEC:M7,XTA,5.ATV
- ,ITS,.0
- ,UTC,SCANER1.'3'
- ,XTA,.INF2
- M17,AEX,.0
- ,U1A,SCANED.ATV1
- ,UJ,SCANEE.0
+ SCANEC:M7,XTA,5.СМ := слот кадра 5
+ ,ITS,.в магазин; СМ := ИР
+ ,UTC,SCANER1.мод.адрес := SCANER1
+ ,XTA,.СМ := слово по адресу SCANER1
+ M17,AEX,.СМ ^= поле контекста 0
+ ,U1A,SCANED.если СМ≠0 → SCANED
+ ,UJ,SCANEE.переход на SCANEE
 C
- SCANED:,UJ,SCANEF.'22'
+ SCANED:,UJ,SCANEF.переход на SCANEF
 C
 C РАСЧЕТ ПОЗИЦИИ И ДЛИНЫ ТЕКСТОВОГО СЕГМЕНТА
- SCANEE:,UTC,*SCANER*.SCANEM
- ,XTA,.0
- ,NTR,3.5(М7)
- M7,A-X,7
- M7,A-X,2.SCANER1
- ,UTC,TXT2.0
- ,ATX,.0(М17)
- M7,XTA,1.SCANED
- ,UTC,TXT3.SCANEE
- ,ATX,.0
- ,NTR,22B.SCANEF
- ,UJ,SCANEM.0
+ SCANEE:,UTC,*SCANER*.мод.адрес := 0 (сброс модификации)
+ ,XTA,.СМ := слово по адресу SCANER
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ M7,A-X,7.СМ -= слот кадра 7
+ M7,A-X,2.СМ -= слот кадра 2
+ ,UTC,TXT2.мод.адрес := TXT2
+ ,ATX,.по адресу TXT2 := СМ
+ M7,XTA,1.СМ := слот кадра 1
+ ,UTC,TXT3.мод.адрес := TXT3
+ ,ATX,.по адресу TXT3 := СМ
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ ,UJ,SCANEM.переход на SCANEM
 C
- SCANEF:M7,XTA,3.SCANER
- ,ITS,.0
- ,UTC,SCANER1.'3'
- ,XTA,.7(М7)
- M17,AEX,.2(М7)
- ,UZA,TXT1F.TXT2
- ,UJ,TXT1G.0
+ SCANEF:M7,XTA,3.СМ := слот кадра 3
+ ,ITS,.в магазин; СМ := ИР
+ ,UTC,SCANER1.мод.адрес := SCANER1
+ ,XTA,.СМ := слово по адресу SCANER1
+ M17,AEX,.СМ ^= поле контекста 0
+ ,UZA,TXT1F.если СМ=0 → TXT1F
+ ,UJ,TXT1G.переход на TXT1G
 C
- TXT1F:,UJ,SCANEI.1(М7)
+ TXT1F:,UJ,SCANEI.переход на SCANEI
 C
- TXT1G:M7,XTA,.TXT3
- M7,ATX,7.0
- ,NTR,3.'22'
- M7,XTA,.SCANEM
- ,ITS,.3(М7)
- ,UTC,TXT1
- ,XTA,.SCANER1
- ,NTR,22B.0
- M17,AEX,.0(М17)
- ,U1A,SCANEG.TXT1F
- ,UJ,SCANEH.TXT1G
+ TXT1G:M7,XTA,.СМ := слот кадра 0
+ M7,ATX,7.слот кадра 7 := СМ
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ M7,XTA,.СМ := слот кадра 0
+ ,ITS,.в магазин; СМ := ИР
+ ,UTC,TXT1.мод.адрес := TXT1
+ ,XTA,.СМ := слово по адресу TXT1
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ M17,AEX,.СМ ^= поле контекста 0
+ ,U1A,SCANEG.если СМ≠0 → SCANEG
+ ,UJ,SCANEH.переход на SCANEH
 C
- SCANEG:,UJ,SCANEJ.0
+ SCANEG:,UJ,SCANEJ.переход на SCANEJ
 C
 C ЗАПИСЬ ТЕКУЩЕЙ ПОЗИЦИИ В БУФЕР ТЕКСТА
- SCANEH:,UTC,*SCANER*.SCANEI
- ,XTA,.0
- ,NTR,3.0(М7)
- M7,A-X,1.7(М7)
- ,UTC,TXT1.'3'
- ,ATX,.0(М7)
- ,NTR,22B
- ,UJ,SCANEJ.TXT1
+ SCANEH:,UTC,*SCANER*.мод.адрес := 0 (сброс модификации)
+ ,XTA,.СМ := слово по адресу SCANER
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ M7,A-X,1.СМ -= слот кадра 1
+ ,UTC,TXT1.мод.адрес := TXT1
+ ,ATX,.по адресу TXT1 := СМ
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ ,UJ,SCANEJ.переход на SCANEJ
 C
- SCANEI:M7,XTA,7.0
- ,NTR,3.'22'
- M7,A+X,1.0(М17)
- M7,ATX,7.SCANEG
- ,NTR,22B.SCANEH
+ SCANEI:M7,XTA,7.СМ := слот кадра 7
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ M7,A+X,1.СМ += слот кадра 1
+ M7,ATX,7.слот кадра 7 := СМ
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
 C ПРОВЕРКА ДОСТИЖЕНИЯ КОНЦА ТЕКСТА
- SCANEJ:,UTC,*SCANER*.0
- ,XTA,.SCANEJ
- ,NTR,3.0
- ,UTC,INS26.SCANER
- ,A-X,.0
- ,NTR,22B.'3'
- ,UZA,ЦИКЛ_ПЕРЕХОД.1(М7)
- ,UJ,SCANEK.TXT1
+ SCANEJ:,UTC,*SCANER*.мод.адрес := 0 (сброс модификации)
+ ,XTA,.СМ := слово по адресу SCANER
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ ,UTC,INS26.мод.адрес := INS26
+ ,A-X,.СМ -= слово по адресу INS26
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ ,UZA,ЦИКЛ_ПЕРЕХОД.если СМ=0 → F7
+ ,UJ,SCANEK.переход на SCANEK
 C
- ЦИКЛ_ПЕРЕХОД:,UJ,SCANEL.0
+ ЦИКЛ_ПЕРЕХОД:,UJ,SCANEL.переход на SCANEL
 C
- SCANEK:,UJ,SCANA.'22'
+ SCANEK:,UJ,SCANA.переход на SCANA
 C
- SCANEL:,UTC,*SCANER*.SCANEJ
- ,XTA,.7(М7)
- ,NTR,3.'3'
- M7,A-X,1.1(М7)
- ,UTC,TXT2.7(М7)
- ,ATX,.'22'
- ,NTR,22B.0
- SCANEM:M7,XTA,.SCANER
- ,ITS,.0
- ,UTC,TXT1.'3'
- ,XTA,.INS26
- M17,AEX,.0
- ,UZA,TXT2A.'22'
- ,UJ,TXT2B.F7
+ SCANEL:,UTC,*SCANER*.мод.адрес := 0 (сброс модификации)
+ ,XTA,.СМ := слово по адресу SCANER
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ M7,A-X,1.СМ -= слот кадра 1
+ ,UTC,TXT2.мод.адрес := TXT2
+ ,ATX,.по адресу TXT2 := СМ
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ SCANEM:M7,XTA,.СМ := слот кадра 0
+ ,ITS,.в магазин; СМ := ИР
+ ,UTC,TXT1.мод.адрес := TXT1
+ ,XTA,.СМ := слово по адресу TXT1
+ M17,AEX,.СМ ^= поле контекста 0
+ ,UZA,TXT2A.если СМ=0 → TXT2A
+ ,UJ,TXT2B.переход на TXT2B
 C
- TXT2A:M7,XTA,.SCANEK
- ,UTC,TXT2.SCANEL
- ,ATX,.0
- ,NTR,3.SCANA
- ,NTR,22B.0
- TXT2B:,UJ,ВОЗВРАТ_В_БЛОК.SCANER
+ TXT2A:M7,XTA,.СМ := слот кадра 0
+ ,UTC,TXT2.мод.адрес := TXT2
+ ,ATX,.по адресу TXT2 := СМ
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ TXT2B:,UJ,ВОЗВРАТ_В_БЛОК.переход на F0A
 C
- ВОЗВРАТ_В_ОС:M7,MTJ,8.0
- M16,MTJ,10.'3'
- M7,VTM,ПАРАМЕТР_АНАЛИЗА+1.1(М7)
- ,ITS,13.TXT2
- ,ITS,8.0
- ,ITS,.'22'
- ,NTR,3.0
- ,NTR,2.0(М7)
- M12,UJ,
+ ВОЗВРАТ_В_ОС:M7,MTJ,8.М10 := М7
+ M16,MTJ,10.М12 := М16
+ M7,VTM,ПАРАМЕТР_АНАЛИЗА+1.М7 := адрес К0
+ ,ITS,13.в магазин; СМ := М15
+ ,ITS,8.в магазин; СМ := М10
+ ,ITS,.в магазин; СМ := ИР
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ ,NTR,2.РЖ := 2 (переходы по нулю, округление
+ M12,UJ,.переход через М12
 C
 C ВОЗВРАТ В ВЫЗЫВАЮЩИЙ БЛОК
- ВОЗВРАТ_В_БЛОК:,STI,.TXT1
- ,STI,7.0
- ,STI,8.0(М17)
- M10,UJ,.TXT2A
+ ВОЗВРАТ_В_БЛОК:,STI,.ИР := СМ; СМ := из магазина
+ ,STI,7.М7 := СМ; СМ := из магазина
+ ,STI,8.М10 := СМ; СМ := из магазина
+ M10,UJ,.переход через М10
 C
  ПАРАМЕТР_АНАЛИЗА+1:,INT,0
  ,INT,1
@@ -286,6 +286,5 @@ C
  ,INT,22
  ,INT,25
  ,BSS,2
- ЗНАЧЕНИЕ_АНАЛИЗА+1:,BSS,1
- ЗНАЧЕНИЕ_АНАЛИЗА+2:,BSS,1
- ,END,.TXT2B
+ ЗНАЧЕНИЕ_АНАЛИЗА:,BSS,2
+ ,END,

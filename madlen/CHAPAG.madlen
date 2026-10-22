@@ -40,168 +40,168 @@ C
  NUST7:,EQU,*NUST*  +7
  NUST5:,EQU,*NUST*  +5
  NUST6:,EQU,*NUST*  +6
- M16,VTM,REGIMA.REGIMA(М16)
- ,UJ,ПЕР+15.F11
+ M16,VTM,REGIMA.М16 := адрес REGIMA
+ ,UJ,ПЕР+15.переход на F11
 C
 C ЗАПОМНЕНИЕ РЕЖИМА И ЧТЕНИЕ СИМВОЛА ЗАГОЛОВКА
- REGIMA:M7,XTA,2.2(М7)
- ,UTC,REGIM9.REGIM9
- ,ATX,.0
- ,WTC,ЯЧ_ЗАГОЛ+3.V6
- ,XTA,.0
- ,UTC,NUST7.NUST7
- ,ATX,.0
- M7,XTA,.0(М7)
- ,ITS,
- ,UTC,NUST7.NUST7
- ,XTA,.0
- M17,AEX,.0(М17)
- ,U1A,NUST7A.NUST7A
- ,UJ,NUST7B.NUST7B
+ REGIMA:M7,XTA,2.СМ := слот кадра 2
+ ,UTC,REGIM9.мод.адрес := REGIM9
+ ,ATX,.по адресу REGIM9 := СМ
+ ,WTC,ЯЧ_ЗАГОЛ+2.мод.адрес := код из V6
+ ,XTA,.СМ := слово по адресу V6
+ ,UTC,NUST7.мод.адрес := NUST7
+ ,ATX,.по адресу NUST7 := СМ
+ M7,XTA,.СМ := слот кадра 0
+ ,ITS,.в магазин; СМ := ИР
+ ,UTC,NUST7.мод.адрес := NUST7
+ ,XTA,.СМ := слово по адресу NUST7
+ M17,AEX,.СМ ^= поле контекста 0
+ ,U1A,NUST7A.если СМ≠0 → NUST7A
+ ,UJ,NUST7B.переход на NUST7B
 C
- NUST7A:,UTC,NUST7.NUST7
- ,XTA,.0
- ,NTR,3.'3'
- M7,A+X,1.1(М7)
- ,UTC,NUST7.NUST7
- ,ATX,.0
- ,NTR,22B.'22'
- NUST7B:M7,XTA,.0
- M7,ATX,12B.0(М7)
- ,NTR,3.10(М7)
- ,NTR,22B.'3'
- SCANA:M15,VJM,SCAN.'22'
- M7,XTA,3.SCAN(М15)
- ,ITS,.0
- ,UTC,SCANER1.3(М7)
- ,XTA,
- M17,AEX,.SCANER1
- ,U1A,ВЫЗОВ_KLAIDA.0
- ,UJ,SCANEA.0(М17)
+ NUST7A:,UTC,NUST7.мод.адрес := NUST7
+ ,XTA,.СМ := слово по адресу NUST7
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ M7,A+X,1.СМ += слот кадра 1
+ ,UTC,NUST7.мод.адрес := NUST7
+ ,ATX,.по адресу NUST7 := СМ
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ NUST7B:M7,XTA,.СМ := слот кадра 0
+ M7,ATX,12B.слот кадра 10 := СМ
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ SCANA:M15,VJM,SCAN.вызов через М15
+ M7,XTA,3.СМ := слот кадра 3
+ ,ITS,.в магазин; СМ := ИР
+ ,UTC,SCANER1.мод.адрес := SCANER1
+ ,XTA,.СМ := слово по адресу SCANER1
+ M17,AEX,.СМ ^= поле контекста 0
+ ,U1A,ВЫЗОВ_KLAIDA.если СМ≠0 → F3
+ ,UJ,SCANEA.переход на SCANEA
 C
- ВЫЗОВ_KLAIDA:M16,VTM,СЧЁТ_20.F3
- ,ITS,14.SCANEA
- M15,VJM,KLAIDA.0
- SCANEA:,UTC,*SCANER*.К4(М16)
- ,XTA,.М16
- ,NTR,3.KLAIDA(М15)
- M7,A-X,1.0
- M7,ATX,13B.SCANER
- M16,VTM,*INS*.0
- ,ITS,14.'3'
- M16,VTM,ЯЧ_ЗАГОЛ+1.1(М7)
- ,ITS,14.11(М7)
- M16,VTM,ЯЧ_ЗАГОЛ+2.INS(М16)
- ,ITS,14.М16
- ,NTR,22B.V2(М16)
- M15,VJM,SYTINT.М16
- ,NTR,3.V3(М16)
- ,NTR,22B.М16
- M7,XTA,13B.'22'
- ,NTR,3.SYTINT(М15)
- M7,A+X,1.0
- ,UTC,*SCANER*.'3'
- ,ATX,.'22'
- M7,XTA,12B.11(М7)
- M7,A+X,1.'3'
- M7,ATX,12B.1(М7)
- M7,XTA,1.SCANER
- ,ITS,.0
- M7,XTA,12B.10(М7)
- ,NTR,22B.1(М7)
- M17,AEX,.10(М7)
- ,U1A,NUST5A.1(М7)
- ,UJ,NUST5B
+ ВЫЗОВ_KLAIDA:M16,VTM,СЧЁТ_20.М16 := адрес К4
+ ,ITS,14.в магазин; СМ := М16
+ M15,VJM,KLAIDA.вызов через М15
+ SCANEA:,UTC,*SCANER*.мод.адрес := 0 (сброс модификации)
+ ,XTA,.СМ := слово по адресу SCANER
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ M7,A-X,1.СМ -= слот кадра 1
+ M7,ATX,13B.слот кадра 11 := СМ
+ M16,VTM,*INS*.М16 := адрес INS
+ ,ITS,14.в магазин; СМ := М16
+ M16,VTM,ЯЧ_ЗАГОЛ.М16 := адрес V2
+ ,ITS,14.в магазин; СМ := М16
+ M16,VTM,ЯЧ_ЗАГОЛ+1.М16 := адрес V3
+ ,ITS,14.в магазин; СМ := М16
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ M15,VJM,SYTINT.вызов через М15
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ M7,XTA,13B.СМ := слот кадра 11
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ M7,A+X,1.СМ += слот кадра 1
+ ,UTC,*SCANER*.мод.адрес := SCANER
+ ,ATX,.по адресу SCANER := СМ
+ M7,XTA,12B.СМ := слот кадра 10
+ M7,A+X,1.СМ += слот кадра 1
+ M7,ATX,12B.слот кадра 10 := СМ
+ M7,XTA,1.СМ := слот кадра 1
+ ,ITS,.в магазин; СМ := ИР
+ M7,XTA,12B.СМ := слот кадра 10
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ M17,AEX,.СМ ^= поле контекста 0
+ ,U1A,NUST5A.если СМ≠0 → NUST5A
+ ,UJ,NUST5B.переход на NUST5B
 C
- NUST5A:,UJ,NUST6A.10(М7)
+ NUST5A:,UJ,NUST6A.переход на NUST6A
 C
 C ЗАПОМНЕНИЕ СМЕЩЕНИЯ NUST5 И ПРОДОЛЖЕНИЕ РАЗБОРА
- NUST5B:M7,XTA,14B.'22'
- ,UTC,NUST5.0(М17)
- ,ATX,.NUST5A
- ,UJ,SCANA.NUST5B
+ NUST5B:M7,XTA,14B.СМ := слот кадра 12
+ ,UTC,NUST5.мод.адрес := NUST5
+ ,ATX,.по адресу NUST5 := СМ
+ ,UJ,SCANA.переход на SCANA
 C
 C ЗАПОМНЕНИЕ ВТОРОГО СМЕЩЕНИЯ И ПРОВЕРКА РЕЖИМА
- NUST6A:M7,XTA,14B.0
- ,UTC,NUST6.NUST6A
- ,ATX,.0
- M7,XTA,6.12(М7)
- M7,ATX,15B.NUST5
- ,NTR,3.0
- M7,XTA,1.SCANA
- ,ITS,.12(М7)
- ,UTC,*REGIM*.NUST6
- ,XTA,.0
- ,NTR,22B.6(М7)
- M17,AEX,.13(М7)
- ,U1A,NUST5C.'3'
- ,UJ,NUST5D.1(М7)
+ NUST6A:M7,XTA,14B.СМ := слот кадра 12
+ ,UTC,NUST6.мод.адрес := NUST6
+ ,ATX,.по адресу NUST6 := СМ
+ M7,XTA,6.СМ := слот кадра 6
+ M7,ATX,15B.слот кадра 13 := СМ
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ M7,XTA,1.СМ := слот кадра 1
+ ,ITS,.в магазин; СМ := ИР
+ ,UTC,*REGIM*.мод.адрес := REGIM
+ ,XTA,.СМ := слово по адресу REGIM
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ M17,AEX,.СМ ^= поле контекста 0
+ ,U1A,NUST5C.если СМ≠0 → NUST5C
+ ,UJ,NUST5D.переход на NUST5D
 C
- NUST5C:M7,XTA,10B
- M7,ATX,15B.REGIM
- ,NTR,3.0
- ,NTR,22B.'22'
+ NUST5C:M7,XTA,10B.СМ := слот кадра 8
+ M7,ATX,15B.слот кадра 13 := СМ
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
 C ПРОВЕРКА ВЫХОДА ЗАГОЛОВКА ЗА ГРАНИЦЫ ПОЛЯ
- NUST5D:M7,XTA,7.0(М17)
- M7,ATX,16B.NUST5C
- ,NTR,3.NUST5D
- ,UTC,NUST5.8(М7)
- ,XTA,.13(М7)
- ,X-A,.'3'
- M7,A+X,15B.'22'
- ,NTR,22B.7(М7)
- ,U1A,ADDR.14(М7)
-  :,UTC,NUST6.'3'
- ,XTA,.NUST5
- ,NTR,3.0
- ,X-A,.0
- M7,A+X,16B.13(М7)
- ,NTR,22B.'22'
- ,U1A,ADDR.ADDR
- ,UJ,SCANEB.0
+ NUST5D:M7,XTA,7.СМ := слот кадра 7
+ M7,ATX,16B.слот кадра 14 := СМ
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ ,UTC,NUST5.мод.адрес := NUST5
+ ,XTA,.СМ := слово по адресу NUST5
+ ,X-A,.СМ := (адрес) - СМ
+ M7,A+X,15B.СМ += слот кадра 13
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ ,U1A,ADDR.если СМ≠0 → ADDR
+  :,UTC,NUST6.мод.адрес := 0 (сброс модификации)
+ ,XTA,.СМ := слово по адресу NUST6
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ ,X-A,.СМ := (адрес) - СМ
+ M7,A+X,16B.СМ += слот кадра 14
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ ,U1A,ADDR.если СМ≠0 → ADDR
+ ,UJ,SCANEB.переход на SCANEB
 C
- ADDR:M16,VTM,ГРАН_ЗАГОЛ.NUST6
- ,ITS,14.0
- M15,VJM,KLAIDA.'3'
- SCANEB:M7,XTA,13B.0
- ,UTC,*SCANER*.14(М7)
- ,ATX,.'22'
- ,NTR,3.ADDR
- ,UTC,INS26.SCANEB
- ,XTA,.К5(М16)
- ,ITS,.М16
- ,UTC,*SCANER*.KLAIDA(М15)
- ,XTA,.0
- ,NTR,22B.11(М7)
- M17,AEX,.SCANER
- ,UZA,SCANEC.0
- ,UJ,SCANED.'3'
+ ADDR:M16,VTM,ГРАН_ЗАГОЛ.М16 := адрес К5
+ ,ITS,14.в магазин; СМ := М16
+ M15,VJM,KLAIDA.вызов через М15
+ SCANEB:M7,XTA,13B.СМ := слот кадра 11
+ ,UTC,*SCANER*.мод.адрес := SCANER
+ ,ATX,.по адресу SCANER := СМ
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ ,UTC,INS26.мод.адрес := INS26
+ ,XTA,.СМ := слово по адресу INS26
+ ,ITS,.в магазин; СМ := ИР
+ ,UTC,*SCANER*.мод.адрес := SCANER
+ ,XTA,.СМ := слово по адресу SCANER
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ M17,AEX,.СМ ^= поле контекста 0
+ ,UZA,SCANEC.если СМ=0 → SCANEC
+ ,UJ,SCANED.переход на SCANED
 C
- SCANEC:,UTC,*SCANER*.INS26
- ,XTA,.0
- ,NTR,3
- M7,A+X,1.SCANER
- ,UTC,*SCANER*.0
- ,ATX,.'22'
- ,NTR,22B.0(М17)
- SCANED:,UJ,POP.SCANEC
+ SCANEC:,UTC,*SCANER*.мод.адрес := 0 (сброс модификации)
+ ,XTA,.СМ := слово по адресу SCANER
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ M7,A+X,1.СМ += слот кадра 1
+ ,UTC,*SCANER*.мод.адрес := SCANER
+ ,ATX,.по адресу SCANER := СМ
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ SCANED:,UJ,POP.переход на POP
 C
- ПЕР+15:M7,MTJ,8.SCANED
- M16,MTJ,10.0
- M7,VTM,ТАБ_ЗАГОЛ.SCANER
- M7,STX,17B.0
- ,ITS,13.'3'
- ,ITS,8.1(М7)
- ,ITS,.SCANER
- ,NTR,3.0
- ,NTR,2.'22'
- M12,UJ,.0
+ ПЕР+15:M7,MTJ,8.М10 := М7
+ M16,MTJ,10.М12 := М16
+ M7,VTM,ТАБ_ЗАГОЛ.М7 := адрес К0
+ M7,STX,17B.ЗП + магазин: 15(М7)
+ ,ITS,13.в магазин; СМ := М15
+ ,ITS,8.в магазин; СМ := М10
+ ,ITS,.в магазин; СМ := ИР
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ ,NTR,2.РЖ := 2 (переходы по нулю, округление
+ M12,UJ,.переход через М12
 C
 C ВОЗВРАТ В ВЫЗЫВАЮЩИЙ БЛОК
- POP:,STI,.POP
- ,STI,7.0
- ,STI,8.М10(М7)
- M10,UJ,.М12(М16)
+ POP:,STI,.ИР := СМ; СМ := из магазина
+ ,STI,7.М7 := СМ; СМ := из магазина
+ ,STI,8.М10 := СМ; СМ := из магазина
+ M10,UJ,.переход через М10
 C
  ТАБ_ЗАГОЛ:,INT,0
  ,INT,1
@@ -213,7 +213,5 @@ C
  ,INT,66
  ,INT,128
  ,BSS,2
- ЯЧ_ЗАГОЛ+1:,BSS,1
- ЯЧ_ЗАГОЛ+2:,BSS,3
- ЯЧ_ЗАГОЛ+3:,BSS,1
- ,END,.К0(М7)
+ ЯЧ_ЗАГОЛ:,BSS,3
+ ,END,

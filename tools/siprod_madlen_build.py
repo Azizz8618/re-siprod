@@ -38,7 +38,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 sys.path.insert(0, HERE)
 
-from siprod_bemsh import parse_be                                 # noqa: E402
+from siprod_bemsh import OPS, parse_be                           # noqa: E402
 from siprod_labels import module_table                          # noqa: E402
 from siprod_lib import Library                                  # noqa: E402
 from siprod_notes import LABEL_NOTES, MODULE_NOTES              # noqa: E402
@@ -231,27 +231,194 @@ def label_notes(lib, module, table):
     return out
 
 
+# ------------------------------------------------------- массивы данных
+
+# Объявление элемента массива: ИМЯ+Номер:,BSS,1
+ARRAY_DECL = re.compile(
+    r"^(\s*)([A-Za-zА-ЯЁ][A-Za-zА-ЯЁ0-9_]*)\+(\d+):,(BSS|ISO|INT|LOG|OCT|HEX|BIN)\b(.*)$")
+# Ссылка на элемент массива в операнде
+ARRAY_REF = re.compile(
+    r"([A-Za-zА-ЯЁ][A-Za-zА-ЯЁ0-9_]*)\+(\d+)")
+
+
+def merge_arrays(text):
+    """Собрать объявления массивов: BASE+1..BASE+N -> BASE (размер N).
+
+    Переменные и константы модуля, идущие подряд, - элементы одного
+    массива.  Объявлять их по одному не нужно: достаточно одного
+    объявления на весь массив (`ЯЧ_АДР:,BSS,3`), а элементы адресуются
+    как `ЯЧ_АДР`, `ЯЧ_АДР+1`, `ЯЧ_АДР+2` (смещение в словах).
+
+    Имена элементов сдвигаются на единицу: первый элемент массива
+    становится его началом.
+    """
+    lines = text.splitlines()
+    # группы: основание -> список номеров (по порядку объявлений)
+    groups = {}
+    for line in lines:
+        m = ARRAY_DECL.match(line)
+        if not m:
+            continue
+        base, num = m.group(2), int(m.group(3))
+        groups.setdefault(base, []).append(num)
+    # оставляем только группы с последовательными номерами
+    groups = {b: ns for b, ns in groups.items()
+              if len(ns) >= 2 and ns == list(range(ns[0], ns[0] + len(ns)))}
+    if not groups:
+        return text
+    shift = {}
+    for base, ns in groups.items():
+        for i, num in enumerate(ns):
+            shift[(base, num)] = i          # 0 - начало массива, 1, 2, ...
+    # 1. объявления: первый элемент - начало массива, остальные убираем
+    out = []
+    skip = set()
+    decl = set()
+    for idx, line in enumerate(lines):
+        if idx in skip:
+            continue
+        m = ARRAY_DECL.match(line)
+        if not m:
+            out.append(line)
+            continue
+        base, num = m.group(2), int(m.group(3))
+        kind, rest = m.group(4), m.group(5)
+        if base not in groups or (base, num) not in shift:
+            out.append(line)
+            continue
+        decl.add(idx)
+        pos = shift[(base, num)]
+        if pos == 0:
+            if kind == "BSS":
+                # весь массив - одно объявление
+                out.append("%s%s:,BSS,%d" % (m.group(1), base, len(groups[base])))
+                skip.update(range(idx + 1, idx + len(groups[base])))
+                decl.update(range(idx + 1, idx + len(groups[base])))
+                continue
+            out.append("%s%s:,%s%s" % (m.group(1), base, kind, rest))
+            continue
+        # объявление промежуточного элемента: имя со смещением
+        out.append("%s%s+%d:,%s%s" % (m.group(1), base, pos, kind, rest))
+    # 2. ссылки в операндах (объявления уже переименованы)
+    final = []
+    for idx, line in enumerate(out):
+        if idx in decl:
+            final.append(line)
+            continue
+        cut = line.find(".")
+        code, sep, tail = (line, "", "") if cut < 0 else (line[:cut], ".", line[cut:])
+        def repl(mo):
+            base, num = mo.group(1), int(mo.group(2))
+            if (base, num) in shift:
+                pos = shift[(base, num)]
+                return base if pos == 0 else "%s+%d" % (base, pos)
+            return mo.group(0)
+        final.append(ARRAY_REF.sub(repl, code) + sep + tail)
+    return "\n".join(final)
+
+
 # ------------------------------------------------------- пояснения к командам
 
-def be_comments(module):
-    """Пояснения к командам модуля: номер команды -> текст.
+# Соответствие мнемоник МАКРО-БЕМШ операциям МАДЛЕН (notes/registers.md).
+BEM2MAD = {
+    "МОДА": "UTC", "СЧ": "XTA", "РЖА": "NTR", "СЧИМ": "ITS",
+    "ПБ": "UJ", "УИА": "VTM", "ЗП": "ATX", "ПВ": "VJM",
+    "СЛ": "A+X", "НТЖ": "AEX", "ПО": "UZA", "ВЧ": "A-X",
+    "УИМ": "STI", "ПЕ": "U1A", "МОД": "WTC", "ВЧОБ": "X-A",
+    "УИИ": "MTJ", "ЗПМ": "STX", "СЛИА": "UTM", "УИ": "ATI",
+    "ИЛИ": "AOX", "СЧМ": "XTS", "И": "AAX", "СДА": "ASN",
+    "СЧИ": "ITA", "ПИО": "VZM", "ЦИКЛ": "VLM", "ПИНО": "V1M",
+    "СЛИ": "AAX", "ЧЕД": "ACX", "СЧМР": "YTA", "СЛЦ": "ARX",
+    "СД": "ASX", "ДЕЛ": "A/X", "УМН": "A*X", "ВЧПА": "E-N",
+    "СЛПА": "E+N",
+}
 
-    Номер команды - как в разборе БЕМШ: номер слова и половина слова.
+
+def be_commands(module):
+    """Команды модуля из текста БЕМШ: (мнемоника, пояснение).
+
+    Пояснение берётся из самого файла (часть строки после запятой) -
+    разборщик parse_be отдаёт только операнд, а пояснение команды
+    («СМ := смещение в буфере 0») в операнд не входит.
+
+    Разбор строк повторяет правила parse_be: строка «СТАРТ», объявления
+    «КОНД»/«ПАМ» и «ФИНИШ» командами не являются.
     """
     path = os.path.join(TXT, module.replace("*", "#") + ".be")
     if not os.path.exists(path):
-        return {}
-    _locsyms, _labels, instrs, _data = parse_be(path)
-    out = {}
-    for num, _instr, op, _lab in instrs:
-        text = op.strip()
-        if not text:
+        return []
+    out = []
+    for raw in open(path, encoding="utf-8"):
+        line = raw.rstrip("\n")
+        if line.startswith("***") or line.startswith("*"):
             continue
-        # в тексте БЕМШ операнд и комментарий разделены запятой
-        if "," in text:
-            text = text.split(",", 1)[1].strip()
-        if text:
-            out[num] = text
+        # пояснение - часть строки после запятой, перед ней 2+ пробелов
+        m = re.search(r"\s{2,},(.*)$", line)
+        comment = m.group(1).strip() if m else ""
+        code = re.sub(r"\s{2,},.*$", "", line).rstrip()
+        if not code.strip():
+            continue
+        parts = code.split(None, 1)
+        first = parts[0]
+        rest = parts[1].strip() if len(parts) > 1 else ""
+        if len(parts) > 1 and parts[1].split(None, 1)[0].upper() in ("КОНД", "ПАМ"):
+            continue                       # объявление данных
+        if first.upper() == "ФИНИШ":
+            continue
+        if first.upper() == "СТАРТ":
+            continue                       # вход в модуль, не команда
+        if re.match(r"^[А-ЯЁA-Z][А-ЯЁA-Z0-9]*$", first) and first.upper() not in OPS:
+            if not rest:
+                continue                   # метка без команды
+            p2 = rest.split(None, 1)
+            if p2[0].upper() == "СТАРТ":
+                continue
+            out.append((p2[0].upper(), comment))
+            continue
+        out.append((first.upper(), comment))
+    return out
+
+
+def madlen_op(line):
+    """Операция МАДЛЕН в строке (None, если строка не команда)."""
+    st = line.strip()
+    if not st or st.startswith("C"):
+        return None
+    if DECL.match(st) or DATA.match(st):
+        return None
+    parts = st.split(",")
+    if len(parts) < 2:
+        return None
+    op = parts[1].strip()
+    return op if op and op[0].isalpha() else None
+
+
+def align_comments(lines, module):
+    """Пояснения к командам МАДЛЕН: номер строки -> текст.
+
+    Тексты БЕМШ и МАДЛЕН описывают один и тот же код, но не совпадают
+    построчно: в БЕМШ есть псевдокоманды («МОДА 0» - сброс модификации),
+    которых в машинном коде нет, поэтому разборщик dtran их не печатает.
+    Команды сопоставляются по мнемонике операции, с пропуском псевдокоманд.
+    """
+    bem = be_commands(module)
+    out = {}
+    i = 0
+    for idx, line in enumerate(lines):
+        op = madlen_op(line)
+        if op is None:
+            continue
+        while i < len(bem):
+            mnemonic, comment = bem[i]
+            if BEM2MAD.get(mnemonic) == op:
+                break
+            i += 1                       # псевдокоманда - её нет в коде
+        if i >= len(bem):
+            break
+        _mnemonic, comment = bem[i]
+        if comment:
+            out[idx] = comment
+        i += 1
     return out
 
 
@@ -298,7 +465,16 @@ def build(lib, module):
     text = rename_equ(text, equ_names(lib, module))
     text, used = register_names(text)
     text = insert_defs(text, register_defs(used))
+    text = merge_arrays(text)
     lines = text.splitlines()
+
+    # пояснения к командам: комментарий отделяется точкой.
+    # Пояснения сопоставляются с командами по мнемонике операции -
+    # строки БЕМШ и МАДЛЕН не совпадают построчно (см. align_comments).
+    comments = align_comments(lines, module)
+    if comments:
+        lines = [line.rstrip() + "." + comments[idx] if idx in comments else line
+                 for idx, line in enumerate(lines)]
 
     # шапка и пояснения к меткам
     notes = label_notes(lib, module, table)
@@ -312,18 +488,6 @@ def build(lib, module):
             out.append(comment(" " + notes[m.group(1)]))
         out.append(line)
 
-    # пояснения к командам: комментарий отделяется точкой
-    comments = be_comments(module)
-    if comments:
-        rows = madlen_commands(out, lib, module)
-        final = []
-        for line, num in zip(out, rows):
-            note = comments.get(num) if num is not None else None
-            if not note:
-                final.append(line)
-                continue
-            final.append(line.rstrip() + "." + note)
-        out = final
     # процедуры разделены по безусловным переходам
     return split_procedures("\n".join(out)) + "\n"
 

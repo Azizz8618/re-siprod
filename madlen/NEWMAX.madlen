@@ -33,154 +33,154 @@ C
  LYG3:,EQU,LYG2+1
  SEK2:,EQU,*SEK*   +2
  LYG5:,EQU,LYG2+3
- M16,VTM,БЛОК_V0.F1(М16)
- ,UJ,ПЕР+2.F0
+ M16,VTM,БЛОК_V0.М16 := адрес F1
+ ,UJ,ПЕР+2.переход на F0
 C
- БЛОК_V0:M7,XTA,1.1(М7)
- ,ITS,
- ,WTC,ЗНАЧЕНИЕ+1.V0
- ,XTA,.0
- M17,AEX,.0(М17)
- ,UZA,NDABA.NDABA
- ,UJ,NDABB.NDABB
+ БЛОК_V0:M7,XTA,1.СМ := слот кадра 1
+ ,ITS,.в магазин; СМ := ИР
+ ,WTC,ЗНАЧЕНИЕ+1.мод.адрес := код из V0
+ ,XTA,.СМ := слово по адресу V0
+ M17,AEX,.СМ ^= поле контекста 0
+ ,UZA,NDABA.если СМ=0 → NDABA
+ ,UJ,NDABB.переход на NDABB
 C
- NDABA:,UJ,SEK3B.0
+ NDABA:,UJ,SEK3B.переход на SEK3B
 C
- NDABB:,UTC,*NDAB*.SEK3B
- ,XTA,.0
- ,NTR,3.NDAB
- ,X-A,.0
- ,UTC,LYG1.'3'
- ,A+X,.0
- ,NTR,22B.LYG1
- ,UZA,SEK3A.0
- ,UJ,SEK3B.'22'
+ NDABB:,UTC,*NDAB*.мод.адрес := 0 (сброс модификации)
+ ,XTA,.СМ := слово по адресу NDAB
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ ,X-A,.СМ := (адрес) - СМ
+ ,UTC,LYG1.мод.адрес := LYG1
+ ,A+X,.СМ += слово по адресу LYG1
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ ,UZA,SEK3A.если СМ=0 → SEK3A
+ ,UJ,SEK3B.переход на SEK3B
 C
- SEK3A:,UJ,LYG1B.SEK3A
+ SEK3A:,UJ,LYG1B.переход на LYG1B
 C
 C СРАВНЕНИЕ ДЛИНЫ СЕГМЕНТА С МАКСИМАЛЬНОЙ ШИРИНОЙ
- SEK3B:,UTC,SEK3.SEK3B
- ,XTA,.0
- ,NTR,3.LYG1B
- ,UTC,LYG3.0
- ,A-X,.SEK3
- ,NTR,22B.0
- ,U1A,LYG3A.'3'
- ,UJ,LYG3B.LYG3
+ SEK3B:,UTC,SEK3.мод.адрес := 0 (сброс модификации)
+ ,XTA,.СМ := слово по адресу SEK3
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ ,UTC,LYG3.мод.адрес := LYG3
+ ,A-X,.СМ -= слово по адресу LYG3
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ ,U1A,LYG3A.если СМ≠0 → LYG3A
+ ,UJ,LYG3B.переход на LYG3B
 C
- LYG3A:,UJ,LYG1B.0
+ LYG3A:,UJ,LYG1B.переход на LYG1B
 C
 C ПРОВЕРКА ФЛАГА ОБНОВЛЕНИЯ МАКСИМАЛЬНОЙ ШИРИНЫ
- LYG3B:,UTC,LYG3.'22'
- ,XTA,.LYG3A
- ,ITS,.LYG3B
- ,UTC,SEK3.LYG1B
- ,XTA,.0
- M17,AEX,.LYG3
- ,U1A,REGIMA.0
- ,UJ,REGIMB
+ LYG3B:,UTC,LYG3.мод.адрес := 0 (сброс модификации)
+ ,XTA,.СМ := слово по адресу LYG3
+ ,ITS,.в магазин; СМ := ИР
+ ,UTC,SEK3.мод.адрес := SEK3
+ ,XTA,.СМ := слово по адресу SEK3
+ M17,AEX,.СМ ^= поле контекста 0
+ ,U1A,REGIMA.если СМ≠0 → REGIMA
+ ,UJ,REGIMB.переход на REGIMB
 C
- REGIMA:,UJ,NDABD.SEK3
+ REGIMA:,UJ,NDABD.переход на NDABD
 C
- REGIMB:M7,XTA,.0
- ,ITS,.0(М17)
- ,UTC,*REGIM*.REGIMA
- ,XTA,.REGIMB
- M17,AEX,.NDABD
- ,U1A,БЛОК_V0_2.0
- ,UJ,REGIMD.0(М7)
+ REGIMB:M7,XTA,.СМ := слот кадра 0
+ ,ITS,.в магазин; СМ := ИР
+ ,UTC,*REGIM*.мод.адрес := REGIM
+ ,XTA,.СМ := слово по адресу REGIM
+ M17,AEX,.СМ ^= поле контекста 0
+ ,U1A,БЛОК_V0_2.если СМ≠0 → F1A
+ ,UJ,REGIMD.переход на REGIMD
 C
- БЛОК_V0_2:M7,XTA,1
- ,ITS,.REGIM
- ,WTC,ЗНАЧЕНИЕ+1.0
- ,XTA,.0(М17)
- M17,AEX,.F1A
- ,UZA,REGIMC.REGIMD
- ,UJ,REGIMD.0
+ БЛОК_V0_2:M7,XTA,1.СМ := слот кадра 1
+ ,ITS,.в магазин; СМ := ИР
+ ,WTC,ЗНАЧЕНИЕ+1.мод.адрес := код из V0
+ ,XTA,.СМ := слово по адресу V0
+ M17,AEX,.СМ ^= поле контекста 0
+ ,UZA,REGIMC.если СМ=0 → REGIMC
+ ,UJ,REGIMD.переход на REGIMD
 C
- REGIMC:,UJ,LYG1B.1(М7)
+ REGIMC:,UJ,LYG1B.переход на LYG1B
 C
- REGIMD:M7,XTA,
- ,ITS,.V0
- ,UTC,*REGIM*.0
- ,XTA,.0(М17)
- M17,AEX,.REGIMC
- ,U1A,SEK2A.REGIMD
- ,UJ,SEK2B.0
+ REGIMD:M7,XTA,.СМ := слот кадра 0
+ ,ITS,.в магазин; СМ := ИР
+ ,UTC,*REGIM*.мод.адрес := REGIM
+ ,XTA,.СМ := слово по адресу REGIM
+ M17,AEX,.СМ ^= поле контекста 0
+ ,U1A,SEK2A.если СМ≠0 → SEK2A
+ ,UJ,SEK2B.переход на SEK2B
 C
- SEK2A:,UJ,NDABD.LYG1B
+ SEK2A:,UJ,NDABD.переход на NDABD
 C
 C СРАВНЕНИЕ ВТОРОГО СЕГМЕНТА С МАКСИМАЛЬНОЙ ШИРИНОЙ
- SEK2B:,UTC,SEK2.0
- ,XTA,.0(М7)
- ,NTR,3
- ,UTC,LYG5.REGIM
- ,A-X,.0
- ,NTR,22B.0(М17)
- ,U1A,LYG5A.SEK2A
- ,UJ,LYG5B.SEK2B
+ SEK2B:,UTC,SEK2.мод.адрес := 0 (сброс модификации)
+ ,XTA,.СМ := слово по адресу SEK2
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ ,UTC,LYG5.мод.адрес := LYG5
+ ,A-X,.СМ -= слово по адресу LYG5
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ ,U1A,LYG5A.если СМ≠0 → LYG5A
+ ,UJ,LYG5B.переход на LYG5B
 C
- LYG5A:,UJ,LYG1B.0
+ LYG5A:,UJ,LYG1B.переход на LYG1B
 C
 C ПРОВЕРКА ФЛАГА ОБНОВЛЕНИЯ ШИРИНЫ ПО ВТОРОМУ СЕГМЕНТУ
- LYG5B:,UTC,LYG5.NDABD
- ,XTA,.0
- ,ITS,.SEK2
- ,UTC,SEK2.0
- ,XTA,.'3'
- M17,AEX,.LYG5
- ,UZA,БЛОК_V0_3.0
- ,UJ,NDABD.'22'
+ LYG5B:,UTC,LYG5.мод.адрес := 0 (сброс модификации)
+ ,XTA,.СМ := слово по адресу LYG5
+ ,ITS,.в магазин; СМ := ИР
+ ,UTC,SEK2.мод.адрес := SEK2
+ ,XTA,.СМ := слово по адресу SEK2
+ M17,AEX,.СМ ^= поле контекста 0
+ ,UZA,БЛОК_V0_3.если СМ=0 → F1B
+ ,UJ,NDABD.переход на NDABD
 C
- БЛОК_V0_3:M7,XTA,1.LYG5A
- ,ITS,.LYG5B
- ,WTC,ЗНАЧЕНИЕ+1.LYG1B
- ,XTA,.0
- M17,AEX,.LYG5
- ,UZA,NDABC.0
- ,UJ,NDABD
+ БЛОК_V0_3:M7,XTA,1.СМ := слот кадра 1
+ ,ITS,.в магазин; СМ := ИР
+ ,WTC,ЗНАЧЕНИЕ+1.мод.адрес := код из V0
+ ,XTA,.СМ := слово по адресу V0
+ M17,AEX,.СМ ^= поле контекста 0
+ ,UZA,NDABC.если СМ=0 → NDABC
+ ,UJ,NDABD.переход на NDABD
 C
- NDABC:,UJ,LYG1B.SEK2
+ NDABC:,UJ,LYG1B.переход на LYG1B
 C
- NDABD:,UTC,*NDAB*.0
- ,XTA,.0(М17)
- ,UTC,LYG1.F1B
- ,ATX,.NDABD
- ,NTR,3.1(М7)
- M7,XTA,1
- ,ITS,.V0
- ,WTC,ЗНАЧЕНИЕ+1.0
- ,XTA,.0(М17)
- ,NTR,22B.NDABC
- M17,AEX,.NDABD
- ,UZA,LYG1A.0
- ,UJ,LYG1B.LYG1B
+ NDABD:,UTC,*NDAB*.мод.адрес := 0 (сброс модификации)
+ ,XTA,.СМ := слово по адресу NDAB
+ ,UTC,LYG1.мод.адрес := LYG1
+ ,ATX,.по адресу LYG1 := СМ
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ M7,XTA,1.СМ := слот кадра 1
+ ,ITS,.в магазин; СМ := ИР
+ ,WTC,ЗНАЧЕНИЕ+1.мод.адрес := код из V0
+ ,XTA,.СМ := слово по адресу V0
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ M17,AEX,.СМ ^= поле контекста 0
+ ,UZA,LYG1A.если СМ=0 → LYG1A
+ ,UJ,LYG1B.переход на LYG1B
 C
- LYG1A:M7,XTA,.0
- ,UTC,LYG1.NDAB
- ,ATX,.0
- ,NTR,3.LYG1
- ,NTR,22B.0
- LYG1B:,UJ,POP.'3'
+ LYG1A:M7,XTA,.СМ := слот кадра 0
+ ,UTC,LYG1.мод.адрес := LYG1
+ ,ATX,.по адресу LYG1 := СМ
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ LYG1B:,UJ,POP.переход на POP
 C
- ПЕР+2:M7,MTJ,8.1(М7)
- M16,MTJ,10
- M7,VTM,ПАРАМЕТР+1.V0
- M7,STX,2.0
- ,ITS,13.'22'
- ,ITS,8.0(М17)
- ,ITS,.LYG1A
- ,NTR,3.LYG1B
- ,NTR,2.0
- M12,UJ,.0(М7)
+ ПЕР+2:M7,MTJ,8.М10 := М7
+ M16,MTJ,10.М12 := М16
+ M7,VTM,ПАРАМЕТР+1.М7 := адрес К0
+ M7,STX,2.ЗП + магазин: 2(М7)
+ ,ITS,13.в магазин; СМ := М15
+ ,ITS,8.в магазин; СМ := М10
+ ,ITS,.в магазин; СМ := ИР
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ ,NTR,2.РЖ := 2 (переходы по нулю, округление
+ M12,UJ,.переход через М12
 C
 C ВОЗВРАТ В ВЫЗЫВАЮЩИЙ МОДУЛЬ
- POP:,STI,.LYG1
- ,STI,7.0
- ,STI,8.'3'
- M10,UJ,.'22'
+ POP:,STI,.ИР := СМ; СМ := из магазина
+ ,STI,7.М7 := СМ; СМ := из магазина
+ ,STI,8.М10 := СМ; СМ := из магазина
+ M10,UJ,.переход через М10
 C
  ПАРАМЕТР+1:,INT,1
  ,INT,2
  ЗНАЧЕНИЕ+1:,BSS,1
- ,END,.0
+ ,END,

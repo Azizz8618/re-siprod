@@ -62,168 +62,168 @@ C
  NUST3:,EQU,*NUST*  +3
  FORMA10:,EQU,*FORMA* +10
  FORMA11:,EQU,*FORMA* +11
- M16,VTM,HEDA.HEDA(М16)
- ,UJ,ВОЗВРАТ_В_ОС.F0A
+ M16,VTM,HEDA.М16 := адрес HEDA
+ ,UJ,ВОЗВРАТ_В_ОС.переход на F0A
 C
 C СОХРАНЕНИЕ ЗАГОЛОВКА В HED И ПРОВЕРКА ПРИЗНАКА КОНЦА
- HEDA:M7,XTA,5.5(М7)
- ,UTC,*HED*.HED
- ,ATX,.0
- ,NTR,3.'3'
- M7,XTA,2.2(М7)
- ,ITS,
- ,UTC,HED1.HED1
- ,XTA,.0
- ,NTR,22B.'22'
- M17,AEX,.0(М17)
- ,UZA,SCANEA.SCANEA
- ,UJ,SCANEB.SCANEB
+ HEDA:M7,XTA,5.СМ := слот кадра 5
+ ,UTC,*HED*.мод.адрес := HED
+ ,ATX,.по адресу HED := СМ
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ M7,XTA,2.СМ := слот кадра 2
+ ,ITS,.в магазин; СМ := ИР
+ ,UTC,HED1.мод.адрес := HED1
+ ,XTA,.СМ := слово по адресу HED1
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ M17,AEX,.СМ ^= поле контекста 0
+ ,UZA,SCANEA.если СМ=0 → SCANEA
+ ,UJ,SCANEB.переход на SCANEB
 C
- SCANEA:,UJ,ENDSTA.ENDSTA
+ SCANEA:,UJ,ENDSTA.переход на ENDSTA
 C
- SCANEB:,UTC,*SCANER*.0
- ,XTA,.SCANER
- ,UTC,INS24.0
- ,ATX,.INS24
- ,NTR,3.0
- ,NTR,22B.'3'
- M15,VJM,ENDPG.'22'
- M15,VJM,BEGPG.ENDPG(М15)
- M15,VJM,TITLE.0
- ,UJ,HEDB.BEGPG(М15)
+ SCANEB:,UTC,*SCANER*.мод.адрес := 0 (сброс модификации)
+ ,XTA,.СМ := слово по адресу SCANER
+ ,UTC,INS24.мод.адрес := INS24
+ ,ATX,.по адресу INS24 := СМ
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ M15,VJM,ENDPG.вызов через М15
+ M15,VJM,BEGPG.вызов через М15
+ M15,VJM,TITLE.вызов через М15
+ ,UJ,HEDB.переход на HEDB
 C
- ENDSTA:M15,VJM,ENDSTR.0
- M15,VJM,BEGSTR.TITLE(М15)
- ,UTC,*NDAB*.0
- ,XTA,.HEDB
- ,NTR,3.0
- M7,A+X,2.ENDSTR(М15)
- ,UTC,*NDAB*.0
- ,ATX,.BEGSTR(М15)
- ,UTC,*NDAB*.0
- ,XTA,.NDAB
- ,X-A,.0
- ,UTC,PAGE3.'3'
- ,A+X,.2(М7)
- ,UTC,PAGE4.NDAB
- ,A+X,.0
- M7,A-X,5.NDAB
- ,NTR,22B.0
- ,UZA,ЦИКЛ_ПЕРЕХОД.0
- ,UJ,ENDPGA.PAGE3
+ ENDSTA:M15,VJM,ENDSTR.вызов через М15
+ M15,VJM,BEGSTR.вызов через М15
+ ,UTC,*NDAB*.мод.адрес := 0 (сброс модификации)
+ ,XTA,.СМ := слово по адресу NDAB
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ M7,A+X,2.СМ += слот кадра 2
+ ,UTC,*NDAB*.мод.адрес := NDAB
+ ,ATX,.по адресу NDAB := СМ
+ ,UTC,*NDAB*.мод.адрес := NDAB
+ ,XTA,.СМ := слово по адресу NDAB
+ ,X-A,.СМ := (адрес) - СМ
+ ,UTC,PAGE3.мод.адрес := PAGE3
+ ,A+X,.СМ += слово по адресу PAGE3
+ ,UTC,PAGE4.мод.адрес := PAGE4
+ ,A+X,.СМ += слово по адресу PAGE4
+ M7,A-X,5.СМ -= слот кадра 5
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ ,UZA,ЦИКЛ_ПЕРЕХОД.если СМ=0 → F2
+ ,UJ,ENDPGA.переход на ENDPGA
 C
- ЦИКЛ_ПЕРЕХОД:,UJ,REGIMA.0
+ ЦИКЛ_ПЕРЕХОД:,UJ,REGIMA.переход на REGIMA
 C
- ENDPGA:M15,VJM,ENDPG.PAGE4
- M15,VJM,BEGPG.0
+ ENDPGA:M15,VJM,ENDPG.вызов через М15
+ M15,VJM,BEGPG.вызов через М15
 C РАСЧЁТ ПАРАМЕТРОВ РЕЖИМА НАБОРА И ПОЛЯ ФОРМАТА
- REGIMA:M7,XTA,.5(М7)
- ,UTC,REGIM8.'22'
- ,ATX,.F2
- M7,XTA,.ENDPGA
- ,UTC,NUST3.0
- ,ATX,.REGIMA
- ,UTC,STR25.0
- ,XTA,.ENDPG(М15)
- ,NTR,3.0
- M7,A+X,2.BEGPG(М15)
- ,UTC,FORMA10.0
- ,ATX,.0(М7)
- ,UTC,FORMA11.REGIM8
- ,XTA,.0
- M7,A-X,4.0(М7)
- ,UTC,FORMA11.NUST3
- ,ATX,.0
- ,UTC,FORMA11.STR25
- ,XTA,.0
- ,X-A,.'3'
- M7,A+X,3.2(М7)
- ,NTR,22B.FORMA10
- ,U1A,ЦИКЛ_ПЕРЕХОД_2.0
- ,UJ,ПЕР+6.FORMA11
+ REGIMA:M7,XTA,.СМ := слот кадра 0
+ ,UTC,REGIM8.мод.адрес := REGIM8
+ ,ATX,.по адресу REGIM8 := СМ
+ M7,XTA,.СМ := слот кадра 0
+ ,UTC,NUST3.мод.адрес := NUST3
+ ,ATX,.по адресу NUST3 := СМ
+ ,UTC,STR25.мод.адрес := STR25
+ ,XTA,.СМ := слово по адресу STR25
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ M7,A+X,2.СМ += слот кадра 2
+ ,UTC,FORMA10.мод.адрес := FORMA10
+ ,ATX,.по адресу FORMA10 := СМ
+ ,UTC,FORMA11.мод.адрес := FORMA11
+ ,XTA,.СМ := слово по адресу FORMA11
+ M7,A-X,4.СМ -= слот кадра 4
+ ,UTC,FORMA11.мод.адрес := FORMA11
+ ,ATX,.по адресу FORMA11 := СМ
+ ,UTC,FORMA11.мод.адрес := FORMA11
+ ,XTA,.СМ := слово по адресу FORMA11
+ ,X-A,.СМ := (адрес) - СМ
+ M7,A+X,3.СМ += слот кадра 3
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ ,U1A,ЦИКЛ_ПЕРЕХОД_2.если СМ≠0 → F0
+ ,UJ,ПЕР+6.переход на F6
 C
- ЦИКЛ_ПЕРЕХОД_2:,UJ,INS26A.0
+ ЦИКЛ_ПЕРЕХОД_2:,UJ,INS26A.переход на INS26A
 C
- ПЕР+6:M7,XTA,6.4(М7)
- M7,ATX,10B.FORMA11
- ,NTR,3.0
- ,NTR,22B.FORMA11
- ,UJ,ВЫЗОВ_KLAIDA.0
+ ПЕР+6:M7,XTA,6.СМ := слот кадра 6
+ M7,ATX,10B.слот кадра 8 := СМ
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ ,UJ,ВЫЗОВ_KLAIDA.переход на F1B
 C
 C ДВОЙНОЙ ПРОГОН ЗАГОЛОВКА И ПРОВЕРКА ГРАНИЦЫ СТРАНИЦЫ
- INS26A:,UTC,INS26.0
- ,XTA,.3(М7)
- ,NTR,3.'22'
- M7,A-X,1.F0
- M7,ATX,11B.F6
- M16,VTM,*SCANER*.INS26A
- ,ITS,14.0
- M16,VTM,ЗНАЧЕНИЕ_ЗАГОЛОВКА+2.6(М7)
- ,ITS,14.8(М7)
- ,NTR,22B.'3'
- M15,VJM,DOUBLE.'22'
- ,NTR,3.F1B
- ,NTR,22B.0
- M7,XTA,1.INS26
- ,UTC,REGIM8.0
- ,ATX,.'3'
- M15,VJM,ENDSTR.1(М7)
- M15,VJM,BEGSTR.9(М7)
- ,UTC,*NDAB*.SCANER(М16)
- ,XTA,.М16
- ,NTR,3.V2(М16)
- M7,A+X,2.М16
- ,UTC,*NDAB*.'22'
- ,ATX,.DOUBLE(М15)
- ,UTC,*NDAB*.0
- ,XTA,.'3'
- ,X-A,.'22'
- ,UTC,PAGE3.1(М7)
- ,A+X,.REGIM8
- ,UTC,PAGE4.0
- ,A+X,.ENDSTR(М15)
- ,NTR,22B.BEGSTR(М15)
- ,UZA,ЦИКЛ_ПЕРЕХОД_3.0
- ,UJ,ENDPGB.NDAB
+ INS26A:,UTC,INS26.мод.адрес := 0 (сброс модификации)
+ ,XTA,.СМ := слово по адресу INS26
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ M7,A-X,1.СМ -= слот кадра 1
+ M7,ATX,11B.слот кадра 9 := СМ
+ M16,VTM,*SCANER*.М16 := адрес SCANER
+ ,ITS,14.в магазин; СМ := М16
+ M16,VTM,ЗНАЧЕНИЕ_ЗАГОЛОВКА+1.М16 := адрес V2
+ ,ITS,14.в магазин; СМ := М16
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ M15,VJM,DOUBLE.вызов через М15
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ M7,XTA,1.СМ := слот кадра 1
+ ,UTC,REGIM8.мод.адрес := REGIM8
+ ,ATX,.по адресу REGIM8 := СМ
+ M15,VJM,ENDSTR.вызов через М15
+ M15,VJM,BEGSTR.вызов через М15
+ ,UTC,*NDAB*.мод.адрес := 0 (сброс модификации)
+ ,XTA,.СМ := слово по адресу NDAB
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ M7,A+X,2.СМ += слот кадра 2
+ ,UTC,*NDAB*.мод.адрес := NDAB
+ ,ATX,.по адресу NDAB := СМ
+ ,UTC,*NDAB*.мод.адрес := NDAB
+ ,XTA,.СМ := слово по адресу NDAB
+ ,X-A,.СМ := (адрес) - СМ
+ ,UTC,PAGE3.мод.адрес := PAGE3
+ ,A+X,.СМ += слово по адресу PAGE3
+ ,UTC,PAGE4.мод.адрес := PAGE4
+ ,A+X,.СМ += слово по адресу PAGE4
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ ,UZA,ЦИКЛ_ПЕРЕХОД_3.если СМ=0 → F1
+ ,UJ,ENDPGB.переход на ENDPGB
 C
- ЦИКЛ_ПЕРЕХОД_3:,UJ,ЦИКЛ_ПЕРЕХОД_4.0
+ ЦИКЛ_ПЕРЕХОД_3:,UJ,ЦИКЛ_ПЕРЕХОД_4.переход на F1A
 C
- ENDPGB:M15,VJM,ENDPG.'3'
- M15,VJM,BEGPG.2(М7)
- ЦИКЛ_ПЕРЕХОД_4:,UJ,HEDB.NDAB
+ ENDPGB:M15,VJM,ENDPG.вызов через М15
+ M15,VJM,BEGPG.вызов через М15
+ ЦИКЛ_ПЕРЕХОД_4:,UJ,HEDB.переход на HEDB
 C
- ВЫЗОВ_KLAIDA:M16,VTM,ЗНАЧЕНИЕ_ЗАГОЛОВКА+1.0
- ,ITS,14.NDAB
- M15,VJM,KLAIDA.0
- ,NTR,3.0
- ,NTR,22B.PAGE3
- HEDB:M7,XTA,.0
- ,UTC,*HED*.PAGE4
- ,ATX,.0
- ,NTR,3.'22'
- ,UTC,INS26.F1
- ,XTA,.ENDPGB
- M7,A+X,1.F1A
- ,UTC,*SCANER*.0
- ,ATX,.ENDPG(М15)
- ,NTR,22B.0
- ,UJ,ВОЗВРАТ_В_БЛОК.BEGPG(М15)
+ ВЫЗОВ_KLAIDA:M16,VTM,ЗНАЧЕНИЕ_ЗАГОЛОВКА.М16 := адрес V1
+ ,ITS,14.в магазин; СМ := М16
+ M15,VJM,KLAIDA.вызов через М15
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ HEDB:M7,XTA,.СМ := слот кадра 0
+ ,UTC,*HED*.мод.адрес := HED
+ ,ATX,.по адресу HED := СМ
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ ,UTC,INS26.мод.адрес := INS26
+ ,XTA,.СМ := слово по адресу INS26
+ M7,A+X,1.СМ += слот кадра 1
+ ,UTC,*SCANER*.мод.адрес := SCANER
+ ,ATX,.по адресу SCANER := СМ
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ ,UJ,ВОЗВРАТ_В_БЛОК.переход на F0B
 C
- ВОЗВРАТ_В_ОС:M7,MTJ,8.0
- M16,MTJ,10.HEDB
- M7,VTM,ПАРАМЕТР_ЗАГОЛОВКА+1.0
- ,ITS,13.V1(М16)
- ,ITS,8.М16
- ,ITS,.KLAIDA(М15)
- ,NTR,3.0
- ,NTR,2.'3'
- M12,UJ,.'22'
+ ВОЗВРАТ_В_ОС:M7,MTJ,8.М10 := М7
+ M16,MTJ,10.М12 := М16
+ M7,VTM,ПАРАМЕТР_ЗАГОЛОВКА+1.М7 := адрес К0
+ ,ITS,13.в магазин; СМ := М15
+ ,ITS,8.в магазин; СМ := М10
+ ,ITS,.в магазин; СМ := ИР
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ ,NTR,2.РЖ := 2 (переходы по нулю, округление
+ M12,UJ,.переход через М12
 C
 C ВОЗВРАТ В ВЫЗЫВАЮЩИЙ БЛОК
- ВОЗВРАТ_В_БЛОК:,STI,.0(М7)
- ,STI,7.HED
- ,STI,8.0
- M10,UJ,.'3'
+ ВОЗВРАТ_В_БЛОК:,STI,.ИР := СМ; СМ := из магазина
+ ,STI,7.М7 := СМ; СМ := из магазина
+ ,STI,8.М10 := СМ; СМ := из магазина
+ M10,UJ,.переход через М10
 C
  ПАРАМЕТР_ЗАГОЛОВКА+1:,INT,0
  ,INT,1
@@ -233,6 +233,5 @@ C
  ,INT,10
  ,INT,110
  ,BSS,1
- ЗНАЧЕНИЕ_ЗАГОЛОВКА+1:,BSS,1
- ЗНАЧЕНИЕ_ЗАГОЛОВКА+2:,BSS,1
- ,END,.INS26
+ ЗНАЧЕНИЕ_ЗАГОЛОВКА:,BSS,2
+ ,END,

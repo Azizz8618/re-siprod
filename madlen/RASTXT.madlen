@@ -130,782 +130,782 @@ C
  LYG32769:,EQU,LYG2-32767
  SEK32767:,EQU,*SEK*   -32767
  PUFOR6:,EQU,*PUFOR* +6
- M16,VTM,TAB4A.TAB4A(М16)
- ,UJ,ВОЗВРАТ_В_ОС.F1A
+ M16,VTM,TAB4A.М16 := адрес TAB4A
+ ,UJ,ВОЗВРАТ_В_ОС.переход на F1A
 C
- TAB4A:M7,XTA,6.6(М7)
- ,ITS,
- ,UTC,TAB4.TAB4
- ,XTA,.0
- M17,AEX,.0(М17)
- ,UZA,NUST1A.NUST1A
- ,UJ,NUST1B.NUST1B
+ TAB4A:M7,XTA,6.СМ := слот кадра 6
+ ,ITS,.в магазин; СМ := ИР
+ ,UTC,TAB4.мод.адрес := TAB4
+ ,XTA,.СМ := слово по адресу TAB4
+ M17,AEX,.СМ ^= поле контекста 0
+ ,UZA,NUST1A.если СМ=0 → NUST1A
+ ,UJ,NUST1B.переход на NUST1B
 C
- NUST1A:,UJ,STR25A.0
+ NUST1A:,UJ,STR25A.переход на STR25A
 C
- NUST1B:M7,XTA,2.STR25A
- ,UTC,NUST1.0
- ,ATX,.2(М7)
- M7,XTA,1.NUST1
- M7,ATX,13B.0
- ,NTR,3.1(М7)
- M7,XTA,1.11(М7)
- M7,ATX,14B.'3'
- M16,VTM,*NRD*.1(М7)
- ,ITS,14.12(М7)
- M16,VTM,TAB1.NRD(М16)
- ,ITS,14.М16
- M16,VTM,ПЕРЕМЕННАЯ_616.TAB1(М16)
- ,ITS,14.М16
- M16,VTM,ШЕСТЬ.V1(М16)
- ,ITS,14.М16
- ,NTR,22B.К6(М16)
- M15,VJM,RSYMB.М16
- ,NTR,3.'22'
- ,NTR,22B.RSYMB(М15)
- M16,VTM,*NRD*.'3'
- ,ITS,14.'22'
- M16,VTM,TAB2.NRD(М16)
- ,ITS,14.М16
- M16,VTM,ПЕРЕМЕННАЯ_617.TAB2(М16)
- ,ITS,14.М16
- M16,VTM,ШЕСТЬ.V2(М16)
- ,ITS,14.М16
- M15,VJM,RSYMB.К6(М16)
- ,NTR,3.М16
- ,NTR,22B.RSYMB(М15)
- M7,XTA,2.0
- ,ITS,.'3'
- ,UTC,*LNT*.'22'
- ,XTA,.2(М7)
- M17,AEX,
- ,U1A,ЦИКЛ_ПЕРЕХОД.LNT
- ,UJ,ПЕР+11.0
+ NUST1B:M7,XTA,2.СМ := слот кадра 2
+ ,UTC,NUST1.мод.адрес := NUST1
+ ,ATX,.по адресу NUST1 := СМ
+ M7,XTA,1.СМ := слот кадра 1
+ M7,ATX,13B.слот кадра 11 := СМ
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ M7,XTA,1.СМ := слот кадра 1
+ M7,ATX,14B.слот кадра 12 := СМ
+ M16,VTM,*NRD*.М16 := адрес NRD
+ ,ITS,14.в магазин; СМ := М16
+ M16,VTM,TAB1.М16 := адрес TAB1
+ ,ITS,14.в магазин; СМ := М16
+ M16,VTM,ПЕРЕМЕННАЯ_616.М16 := адрес V1
+ ,ITS,14.в магазин; СМ := М16
+ M16,VTM,ШЕСТЬ.М16 := адрес К6
+ ,ITS,14.в магазин; СМ := М16
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ M15,VJM,RSYMB.вызов через М15
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ M16,VTM,*NRD*.М16 := адрес NRD
+ ,ITS,14.в магазин; СМ := М16
+ M16,VTM,TAB2.М16 := адрес TAB2
+ ,ITS,14.в магазин; СМ := М16
+ M16,VTM,ПЕРЕМЕННАЯ_617.М16 := адрес V2
+ ,ITS,14.в магазин; СМ := М16
+ M16,VTM,ШЕСТЬ.М16 := адрес К6
+ ,ITS,14.в магазин; СМ := М16
+ M15,VJM,RSYMB.вызов через М15
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ M7,XTA,2.СМ := слот кадра 2
+ ,ITS,.в магазин; СМ := ИР
+ ,UTC,*LNT*.мод.адрес := LNT
+ ,XTA,.СМ := слово по адресу LNT
+ M17,AEX,.СМ ^= поле контекста 0
+ ,U1A,ЦИКЛ_ПЕРЕХОД.если СМ≠0 → F2
+ ,UJ,ПЕР+11.переход на F11
 C
- ЦИКЛ_ПЕРЕХОД:,UJ,TXT2A.0(М17)
+ ЦИКЛ_ПЕРЕХОД:,UJ,TXT2A.переход на TXT2A
 C
- ПЕР+11:M7,XTA,13B.F2
- ,NTR,3.F11
- M7,A+X,3.0
- M7,ATX,13B.TXT2A
- M7,XTA,14B.0
- M7,A-X,3.11(М7)
- M7,ATX,14B.'3'
- M7,XTA,13B.3(М7)
- ,X-A,.11(М7)
- M7,A+X,14B.12(М7)
- ,NTR,22B.3(М7)
- ,U1A,ВЫЗОВ_KLAIDA.12(М7)
- ,UJ,TXT2A.11(М7)
+ ПЕР+11:M7,XTA,13B.СМ := слот кадра 11
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ M7,A+X,3.СМ += слот кадра 3
+ M7,ATX,13B.слот кадра 11 := СМ
+ M7,XTA,14B.СМ := слот кадра 12
+ M7,A-X,3.СМ -= слот кадра 3
+ M7,ATX,14B.слот кадра 12 := СМ
+ M7,XTA,13B.СМ := слот кадра 11
+ ,X-A,.СМ := (адрес) - СМ
+ M7,A+X,14B.СМ += слот кадра 12
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ ,U1A,ВЫЗОВ_KLAIDA.если СМ≠0 → F11A
+ ,UJ,TXT2A.переход на TXT2A
 C
- ВЫЗОВ_KLAIDA:M16,VTM,КОНСТАНТА_612.0
- ,ITS,14.12(М7)
- M15,VJM,KLAIDA.'22'
- TXT2A:,UTC,TXT2.F11A
- ,XTA,.TXT2A
- ,NTR,3.0
- ,UTC,TXT1.К8(М16)
- ,A-X,.М16
- M7,A+X,2.KLAIDA(М15)
- M7,ATX,15B.0
- M7,XTA,14B.TXT2
- M7,A-X,13B.0
- M7,A+X,2.'3'
- M7,ATX,16B.TXT1
- M7,XTA,6.0
- ,ITS,.2(М7)
- ,UTC,*PAP*.13(М7)
- ,XTA,.12(М7)
- ,NTR,22B.11(М7)
- M17,AEX,.2(М7)
- ,UZA,NDAB1A.14(М7)
- ,UJ,NDAB1B.6(М7)
+ ВЫЗОВ_KLAIDA:M16,VTM,КОНСТАНТА_612.М16 := адрес К8
+ ,ITS,14.в магазин; СМ := М16
+ M15,VJM,KLAIDA.вызов через М15
+ TXT2A:,UTC,TXT2.мод.адрес := 0 (сброс модификации)
+ ,XTA,.СМ := слово по адресу TXT2
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ ,UTC,TXT1.мод.адрес := TXT1
+ ,A-X,.СМ -= слово по адресу TXT1
+ M7,A+X,2.СМ += слот кадра 2
+ M7,ATX,15B.слот кадра 13 := СМ
+ M7,XTA,14B.СМ := слот кадра 12
+ M7,A-X,13B.СМ -= слот кадра 11
+ M7,A+X,2.СМ += слот кадра 2
+ M7,ATX,16B.слот кадра 14 := СМ
+ M7,XTA,6.СМ := слот кадра 6
+ ,ITS,.в магазин; СМ := ИР
+ ,UTC,*PAP*.мод.адрес := PAP
+ ,XTA,.СМ := слово по адресу PAP
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ M17,AEX,.СМ ^= поле контекста 0
+ ,UZA,NDAB1A.если СМ=0 → NDAB1A
+ ,UJ,NDAB1B.переход на NDAB1B
 C
- NDAB1A:,UJ,NDAB1C
+ NDAB1A:,UJ,NDAB1C.переход на NDAB1C
 C
- NDAB1B:,UTC,NDAB1.PAP
- ,XTA,.0
- ,UTC,NDABL1.'22'
- ,ATX,.0(М17)
- ,NTR,3.NDAB1A
- ,UTC,*NDAB*.NDAB1B
- ,XTA,.0
- ,UTC,*NDABL*.NDAB1C
- ,ATX,.0
- ,UTC,STR25.NDAB1
- ,XTA,.0
- ,UTC,*STL*.NDABL1
- ,ATX,.0
- ,UTC,STR26.'3'
- ,XTA,.NDAB
- ,UTC,STL1.0
- ,ATX,.NDABL
- M7,XTA,1.0
- ,UTC,DYD1.STR25
- ,ATX,.0
- M7,XTA,1.STL
- ,UTC,DYD2.0
- ,ATX,.STR26
- M7,XTA,1.0
- ,UTC,*DYD*.STL1
- ,ATX,.0
- M7,XTA,6.1(М7)
- ,UTC,*PAP*.DYD1
- ,ATX,.0
- ,NTR,22B.1(М7)
- NDAB1C:,UTC,*PAGE*.DYD2
- ,XTA,.0
- ,NTR,3.1(М7)
- M7,A+X,13B.DYD
- ,UTC,STR25.0
- ,ATX,.6(М7)
- ,UTC,*PAGE*.PAP
- ,XTA,.0
- M7,A+X,14B.'22'
- ,UTC,STR26.PAGE
- ,ATX,.0
- ,UTC,SEK2.'3'
- ,XTA,.11(М7)
- ,UTC,*PUS*.STR25
- ,ATX,.0
- ,NTR,22B.PAGE
- M15,VJM,WTBACK.0
- ,UTC,STR25.12(М7)
- ,XTA,.STR26
- ,UTC,STR24.0
- ,ATX,.SEK2
- ,NTR,3.0
- ,UTC,STR25.PUS
- ,XTA,.0
- ,UTC,RAI1.'22'
- ,ATX,.WTBACK(М15)
- ,NTR,22B.0
- STR25A:M7,XTA,1.STR25
- ,ITS,.0
- ,UTC,TXT2.STR24
- ,XTA,.0
- M17,AEX,.'3'
- ,UZA,TXT3A.STR25
- ,UJ,TXT2C.0
+ NDAB1B:,UTC,NDAB1.мод.адрес := 0 (сброс модификации)
+ ,XTA,.СМ := слово по адресу NDAB1
+ ,UTC,NDABL1.мод.адрес := NDABL1
+ ,ATX,.по адресу NDABL1 := СМ
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ ,UTC,*NDAB*.мод.адрес := NDAB
+ ,XTA,.СМ := слово по адресу NDAB
+ ,UTC,*NDABL*.мод.адрес := NDABL
+ ,ATX,.по адресу NDABL := СМ
+ ,UTC,STR25.мод.адрес := STR25
+ ,XTA,.СМ := слово по адресу STR25
+ ,UTC,*STL*.мод.адрес := STL
+ ,ATX,.по адресу STL := СМ
+ ,UTC,STR26.мод.адрес := STR26
+ ,XTA,.СМ := слово по адресу STR26
+ ,UTC,STL1.мод.адрес := STL1
+ ,ATX,.по адресу STL1 := СМ
+ M7,XTA,1.СМ := слот кадра 1
+ ,UTC,DYD1.мод.адрес := DYD1
+ ,ATX,.по адресу DYD1 := СМ
+ M7,XTA,1.СМ := слот кадра 1
+ ,UTC,DYD2.мод.адрес := DYD2
+ ,ATX,.по адресу DYD2 := СМ
+ M7,XTA,1.СМ := слот кадра 1
+ ,UTC,*DYD*.мод.адрес := DYD
+ ,ATX,.по адресу DYD := СМ
+ M7,XTA,6.СМ := слот кадра 6
+ ,UTC,*PAP*.мод.адрес := PAP
+ ,ATX,.по адресу PAP := СМ
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ NDAB1C:,UTC,*PAGE*.мод.адрес := PAGE
+ ,XTA,.СМ := слово по адресу PAGE
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ M7,A+X,13B.СМ += слот кадра 11
+ ,UTC,STR25.мод.адрес := STR25
+ ,ATX,.по адресу STR25 := СМ
+ ,UTC,*PAGE*.мод.адрес := PAGE
+ ,XTA,.СМ := слово по адресу PAGE
+ M7,A+X,14B.СМ += слот кадра 12
+ ,UTC,STR26.мод.адрес := STR26
+ ,ATX,.по адресу STR26 := СМ
+ ,UTC,SEK2.мод.адрес := SEK2
+ ,XTA,.СМ := слово по адресу SEK2
+ ,UTC,*PUS*.мод.адрес := PUS
+ ,ATX,.по адресу PUS := СМ
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ M15,VJM,WTBACK.вызов через М15
+ ,UTC,STR25.мод.адрес := 0 (сброс модификации)
+ ,XTA,.СМ := слово по адресу STR25
+ ,UTC,STR24.мод.адрес := STR24
+ ,ATX,.по адресу STR24 := СМ
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ ,UTC,STR25.мод.адрес := STR25
+ ,XTA,.СМ := слово по адресу STR25
+ ,UTC,RAI1.мод.адрес := RAI1
+ ,ATX,.по адресу RAI1 := СМ
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ STR25A:M7,XTA,1.СМ := слот кадра 1
+ ,ITS,.в магазин; СМ := ИР
+ ,UTC,TXT2.мод.адрес := TXT2
+ ,XTA,.СМ := слово по адресу TXT2
+ M17,AEX,.СМ ^= поле контекста 0
+ ,UZA,TXT3A.если СМ=0 → TXT3A
+ ,UJ,TXT2C.переход на TXT2C
 C
- TXT3A:M7,XTA,2.RAI1
- ,ITS,.0
- ,UTC,TXT3.'22'
- ,XTA,.1(М7)
- M17,AEX,
- ,U1A,TXT2B.TXT2
- ,UJ,TXT2C.0
+ TXT3A:M7,XTA,2.СМ := слот кадра 2
+ ,ITS,.в магазин; СМ := ИР
+ ,UTC,TXT3.мод.адрес := TXT3
+ ,XTA,.СМ := слово по адресу TXT3
+ M17,AEX,.СМ ^= поле контекста 0
+ ,U1A,TXT2B.если СМ≠0 → TXT2B
+ ,UJ,TXT2C.переход на TXT2C
 C
- TXT2B:,UJ,NUST8B.0(М17)
+ TXT2B:,UJ,NUST8B.переход на NUST8B
 C
- TXT2C:M7,XTA,1.TXT3A
- ,ITS,.TXT2C
- ,UTC,TXT2.0
- ,XTA,.2(М7)
- M17,AEX,
- ,UZA,TAB4B.TXT3
- ,UJ,TAB4C.0
+ TXT2C:M7,XTA,1.СМ := слот кадра 1
+ ,ITS,.в магазин; СМ := ИР
+ ,UTC,TXT2.мод.адрес := TXT2
+ ,XTA,.СМ := слово по адресу TXT2
+ M17,AEX,.СМ ^= поле контекста 0
+ ,UZA,TAB4B.если СМ=0 → TAB4B
+ ,UJ,TAB4C.переход на TAB4C
 C
- TAB4B:,UJ,STR24B.0(М17)
+ TAB4B:,UJ,STR24B.переход на STR24B
 C
- TAB4C:M7,XTA,6.TXT2B
- ,ITS,.TXT2C
- ,UTC,TAB4.0
- ,XTA,.NUST8B
- M17,AEX,.0
- ,U1A,KOKSEA.1(М7)
- ,UJ,INS25A
+ TAB4C:M7,XTA,6.СМ := слот кадра 6
+ ,ITS,.в магазин; СМ := ИР
+ ,UTC,TAB4.мод.адрес := TAB4
+ ,XTA,.СМ := слово по адресу TAB4
+ M17,AEX,.СМ ^= поле контекста 0
+ ,U1A,KOKSEA.если СМ≠0 → KOKSEA
+ ,UJ,INS25A.переход на INS25A
 C
- KOKSEA:M15,VJM,KOKSEK.TXT2
+ KOKSEA:M15,VJM,KOKSEK.вызов через М15
 C ОБРАБОТКА СЕГМЕНТА ЧЕРЕЗ SPAUD СО СМЕНОЙ УКАЗАТЕЛЕЙ
- INS25A:,UTC,INS25.0
- ,XTA,.0(М17)
- M7,ATX,17B.TAB4B
- ,NTR,3.TAB4C
- ,UTC,INS26.0
- ,XTA,.STR24B
- M7,ATX,20B.0
- ,UTC,*SCANER*.6(М7)
- ,XTA,
- M7,ATX,21B.TAB4
- ,UTC,TXT1.0
- ,XTA,.0(М17)
- ,UTC,INS25.KOKSEA
- ,ATX,.INS25A
- ,UTC,TXT2.0
- ,XTA,.KOKSEK(М15)
- M7,A+X,2.0
- ,UTC,INS26.INS25
- ,ATX,.0
- M16,VTM,ПЕРЕМЕННАЯ_640.15(М7)
- ,ITS,14.'3'
- M16,VTM,ПЕРЕМЕННАЯ_625.INS26
- ,ITS,14.0
- ,NTR,22B.16(М7)
- M15,VJM,SPAUD.SCANER
- ,NTR,3.0
- ,NTR,22B.17(М7)
- M7,XTA,17B.TXT1
- ,UTC,INS25.0
- ,ATX,.INS25
- ,NTR,3.0
- M7,XTA,20B.TXT2
- ,UTC,INS26.0
- ,ATX,.2(М7)
- M7,XTA,21B.INS26
- ,UTC,*SCANER*.0
- ,ATX,.V19(М16)
- M7,XTA,1.М16
- ,ITS,.V8(М16)
- ,UTC,TAB3.М16
- ,XTA,.'22'
- ,NTR,22B.SPAUD(М15)
- M17,AEX,.0
- ,U1A,STR24A.'3'
- ,UJ,STR24B.'22'
+ INS25A:,UTC,INS25.мод.адрес := 0 (сброс модификации)
+ ,XTA,.СМ := слово по адресу INS25
+ M7,ATX,17B.слот кадра 15 := СМ
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ ,UTC,INS26.мод.адрес := INS26
+ ,XTA,.СМ := слово по адресу INS26
+ M7,ATX,20B.слот кадра 16 := СМ
+ ,UTC,*SCANER*.мод.адрес := SCANER
+ ,XTA,.СМ := слово по адресу SCANER
+ M7,ATX,21B.слот кадра 17 := СМ
+ ,UTC,TXT1.мод.адрес := TXT1
+ ,XTA,.СМ := слово по адресу TXT1
+ ,UTC,INS25.мод.адрес := INS25
+ ,ATX,.по адресу INS25 := СМ
+ ,UTC,TXT2.мод.адрес := TXT2
+ ,XTA,.СМ := слово по адресу TXT2
+ M7,A+X,2.СМ += слот кадра 2
+ ,UTC,INS26.мод.адрес := INS26
+ ,ATX,.по адресу INS26 := СМ
+ M16,VTM,ПЕРЕМЕННАЯ_640.М16 := адрес V19
+ ,ITS,14.в магазин; СМ := М16
+ M16,VTM,ПЕРЕМЕННАЯ_625.М16 := адрес V8
+ ,ITS,14.в магазин; СМ := М16
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ M15,VJM,SPAUD.вызов через М15
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ M7,XTA,17B.СМ := слот кадра 15
+ ,UTC,INS25.мод.адрес := INS25
+ ,ATX,.по адресу INS25 := СМ
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ M7,XTA,20B.СМ := слот кадра 16
+ ,UTC,INS26.мод.адрес := INS26
+ ,ATX,.по адресу INS26 := СМ
+ M7,XTA,21B.СМ := слот кадра 17
+ ,UTC,*SCANER*.мод.адрес := SCANER
+ ,ATX,.по адресу SCANER := СМ
+ M7,XTA,1.СМ := слот кадра 1
+ ,ITS,.в магазин; СМ := ИР
+ ,UTC,TAB3.мод.адрес := TAB3
+ ,XTA,.СМ := слово по адресу TAB3
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ M17,AEX,.СМ ^= поле контекста 0
+ ,U1A,STR24A.если СМ≠0 → STR24A
+ ,UJ,STR24B.переход на STR24B
 C
- STR24A:,UJ,STR24B.15(М7)
+ STR24A:,UJ,STR24B.переход на STR24B
 C
- STR24B:,UTC,STR24.INS25
- ,XTA,.0
- ,NTR,3.'3'
- ,X-A,.16(М7)
- ,UTC,STR26.INS26
- ,A+X,.0
- ,NTR,22B.17(М7)
- ,UZA,TAB3A.SCANER
- ,UJ,STR25C.0
+ STR24B:,UTC,STR24.мод.адрес := 0 (сброс модификации)
+ ,XTA,.СМ := слово по адресу STR24
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ ,X-A,.СМ := (адрес) - СМ
+ ,UTC,STR26.мод.адрес := STR26
+ ,A+X,.СМ += слово по адресу STR26
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ ,UZA,TAB3A.если СМ=0 → TAB3A
+ ,UJ,STR25C.переход на STR25C
 C
- TAB3A:M7,XTA,1.1(М7)
- ,ITS,
- ,UTC,TAB3.TAB3
- ,XTA,.0
- M17,AEX,.'22'
- ,U1A,STR25B.0(М17)
- ,UJ,STR25C.STR24A
+ TAB3A:M7,XTA,1.СМ := слот кадра 1
+ ,ITS,.в магазин; СМ := ИР
+ ,UTC,TAB3.мод.адрес := TAB3
+ ,XTA,.СМ := слово по адресу TAB3
+ M17,AEX,.СМ ^= поле контекста 0
+ ,U1A,STR25B.если СМ≠0 → STR25B
+ ,UJ,STR25C.переход на STR25C
 C
- STR25B:,UJ,TAB3B.STR24B
+ STR25B:,UJ,TAB3B.переход на TAB3B
 C
 C ПРОВЕРКА ПРИЗНАКА STR24 В КОНТЕКСТЕ ЗАДАЧИ
- STR25C:,UTC,STR25.STR24B
- ,XTA,.0
- ,ITS,.STR24
- ,UTC,STR24.0
- ,XTA,.'3'
- M17,AEX,.0
- ,UZA,STR25D.STR26
- ,UJ,STR25E.0
+ STR25C:,UTC,STR25.мод.адрес := 0 (сброс модификации)
+ ,XTA,.СМ := слово по адресу STR25
+ ,ITS,.в магазин; СМ := ИР
+ ,UTC,STR24.мод.адрес := STR24
+ ,XTA,.СМ := слово по адресу STR24
+ M17,AEX,.СМ ^= поле контекста 0
+ ,UZA,STR25D.если СМ=0 → STR25D
+ ,UJ,STR25E.переход на STR25E
 C
- STR25D:,UJ,TAB3B.'22'
+ STR25D:,UJ,TAB3B.переход на TAB3B
 C
 C СОХРАНЕНИЕ УКАЗАТЕЛЯ СТРОКИ STR25 В СЛОТ КАДРА
- STR25E:,UTC,STR25.TAB3A
- ,XTA,.STR25C
- M7,ATX,23B.0
- ,NTR,3.1(М7)
- ,NTR,22B
- ,UJ,STR24E.TAB3
+ STR25E:,UTC,STR25.мод.адрес := 0 (сброс модификации)
+ ,XTA,.СМ := слово по адресу STR25
+ M7,ATX,23B.слот кадра 19 := СМ
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ ,UJ,STR24E.переход на STR24E
 C
 C РАЗБОР СИМВОЛА ТЕКСТА ЧЕРЕЗ RSYMB
- LOOP:M16,VTM,*STR*.0
- ,ITS,14.0(М17)
- M16,VTM,ПЕРЕМЕННАЯ_626.STR25B
- ,ITS,14.STR25C
- M16,VTM,МАСКА_ПРОБЕЛОВ.0
- ,ITS,14.TAB3B
- M16,VTM,ШЕСТЬ.0
- ,ITS,14.STR25
- M15,VJM,RSYMB.0
- ,NTR,3
- ,NTR,22B.STR24
- M7,XTA,11B.0
- ,ITS,.0(М17)
- M7,XTA,-1.STR25D
- M17,AEX,.STR25E
- ,U1A,STR24C.TAB3B
- ,UJ,STR24D.0
+ LOOP:M16,VTM,*STR*.М16 := адрес STR
+ ,ITS,14.в магазин; СМ := М16
+ M16,VTM,ПЕРЕМЕННАЯ_626.М16 := адрес V9
+ ,ITS,14.в магазин; СМ := М16
+ M16,VTM,МАСКА_ПРОБЕЛОВ.М16 := адрес К0
+ ,ITS,14.в магазин; СМ := М16
+ M16,VTM,ШЕСТЬ.М16 := адрес К6
+ ,ITS,14.в магазин; СМ := М16
+ M15,VJM,RSYMB.вызов через М15
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ M7,XTA,11B.СМ := слот кадра 9
+ ,ITS,.в магазин; СМ := ИР
+ M7,XTA,-1.СМ := каталог задачи: элемент 75
+ M17,AEX,.СМ ^= поле контекста 0
+ ,U1A,STR24C.если СМ≠0 → STR24C
+ ,UJ,STR24D.переход на STR24D
 C
- STR24C:,UJ,NDAB1D.STR25
+ STR24C:,UJ,NDAB1D.переход на NDAB1D
 C
- STR24D:M7,XTA,23B.0
- ,NTR,3.19(М7)
- M7,A+X,2.'3'
- M7,ATX,23B.'22'
- ,NTR,22B.STR24E
+ STR24D:M7,XTA,23B.СМ := слот кадра 19
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ M7,A+X,2.СМ += слот кадра 2
+ M7,ATX,23B.слот кадра 19 := СМ
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
 C ПРОВЕРКА ОКОНЧАНИЯ ТЕКСТОВОГО СЕГМЕНТА
- STR24E:,UTC,STR24.STR(М16)
- ,X-A,.М16
- ,UZA,LOOP.V9(М16)
- ,UJ,TAB3B.М16
+ STR24E:,UTC,STR24.мод.адрес := 0 (сброс модификации)
+ ,X-A,.СМ := слово по адресу STR24 - СМ
+ ,UZA,LOOP.если СМ=0 → LOOP
+ ,UJ,TAB3B.переход на TAB3B
 C
- NDAB1D:,UTC,NDAB1.К0(М16)
- ,XTA,.М16
- M7,ATX,24B.К6(М16)
- ,NTR,3.М16
- ,NTR,22B.RSYMB(М15)
- M15,VJM,ENDSTR.0
- M7,XTA,24B.'3'
- ,ITS,.'22'
- ,UTC,NDAB1.9(М7)
- ,XTA,
- M17,AEX,.'4113'(М7)
- ,UZA,BEGSTA.0(М17)
- ,UJ,TAB3B.STR24C
+ NDAB1D:,UTC,NDAB1.мод.адрес := NDAB1
+ ,XTA,.СМ := слово по адресу NDAB1
+ M7,ATX,24B.слот кадра 20 := СМ
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ M15,VJM,ENDSTR.вызов через М15
+ M7,XTA,24B.СМ := слот кадра 20
+ ,ITS,.в магазин; СМ := ИР
+ ,UTC,NDAB1.мод.адрес := NDAB1
+ ,XTA,.СМ := слово по адресу NDAB1
+ M17,AEX,.СМ ^= поле контекста 0
+ ,UZA,BEGSTA.если СМ=0 → BEGSTA
+ ,UJ,TAB3B.переход на TAB3B
 C
- BEGSTA:M15,VJM,BEGSTR.STR24D
- TAB3B:M7,XTA,1.NDAB1D
- ,ITS,.0
- ,UTC,TAB3.19(М7)
- ,XTA,.'3'
- M17,AEX,.2(М7)
- ,U1A,LNTA.19(М7)
- ,UJ,LNTB.'22'
+ BEGSTA:M15,VJM,BEGSTR.вызов через М15
+ TAB3B:M7,XTA,1.СМ := слот кадра 1
+ ,ITS,.в магазин; СМ := ИР
+ ,UTC,TAB3.мод.адрес := TAB3
+ ,XTA,.СМ := слово по адресу TAB3
+ M17,AEX,.СМ ^= поле контекста 0
+ ,U1A,LNTA.если СМ≠0 → LNTA
+ ,UJ,LNTB.переход на LNTB
 C
- LNTA:,UJ,NDAB1E.0
+ LNTA:,UJ,NDAB1E.переход на NDAB1E
 C
- LNTB:M7,XTA,2.STR24
- ,ITS,.0
- ,UTC,*LNT*.LOOP
- ,XTA,.TAB3B
- M17,AEX,.NDAB1
- ,UZA,SEKGIA.0
- ,UJ,SEKDYA.20(М7)
+ LNTB:M7,XTA,2.СМ := слот кадра 2
+ ,ITS,.в магазин; СМ := ИР
+ ,UTC,*LNT*.мод.адрес := LNT
+ ,XTA,.СМ := слово по адресу LNT
+ M17,AEX,.СМ ^= поле контекста 0
+ ,UZA,SEKGIA.если СМ=0 → SEKGIA
+ ,UJ,SEKDYA.переход на SEKDYA
 C
- SEKGIA:M15,VJM,SEKGIR.'3'
- SEKDYA:M15,VJM,SEKDYD.'22'
- M16,VTM,ЕДИНИЦА.ENDSTR(М15)
- ,ITS,14.20(М7)
- M15,VJM,NEWMAX  
- M15,VJM,LYGPAR.NDAB1
- NDAB1E:,UTC,NDAB1.0
- ,XTA,.0(М17)
- ,NTR,3.BEGSTA
- ,X-A,.TAB3B
- ,UTC,DYD1.0
- ,A+X,.BEGSTR(М15)
- ,NTR,22B.0
- ,U1A,NDAB1F.1(М7)
- ,UJ,NDAB1G
+ SEKGIA:M15,VJM,SEKGIR.вызов через М15
+ SEKDYA:M15,VJM,SEKDYD.вызов через М15
+ M16,VTM,ЕДИНИЦА.М16 := адрес К3
+ ,ITS,14.в магазин; СМ := М16
+ M15,VJM,NEWMAX.вызов через М15
+ M15,VJM,LYGPAR.вызов через М15
+ NDAB1E:,UTC,NDAB1.мод.адрес := 0 (сброс модификации)
+ ,XTA,.СМ := слово по адресу NDAB1
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ ,X-A,.СМ := (адрес) - СМ
+ ,UTC,DYD1.мод.адрес := DYD1
+ ,A+X,.СМ += слово по адресу DYD1
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ ,U1A,NDAB1F.если СМ≠0 → NDAB1F
+ ,UJ,NDAB1G.переход на NDAB1G
 C
- NDAB1F:,UTC,NDAB1.TAB3
- ,XTA,.0
- ,UTC,DYD1.0(М17)
- ,ATX,.LNTA
- ,NTR,3.LNTB
- ,NTR,22B.0
- NDAB1G:,UTC,NUST8.NDAB1E
- ,XTA,.0
- ,NTR,3.2(М7)
- ,X-A,
- ,UTC,DYD2.LNT
- ,A+X,.0
- ,NTR,22B.0(М17)
- ,U1A,NUST8A.SEKGIA
- ,UJ,NUST8B.SEKDYA
+ NDAB1F:,UTC,NDAB1.мод.адрес := 0 (сброс модификации)
+ ,XTA,.СМ := слово по адресу NDAB1
+ ,UTC,DYD1.мод.адрес := DYD1
+ ,ATX,.по адресу DYD1 := СМ
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ NDAB1G:,UTC,NUST8.мод.адрес := NUST8
+ ,XTA,.СМ := слово по адресу NUST8
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ ,X-A,.СМ := (адрес) - СМ
+ ,UTC,DYD2.мод.адрес := DYD2
+ ,A+X,.СМ += слово по адресу DYD2
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ ,U1A,NUST8A.если СМ≠0 → NUST8A
+ ,UJ,NUST8B.переход на NUST8B
 C
- NUST8A:,UTC,NUST8.0
- ,XTA,.SEKGIR(М15)
- ,UTC,DYD2.0
- ,ATX,.SEKDYD(М15)
- ,NTR,3.0
- ,NTR,22B.К3(М16)
- NUST8B:M7,XTA,2.М16
- ,ITS,.NEWMAX(М15)
- ,UTC,TXT3.0
- ,XTA,.LYGPAR(М15)
- M17,AEX,.0
- ,UZA,TAB3C.NDAB1
- ,UJ,TAB3D.0
+ NUST8A:,UTC,NUST8.мод.адрес := 0 (сброс модификации)
+ ,XTA,.СМ := слово по адресу NUST8
+ ,UTC,DYD2.мод.адрес := DYD2
+ ,ATX,.по адресу DYD2 := СМ
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ NUST8B:M7,XTA,2.СМ := слот кадра 2
+ ,ITS,.в магазин; СМ := ИР
+ ,UTC,TXT3.мод.адрес := TXT3
+ ,XTA,.СМ := слово по адресу TXT3
+ M17,AEX,.СМ ^= поле контекста 0
+ ,UZA,TAB3C.если СМ=0 → TAB3C
+ ,UJ,TAB3D.переход на TAB3D
 C
- TAB3C:,UJ,SEKLYA.'3'
+ TAB3C:,UJ,SEKLYA.переход на SEKLYA
 C
- TAB3D:M7,XTA,1.0
- ,ITS,.DYD1
- ,UTC,TAB3.0
- ,XTA,.'22'
- M17,AEX,.NDAB1F
- ,U1A,LYGA.NDAB1G
- ,UJ,LYGB.0
+ TAB3D:M7,XTA,1.СМ := слот кадра 1
+ ,ITS,.в магазин; СМ := ИР
+ ,UTC,TAB3.мод.адрес := TAB3
+ ,XTA,.СМ := слово по адресу TAB3
+ M17,AEX,.СМ ^= поле контекста 0
+ ,U1A,LYGA.если СМ≠0 → LYGA
+ ,UJ,LYGB.переход на LYGB
 C
- LYGA:,UJ,TAB4F.NDAB1
+ LYGA:,UJ,TAB4F.переход на TAB4F
 C
- LYGB:,UTC,*LYG*.0
- ,XTA,.DYD1
- ,NTR,3.0
- ,UTC,*LNT*.'3'
- ,A+X,.'22'
- ,UTC,*NDAB*.NUST8
- ,ATX,.0
- M7,XTA,2.'3'
- ,ITS,.0
- ,UTC,ATV1.DYD2
- ,XTA,.0
- ,NTR,22B.'22'
- M17,AEX,.NUST8A
- ,U1A,TXTA.NUST8B
- ,UJ,SEKLYA.0
+ LYGB:,UTC,*LYG*.мод.адрес := 0 (сброс модификации)
+ ,XTA,.СМ := слово по адресу LYG
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ ,UTC,*LNT*.мод.адрес := LNT
+ ,A+X,.СМ += слово по адресу LNT
+ ,UTC,*NDAB*.мод.адрес := NDAB
+ ,ATX,.по адресу NDAB := СМ
+ M7,XTA,2.СМ := слот кадра 2
+ ,ITS,.в магазин; СМ := ИР
+ ,UTC,ATV1.мод.адрес := ATV1
+ ,XTA,.СМ := слово по адресу ATV1
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ M17,AEX,.СМ ^= поле контекста 0
+ ,U1A,TXTA.если СМ≠0 → TXTA
+ ,UJ,SEKLYA.переход на SEKLYA
 C
- TXTA:,UTC,*TXT*.NUST8
- ,XTA,.0
- ,NTR,3.DYD2
- ,X-A,.0
- ,UTC,*TAB*.'3'
- ,A+X,.'22'
- ,NTR,22B.2(М7)
- ,U1A,ЦИКЛ_ПЕРЕХОД_2
- ,UJ,SEKLYA.TXT3
+ TXTA:,UTC,*TXT*.мод.адрес := 0 (сброс модификации)
+ ,XTA,.СМ := слово по адресу TXT
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ ,X-A,.СМ := (адрес) - СМ
+ ,UTC,*TAB*.мод.адрес := TAB
+ ,A+X,.СМ += слово по адресу TAB
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ ,U1A,ЦИКЛ_ПЕРЕХОД_2.если СМ≠0 → F2A
+ ,UJ,SEKLYA.переход на SEKLYA
 C
- ЦИКЛ_ПЕРЕХОД_2:,UJ,TAB4E.0
+ ЦИКЛ_ПЕРЕХОД_2:,UJ,TAB4E.переход на TAB4E
 C
 C ВЫЗОВ SEKLYG И УСТАНОВКА УКАЗАТЕЛЕЙ ТАБЛИЦЫ
- SEKLYA:M15,VJM,SEKLYG.0(М17)
- ,UTC,DYD2.TAB3C
- ,XTA,.TAB3D
- ,UTC,NUST8.0
- ,ATX,.SEKLYA
- ,UTC,DYD1.0
- ,XTA,.1(М7)
- ,UTC,NDAB1
- ,ATX,.TAB3
- ,NTR,3.0
- M7,XTA,1.0(М17)
- ,UTC,TAB4.LYGA
- ,ATX,.LYGB
- M7,XTA,2.0
- ,ITS,.TAB4F
- ,UTC,TXT3.0
- ,XTA,.LYG
- ,NTR,22B.0
- M17,AEX,.'3'
- ,UZA,ЦИКЛ_ПЕРЕХОД_3.LNT
- ,UJ,TAB4D.0
+ SEKLYA:M15,VJM,SEKLYG.вызов через М15
+ ,UTC,DYD2.мод.адрес := 0 (сброс модификации)
+ ,XTA,.СМ := слово по адресу DYD2
+ ,UTC,NUST8.мод.адрес := NUST8
+ ,ATX,.по адресу NUST8 := СМ
+ ,UTC,DYD1.мод.адрес := DYD1
+ ,XTA,.СМ := слово по адресу DYD1
+ ,UTC,NDAB1.мод.адрес := NDAB1
+ ,ATX,.по адресу NDAB1 := СМ
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ M7,XTA,1.СМ := слот кадра 1
+ ,UTC,TAB4.мод.адрес := TAB4
+ ,ATX,.по адресу TAB4 := СМ
+ M7,XTA,2.СМ := слот кадра 2
+ ,ITS,.в магазин; СМ := ИР
+ ,UTC,TXT3.мод.адрес := TXT3
+ ,XTA,.СМ := слово по адресу TXT3
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ M17,AEX,.СМ ^= поле контекста 0
+ ,UZA,ЦИКЛ_ПЕРЕХОД_3.если СМ=0 → F2B
+ ,UJ,TAB4D.переход на TAB4D
 C
- ЦИКЛ_ПЕРЕХОД_3:,UJ,TXT3B.NDAB
+ ЦИКЛ_ПЕРЕХОД_3:,UJ,TXT3B.переход на TXT3B
 C
- TAB4D:,UJ,STR25F.0
+ TAB4D:,UJ,STR25F.переход на STR25F
 C
- TAB4E:M7,XTA,1.2(М7)
- ,UTC,TAB4
- ,ATX,.ATV1
- ,NTR,3.0
- ,UTC,*DYD*.'22'
- ,XTA,.0(М17)
- ,X-A,.TXTA
- M7,A+X,1.SEKLYA
- ,NTR,22B.0
- ,UZA,DYDA.TXT
- ,UJ,DYDB.0
+ TAB4E:M7,XTA,1.СМ := слот кадра 1
+ ,UTC,TAB4.мод.адрес := TAB4
+ ,ATX,.по адресу TAB4 := СМ
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ ,UTC,*DYD*.мод.адрес := DYD
+ ,XTA,.СМ := слово по адресу DYD
+ ,X-A,.СМ := (адрес) - СМ
+ M7,A+X,1.СМ += слот кадра 1
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ ,UZA,DYDA.если СМ=0 → DYDA
+ ,UJ,DYDB.переход на DYDB
 C
- DYDA:M7,XTA,2.'3'
- ,UTC,*DYD*.0
- ,ATX,.TAB
- ,NTR,3.0
- ,NTR,22B.'22'
- DYDB:,UTC,NDAB1.F2A
- ,XTA,.SEKLYA
- ,NTR,3.0
- ,UTC,*DYD*.TAB4E
- ,A-X,.0
- M7,A+X,2.SEKLYG(М15)
- ,UTC,NDAB1.0
- ,ATX,.DYD2
- ,UTC,NUST8.0
- ,XTA,.NUST8
- ,UTC,*DYD*.0
- ,A-X,.DYD1
- M7,A+X,2.0
- ,UTC,NUST8.NDAB1
- ,ATX,.0
- ,NTR,22B.'3'
- ,UJ,STR25F.1(М7)
+ DYDA:M7,XTA,2.СМ := слот кадра 2
+ ,UTC,*DYD*.мод.адрес := DYD
+ ,ATX,.по адресу DYD := СМ
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ DYDB:,UTC,NDAB1.мод.адрес := 0 (сброс модификации)
+ ,XTA,.СМ := слово по адресу NDAB1
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ ,UTC,*DYD*.мод.адрес := DYD
+ ,A-X,.СМ -= слово по адресу DYD
+ M7,A+X,2.СМ += слот кадра 2
+ ,UTC,NDAB1.мод.адрес := NDAB1
+ ,ATX,.по адресу NDAB1 := СМ
+ ,UTC,NUST8.мод.адрес := NUST8
+ ,XTA,.СМ := слово по адресу NUST8
+ ,UTC,*DYD*.мод.адрес := DYD
+ ,A-X,.СМ -= слово по адресу DYD
+ M7,A+X,2.СМ += слот кадра 2
+ ,UTC,NUST8.мод.адрес := NUST8
+ ,ATX,.по адресу NUST8 := СМ
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ ,UJ,STR25F.переход на STR25F
 C
 C УСТАНОВКА УКАЗАТЕЛЯ ТАБЛИЦЫ TAB4
- TAB4F:M7,XTA,6.TAB4
- ,UTC,TAB4.0
- ,ATX,.2(М7)
- ,NTR,3
- ,NTR,22B.TXT3
- ,UJ,STR25F.0
+ TAB4F:M7,XTA,6.СМ := слот кадра 6
+ ,UTC,TAB4.мод.адрес := TAB4
+ ,ATX,.по адресу TAB4 := СМ
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ ,UJ,STR25F.переход на STR25F
 C
 C УСТАНОВКА УКАЗАТЕЛЕЙ ТЕКСТА TXT3 И NUST8
- TXT3B:M7,XTA,6.'22'
- ,UTC,TXT3.0(М17)
- ,ATX,.F2B
- ,NTR,3.TAB4D
- ,UTC,DYD2.TXT3B
- ,XTA,.0
- ,UTC,NUST8.STR25F
- ,ATX,.0
- ,UTC,DYD1.1(М7)
- ,XTA,.TAB4
- ,UTC,NDAB1.0
- ,ATX,.'3'
- M7,XTA,1.DYD
- M7,ATX,25B.0
- M7,XTA,1.0
- M7,ATX,26B.1(М7)
- M7,XTA,1.'22'
- ,ITS,.DYDA
- ,UTC,LYG3.DYDB
- ,XTA,.0
- ,NTR,22B.2(М7)
- M17,AEX,.DYD
- ,UZA,ЦИКЛ_ПЕРЕХОД_4.0
- ,UJ,EGO351.'3'
+ TXT3B:M7,XTA,6.СМ := слот кадра 6
+ ,UTC,TXT3.мод.адрес := TXT3
+ ,ATX,.по адресу TXT3 := СМ
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ ,UTC,DYD2.мод.адрес := DYD2
+ ,XTA,.СМ := слово по адресу DYD2
+ ,UTC,NUST8.мод.адрес := NUST8
+ ,ATX,.по адресу NUST8 := СМ
+ ,UTC,DYD1.мод.адрес := DYD1
+ ,XTA,.СМ := слово по адресу DYD1
+ ,UTC,NDAB1.мод.адрес := NDAB1
+ ,ATX,.по адресу NDAB1 := СМ
+ M7,XTA,1.СМ := слот кадра 1
+ M7,ATX,25B.слот кадра 21 := СМ
+ M7,XTA,1.СМ := слот кадра 1
+ M7,ATX,26B.слот кадра 22 := СМ
+ M7,XTA,1.СМ := слот кадра 1
+ ,ITS,.в магазин; СМ := ИР
+ ,UTC,LYG3.мод.адрес := LYG3
+ ,XTA,.СМ := слово по адресу LYG3
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ M17,AEX,.СМ ^= поле контекста 0
+ ,UZA,ЦИКЛ_ПЕРЕХОД_4.если СМ=0 → F1
+ ,UJ,EGO351.переход на EGO351
 C
- ЦИКЛ_ПЕРЕХОД_4:,UJ,APJC.'22'
+ ЦИКЛ_ПЕРЕХОД_4:,UJ,APJC.переход на APJC
 C
- EGO351:,UJ,LYG3B.0
+ EGO351:,UJ,LYG3B.переход на LYG3B
 C
- EGO35A:M7,XTA,2.NDAB1
- M7,ATX,27B.0
- ,NTR,3.'3'
- ,NTR,22B.DYD
- EGO35B:,WTC,ПЕРЕМЕННАЯ_632.0
- M1,VTM,.2(М7)
- M1,UTC,EGO35167.NDAB1
- ,XTA,.0
- M1,UTC,EGO32767.NUST8
- ,ATX,.0
- M7,XTA,27B.DYD
- ,NTR,3.0
- M7,A+X,2.2(М7)
- M7,ATX,27B.NUST8
- M7,X-A,10B.0
- ,NTR,22B.'22'
- ,UZA,EGO35B.STR25F
- M7,XTA,2.0
- M7,ATX,30B.6(М7)
- ,NTR,3.TAB4
- M7,XTA,6.0
- ,UTC,*APJ*.'3'
- ,ATX,.'22'
- ,UTC,NDABL1.STR25F
- ,XTA,.6(М7)
- ,UTC,NDAB1.TXT3
- ,ATX,.0
- M7,XTA,2.'3'
- ,ITS,.DYD2
- ,UTC,*REGIM*.0
- ,XTA,.NUST8
- ,NTR,22B.0
- M17,AEX,.DYD1
- ,U1A,NDABLA.0
- ,UJ,NDABLB.NDAB1
+ EGO35A:M7,XTA,2.СМ := слот кадра 2
+ M7,ATX,27B.слот кадра 23 := СМ
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ EGO35B:,WTC,ПЕРЕМЕННАЯ_632.мод.адрес := код из V13
+ M1,VTM,.М1 := код из V13
+ M1,UTC,EGO35167.мод.адрес := EGO35167(М1)
+ ,XTA,.СМ := слово по адресу EGO35167+М1
+ M1,UTC,EGO32767.мод.адрес := EGO32767(М1)
+ ,ATX,.по адресу EGO32767+М1 := СМ
+ M7,XTA,27B.СМ := слот кадра 23
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ M7,A+X,2.СМ += слот кадра 2
+ M7,ATX,27B.слот кадра 23 := СМ
+ M7,X-A,10B.СМ := (адрес) - СМ
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ ,UZA,EGO35B.если СМ=0 → EGO35B
+ M7,XTA,2.СМ := слот кадра 2
+ M7,ATX,30B.слот кадра 24 := СМ
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ M7,XTA,6.СМ := слот кадра 6
+ ,UTC,*APJ*.мод.адрес := APJ
+ ,ATX,.по адресу APJ := СМ
+ ,UTC,NDABL1.мод.адрес := NDABL1
+ ,XTA,.СМ := слово по адресу NDABL1
+ ,UTC,NDAB1.мод.адрес := NDAB1
+ ,ATX,.по адресу NDAB1 := СМ
+ M7,XTA,2.СМ := слот кадра 2
+ ,ITS,.в магазин; СМ := ИР
+ ,UTC,*REGIM*.мод.адрес := REGIM
+ ,XTA,.СМ := слово по адресу REGIM
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ M17,AEX,.СМ ^= поле контекста 0
+ ,U1A,NDABLA.если СМ≠0 → NDABLA
+ ,UJ,NDABLB.переход на NDABLB
 C
- NDABLA:,UJ,BEGPGA.0
+ NDABLA:,UJ,BEGPGA.переход на BEGPGA
 C
 C ПРОВЕРКА ПЕРЕХОДА К СЛЕДУЮЩЕМУ АБЗАЦУ
- NDABLB:,UTC,NDABL1.1(М7)
- ,XTA,.21(М7)
- M16,VTM,ДВОЙКА.1(М7)
- M15,VJM,I*DI*I.22(М7)
- M7,ATX,31B.1(М7)
- ,NTR,3
- ,UTC,NDABL1.LYG3
- ,XTA,.0
- ,ITS,.'22'
- M7,XTA,31B.0(М17)
- M16,VTM,ДВОЙКА.F1
- M15,VJM,I*MU*I.EGO351
- ,NTR,22B.APJC
- M17,AEX,.0
- ,UZA,NDABLC.LYG3B
- ,UJ,NDABLD.0
+ NDABLB:,UTC,NDABL1.мод.адрес := 0 (сброс модификации)
+ ,XTA,.СМ := слово по адресу NDABL1
+ M16,VTM,ДВОЙКА.М16 := адрес К4
+ M15,VJM,I*DI*I.вызов через М15
+ M7,ATX,31B.слот кадра 25 := СМ
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ ,UTC,NDABL1.мод.адрес := NDABL1
+ ,XTA,.СМ := слово по адресу NDABL1
+ ,ITS,.в магазин; СМ := ИР
+ M7,XTA,31B.СМ := слот кадра 25
+ M16,VTM,ДВОЙКА.М16 := адрес К4
+ M15,VJM,I*MU*I.вызов через М15
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ M17,AEX,.СМ ^= поле контекста 0
+ ,UZA,NDABLC.если СМ=0 → NDABLC
+ ,UJ,NDABLD.переход на NDABLD
 C
- NDABLC:,UJ,BEGPGA.2(М7)
+ NDABLC:,UJ,BEGPGA.переход на BEGPGA
 C
- NDABLD:,UTC,NDABL1.23(М7)
- ,XTA,.'3'
- ,NTR,3.'22'
- M7,A+X,2.V13
- ,UTC,NDAB1.0(М1)
- ,ATX,.EGO35167(М1)
- ,NTR,22B.0
- BEGPGA:M15,VJM,BEGPG.EGO32767(М1)
- M7,XTA,2.0
- ,ITS,.23(М7)
- ,UTC,*REGIM*.'3'
- ,XTA,.2(М7)
- M17,AEX,.23(М7)
- ,U1A,ЦИКЛ_ПЕРЕХОД_5.8(М7)
- ,UJ,ПЕР+24.'22'
+ NDABLD:,UTC,NDABL1.мод.адрес := 0 (сброс модификации)
+ ,XTA,.СМ := слово по адресу NDABL1
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ M7,A+X,2.СМ += слот кадра 2
+ ,UTC,NDAB1.мод.адрес := NDAB1
+ ,ATX,.по адресу NDAB1 := СМ
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ BEGPGA:M15,VJM,BEGPG.вызов через М15
+ M7,XTA,2.СМ := слот кадра 2
+ ,ITS,.в магазин; СМ := ИР
+ ,UTC,*REGIM*.мод.адрес := REGIM
+ ,XTA,.СМ := слово по адресу REGIM
+ M17,AEX,.СМ ^= поле контекста 0
+ ,U1A,ЦИКЛ_ПЕРЕХОД_5.если СМ≠0 → F2C
+ ,UJ,ПЕР+24.переход на F24
 C
- ЦИКЛ_ПЕРЕХОД_5:,UJ,APJB.EGO35B
+ ЦИКЛ_ПЕРЕХОД_5:,UJ,APJB.переход на APJB
 C
- ПЕР+24:M7,XTA,30B.2(М7)
- ,NTR,3.24(М7)
- M7,A+X,2.'3'
- M7,ATX,30B.6(М7)
- M7,XTA,30B.APJ
- ,X-A,.0
- M7,A+X,3.NDABL1
- ,NTR,22B.0
- ,UZA,APJA.NDAB1
- ,UJ,APJB.0
+ ПЕР+24:M7,XTA,30B.СМ := слот кадра 24
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ M7,A+X,2.СМ += слот кадра 2
+ M7,ATX,30B.слот кадра 24 := СМ
+ M7,XTA,30B.СМ := слот кадра 24
+ ,X-A,.СМ := (адрес) - СМ
+ M7,A+X,3.СМ += слот кадра 3
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ ,UZA,APJA.если СМ=0 → APJA
+ ,UJ,APJB.переход на APJB
 C
- APJA:,UJ,BEGPGA.2(М7)
+ APJA:,UJ,BEGPGA.переход на BEGPGA
 C
 C СОХРАНЕНИЕ ПОЗИЦИИ АБЗАЦА В APJ И ПРОВЕРКА LYG3
- APJB:M7,XTA,1
- ,UTC,*APJ*.REGIM
- ,ATX,.0
- ,NTR,3.'22'
- M7,XTA,2.0(М17)
- ,ITS,.NDABLA
- ,UTC,LYG3.NDABLB
- ,XTA,.0
- ,NTR,22B.BEGPGA
- M17,AEX,.0
- ,UZA,LYG3A.NDABL1
- ,UJ,LYG3B.0
+ APJB:M7,XTA,1.СМ := слот кадра 1
+ ,UTC,*APJ*.мод.адрес := APJ
+ ,ATX,.по адресу APJ := СМ
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ M7,XTA,2.СМ := слот кадра 2
+ ,ITS,.в магазин; СМ := ИР
+ ,UTC,LYG3.мод.адрес := LYG3
+ ,XTA,.СМ := слово по адресу LYG3
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ M17,AEX,.СМ ^= поле контекста 0
+ ,UZA,LYG3A.если СМ=0 → LYG3A
+ ,UJ,LYG3B.переход на LYG3B
 C
- LYG3A:,UJ,APJC.К4(М16)
+ LYG3A:,UJ,APJC.переход на APJC
 C
 C ВЫЗОВ ENDPG СО СБРОСОМ И ВОССТАНОВЛЕНИЕМ LYG3
- LYG3B:,UTC,LYG3.IDII(М15)
- ,XTA,.25(М7)
- M7,ATX,32B.'3'
- ,NTR,3.NDABL1
- M7,XTA,1.0
- ,UTC,LYG3
- ,ATX,.25(М7)
- ,NTR,22B.К4(М16)
- M15,VJM,ENDPG.IMUI(М15)
- M7,XTA,32B.'22'
- ,UTC,LYG3.0(М17)
- ,ATX,.NDABLC
- M7,XTA,26B.NDABLD
- ,NTR,3.BEGPGA
- M7,A+X,2.0
- M7,ATX,26B.NDABL1
- M7,XTA,2.0
- ,ITS,.'3'
- M7,XTA,26B.2(М7)
- ,NTR,22B.NDAB1
- M17,AEX,.0
- ,UZA,EGO375.'22'
- ,UJ,EGO37A.0
+ LYG3B:,UTC,LYG3.мод.адрес := 0 (сброс модификации)
+ ,XTA,.СМ := слово по адресу LYG3
+ M7,ATX,32B.слот кадра 26 := СМ
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ M7,XTA,1.СМ := слот кадра 1
+ ,UTC,LYG3.мод.адрес := LYG3
+ ,ATX,.по адресу LYG3 := СМ
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ M15,VJM,ENDPG.вызов через М15
+ M7,XTA,32B.СМ := слот кадра 26
+ ,UTC,LYG3.мод.адрес := LYG3
+ ,ATX,.по адресу LYG3 := СМ
+ M7,XTA,26B.СМ := слот кадра 22
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ M7,A+X,2.СМ += слот кадра 2
+ M7,ATX,26B.слот кадра 22 := СМ
+ M7,XTA,2.СМ := слот кадра 2
+ ,ITS,.в магазин; СМ := ИР
+ M7,XTA,26B.СМ := слот кадра 22
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ M17,AEX,.СМ ^= поле контекста 0
+ ,UZA,EGO375.если СМ=0 → EGO375
+ ,UJ,EGO37A.переход на EGO37A
 C
- EGO375:,UJ,EGO35A.BEGPG(М15)
+ EGO375:,UJ,EGO35A.переход на EGO35A
 C
- EGO37A:M7,XTA,2.0
- M7,ATX,33B.2(М7)
- ,NTR,3
- ,NTR,22B.REGIM
- EGO37B:,WTC,ПЕРЕМЕННАЯ_636.0
- M1,VTM,.0(М17)
- M1,UTC,EGO37567.F2C
- ,XTA,.F24
- M1,UTC,EGO32767.0
- ,ATX,.APJB
- M7,XTA,33B.0
- ,NTR,3.24(М7)
- M7,A+X,2.'3'
- M7,ATX,33B.2(М7)
- M7,X-A,10B.24(М7)
- ,NTR,22B.24(М7)
- ,UZA,EGO37B.0
- M7,XTA,6.3(М7)
- ,UTC,*APJ*.'22'
- ,ATX,.APJA
- ,NTR,3.APJB
- ,NTR,22B.BEGPGA
- M15,VJM,BEGPG.0
- M7,XTA,2.1(М7)
- ,ITS,.APJ
- ,UTC,*REGIM*.0
- ,XTA,.'3'
- M17,AEX,.2(М7)
- ,U1A,ЦИКЛ_ПЕРЕХОД_6
- ,UJ,BEGPGB.LYG3
+ EGO37A:M7,XTA,2.СМ := слот кадра 2
+ M7,ATX,33B.слот кадра 27 := СМ
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ EGO37B:,WTC,ПЕРЕМЕННАЯ_636.мод.адрес := код из V17
+ M1,VTM,.М1 := код из V17
+ M1,UTC,EGO37567.мод.адрес := EGO37567(М1)
+ ,XTA,.СМ := слово по адресу EGO37567+М1
+ M1,UTC,EGO32767.мод.адрес := EGO32767(М1)
+ ,ATX,.по адресу EGO32767+М1 := СМ
+ M7,XTA,33B.СМ := слот кадра 27
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ M7,A+X,2.СМ += слот кадра 2
+ M7,ATX,33B.слот кадра 27 := СМ
+ M7,X-A,10B.СМ := (адрес) - СМ
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ ,UZA,EGO37B.если СМ=0 → EGO37B
+ M7,XTA,6.СМ := слот кадра 6
+ ,UTC,*APJ*.мод.адрес := APJ
+ ,ATX,.по адресу APJ := СМ
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ M15,VJM,BEGPG.вызов через М15
+ M7,XTA,2.СМ := слот кадра 2
+ ,ITS,.в магазин; СМ := ИР
+ ,UTC,*REGIM*.мод.адрес := REGIM
+ ,XTA,.СМ := слово по адресу REGIM
+ M17,AEX,.СМ ^= поле контекста 0
+ ,U1A,ЦИКЛ_ПЕРЕХОД_6.если СМ≠0 → F2D
+ ,UJ,BEGPGB.переход на BEGPGB
 C
- ЦИКЛ_ПЕРЕХОД_6:,UJ,APJC.0
+ ЦИКЛ_ПЕРЕХОД_6:,UJ,APJC.переход на APJC
 C
- BEGPGB:M15,VJM,BEGPG.'22'
- APJC:M7,XTA,1.0(М17)
- ,UTC,*APJ*.LYG3A
- ,ATX,.LYG3B
- ,NTR,3.APJC
- ,UTC,LYG1.0
- ,XTA,.LYG3
- ,UTC,*NDAB*.0
- ,ATX,.26(М7)
- ,UTC,NDABL1.'3'
- ,XTA,.1(М7)
- ,UTC,NUST8.LYG3
- ,A+X,.0
- ,UTC,NDAB1.'22'
- ,ATX,.ENDPG(М15)
- M7,XTA,1.0
- ,UTC,NUST1.26(М7)
- ,ATX,.LYG3
- M7,XTA,1.0
- ,UTC,NUST8.22(М7)
- ,ATX,.'3'
- M7,XTA,2.2(М7)
- M7,ATX,34B.22(М7)
- ,NTR,22B.2(М7)
- APJD:M7,XTA,1
- ,WTC,ПЕРЕМЕННАЯ_637.22(М7)
- M1,VTM,.'22'
- M1,UTC,LYG32769.0(М17)
- ,ATX,.EGO375
- M7,XTA,1.EGO37A
- ,WTC,ПЕРЕМЕННАЯ_637.EGO35A
- M1,VTM,.0
- M1,UTC,SEK32767.2(М7)
- ,ATX,.27(М7)
- M7,XTA,34B.'3'
- ,NTR,3.'22'
- M7,A+X,2.V17
- M7,ATX,34B.0(М1)
- M7,X-A,4.EGO37567(М1)
- ,NTR,22B.0
- ,UZA,APJD.EGO32767(М1)
- M7,XTA,1.0
- ,UTC,*PAP*.27(М7)
- ,ATX,.'3'
- ,NTR,3.2(М7)
- M7,XTA,.27(М7)
- ,UTC,*SUT*.8(М7)
- ,ATX,.'22'
- M7,XTA,.EGO37B
- ,UTC,SUT1.6(М7)
- ,ATX,.APJ
- ,UTC,INS26.0
- ,XTA,.'3'
- M7,A-X,2.'22'
- ,UTC,INS26.BEGPG(М15)
- ,ATX,.0
- M7,XTA,1.2(М7)
- ,UTC,*PLN*   
- ,ATX,.REGIM
- ,NTR,22B.0
- M15,VJM,BEGSTR.0(М17)
- ,UTC,STR25.F2D
- ,XTA,.BEGPGB
- ,UTC,PUFOR6.0
- ,ATX,.APJC
- STR25F:,UJ,POP.0
+ BEGPGB:M15,VJM,BEGPG.вызов через М15
+ APJC:M7,XTA,1.СМ := слот кадра 1
+ ,UTC,*APJ*.мод.адрес := APJ
+ ,ATX,.по адресу APJ := СМ
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ ,UTC,LYG1.мод.адрес := LYG1
+ ,XTA,.СМ := слово по адресу LYG1
+ ,UTC,*NDAB*.мод.адрес := NDAB
+ ,ATX,.по адресу NDAB := СМ
+ ,UTC,NDABL1.мод.адрес := NDABL1
+ ,XTA,.СМ := слово по адресу NDABL1
+ ,UTC,NUST8.мод.адрес := NUST8
+ ,A+X,.СМ += слово по адресу NUST8
+ ,UTC,NDAB1.мод.адрес := NDAB1
+ ,ATX,.по адресу NDAB1 := СМ
+ M7,XTA,1.СМ := слот кадра 1
+ ,UTC,NUST1.мод.адрес := NUST1
+ ,ATX,.по адресу NUST1 := СМ
+ M7,XTA,1.СМ := слот кадра 1
+ ,UTC,NUST8.мод.адрес := NUST8
+ ,ATX,.по адресу NUST8 := СМ
+ M7,XTA,2.СМ := слот кадра 2
+ M7,ATX,34B.слот кадра 28 := СМ
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ APJD:M7,XTA,1.СМ := слот кадра 1
+ ,WTC,ПЕРЕМЕННАЯ_637.мод.адрес := код из V18
+ M1,VTM,.М1 := код из V18
+ M1,UTC,LYG32769.мод.адрес := LYG32769(М1)
+ ,ATX,.по адресу LYG32769+М1 := СМ
+ M7,XTA,1.СМ := слот кадра 1
+ ,WTC,ПЕРЕМЕННАЯ_637.мод.адрес := код из V18
+ M1,VTM,.М1 := код из V18
+ M1,UTC,SEK32767.мод.адрес := SEK32767(М1)
+ ,ATX,.по адресу SEK32767+М1 := СМ
+ M7,XTA,34B.СМ := слот кадра 28
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ M7,A+X,2.СМ += слот кадра 2
+ M7,ATX,34B.слот кадра 28 := СМ
+ M7,X-A,4.СМ := (адрес) - СМ
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ ,UZA,APJD.если СМ=0 → APJD
+ M7,XTA,1.СМ := слот кадра 1
+ ,UTC,*PAP*.мод.адрес := PAP
+ ,ATX,.по адресу PAP := СМ
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ M7,XTA,.СМ := слот кадра 0
+ ,UTC,*SUT*.мод.адрес := SUT
+ ,ATX,.по адресу SUT := СМ
+ M7,XTA,.СМ := слот кадра 0
+ ,UTC,SUT1.мод.адрес := SUT1
+ ,ATX,.по адресу SUT1 := СМ
+ ,UTC,INS26.мод.адрес := INS26
+ ,XTA,.СМ := слово по адресу INS26
+ M7,A-X,2.СМ -= слот кадра 2
+ ,UTC,INS26.мод.адрес := INS26
+ ,ATX,.по адресу INS26 := СМ
+ M7,XTA,1.СМ := слот кадра 1
+ ,UTC,*PLN*.мод.адрес := PLN
+ ,ATX,.по адресу PLN := СМ
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ M15,VJM,BEGSTR.вызов через М15
+ ,UTC,STR25.мод.адрес := 0 (сброс модификации)
+ ,XTA,.СМ := слово по адресу STR25
+ ,UTC,PUFOR6.мод.адрес := PUFOR6
+ ,ATX,.по адресу PUFOR6 := СМ
+ STR25F:,UJ,POP.переход на POP
 C
 C ВОЗВРАТ В ОС
- ВОЗВРАТ_В_ОС:M7,MTJ,8.BEGPG(М15)
- M16,MTJ,10.0
- M7,VTM,НОЛЬ.1(М7)
- ,ITS,13.APJ
- ,ITS,1.0
- ,ITS,8.'3'
- ,ITS,.LYG1
- ,NTR,3.0
- ,NTR,2.NDAB
- M12,UJ,.0
+ ВОЗВРАТ_В_ОС:M7,MTJ,8.М10 := М7
+ M16,MTJ,10.М12 := М16
+ M7,VTM,НОЛЬ.М7 := адрес К1
+ ,ITS,13.в магазин; СМ := М15
+ ,ITS,1.в магазин; СМ := М1
+ ,ITS,8.в магазин; СМ := М10
+ ,ITS,.в магазин; СМ := ИР
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ ,NTR,2.РЖ := 2 (переходы по нулю, округление
+ M12,UJ,.переход через М12
 C
- POP:,STI,.NDABL1
- ,STI,7.0
- ,STI,1.NUST8
- ,STI,8.0
- M10,UJ,.NDAB1
+ POP:,STI,.ИР := СМ; СМ := из магазина
+ ,STI,7.М7 := СМ; СМ := из магазина
+ ,STI,1.М1 := СМ; СМ := из магазина
+ ,STI,8.М10 := СМ; СМ := из магазина
+ M10,UJ,.переход через М10
 C
  МАСКА_ПРОБЕЛОВ:,ISO, 6H       . 040 040 040 040 040 040 
  НОЛЬ:,LOG,0
@@ -927,4 +927,4 @@ C
  ПЕРЕМЕННАЯ_636:,BSS,1
  ПЕРЕМЕННАЯ_637:,BSS,1
  ПЕРЕМЕННАЯ_640:,BSS,14
- ,END,.0
+ ,END,

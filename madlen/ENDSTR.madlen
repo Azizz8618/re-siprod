@@ -38,47 +38,47 @@ C
  BEGPG   :,SUBP,
  ENDPG   :,SUBP,
  REGIM1:,EQU,*REGIM* +1
- M16,VTM,NDABA.NDABA(М16)
- ,UJ,ВОЗВРАТ_В_ОС.L0034
+ M16,VTM,NDABA.М16 := адрес NDABA
+ ,UJ,ВОЗВРАТ_В_ОС.переход на L0034
 C
- NDABA:,UTC,*NDAB*.NDAB
- ,XTA,.0
- ,NTR,3.'3'
- ,UTC,PAGE3.PAGE3
- ,A-X,.0
- ,UTC,PAGE4.PAGE4
- ,A-X,.0
- ,UTC,REGIM1.REGIM1
- ,A+X,.0
- M7,A-X,.0(М7)
- ,NTR,22B.'22'
- ,U1A,JMP.JMP
- ,UJ,ENDPGA.ENDPGA
+ NDABA:,UTC,*NDAB*.мод.адрес := NDAB
+ ,XTA,.СМ := слово по адресу NDAB
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ ,UTC,PAGE3.мод.адрес := PAGE3
+ ,A-X,.СМ -= слово по адресу PAGE3
+ ,UTC,PAGE4.мод.адрес := PAGE4
+ ,A-X,.СМ -= слово по адресу PAGE4
+ ,UTC,REGIM1.мод.адрес := REGIM1
+ ,A+X,.СМ += слово по адресу REGIM1
+ M7,A-X,.СМ -= слот кадра 0
+ ,NTR,22B.РЖ := 18 (переходы по знаку)
+ ,U1A,JMP.если СМ≠0 → JMP
+ ,UJ,ENDPGA.переход на ENDPGA
 C
- JMP:,UJ,TOPAGA.0
+ JMP:,UJ,TOPAGA.переход на TOPAGA
 C
- ENDPGA:M15,VJM,ENDPG.TOPAGA
- M15,VJM,BEGPG.0
- ,UJ,JMPA.ENDPG(М15)
+ ENDPGA:M15,VJM,ENDPG.вызов через М15
+ M15,VJM,BEGPG.вызов через М15
+ ,UJ,JMPA.переход на JMPA
 C
- TOPAGA:M15,VJM,TOPAGE.0
- JMPA:,UJ,POP.BEGPG(М15)
+ TOPAGA:M15,VJM,TOPAGE.вызов через М15
+ JMPA:,UJ,POP.переход на POP
 C
- ВОЗВРАТ_В_ОС:M7,MTJ,8.0
- M16,MTJ,10.JMPA
- M7,VTM,ПАРАМЕТР_КОНЦА_СТРОКИ.0
- ,ITS,13.TOPAGE(М15)
- ,ITS,8.0
- ,ITS,.POP
- ,NTR,3.0
- ,NTR,2.М10(М7)
- M12,UJ,.М12(М16)
+ ВОЗВРАТ_В_ОС:M7,MTJ,8.М10 := М7
+ M16,MTJ,10.М12 := М16
+ M7,VTM,ПАРАМЕТР_КОНЦА_СТРОКИ.М7 := адрес К0
+ ,ITS,13.в магазин; СМ := М15
+ ,ITS,8.в магазин; СМ := М10
+ ,ITS,.в магазин; СМ := ИР
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ ,NTR,2.РЖ := 2 (переходы по нулю, округление
+ M12,UJ,.переход через М12
 C
 C ВОЗВРАТ В ВЫЗЫВАЮЩИЙ МОДУЛЬ
- POP:,STI,.К0(М7)
- ,STI,7.М15
- ,STI,8.М10
- M10,UJ,
+ POP:,STI,.ИР := СМ; СМ := из магазина
+ ,STI,7.М7 := СМ; СМ := из магазина
+ ,STI,8.М10 := СМ; СМ := из магазина
+ M10,UJ,.переход через М10
 C
  ПАРАМЕТР_КОНЦА_СТРОКИ:,INT,1
- ,END,.'3'
+ ,END,

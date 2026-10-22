@@ -35,190 +35,190 @@ C
  SYTOBI3:,EQU,SYTOBIN +3
  SYTOBI4:,EQU,SYTOBIN +4
  SYTOBI5:,EQU,SYTOBIN +5
- ,ITS,7.М7
- M7,VTM,ПОЛЕ_БЛОКА_ВЫЗЫВАЮЩЕГО.L12(М7)
- ,ITS,13.М15
- M15,VJM,KONSTA.KONSTA(М15)
- M12,STX,11B.9(М12)
+ ,ITS,7.в магазин; СМ := М7
+ M7,VTM,ПОЛЕ_БЛОКА_ВЫЗЫВАЮЩЕГО.М7 := адрес L12
+ ,ITS,13.в магазин; СМ := М15
+ M15,VJM,KONSTA.вызов через М15
+ M12,STX,11B.ЗП + магазин: 9(М12)
 C ПОДГОТОВКА КАДРА ОС ДЛЯ РАЗБОРА СИМВОЛА
- БЛОК_С20:M12,STX,14B.0
- ,NTR,3.12(М12)
- ,ATI,14.'3'
- M12,STX,26B.М16
- ,ATI,11.22(М12)
- M12,STX,24B.М13
- ,ATI,9.20(М12)
- M12,STX,23B.М11
- ,ATI,12.19(М12)
- M12,ATX,25B.М14
- M12,WTC,24B.21(М12)
- ,XTA,.20(М12)
- M10,A+X,3.0
- ,ATI,13.3(М10)
- ,X-A,.М15
- ,ATI,11.0
- M12,WTC,23B.М13
- ,XTA,.19(М12)
- M10,A+X,3.0
- ,ATI,9.3(М10)
- M14,XTA,.М11
- M13,UTC,.0(М14)
- M11,ASN,64+0.0(М13)
- M15,UTC,.64(М11)
- M10,AAX,11B.0(М15)
- M7,UJ,.9(М10)
+ БЛОК_С20:M12,STX,14B.ЗП + магазин: 12(М12)
+ ,NTR,3.РЖ := 3 (переходы по нулю)
+ ,ATI,14.М16 := СМ
+ M12,STX,26B.ЗП + магазин: 22(М12)
+ ,ATI,11.М13 := СМ
+ M12,STX,24B.ЗП + магазин: 20(М12)
+ ,ATI,9.М11 := СМ
+ M12,STX,23B.ЗП + магазин: 19(М12)
+ ,ATI,12.М14 := СМ
+ M12,ATX,25B.параметр вызова ОС 21 := СМ
+ M12,WTC,24B.мод.адрес := код из 20(М12)
+ ,XTA,.СМ := слово по адресу 20+М12
+ M10,A+X,3.СМ += поле блока вызывающего 3
+ ,ATI,13.М15 := СМ
+ ,X-A,.СМ := (адрес) - СМ
+ ,ATI,11.М13 := СМ
+ M12,WTC,23B.мод.адрес := код из 19(М12)
+ ,XTA,.СМ := слово по адресу 19+М12
+ M10,A+X,3.СМ += поле блока вызывающего 3
+ ,ATI,9.М11 := СМ
+ M14,XTA,.СМ := смещение в буфере 0
+ M13,UTC,.мод.адрес := 0(М13)
+ M11,ASN,64+0
+ M15,UTC,.мод.адрес := 0(М15)
+ M10,AAX,11B.СМ &= поле блока вызывающего 9
+ M7,UJ,.переход через М7
 C
- ПОЛЕ_БЛОКА_ВЫЗЫВАЮЩЕГО:M10,AOX,3.0(М7)
- M16,ATX,.3(М10)
+ ПОЛЕ_БЛОКА_ВЫЗЫВАЮЩЕГО:M10,AOX,3.СМ |= поле блока вызывающего 3
+ M16,ATX,.ячейка мод.адреса 0 := СМ
 C ПЕРЕДАЧА РЕЗУЛЬТАТА В ОС И ВЫЗОВ KONSTA ДЛЯ ПРОДОЛЖЕНИЯ
- ВЫЗОВ_KONSTA:M12,WTC,14B.0(М16)
- M7,VTM,.12(М12)
- M17,XTA,.0(М7)
- ,NTR,6.0(М17)
- M12,WTC,11B.'6'
- ,UJ,.9(М12)
+ ВЫЗОВ_KONSTA:M12,WTC,14B.мод.адрес := код из 12(М12)
+ M7,VTM,.М7 := код из 12+М12
+ M17,XTA,.СМ := поле контекста 0
+ ,NTR,6.РЖ := 6 (обращение к ОС)
+ M12,WTC,11B.мод.адрес := код из 9(М12)
+ ,UJ,.переход по адресу в мод.адресе
 C
- ,ITS,13.0
- M15,VJM,KONSTA.М15
- M12,STX,11B.KONSTA(М15)
- M12,STX,13B.9(М12)
- M12,STX,22B.11(М12)
- ,ITS,7.18(М12)
- M7,VTM,OR.М7
- ,UJ,БЛОК_С20.OR(М7)
+ ,ITS,13.в магазин; СМ := М15
+ M15,VJM,KONSTA.вызов через М15
+ M12,STX,11B.ЗП + магазин: 9(М12)
+ M12,STX,13B.ЗП + магазин: 11(М12)
+ M12,STX,22B.ЗП + магазин: 18(М12)
+ ,ITS,7.в магазин; СМ := М7
+ M7,VTM,OR.М7 := адрес OR
+ ,UJ,БЛОК_С20.переход на L20
 C
- OR:M10,AOX,3.L20
- M15,VJM,SYTOBI3.3(М10)
- M12,WTC,22B.SYTOBI3(М15)
- ,XTS,.18(М12)
- M15,VJM,SYTOBI5.0
- M7,J+M,14.SYTOBI5(М15)
- M11,MTJ,11.0
- M12,WTC,13B.М16(М7)
- ,XTA,.М13(М11)
- ,ATI,9.11(М12)
- M13,UTM,-7.0
- ,XTA,.М11
- M12,ATX,13B.N7(М13)
- M11,UTM,-12.0
- ,ITA,9.11(М12)
- M10,AAX,4.N12(М11)
- ,U1A,GETR.М11
- M10,XTA,116B.4(М10)
- M12,ATX,10B.GETR
- ВЫЗОВ_SYTOBI2:M11,UTM,-1.'116'(М10)
- M15,VJM,SYTOBI2.8(М12)
- M11,V1M,ВЫЗОВ_SYTOBI2.N1(М11)
- M11,VTM,14B.SYTOBI2(М15)
+ OR:M10,AOX,3.СМ |= поле блока вызывающего 3
+ M15,VJM,SYTOBI3.вызов через М15
+ M12,WTC,22B.мод.адрес := код из 18(М12)
+ ,XTS,.в магазин; СМ := слово по адресу 18+М
+ M15,VJM,SYTOBI5.вызов через М15
+ M7,J+M,14
+ M11,MTJ,11
+ M12,WTC,13B
+ ,XTA,
+ ,ATI,9
+ M13,UTM,-7
+ ,XTA,
+ M12,ATX,13B
+ M11,UTM,-12
+ ,ITA,9
+ M10,AAX,4
+ ,U1A,GETR
+ M10,XTA,116B
+ M12,ATX,10B
+ ВЫЗОВ_SYTOBI2:M11,UTM,-1
+ M15,VJM,SYTOBI2
+ M11,V1M,ВЫЗОВ_SYTOBI2
+ M11,VTM,14B
 C ЦИКЛ ПРЕОБРАЗОВАНИЯ СИМВОЛОВ И НАКОПЛЕНИЯ РЕЗУЛЬТАТА
- LOOP:M11,UTM,-1.L11(М11)
- M17,XTA,.12(М11)
- ,ASN,64-4.N1(М11)
- M17,ATX,.0(М17)
- ,YTA,.64-4
- M12,ATX,10B.0(М17)
- M12,AOX,13B.64-64
- ,UZA,GET.8(М12)
- M12,XTA,10B.11(М12)
- M10,AOX,117B.GET
- M12,ATX,10B.8(М12)
- M12,ATX,13B.'117'(М10)
- M15,VJM,SYTOBI2.8(М12)
- M11,V1M,LOOP.11(М12)
- ,UJ,LOOPA.SYTOBI2(М15)
+ LOOP:M11,UTM,-1
+ M17,XTA,
+ ,ASN,64-4
+ M17,ATX,
+ ,YTA,
+ M12,ATX,10B
+ M12,AOX,13B
+ ,UZA,GET
+ M12,XTA,10B
+ M10,AOX,117B
+ M12,ATX,10B
+ M12,ATX,13B
+ M15,VJM,SYTOBI2
+ M11,V1M,LOOP
+ ,UJ,LOOPA
 C
- GET:M10,XTA,116B.0
- M11,V1M,PUT.LOOP(М11)
- M10,XTA,117B.LOOPA
- PUT:M12,ATX,10B.'116'(М10)
- M15,VJM,SYTOBI2.PUT(М11)
- M11,V1M,LOOP.'117'(М10)
+ GET:M10,XTA,116B
+ M11,V1M,PUT
+ M10,XTA,117B
+ PUT:M12,ATX,10B
+ M15,VJM,SYTOBI2
+ M11,V1M,LOOP
 C УВЕЛИЧЕНИЕ СЧЁТЧИКА КОНТЕКСТА И ВОЗВРАТ В ОС
- LOOPA:M17,UTM,-1.0
- ,UJ,ВЫЗОВ_KONSTA.8(М12)
+ LOOPA:M17,UTM,-1
+ ,UJ,ВЫЗОВ_KONSTA
 C
 C ЧТЕНИЕ ОЧЕРЕДНОГО СЛОВА ИЗ КАДРА ПАРАМЕТРОВ ОС
- GETR:,ITA,9.SYTOBI2(М15)
- ,ASN,64-2.LOOP(М11)
- M11,UTM,14B.0
- ,STI,13.N1(М17)
- M15,ASN,64+0.L12A
- M17,ATX,.М11
- ,UJ,LOOP.64-2
+ GETR:,ITA,9
+ ,ASN,64-2
+ M11,UTM,14B
+ ,STI,13
+ M15,ASN,64+0
+ M17,ATX,
+ ,UJ,LOOP
 C
-  :,ITS,13.12(М11)
- M15,VJM,KONSTA.М15
- M12,STX,11B.64(М15)
- M12,STX,13B.0(М17)
- M12,STX,22B.LOOP
- ,ITS,7.0
- M7,VTM,ORA.М15
- ,UJ,БЛОК_С20.KONSTA(М15)
+  :,ITS,13
+ M15,VJM,KONSTA  
+ M12,STX,11B
+ M12,STX,13B
+ M12,STX,22B
+ ,ITS,7
+ M7,VTM,ORA
+ ,UJ,БЛОК_С20
 C
- ORA:M10,AOX,3.9(М12)
- M15,VJM,SYTOBI3.11(М12)
- ,ASN,64-8.18(М12)
- M12,WTC,22B.М7
- ,XTS,.ORA(М7)
- M15,VJM,SYTOBI5.L20
- M7,J+M,14.3(М10)
- M11,MTJ,11.SYTOBI3(М15)
- M13,UTM,-7.64-8
- ,XTA,.18(М12)
- M11,VTM,-9.0
- M12,ATX,7.SYTOBI5(М15)
- M7,VTM,.М16(М7)
- LOOPB:M17,XTA,.М13(М11)
- ,ASN,64-4.N7(М13)
- M17,ATX,.0
- ,YTA,.N9(М11)
- M12,ATX,10B.7(М12)
- M12,AOX,7.0(М7)
- ,UZA,ЦИКЛ_ПРОЦЕДУРА.0
+ ORA:M10,AOX,3
+ M15,VJM,SYTOBI3
+ ,ASN,64-8
+ M12,WTC,22B
+ ,XTS,
+ M15,VJM,SYTOBI5
+ M7,J+M,14
+ M11,MTJ,11
+ M13,UTM,-7
+ ,XTA,
+ M11,VTM,-9
+ M12,ATX,7
+ M7,VTM,
+ LOOPB:M17,XTA,
+ ,ASN,64-4
+ M17,ATX,
+ ,YTA,
+ M12,ATX,10B
+ M12,AOX,7
+ ,UZA,ЦИКЛ_ПРОЦЕДУРА
 C ЗАПИСЬ НАКОПЛЕННОГО РЕЗУЛЬТАТА И ЗАВЕРШЕНИЕ ЦИКЛА
- LOOPC:M7,UTM,1.0(М17)
- M12,XTA,10B.64-4
- M10,AOX,117B.0(М17)
- M12,ATX,10B.64-64
- M12,ATX,7.8(М12)
- M15,VJM,SYTOBI2.7(М12)
- M11,VLM,LOOPB.L0224
- ,ITA,7.0
- M10,AOX,3.1(М7)
- M12,WTC,13B.8(М12)
- ,ATX,.'117'(М10)
- ,UJ,LOOPA.8(М12)
+ LOOPC:M7,UTM,1
+ M12,XTA,10B
+ M10,AOX,117B
+ M12,ATX,10B
+ M12,ATX,7
+ M15,VJM,SYTOBI2
+ M11,VLM,LOOPB
+ ,ITA,7
+ M10,AOX,3
+ M12,WTC,13B
+ ,ATX,
+ ,UJ,LOOPA
 C
- ЦИКЛ_ПРОЦЕДУРА:M11,VZM,JMP.7(М12)
- M11,UTM,1.SYTOBI2(М15)
- ,UJ,LOOPB.LOOPB(М11)
+ ЦИКЛ_ПРОЦЕДУРА:M11,VZM,JMP
+ M11,UTM,1
+ ,UJ,LOOPB
 C
- JMP:,UJ,LOOPC.М7
+ JMP:,UJ,LOOPC
 C
-  :,ITS,13.3(М10)
- M15,VJM,KONSTA.11(М12)
- M12,STX,11B.0
- M12,STX,22B.LOOPA
- ,ITS,7.JMP(М11)
- M7,VTM,БЛОК_С18.1(М11)
- ,UJ,БЛОК_С20.LOOPB
+  :,ITS,13
+ M15,VJM,KONSTA  
+ M12,STX,11B
+ M12,STX,22B
+ ,ITS,7
+ M7,VTM,БЛОК_С18
+ ,UJ,БЛОК_С20
 C
- БЛОК_С18:M12,WTC,22B.0
- ,XTS,.LOOPC
- M10,X-A,3.0
- ,ATI,9.М15
- M15,MTJ,11.KONSTA(М15)
- M13,UTC,.9(М12)
- M10,XTA,11B.18(М12)
- M13,UTC,.М7
- M11,ASN,64+0.L18(М7)
- M10,AEX,2.L20
- M16,AAX,.0
- M12,STX,7.18(М12)
- M13,UTC,.0
- M11,ASN,64+0.3(М10)
- M12,AOX,7.М11
- M16,ATX,.М13(М15)
- ,UJ,ВЫЗОВ_KONSTA.0(М13)
+ БЛОК_С18:M12,WTC,22B
+ ,XTS,
+ M10,X-A,3
+ ,ATI,9
+ M15,MTJ,11
+ M13,UTC,
+ M10,XTA,11B
+ M13,UTC,
+ M11,ASN,64+0
+ M10,AEX,2
+ M16,AAX,
+ M12,STX,7
+ M13,UTC,
+ M11,ASN,64+0
+ M12,AOX,7
+ M16,ATX,
+ ,UJ,ВЫЗОВ_KONSTA
 C
- ,END,.9(М10)
+ ,END,

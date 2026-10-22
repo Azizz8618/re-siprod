@@ -14,53 +14,53 @@ C
  M12:,EQU,12B
  M13:,EQU,13B
  M15:,EQU,15B
- ,STI,9.М11
- ,STI,11.М13
- ,UTC,ЗНАЧЕНИЕ+1.V0
- ,STX,.0
- M12,VTM,.0(М12)
- SKZONB:M13,XTA,.0
- ,ATI,11.0(М13)
- ,ITA,11.М13
- M12,UTC,GETA.М13
- ,AEX,.GETA(М12)
- ,UTC,GET.0
- ,ATX,.GET
- M11,XTA,.0
- ,ASN,64-12.0(М11)
- ,UTC,GET.64-12
- ,AEX,.GET
- ,UTC,GET.0
- ,CTX,.GET
-  :,UTC,GET.0
- ,*70,.0
- M12,V1M,SKZOND.GET
- M13,VTM,76001B.0
- SKZONC:,UTC,B.SKZOND(М12)
- M13,XTA,1777B.A31745(М13)
- ,WTC,ЗНАЧЕНИЕ+1.SKZONA1024
- M13,ATX,1777B.'1777'(М13)
- M13,VLM,SKZONC.V0
- SKZOND:M15,UJ,.'1777'(М13)
+ ,STI,9.М11 := СМ; СМ := из магазина
+ ,STI,11.М13 := СМ; СМ := из магазина
+ ,UTC,ЗНАЧЕНИЕ+1.мод.адрес := V0
+ ,STX,.по адресу V0 := СМ (в магазин)
+ M12,VTM,.М12 := база модуля
+ SKZONB:M13,XTA,.СМ := смещение в буфере 0
+ ,ATI,11.М13 := СМ
+ ,ITA,11.СМ := М13
+ M12,UTC,GETA.мод.адрес := GETA(М12)
+ ,AEX,.СМ ^= слово по адресу GETA+М12
+ ,UTC,GET.мод.адрес := GET
+ ,ATX,.по адресу GET := СМ
+ M11,XTA,.СМ := смещение в буфере 0
+ ,ASN,64-12
+ ,UTC,GET.мод.адрес := GET
+ ,AEX,.СМ ^= слово по адресу GET
+ ,UTC,GET.мод.адрес := GET
+ ,CTX,
+  :,UTC,GET
+ ,*70,
+ M12,V1M,SKZOND
+ M13,VTM,76001B
+ SKZONC:,UTC,B       
+ M13,XTA,1777B
+ ,WTC,ЗНАЧЕНИЕ+1
+ M13,ATX,1777B
+ M13,VLM,SKZONC
+ SKZOND:M15,UJ,
 C
-  :,STI,9.SKZONC(М13)
- ,STI,11.0
- ,UTC,ЗНАЧЕНИЕ+1.0(М15)
- ,STX,.0
- M12,VTM,76001B.М11
- SKZONE:,WTC,ЗНАЧЕНИЕ+1.М13
- M12,XTA,1777B.V0
- ,UTC,B.0
- M12,ATX,1777B.A31745(М12)
- M12,VLM,SKZONE.0
- M12,VTM,1.V0
- ,UJ,SKZONB.'1777'(М12)
+  :,STI,9
+ ,STI,11
+ ,UTC,ЗНАЧЕНИЕ+1
+ ,STX,
+ M12,VTM,76001B
+ SKZONE:,WTC,ЗНАЧЕНИЕ+1
+ M12,XTA,1777B
+ ,UTC,B       
+ M12,ATX,1777B
+ M12,VLM,SKZONE
+ M12,VTM,1
+ ,UJ,SKZONB
 C
- GET:,XTA,.SKZONA1024
- ,STI,.'1777'(М12)
- GETA:,XTA,.SKZONE(М12)
- ,ATX,.1(М12)
- ,ATX,.SKZONB
- ,ATX,.0
+ GET:,XTA,
+ ,STI,
+ GETA:,XTA,
+ ,ATX,
+ ,ATX,
+ ,ATX,
  ЗНАЧЕНИЕ+1:,BSS,1
- ,END,.'4004'
+ ,END,
