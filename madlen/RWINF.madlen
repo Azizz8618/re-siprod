@@ -4,18 +4,18 @@
  GAK/3:,EQU,*INF*   +2
  RWBIT   :,SUBP,
  IBIT    :,SUBP,
- 14,VTM,*0001B
- ,UJ,*0036B
- *0001B:,UTC,GAK/2
+ 14,VTM,БЛОК_INF1
+ ,UJ,ВОЗВРАТ
+ БЛОК_INF1:,UTC,GAK/2
  ,XTA,
  ,NTR,3
  ,X-A,
  7,A+X,
  ,NTR,22B
- ,UZA,*0005B
- ,UJ,*0006B
- *0005B:,UJ,*0035B
- *0006B:14,VTM,*INF*   
+ ,UZA,ПЕРЕХОД_2
+ ,UJ,ВЫЗОВ_IBIT
+ ПЕРЕХОД_2:,UJ,ПЕРЕХОД_4
+ ВЫЗОВ_IBIT:14,VTM,*INF*   
  ,ITA,14
  14,VTM,GAK/2
  ,ITS,14
@@ -27,15 +27,15 @@
  7,XTA,3
  ,NTR,22B
  15,AEX,
- ,UZA,*0016B
- ,UJ,*0017B
- *0016B:,UJ,*0032B
- *0017B:7,XTA,1
+ ,UZA,ПЕРЕХОД_3
+ ,UJ,ВЫЗОВ_RWBIT
+ ПЕРЕХОД_3:,UJ,БЛОК_INF2
+ ВЫЗОВ_RWBIT:7,XTA,1
  7,ATX,4
  ,NTR,3
- 14,VTM,*0051B
+ 14,VTM,V2
  ,ITS,14
- 14,VTM,*0051B
+ 14,VTM,V2
  ,ITS,14
  14,VTM,*INF*   
  ,ITS,14
@@ -50,28 +50,28 @@
  ,ATX,
  ,NTR,3
  ,NTR,22B
- ,UJ,*0035B
- *0032B:7,XTA,1
+ ,UJ,ПЕРЕХОД_4
+ БЛОК_INF2:7,XTA,1
  ,UTC,GAK/3
  ,ATX,
  ,NTR,3
  ,NTR,22B
- *0035B:,UJ,*0043B
- *0036B:7,MTJ,8
+ ПЕРЕХОД_4:,UJ,ВОЗВРАТ_2
+ ВОЗВРАТ:7,MTJ,8
  14,MTJ,10
- 7,VTM,*0045B
+ 7,VTM,К0
  ,ITS,13
  ,ITS,8
  ,ITS,
  ,NTR,3
  ,NTR,2
  10,UJ,
- *0043B:,STI,
+ ВОЗВРАТ_2:,STI,
  ,STI,7
  ,STI,8
  8,UJ,
- *0045B:,INT,0
+ К0:,INT,0
  ,INT,1
  ,BSS,2
- *0051B:,BSS,1
+ V2:,BSS,1
  ,END,

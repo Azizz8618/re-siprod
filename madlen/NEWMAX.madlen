@@ -11,114 +11,114 @@
  GAL/2:,EQU,GAK/3+1
  GAL/3:,EQU,*SEK*   +2
  GAL/4:,EQU,GAK/3+3
- 14,VTM,*0001B
- ,UJ,*0075B
- *0001B:7,XTA,1
+ 14,VTM,БЛОК_V0
+ ,UJ,ПЕР_2
+ БЛОК_V0:7,XTA,1
  ,ITS,
- ,WTC,*0106B
+ ,WTC,V0
  ,XTA,
  15,AEX,
- ,UZA,*0005B
- ,UJ,*0006B
- *0005B:,UJ,*0014B
- *0006B:,UTC,*NDAB*  
+ ,UZA,ПЕРЕХОД_2
+ ,UJ,БЛОК_NDAB
+ ПЕРЕХОД_2:,UJ,БЛОК_SEK3
+ БЛОК_NDAB:,UTC,*NDAB*  
  ,XTA,
  ,NTR,3
  ,X-A,
  ,UTC,GAK/2
  ,A+X,
  ,NTR,22B
- ,UZA,*0013B
- ,UJ,*0014B
- *0013B:,UJ,*0074B
- *0014B:,UTC,GAL/1
+ ,UZA,ПЕРЕХОД_3
+ ,UJ,БЛОК_SEK3
+ ПЕРЕХОД_3:,UJ,ПЕРЕХОД_10
+ БЛОК_SEK3:,UTC,GAL/1
  ,XTA,
  ,NTR,3
  ,UTC,GAL/2
  ,A-X,
  ,NTR,22B
- ,U1A,*0020B
- ,UJ,*0021B
- *0020B:,UJ,*0074B
- *0021B:,UTC,GAL/2
+ ,U1A,ПЕРЕХОД_4
+ ,UJ,БЛОК_LYG3
+ ПЕРЕХОД_4:,UJ,ПЕРЕХОД_10
+ БЛОК_LYG3:,UTC,GAL/2
  ,XTA,
  ,ITS,
  ,UTC,GAL/1
  ,XTA,
  15,AEX,
- ,U1A,*0025B
- ,UJ,*0026B
- *0025B:,UJ,*0062B
- *0026B:7,XTA,
+ ,U1A,ПЕРЕХОД_5
+ ,UJ,БЛОК_REGIM
+ ПЕРЕХОД_5:,UJ,БЛОК_NDAB_2
+ БЛОК_REGIM:7,XTA,
  ,ITS,
  ,UTC,*REGIM* 
  ,XTA,
  15,AEX,
- ,U1A,*0032B
- ,UJ,*0037B
- *0032B:7,XTA,1
+ ,U1A,БЛОК_V0_2
+ ,UJ,БЛОК_REGIM_2
+ БЛОК_V0_2:7,XTA,1
  ,ITS,
- ,WTC,*0106B
+ ,WTC,V0
  ,XTA,
  15,AEX,
- ,UZA,*0036B
- ,UJ,*0037B
- *0036B:,UJ,*0074B
- *0037B:7,XTA,
+ ,UZA,ПЕРЕХОД_6
+ ,UJ,БЛОК_REGIM_2
+ ПЕРЕХОД_6:,UJ,ПЕРЕХОД_10
+ БЛОК_REGIM_2:7,XTA,
  ,ITS,
  ,UTC,*REGIM* 
  ,XTA,
  15,AEX,
- ,U1A,*0043B
- ,UJ,*0044B
- *0043B:,UJ,*0062B
- *0044B:,UTC,GAL/3
+ ,U1A,ПЕРЕХОД_7
+ ,UJ,БЛОК_SEK2
+ ПЕРЕХОД_7:,UJ,БЛОК_NDAB_2
+ БЛОК_SEK2:,UTC,GAL/3
  ,XTA,
  ,NTR,3
  ,UTC,GAL/4
  ,A-X,
  ,NTR,22B
- ,U1A,*0050B
- ,UJ,*0051B
- *0050B:,UJ,*0074B
- *0051B:,UTC,GAL/4
+ ,U1A,ПЕРЕХОД_8
+ ,UJ,БЛОК_LYG5
+ ПЕРЕХОД_8:,UJ,ПЕРЕХОД_10
+ БЛОК_LYG5:,UTC,GAL/4
  ,XTA,
  ,ITS,
  ,UTC,GAL/3
  ,XTA,
  15,AEX,
- ,UZA,*0055B
- ,UJ,*0062B
- *0055B:7,XTA,1
+ ,UZA,БЛОК_V0_3
+ ,UJ,БЛОК_NDAB_2
+ БЛОК_V0_3:7,XTA,1
  ,ITS,
- ,WTC,*0106B
+ ,WTC,V0
  ,XTA,
  15,AEX,
- ,UZA,*0061B
- ,UJ,*0062B
- *0061B:,UJ,*0074B
- *0062B:,UTC,*NDAB*  
+ ,UZA,ПЕРЕХОД_9
+ ,UJ,БЛОК_NDAB_2
+ ПЕРЕХОД_9:,UJ,ПЕРЕХОД_10
+ БЛОК_NDAB_2:,UTC,*NDAB*  
  ,XTA,
  ,UTC,GAK/2
  ,ATX,
  ,NTR,3
  7,XTA,1
  ,ITS,
- ,WTC,*0106B
+ ,WTC,V0
  ,XTA,
  ,NTR,22B
  15,AEX,
- ,UZA,*0071B
- ,UJ,*0074B
- *0071B:7,XTA,
+ ,UZA,БЛОК_LYG1
+ ,UJ,ПЕРЕХОД_10
+ БЛОК_LYG1:7,XTA,
  ,UTC,GAK/2
  ,ATX,
  ,NTR,3
  ,NTR,22B
- *0074B:,UJ,*0102B
- *0075B:7,MTJ,8
+ ПЕРЕХОД_10:,UJ,ВОЗВРАТ
+ ПЕР_2:7,MTJ,8
  14,MTJ,10
- 7,VTM,*0104B
+ 7,VTM,К0
  7,STX,2
  ,ITS,13
  ,ITS,8
@@ -126,11 +126,11 @@
  ,NTR,3
  ,NTR,2
  10,UJ,
- *0102B:,STI,
+ ВОЗВРАТ:,STI,
  ,STI,7
  ,STI,8
  8,UJ,
- *0104B:,INT,1
+ К0:,INT,1
  ,INT,2
- *0106B:,BSS,1
+ V0:,BSS,1
  ,END,

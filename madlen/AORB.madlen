@@ -13,12 +13,12 @@
  8,X-A,3
  ,STI,11
  11,UTM,1
- *0007B:12,XTS,
+ ВЫЗОВ_KONSTA_2:12,XTS,
  9,AOX,
  12,UTM,1
  15,ACX,
  9,UTM,1
- 11,VLM,*0007B
+ 11,VLM,ВЫЗОВ_KONSTA_2
  8,AOX,3
  14,STX,
  ,NTR,6
@@ -38,14 +38,14 @@
  ,STI,9
  ,ATI,12
  ,XTA,
- *0024B:12,XTS,
+ БЛОК_С9:12,XTS,
  9,AOX,
  12,UTM,1
  13,ATX,
  9,UTM,1
  15,ACX,
  13,UTM,1
- 11,VLM,*0024B
+ 11,VLM,БЛОК_С9
  8,AOX,3
  14,STX,
  ,NTR,6

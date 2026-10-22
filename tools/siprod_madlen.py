@@ -5,9 +5,11 @@
 
 1. **разбор** - дизассемблером dtran (https://github.com/besm6/dtran) в
    формат МАДЛЕН (макроязык Монитор-80); результат - в каталоге
-   `madlen/`;
+   `madlen-gen/` (он перезаписывается при каждом разборе);
 2. **сборка** - штатным компилятором МАДЛЕН мониторной системы
    (`monitor80-re/tools/asm.pl`, том 2348 - там компилятор МАДЛЕН);
+   собираются **откомментированные** тексты из каталога `madlen/` - они
+   наполнены пояснениями и при разборе не перезаписываются;
 3. **проверка** - библиотека собирается заново: разделы команд модулей
    берутся из собранных модулей, остальное - из исходной библиотеки
    СИПРОДа; СИПРОД с такой библиотекой запускается и его вывод
@@ -20,9 +22,12 @@
 библиотеки.
 
 Использование:
-    tools/siprod_madlen.py                    # разбор всех модулей -> madlen/
-    tools/siprod_madlen.py --check            # разбор, сборка и проверка
+    tools/siprod_madlen.py                    # разбор всех модулей -> madlen-gen/
+    tools/siprod_madlen.py --check            # сборка из madlen/ и проверка
     tools/siprod_madlen.py --check --keep     # ... с сохранением образа
+
+Каталог `madlen/` (откомментированные тексты) инструмент не трогает:
+перезаписывается только `madlen-gen/`.
 """
 
 import argparse
@@ -42,6 +47,7 @@ ASMPL = "/home/azizz/Yandex.Disk/monitor80-re/tools/asm.pl"
 MONITOR = "/home/azizz/Yandex.Disk/monitor80-re/tools"
 WORKVOL = "2348"          # том с компилятором МАДЛЕН
 WORK = "/tmp/siprod-madlen"
+SRC = [os.path.join(ROOT, "madlen")]        # откомментированные тексты
 ZONE0 = 690               # с этой зоны тома пишет компилятор МАДЛЕН
 
 
@@ -86,8 +92,7 @@ def disassemble(dtran, image, work, name):
 def assemble(work, name):
     """Собрать модуль компилятором МАДЛЕН; вернуть (текст сборки, ok)."""
     masm = os.path.join(work, name.replace("*", "#") + ".masm")
-    shutil.copy(os.path.join(ROOT, "madlen",
-                             name.replace("*", "#") + ".madlen"), masm)
+    shutil.copy(os.path.join(SRC[0], name.replace("*", "#") + ".madlen"), masm)
     r = subprocess.run(["perl", "-CA", ASMPL, masm], cwd=work,
                        capture_output=True, text=True, env=env(work))
     out = r.stdout + r.stderr
@@ -186,8 +191,10 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("modules", nargs="*", help="модули (по умолчанию - все)")
-    ap.add_argument("--out", default=os.path.join(ROOT, "madlen"),
+    ap.add_argument("--out", default=os.path.join(ROOT, "madlen-gen"),
                     help="каталог для результата разбора")
+    ap.add_argument("--src", default=os.path.join(ROOT, "madlen"),
+                    help="каталог с откомментированными текстами (сборка)")
     ap.add_argument("--image", default=os.path.join(ROOT, "siprod.bin"))
     ap.add_argument("--dtran", default=None, help="путь к дизассемблеру dtran")
     ap.add_argument("--check", action="store_true",
@@ -195,6 +202,7 @@ def main():
     ap.add_argument("--keep", action="store_true",
                     help="сохранить образ собранной библиотеки")
     args = ap.parse_args()
+    SRC[0] = args.src
     dtran = find_dtran(args.dtran)
     if not dtran:
         print("не найден дизассемблер dtran (укажите --dtran=)",

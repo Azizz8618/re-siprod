@@ -1,3 +1,5 @@
+CНАЧАЛО ОБРАБОТКИ ВХОДНОГО ПОТОКА.
+C
  START   :,NAME, NEW DTRAN
  *KORT*  :,LC,15
  GAK/2:,EQU,*KORT*  +14
@@ -11,17 +13,17 @@
  GAL/2:,EQU,*KOMA*  +7
  *NUNU*  :,LC,1
  GAL/5:,EQU,*KORT*  -32767
- 14,VTM,*0001B
- ,UJ,*0022B
- *0001B:7,XTA,
+ 14,VTM,БЛОК_FOP
+ ,UJ,ВОЗВРАТ
+ БЛОК_FOP:7,XTA,
  ,UTC,*FOP*   
  ,ATX,
  ,NTR,3
  7,XTA,1
  7,ATX,3
  ,NTR,22B
- *0005B:7,XTA,-1
- ,WTC,*0036B
+ БЛОК_V0:7,XTA,-1
+ ,WTC,V0
  1,VTM,
  1,UTC,GAL/5
  ,ATX,
@@ -31,7 +33,7 @@
  7,ATX,3
  7,X-A,2
  ,NTR,22B
- ,UZA,*0005B
+ ,UZA,БЛОК_V0
  7,XTA,1
  ,UTC,GAK/2
  ,ATX,
@@ -43,10 +45,10 @@
  ,UTC,*NUNU*  
  ,ATX,
  ,NTR,22B
- ,UJ,*0027B
- *0022B:7,MTJ,8
+ ,UJ,ВОЗВРАТ_2
+ ВОЗВРАТ:7,MTJ,8
  14,MTJ,10
- 7,VTM,*0033B
+ 7,VTM,К1
  ,ITS,13
  ,ITS,1
  ,ITS,8
@@ -54,25 +56,25 @@
  ,NTR,3
  ,NTR,2
  10,UJ,
- *0027B:,STI,
+ ВОЗВРАТ_2:,STI,
  ,STI,7
  ,STI,1
  ,STI,8
  8,UJ,
   :,ISO, 6H       . 040 040 040 040 040 040 
- *0033B:,INT,0
+ К1:,INT,0
  ,INT,1
  ,INT,14
  ,BSS,1
  ,DATA,
- *0036B:,ISO, 6H123456 . 061 062 063 064 065 066 
+ V0:,ISO, 6H123456 . 061 062 063 064 065 066 
  ,ISO, 6H7890   . 067 070 071 060 040 040 
- *0040B:,ISO, 6H*)$(I- . 052 051 044 050 111 055 
- *0041B:,ISO, 6HSLFGC/ . 123 114 106 107 103 057 
- 2,SET,*0036B
+ V2:,ISO, 6H*)$(I- . 052 051 044 050 111 055 
+ V3:,ISO, 6HSLFGC/ . 123 114 106 107 103 057 
+ 2,SET,V0
  1,   ,*KOMA*  
- 1,SET,*0040B
+ 1,SET,V2
  1,   ,GAL/2
- 1,SET,*0041B
+ 1,SET,V3
  1,   ,GAL/1
  ,END,

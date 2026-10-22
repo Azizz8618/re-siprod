@@ -1,3 +1,5 @@
+CРАЗБОР ЗАГОЛОВКА СТРАНИЦЫ.
+C
  CHAPAG  :,NAME, NEW DTRAN
  *NUST*  :,LC,10
  *REGIM* :,LC,16
@@ -16,12 +18,12 @@
  GAL/7:,EQU,*NUST*  +7
  GAM/0:,EQU,*NUST*  +5
  GAM/1:,EQU,*NUST*  +6
- 14,VTM,*0001B
- ,UJ,*0110B
- *0001B:7,XTA,2
+ 14,VTM,БЛОК_REGIM9
+ ,UJ,ПЕР_15
+ БЛОК_REGIM9:7,XTA,2
  ,UTC,GAL/6
  ,ATX,
- ,WTC,*0136B
+ ,WTC,V6
  ,XTA,
  ,UTC,GAL/7
  ,ATX,
@@ -30,40 +32,40 @@
  ,UTC,GAL/7
  ,XTA,
  15,AEX,
- ,U1A,*0010B
- ,UJ,*0014B
- *0010B:,UTC,GAL/7
+ ,U1A,БЛОК_NUST7
+ ,UJ,ПЕР_0
+ БЛОК_NUST7:,UTC,GAL/7
  ,XTA,
  ,NTR,3
  7,A+X,1
  ,UTC,GAL/7
  ,ATX,
  ,NTR,22B
- *0014B:7,XTA,
+ ПЕР_0:7,XTA,
  7,ATX,12B
  ,NTR,3
  ,NTR,22B
- *0016B:13,VJM,SCAN    
+ ВЫЗОВ_SCAN:13,VJM,SCAN    
  7,XTA,3
  ,ITS,
  ,UTC,GAK/4
  ,XTA,
  15,AEX,
- ,U1A,*0023B
- ,UJ,*0025B
- *0023B:14,VTM,*0123B
+ ,U1A,ВЫЗОВ_KLAIDA
+ ,UJ,ВЫЗОВ_SYTINT
+ ВЫЗОВ_KLAIDA:14,VTM,К4
  ,ITS,14
  13,VJM,KLAIDA  
- *0025B:,UTC,*SCANER*
+ ВЫЗОВ_SYTINT:,UTC,*SCANER*
  ,XTA,
  ,NTR,3
  7,A-X,1
  7,ATX,13B
  14,VTM,*INS*   
  ,ITS,14
- 14,VTM,*0132B
+ 14,VTM,V2
  ,ITS,14
- 14,VTM,*0133B
+ 14,VTM,V3
  ,ITS,14
  ,NTR,22B
  13,VJM,SYTINT  
@@ -82,14 +84,14 @@
  7,XTA,12B
  ,NTR,22B
  15,AEX,
- ,U1A,*0045B
- ,UJ,*0046B
- *0045B:,UJ,*0050B
- *0046B:7,XTA,14B
+ ,U1A,ПЕРЕХОД_2
+ ,UJ,БЛОК_NUST5
+ ПЕРЕХОД_2:,UJ,БЛОК_NUST6
+ БЛОК_NUST5:7,XTA,14B
  ,UTC,GAM/0
  ,ATX,
- ,UJ,*0016B
- *0050B:7,XTA,14B
+ ,UJ,ВЫЗОВ_SCAN
+ БЛОК_NUST6:7,XTA,14B
  ,UTC,GAM/1
  ,ATX,
  7,XTA,6
@@ -101,13 +103,13 @@
  ,XTA,
  ,NTR,22B
  15,AEX,
- ,U1A,*0057B
- ,UJ,*0061B
- *0057B:7,XTA,10B
+ ,U1A,ПЕР_8
+ ,UJ,БЛОК_NUST5_2
+ ПЕР_8:7,XTA,10B
  7,ATX,15B
  ,NTR,3
  ,NTR,22B
- *0061B:7,XTA,7
+ БЛОК_NUST5_2:7,XTA,7
  7,ATX,16B
  ,NTR,3
  ,UTC,GAM/0
@@ -115,19 +117,19 @@
  ,X-A,
  7,A+X,15B
  ,NTR,22B
- ,U1A,*0072B
+ ,U1A,ВЫЗОВ_KLAIDA_2
   :,UTC,GAM/1
  ,XTA,
  ,NTR,3
  ,X-A,
  7,A+X,16B
  ,NTR,22B
- ,U1A,*0072B
- ,UJ,*0074B
- *0072B:14,VTM,*0124B
+ ,U1A,ВЫЗОВ_KLAIDA_2
+ ,UJ,БЛОК_SCANER
+ ВЫЗОВ_KLAIDA_2:14,VTM,К5
  ,ITS,14
  13,VJM,KLAIDA  
- *0074B:7,XTA,13B
+ БЛОК_SCANER:7,XTA,13B
  ,UTC,*SCANER*
  ,ATX,
  ,NTR,3
@@ -138,19 +140,19 @@
  ,XTA,
  ,NTR,22B
  15,AEX,
- ,UZA,*0103B
- ,UJ,*0107B
- *0103B:,UTC,*SCANER*
+ ,UZA,БЛОК_SCANER_2
+ ,UJ,ПЕРЕХОД_3
+ БЛОК_SCANER_2:,UTC,*SCANER*
  ,XTA,
  ,NTR,3
  7,A+X,1
  ,UTC,*SCANER*
  ,ATX,
  ,NTR,22B
- *0107B:,UJ,*0115B
- *0110B:7,MTJ,8
+ ПЕРЕХОД_3:,UJ,ВОЗВРАТ
+ ПЕР_15:7,MTJ,8
  14,MTJ,10
- 7,VTM,*0117B
+ 7,VTM,К0
  7,STX,17B
  ,ITS,13
  ,ITS,8
@@ -158,21 +160,21 @@
  ,NTR,3
  ,NTR,2
  10,UJ,
- *0115B:,STI,
+ ВОЗВРАТ:,STI,
  ,STI,7
  ,STI,8
  8,UJ,
- *0117B:,INT,0
+ К0:,INT,0
  ,INT,1
  ,INT,10
  ,INT,19
- *0123B:,INT,20
- *0124B:,INT,40
+ К4:,INT,20
+ К5:,INT,40
  ,INT,64
  ,INT,66
  ,INT,128
  ,BSS,2
- *0132B:,BSS,1
- *0133B:,BSS,3
- *0136B:,BSS,1
+ V2:,BSS,1
+ V3:,BSS,3
+ V6:,BSS,1
  ,END,

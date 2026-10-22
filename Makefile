@@ -34,7 +34,7 @@ DTR := $(wildcard dtr/*.dtr)
 DTRAN := $(patsubst dtr/%.dtr,build/%.dtran,$(DTR))
 
 .PHONY: all dtran dis be build check loadmaps test regress corpus test-perso \
-	coverage bemsh rvs libs madlen madlen-check record clean
+	coverage bemsh rvs libs madlen madlen-texts madlen-check record clean
 
 all: dis be build loadmaps
 
@@ -101,9 +101,13 @@ rvs:
 libs:
 	$(PYTHON) tools/siprod_libs.py
 
-# дизассемблирование в автокод МАДЛЕН (дизассемблером dtran)
+# дизассемблирование в автокод МАДЛЕН (дизассемблером dtran) - в madlen-gen/
 madlen:
 	$(PYTHON) tools/siprod_madlen.py
+
+# тексты МАДЛЕН с осмысленными именами меток и пояснениями - в madlen/
+madlen-texts:
+	$(PYTHON) tools/siprod_madlen_notes.py
 
 # сборка модулей компилятором МАДЛЕН и проверка программы
 madlen-check:

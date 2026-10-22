@@ -10,16 +10,16 @@
  RSYMB   :,SUBP,
  SYTINT  :,SUBP,
  SCAN    :,SUBP,
- 14,VTM,*0001B
- ,UJ,*0076B
- *0001B:7,XTA,1
+ 14,VTM,ПЕР_1
+ ,UJ,ПЕР_14
+ ПЕР_1:7,XTA,1
  7,ATX,10B
  ,NTR,3
  ,NTR,22B
- *0003B:7,XTA,-1
- ,WTC,*0120B
+ БЛОК_V1:7,XTA,-1
+ ,WTC,V1
  1,VTM,
- ,WTC,*0125B
+ ,WTC,V6
  1,ATX,-1
   :7,XTA,10B
  ,NTR,3
@@ -27,13 +27,13 @@
  7,ATX,10B
  7,X-A,4
  ,NTR,22B
- ,UZA,*0003B
+ ,UZA,БЛОК_V1
  7,XTA,
- ,WTC,*0126B
+ ,WTC,V7
  ,ATX,
  ,NTR,3
  ,NTR,22B
- *0014B:13,VJM,SCAN    
+ ВЫЗОВ_SCAN:13,VJM,SCAN    
  ,UTC,*SCANER*
  ,XTA,
  ,NTR,3
@@ -45,35 +45,35 @@
  ,XTA,
  ,NTR,22B
  15,AEX,
- ,UZA,*0024B
- ,UJ,*0031B
- *0024B:,UTC,*SCANER*
+ ,UZA,БЛОК_SCANER
+ ,UJ,БЛОК_SCANER1
+ БЛОК_SCANER:,UTC,*SCANER*
  ,XTA,
  ,NTR,3
  ,UTC,GAK/7
  ,A-X,
  ,NTR,22B
- ,U1A,*0030B
- ,UJ,*0031B
- *0030B:,UJ,*0014B
- *0031B:7,XTA,5
+ ,U1A,ПЕРЕХОД_2
+ ,UJ,БЛОК_SCANER1
+ ПЕРЕХОД_2:,UJ,ВЫЗОВ_SCAN
+ БЛОК_SCANER1:7,XTA,5
  ,ITS,
  ,UTC,GAK/2
  ,XTA,
  15,AEX,
- ,U1A,*0035B
- ,UJ,*0036B
- *0035B:,UJ,*0070B
- *0036B:,UTC,*SCANER*
+ ,U1A,ПЕРЕХОД_3
+ ,UJ,ВЫЗОВ_SYTINT
+ ПЕРЕХОД_3:,UJ,ВЫЗОВ_KLAIDA
+ ВЫЗОВ_SYTINT:,UTC,*SCANER*
  ,XTA,
  ,NTR,3
  7,A-X,1
  7,ATX,12B
  14,VTM,*INS*   
  ,ITS,14
- 14,VTM,*0122B
+ 14,VTM,V3
  ,ITS,14
- 14,VTM,*0123B
+ 14,VTM,V4
  ,ITS,14
  ,NTR,22B
  13,VJM,SYTINT  
@@ -83,19 +83,19 @@
  ,UTC,*SCANER*
  ,ATX,
  ,NTR,3
- ,WTC,*0126B
+ ,WTC,V7
  ,XTA,
  7,A+X,1
- ,WTC,*0126B
+ ,WTC,V7
  ,ATX,
- 14,VTM,*0123B
+ 14,VTM,V4
  ,ITS,14
- 14,VTM,*0112B
+ 14,VTM,К3
  ,ITS,14
- ,WTC,*0125B
+ ,WTC,V6
  14,VTM,
  ,ITS,14
- ,WTC,*0126B
+ ,WTC,V7
  14,VTM,
  ,ITS,14
  ,NTR,22B
@@ -108,23 +108,23 @@
  ,UTC,GAK/7
  ,A-X,
  ,NTR,22B
- ,U1A,*0066B
- ,UJ,*0067B
- *0066B:,UJ,*0014B
- *0067B:,UJ,*0075B
- *0070B:7,XTA,6
+ ,U1A,ПЕРЕХОД_4
+ ,UJ,ПЕРЕХОД_5
+ ПЕРЕХОД_4:,UJ,ВЫЗОВ_SCAN
+ ПЕРЕХОД_5:,UJ,ПЕРЕХОД_6
+ ВЫЗОВ_KLAIDA:7,XTA,6
  7,ATX,14B
  ,NTR,3
- 14,VTM,*0124B
+ 14,VTM,V5
  ,ITS,14
  ,NTR,22B
  13,VJM,KLAIDA  
  ,NTR,3
  ,NTR,22B
- *0075B:,UJ,*0104B
- *0076B:7,MTJ,8
+ ПЕРЕХОД_6:,UJ,ВОЗВРАТ
+ ПЕР_14:7,MTJ,8
  14,MTJ,10
- 7,VTM,*0110B
+ 7,VTM,К1
  7,STX,16B
  7,STX,15B
  ,ITS,13
@@ -134,24 +134,24 @@
  ,NTR,3
  ,NTR,2
  10,UJ,
- *0104B:,STI,
+ ВОЗВРАТ:,STI,
  ,STI,7
  ,STI,1
  ,STI,8
  8,UJ,
   :,ISO, 6H       . 040 040 040 040 040 040 
- *0110B:,INT,0
+ К1:,INT,0
  ,INT,1
- *0112B:,INT,6
+ К3:,INT,6
  ,INT,8
  ,INT,10
  ,INT,19
  ,INT,61
  ,BSS,1
- *0120B:,BSS,2
- *0122B:,BSS,1
- *0123B:,BSS,1
- *0124B:,BSS,1
- *0125B:,BSS,1
- *0126B:,BSS,1
+ V1:,BSS,2
+ V3:,BSS,1
+ V4:,BSS,1
+ V5:,BSS,1
+ V6:,BSS,1
+ V7:,BSS,1
  ,END,

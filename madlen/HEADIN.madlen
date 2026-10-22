@@ -1,3 +1,5 @@
+CРАЗБОР ЗАГОЛОВКА ВХОДНОГО БЛОКА.
+C
  HEADIN  :,NAME, NEW DTRAN
  *INS*   :,LC,27
  GAK/2:,EQU,*INS*   +24
@@ -32,9 +34,9 @@
  GAN/7:,EQU,*NUST*  +3
  GAO/0:,EQU,*FORMA* +10
  GAO/1:,EQU,*FORMA* +11
- 14,VTM,*0001B
- ,UJ,*0114B
- *0001B:7,XTA,5
+ 14,VTM,БЛОК_HED
+ ,UJ,ВОЗВРАТ
+ БЛОК_HED:7,XTA,5
  ,UTC,*HED*   
  ,ATX,
  ,NTR,3
@@ -44,10 +46,10 @@
  ,XTA,
  ,NTR,22B
  15,AEX,
- ,UZA,*0007B
- ,UJ,*0010B
- *0007B:,UJ,*0017B
- *0010B:,UTC,*SCANER*
+ ,UZA,ПЕРЕХОД_2
+ ,UJ,ВЫЗОВ_ENDPG
+ ПЕРЕХОД_2:,UJ,ВЫЗОВ_ENDSTR
+ ВЫЗОВ_ENDPG:,UTC,*SCANER*
  ,XTA,
  ,UTC,GAK/2
  ,ATX,
@@ -56,8 +58,8 @@
  13,VJM,ENDPG   
  13,VJM,BEGPG   
  13,VJM,TITLE   
- ,UJ,*0106B
- *0017B:13,VJM,ENDSTR  
+ ,UJ,БЛОК_HED_2
+ ВЫЗОВ_ENDSTR:13,VJM,ENDSTR  
  13,VJM,BEGSTR  
  ,UTC,*NDAB*  
  ,XTA,
@@ -74,12 +76,12 @@
  ,A+X,
  7,A-X,5
  ,NTR,22B
- ,UZA,*0032B
- ,UJ,*0033B
- *0032B:,UJ,*0035B
- *0033B:13,VJM,ENDPG   
+ ,UZA,ПЕРЕХОД_3
+ ,UJ,ВЫЗОВ_ENDPG_2
+ ПЕРЕХОД_3:,UJ,БЛОК_REGIM8
+ ВЫЗОВ_ENDPG_2:13,VJM,ENDPG   
  13,VJM,BEGPG   
- *0035B:7,XTA,
+ БЛОК_REGIM8:7,XTA,
  ,UTC,GAN/6
  ,ATX,
  7,XTA,
@@ -101,22 +103,22 @@
  ,X-A,
  7,A+X,3
  ,NTR,22B
- ,U1A,*0051B
- ,UJ,*0052B
- *0051B:,UJ,*0055B
- *0052B:7,XTA,6
+ ,U1A,ПЕРЕХОД_4
+ ,UJ,ПЕР_6
+ ПЕРЕХОД_4:,UJ,ВЫЗОВ_DOUBLE
+ ПЕР_6:7,XTA,6
  7,ATX,10B
  ,NTR,3
  ,NTR,22B
- ,UJ,*0103B
- *0055B:,UTC,GAK/4
+ ,UJ,ВЫЗОВ_KLAIDA
+ ВЫЗОВ_DOUBLE:,UTC,GAK/4
  ,XTA,
  ,NTR,3
  7,A-X,1
  7,ATX,11B
  14,VTM,*SCANER*
  ,ITS,14
- 14,VTM,*0134B
+ 14,VTM,V2
  ,ITS,14
  ,NTR,22B
  13,VJM,DOUBLE  
@@ -141,18 +143,18 @@
  ,UTC,GAN/5
  ,A+X,
  ,NTR,22B
- ,UZA,*0077B
- ,UJ,*0100B
- *0077B:,UJ,*0102B
- *0100B:13,VJM,ENDPG   
+ ,UZA,ПЕРЕХОД_5
+ ,UJ,ВЫЗОВ_ENDPG_3
+ ПЕРЕХОД_5:,UJ,ПЕРЕХОД_6
+ ВЫЗОВ_ENDPG_3:13,VJM,ENDPG   
  13,VJM,BEGPG   
- *0102B:,UJ,*0106B
- *0103B:14,VTM,*0133B
+ ПЕРЕХОД_6:,UJ,БЛОК_HED_2
+ ВЫЗОВ_KLAIDA:14,VTM,V1
  ,ITS,14
  13,VJM,KLAIDA  
  ,NTR,3
  ,NTR,22B
- *0106B:7,XTA,
+ БЛОК_HED_2:7,XTA,
  ,UTC,*HED*   
  ,ATX,
  ,NTR,3
@@ -162,21 +164,21 @@
  ,UTC,*SCANER*
  ,ATX,
  ,NTR,22B
- ,UJ,*0121B
- *0114B:7,MTJ,8
+ ,UJ,ВОЗВРАТ_2
+ ВОЗВРАТ:7,MTJ,8
  14,MTJ,10
- 7,VTM,*0123B
+ 7,VTM,К0
  ,ITS,13
  ,ITS,8
  ,ITS,
  ,NTR,3
  ,NTR,2
  10,UJ,
- *0121B:,STI,
+ ВОЗВРАТ_2:,STI,
  ,STI,7
  ,STI,8
  8,UJ,
- *0123B:,INT,0
+ К0:,INT,0
  ,INT,1
  ,INT,2
  ,INT,5
@@ -184,6 +186,6 @@
  ,INT,10
  ,INT,110
  ,BSS,1
- *0133B:,BSS,1
- *0134B:,BSS,1
+ V1:,BSS,1
+ V2:,BSS,1
  ,END,

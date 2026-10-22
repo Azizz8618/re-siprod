@@ -1,49 +1,49 @@
  SKZONA  :,NAME, NEW DTRAN
  ,STI,9
  ,STI,11
- ,UTC,*0032B
+ ,UTC,V0
  ,STX,
  10,VTM,
- *0003B:11,XTA,
+ БЛОК_GETA:11,XTA,
  ,ATI,11
  ,ITA,11
- 10,UTC,*0030B
+ 10,UTC,ЧТЕНИЕ_2
  ,AEX,
- ,UTC,*0027B
+ ,UTC,ЧТЕНИЕ
  ,ATX,
  9,XTA,
  ,ASN,64-12
- ,UTC,*0027B
+ ,UTC,ЧТЕНИЕ
  ,AEX,
- ,UTC,*0027B
+ ,UTC,ЧТЕНИЕ
  ,CTX,
-  :,UTC,*0027B
+  :,UTC,ЧТЕНИЕ
  ,*70,
- 10,V1M,*0017B
+ 10,V1M,БЛОК_V0_2
  11,VTM,76001B
- *0014B:,UTC,B       
+ БЛОК_SKZONA1024:,UTC,B       
  11,XTA,1777B
- ,WTC,*0032B
+ ,WTC,V0
  11,ATX,1777B
- 11,VLM,*0014B
- *0017B:13,UJ,
+ 11,VLM,БЛОК_SKZONA1024
+ БЛОК_V0_2:13,UJ,
   :,STI,9
  ,STI,11
- ,UTC,*0032B
+ ,UTC,V0
  ,STX,
  10,VTM,76001B
- *0023B:,WTC,*0032B
+ БЛОК_V0_3:,WTC,V0
  10,XTA,1777B
  ,UTC,B       
  10,ATX,1777B
- 10,VLM,*0023B
+ 10,VLM,БЛОК_V0_3
  10,VTM,1
- ,UJ,*0003B
- *0027B:,XTA,
+ ,UJ,БЛОК_GETA
+ ЧТЕНИЕ:,XTA,
  ,STI,
- *0030B:,XTA,
+ ЧТЕНИЕ_2:,XTA,
  ,ATX,
  ,ATX,
  ,ATX,
- *0032B:,BSS,1
+ V0:,BSS,1
  ,END,

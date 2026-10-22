@@ -1,3 +1,5 @@
+CЗАПОЛНЕНИЕ СТРОКИ СИМВОЛОМ ПО ШИРИНЕ ПОЛЯ.
+C
  FILL    :,NAME, NEW DTRAN
  *STR*   :,LC,27
  GAK/2:,EQU,*STR*   +24
@@ -9,14 +11,14 @@
  BEGSTR  :,SUBP,
  ENDSTR  :,SUBP,
  RSYMB   :,SUBP,
- 14,VTM,*0001B
- ,UJ,*0070B
- *0001B:,WTC,*0111B
+ 14,VTM,БЛОК_V6
+ ,UJ,ПЕР_10
+ БЛОК_V6:,WTC,V6
  ,XTA,
  7,ATX,3
  ,NTR,3
  ,NTR,22B
- *0004B:,UTC,GAK/4
+ БЛОК_STR26:,UTC,GAK/4
  ,XTA,
  ,NTR,3
  ,UTC,GAK/2
@@ -29,13 +31,13 @@
  ,X-A,
  7,A+X,4
  ,NTR,22B
- ,U1A,*0014B
- ,UJ,*0016B
- *0014B:7,XTA,4
+ ,U1A,ПЕР_4
+ ,UJ,БЛОК_STR24
+ ПЕР_4:7,XTA,4
  7,ATX,5
  ,NTR,3
  ,NTR,22B
- *0016B:,UTC,GAK/2
+ БЛОК_STR24:,UTC,GAK/2
  ,XTA,
  ,NTR,3
  7,A-X,1
@@ -43,19 +45,19 @@
  7,XTA,1
  7,ATX,7
  ,NTR,22B
- ,UJ,*0037B
- *0023B:7,XTA,6
+ ,UJ,БЛОК_STR24_2
+ ВЫЗОВ_RSYMB:7,XTA,6
  ,NTR,3
  7,A+X,1
  7,ATX,6
- ,WTC,*0112B
+ ,WTC,V7
  14,VTM,
  ,ITS,14
- 14,VTM,*0102B
+ 14,VTM,К2
  ,ITS,14
  14,VTM,*STR*   
  ,ITS,14
- 14,VTM,*0106B
+ 14,VTM,V3
  ,ITS,14
  ,NTR,22B
  13,VJM,RSYMB   
@@ -66,8 +68,8 @@
  7,A+X,1
  7,ATX,7
  ,NTR,22B
- *0037B:7,X-A,5
- ,UZA,*0023B
+ БЛОК_STR24_2:7,X-A,5
+ ,UZA,ВЫЗОВ_RSYMB
  ,UTC,GAK/2
  ,XTA,
  ,NTR,3
@@ -83,10 +85,10 @@
  ,UTC,GAK/4
  ,A+X,
  ,NTR,22B
- ,UZA,*0051B
- ,UJ,*0052B
- *0051B:,UJ,*0062B
- *0052B:,UTC,GAK/6
+ ,UZA,ПЕРЕХОД_2
+ ,UJ,ВЫЗОВ_ENDSTR
+ ПЕРЕХОД_2:,UJ,ПЕР_3
+ ВЫЗОВ_ENDSTR:,UTC,GAK/6
  ,XTA,
  7,ATX,10B
  ,NTR,3
@@ -97,21 +99,21 @@
  ,UTC,GAK/6
  ,XTA,
  15,AEX,
- ,UZA,*0061B
- ,UJ,*0062B
- *0061B:13,VJM,BEGSTR  
- *0062B:7,XTA,3
+ ,UZA,ВЫЗОВ_BEGSTR
+ ,UJ,ПЕР_3
+ ВЫЗОВ_BEGSTR:13,VJM,BEGSTR  
+ ПЕР_3:7,XTA,3
  ,NTR,3
  ,X-A,
  7,A+X,
  ,NTR,22B
- ,U1A,*0066B
- ,UJ,*0067B
- *0066B:,UJ,*0004B
- *0067B:,UJ,*0076B
- *0070B:7,MTJ,8
+ ,U1A,ПЕРЕХОД_3
+ ,UJ,ПЕРЕХОД_4
+ ПЕРЕХОД_3:,UJ,БЛОК_STR26
+ ПЕРЕХОД_4:,UJ,ВОЗВРАТ
+ ПЕР_10:7,MTJ,8
  14,MTJ,10
- 7,VTM,*0100B
+ 7,VTM,К0
  7,STX,12B
  7,STX,11B
  ,ITS,13
@@ -120,15 +122,15 @@
  ,NTR,3
  ,NTR,2
  10,UJ,
- *0076B:,STI,
+ ВОЗВРАТ:,STI,
  ,STI,7
  ,STI,8
  8,UJ,
- *0100B:,INT,0
+ К0:,INT,0
  ,INT,1
- *0102B:,INT,6
+ К2:,INT,6
  ,BSS,3
- *0106B:,BSS,3
- *0111B:,BSS,1
- *0112B:,BSS,1
+ V3:,BSS,3
+ V6:,BSS,1
+ V7:,BSS,1
  ,END,

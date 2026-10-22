@@ -2,3 +2,6 @@ build/
 *.err
 __pycache__/
 drakon/out/
+
+# промежуточные файлы разбора dtran
+madlen-gen/

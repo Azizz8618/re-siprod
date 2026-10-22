@@ -1,3 +1,5 @@
+CНАЧАЛО СТРАНИЦЫ (РАЗМЕТКА).
+C
  BEGPG   :,NAME, NEW DTRAN
  *NDAB*  :,LC,4
  GAK/2:,EQU,*NDAB*  +1
@@ -57,15 +59,15 @@
  GAR/1:,EQU,*SEK*   +3
  GAR/2:,EQU,*REGIM* +7
  GAR/3:,EQU,*SEK*   +2
- 14,VTM,*0001B
- ,UJ,*0576B
- *0001B:7,XTA,
+ 14,VTM,ВЫЗОВ_IDII
+ ,UJ,ВОЗВРАТ
+ ВЫЗОВ_IDII:7,XTA,
  ,UTC,*NDAB*  
  ,ATX,
  ,NTR,3
  ,UTC,GAN/7
  ,XTA,
- 14,VTM,*0621B
+ 14,VTM,К11
  13,VJM,I*DI*I  
  7,ATX,20B
  ,UTC,GAK/2
@@ -101,7 +103,7 @@
  7,ATX,21B
  ,UTC,GAK/2
  ,XTA,
- 14,VTM,*0621B
+ 14,VTM,К11
  13,VJM,I*DI*I  
  7,ATX,22B
  ,NTR,22B
@@ -112,30 +114,30 @@
  ,UTC,GAL/5
  ,A+X,
  ,NTR,22B
- ,U1A,*0035B
- ,UJ,*0044B
- *0035B:7,XTA,1
+ ,U1A,БЛОК_NUST1
+ ,UJ,БЛОК_REGIM
+ БЛОК_NUST1:7,XTA,1
  ,ITS,
  ,UTC,GAQ/1
  ,XTA,
  15,AEX,
- ,UZA,*0041B
- ,UJ,*0044B
- *0041B:,UTC,GAK/2
+ ,UZA,БЛОК_NDAB1
+ ,UJ,БЛОК_REGIM
+ БЛОК_NDAB1:,UTC,GAK/2
  ,XTA,
  ,UTC,GAL/5
  ,ATX,
  ,NTR,3
  ,NTR,22B
- *0044B:7,XTA,1
+ БЛОК_REGIM:7,XTA,1
  ,ITS,
  ,UTC,*REGIM* 
  ,XTA,
  15,AEX,
- ,UZA,*0050B
- ,UJ,*0051B
- *0050B:,UJ,*0131B
- *0051B:14,VTM,*0616B
+ ,UZA,ПЕРЕХОД_2
+ ,UJ,ВЫЗОВ_FT571
+ ПЕРЕХОД_2:,UJ,ВЫЗОВ_IMUI
+ ВЫЗОВ_FT571:14,VTM,К8
  ,ITS,14
  13,VJM,FT*571  
  13,VJM,FT*003  
@@ -146,66 +148,66 @@
  ,XTA,
  ,ITS,
  7,XTA,22B
- 14,VTM,*0621B
+ 14,VTM,К11
  13,VJM,I*MU*I  
  ,NTR,22B
  15,AEX,
- ,U1A,*0063B
- ,UJ,*0065B
- *0063B:7,XTA,1
+ ,U1A,ПЕР_1
+ ,UJ,БЛОК_REGIM3
+ ПЕР_1:7,XTA,1
  7,ATX,23B
  ,NTR,3
  ,NTR,22B
- *0065B:7,XTA,1
+ БЛОК_REGIM3:7,XTA,1
  ,ITS,
  ,UTC,GAQ/3
  ,XTA,
  15,AEX,
- ,UZA,*0071B
- ,UJ,*0072B
- *0071B:,UJ,*0072B
- *0072B:7,XTA,1
+ ,UZA,ПЕРЕХОД_3
+ ,UJ,БЛОК_REGIM5
+ ПЕРЕХОД_3:,UJ,БЛОК_REGIM5
+ БЛОК_REGIM5:7,XTA,1
  ,ITS,
  ,UTC,GAQ/4
  ,XTA,
  15,AEX,
- ,UZA,*0076B
- ,UJ,*0077B
- *0076B:,UJ,*0131B
- *0077B:7,XTA,1
+ ,UZA,ПЕРЕХОД_4
+ ,UJ,БЛОК_REGIM4
+ ПЕРЕХОД_4:,UJ,ВЫЗОВ_IMUI
+ БЛОК_REGIM4:7,XTA,1
  ,ITS,
  ,UTC,GAQ/5
  ,XTA,
  15,AEX,
- ,U1A,*0103B
- ,UJ,*0104B
- *0103B:,UJ,*0540B
- *0104B:7,XTA,
+ ,U1A,ПЕРЕХОД_5
+ ,UJ,ПЕР_0
+ ПЕРЕХОД_5:,UJ,БЛОК_APJ_3
+ ПЕР_0:7,XTA,
  ,ITS,
  7,XTA,23B
  15,AEX,
- ,UZA,*0107B
- ,UJ,*0110B
- *0107B:,UJ,*0072B
- *0110B:,UTC,GAL/0
+ ,UZA,ПЕРЕХОД_6
+ ,UJ,ВЫЗОВ_IDII_2
+ ПЕРЕХОД_6:,UJ,БЛОК_REGIM5
+ ВЫЗОВ_IDII_2:,UTC,GAL/0
  ,XTA,
  ,NTR,3
  ,UTC,GAK/7
  ,A-X,
  ,UTC,GAL/2
  ,A-X,
- 14,VTM,*0621B
+ 14,VTM,К11
  13,VJM,I*DI*I  
  ,UTC,GAK/7
  ,A+X,
  7,ATX,24B
  14,VTM,*COMTIT*
  ,ITS,14
- 14,VTM,*0620B
+ 14,VTM,К10
  ,ITS,14
  14,VTM,*STR*   
  ,ITS,14
- 14,VTM,*0643B
+ 14,VTM,V7
  ,ITS,14
  14,VTM,GAL/2
  ,ITS,14
@@ -215,8 +217,8 @@
  ,NTR,22B
  13,VJM,ENDSTR  
  13,VJM,BEGSTR  
- ,UJ,*0540B
- *0131B:,UTC,GAK/7
+ ,UJ,БЛОК_APJ_3
+ ВЫЗОВ_IMUI:,UTC,GAK/7
  ,XTA,
  7,ATX,25B
  ,NTR,3
@@ -232,20 +234,20 @@
  ,XTA,
  ,ITS,
  7,XTA,22B
- 14,VTM,*0621B
+ 14,VTM,К11
  13,VJM,I*MU*I  
  ,NTR,22B
  15,AEX,
- ,U1A,*0150B
+ ,U1A,ПЕРЕХОД_7
   :7,XTA,7
  ,ITS,
  ,UTC,*REGIM* 
  ,XTA,
  15,AEX,
- ,UZA,*0150B
- ,UJ,*0151B
- *0150B:,UJ,*0162B
- *0151B:,UTC,GAK/7
+ ,UZA,ПЕРЕХОД_7
+ ,UJ,БЛОК_STR25
+ ПЕРЕХОД_7:,UJ,БЛОК_STAND
+ БЛОК_STR25:,UTC,GAK/7
  ,XTA,
  ,NTR,3
  7,A+X,13B
@@ -257,43 +259,43 @@
  ,XTA,
  ,NTR,22B
  15,AEX,
- ,UZA,*0160B
- ,UJ,*0161B
- *0160B:,UJ,*0162B
- *0161B:,UJ,*0213B
- *0162B:7,XTA,1
+ ,UZA,ПЕРЕХОД_8
+ ,UJ,ПЕРЕХОД_9
+ ПЕРЕХОД_8:,UJ,БЛОК_STAND
+ ПЕРЕХОД_9:,UJ,БЛОК_STR25_2
+ БЛОК_STAND:7,XTA,1
  ,ITS,
  ,UTC,*STAND* 
  ,XTA,
  15,AEX,
- ,UZA,*0166B
- ,UJ,*0171B
- *0166B:7,XTA,
+ ,UZA,БЛОК_STAND_2
+ ,UJ,БЛОК_APJ
+ БЛОК_STAND_2:7,XTA,
  ,UTC,*STAND* 
  ,ATX,
  ,NTR,3
  ,NTR,22B
- *0171B:7,XTA,7
+ БЛОК_APJ:7,XTA,7
  ,ITS,
  ,UTC,*APJ*   
  ,XTA,
  15,AEX,
- ,UZA,*0200B
+ ,UZA,ПЕРЕХОД_10
  7,XTA,1
  ,ITS,
  ,UTC,GAQ/1
  ,XTA,
  15,AEX,
- ,UZA,*0200B
- ,UJ,*0201B
- *0200B:,UJ,*0213B
- *0201B:7,XTA,1
+ ,UZA,ПЕРЕХОД_10
+ ,UJ,ПЕР_1_2
+ ПЕРЕХОД_10:,UJ,БЛОК_STR25_2
+ ПЕР_1_2:7,XTA,1
  7,ATX,27B
  ,NTR,3
  ,NTR,22B
- ,UJ,*0212B
- *0204B:7,XTA,-6
- ,WTC,*0646B
+ ,UJ,ВЫЧИТАНИЕ
+ БЛОК_V10:7,XTA,-6
+ ,WTC,V10
  1,VTM,
  1,UTC,GAQ/7
  ,ATX,
@@ -302,9 +304,9 @@
  7,A+X,1
  7,ATX,27B
  ,NTR,22B
- *0212B:7,X-A,21B
- ,UZA,*0204B
- *0213B:,UTC,GAK/7
+ ВЫЧИТАНИЕ:7,X-A,21B
+ ,UZA,БЛОК_V10
+ БЛОК_STR25_2:,UTC,GAK/7
  ,XTA,
  ,UTC,GAR/0
  ,ATX,
@@ -313,27 +315,27 @@
  ,UTC,GAQ/1
  ,XTA,
  15,AEX,
- ,U1A,*0221B
- ,UJ,*0222B
- *0221B:,UJ,*0235B
- *0222B:7,XTA,
+ ,U1A,ПЕРЕХОД_11
+ ,UJ,БЛОК_SEK3
+ ПЕРЕХОД_11:,UJ,БЛОК_STR25_3
+ БЛОК_SEK3:7,XTA,
  ,ITS,
  ,UTC,GAR/1
  ,XTA,
  15,AEX,
- ,UZA,*0226B
- ,UJ,*0227B
- *0226B:,UJ,*0235B
- *0227B:7,XTA,7
+ ,UZA,ПЕРЕХОД_12
+ ,UJ,БЛОК_APJ_2
+ ПЕРЕХОД_12:,UJ,БЛОК_STR25_3
+ БЛОК_APJ_2:7,XTA,7
  ,ITS,
  ,UTC,*APJ*   
  ,XTA,
  15,AEX,
- ,UZA,*0233B
- ,UJ,*0234B
- *0233B:,UJ,*0235B
- *0234B:,UJ,*0540B
- *0235B:,UTC,GAK/7
+ ,UZA,ПЕРЕХОД_13
+ ,UJ,ПЕРЕХОД_14
+ ПЕРЕХОД_13:,UJ,БЛОК_STR25_3
+ ПЕРЕХОД_14:,UJ,БЛОК_APJ_3
+ БЛОК_STR25_3:,UTC,GAK/7
  ,XTA,
  ,NTR,3
  ,UTC,GAN/5
@@ -347,10 +349,10 @@
  ,XTA,
  ,NTR,22B
  15,AEX,
- ,U1A,*0245B
- ,UJ,*0246B
- *0245B:,UJ,*0451B
- *0246B:,UTC,GAK/7
+ ,U1A,ПЕРЕХОД_15
+ ,UJ,ВЫЗОВ_IMUI_2
+ ПЕРЕХОД_15:,UJ,БЛОК_REGIM4_2
+ ВЫЗОВ_IMUI_2:,UTC,GAK/7
  ,XTA,
  ,NTR,3
  7,A-X,3
@@ -364,7 +366,7 @@
  ,UTC,GAO/0
  ,A+X,
  7,A+X,2
- 14,VTM,*0630B
+ 14,VTM,К18
  13,VJM,I*MU*I  
  7,ATX,32B
  7,XTA,7
@@ -373,10 +375,10 @@
  ,XTA,
  ,NTR,22B
  15,AEX,
- ,U1A,*0263B
- ,UJ,*0264B
- *0263B:,UJ,*0300B
- *0264B:,UTC,GAK/7
+ ,U1A,ПЕРЕХОД_16
+ ,UJ,ВЫЗОВ_IMUI_3
+ ПЕРЕХОД_16:,UJ,ПЕР_26
+ ВЫЗОВ_IMUI_3:,UTC,GAK/7
  ,XTA,
  ,NTR,3
  ,UTC,*PAGE*  
@@ -396,11 +398,11 @@
  ,UTC,GAO/1
  ,A+X,
  7,A-X,1
- 14,VTM,*0630B
+ 14,VTM,К18
  13,VJM,I*MU*I  
  7,ATX,32B
  ,NTR,22B
- *0300B:7,XTA,32B
+ ПЕР_26:7,XTA,32B
  ,NTR,3
  7,A-X,10B
  7,ATX,33B
@@ -410,15 +412,15 @@
  7,XTA,1
  7,ATX,27B
  ,NTR,22B
- *0305B:7,XTA,7
+ БЛОК_STAND_3:7,XTA,7
  ,ITS,
  ,UTC,*STAND* 
  ,XTA,
  15,AEX,
- ,UZA,*0311B
- ,UJ,*0312B
- *0311B:,UJ,*0335B
- *0312B:7,XTA,27B
+ ,UZA,ПЕРЕХОД_17
+ ,UJ,ВЫЗОВ_IMUI_4
+ ПЕРЕХОД_17:,UJ,ВЫЗОВ_IMUI_5
+ ВЫЗОВ_IMUI_4:7,XTA,27B
  ,NTR,3
  7,A-X,1
  7,ATX,15B
@@ -430,13 +432,13 @@
  7,A-X,27B
  7,ATX,17B
  7,XTA,32B
- 14,VTM,*0634B
+ 14,VTM,V0
  13,VJM,I*MU*I  
  7,ATX,15B
  7,XTA,16B
- 14,VTM,*0636B
+ 14,VTM,V2
  13,VJM,I*MU*I  
- 14,VTM,*0630B
+ 14,VTM,К18
  13,VJM,I*MU*I  
  7,A+X,15B
  7,A+X,1
@@ -449,18 +451,18 @@
  7,A-X,1
  7,ATX,16B
  7,XTA,15B
- 14,VTM,*0635B
+ 14,VTM,V1
  13,VJM,I*MU*I  
  7,A+X,34B
  7,ATX,34B
  ,NTR,22B
- ,UJ,*0353B
- *0335B:7,XTA,27B
+ ,UJ,ВЫЗОВ_RSYMB
+ ВЫЗОВ_IMUI_5:7,XTA,27B
  ,NTR,3
  7,A-X,1
  7,ATX,15B
  7,XTA,32B
- 14,VTM,*0634B
+ 14,VTM,V0
  13,VJM,I*MU*I  
  7,A+X,1
  7,ATX,35B
@@ -476,25 +478,25 @@
  7,A-X,1
  7,ATX,16B
  7,XTA,15B
- 14,VTM,*0635B
+ 14,VTM,V1
  13,VJM,I*MU*I  
  7,A+X,34B
  7,ATX,34B
  ,NTR,22B
- *0353B:7,XTA,30B
+ ВЫЗОВ_RSYMB:7,XTA,30B
  ,NTR,3
  7,A-X,1
  7,ATX,15B
- 14,VTM,*0610B
+ 14,VTM,К2
  ,ITS,14
- 14,VTM,*0624B
+ 14,VTM,К14
  ,ITS,14
- ,WTC,*0654B
+ ,WTC,V16
  1,VTM,
  1,UTC,GAQ/7
  14,VTM,
  ,ITS,14
- 14,VTM,*0634B
+ 14,VTM,V0
  ,ITS,14
  ,NTR,22B
  13,VJM,RSYMB   
@@ -504,16 +506,16 @@
  ,NTR,3
  7,A+X,1
  7,ATX,15B
- 14,VTM,*0610B
+ 14,VTM,К2
  ,ITS,14
- 14,VTM,*0624B
+ 14,VTM,К14
  ,ITS,14
- ,WTC,*0654B
+ ,WTC,V16
  1,VTM,
  1,UTC,GAQ/7
  14,VTM,
  ,ITS,14
- 14,VTM,*0634B
+ 14,VTM,V0
  ,ITS,14
  ,NTR,22B
  13,VJM,RSYMB   
@@ -523,17 +525,17 @@
  7,ATX,36B
  ,NTR,3
  ,NTR,22B
- ,UJ,*0414B
- *0402B:14,VTM,*0606B
+ ,UJ,ВЫЗОВ_IMUI_6
+ ВЫЗОВ_RSYMB_2:14,VTM,К0
  ,ITS,14
- 14,VTM,*0624B
+ 14,VTM,К14
  ,ITS,14
- ,WTC,*0654B
+ ,WTC,V16
  1,VTM,
  1,UTC,GAQ/7
  14,VTM,
  ,ITS,14
- 14,VTM,*0655B
+ 14,VTM,V17
  ,ITS,14
  13,VJM,RSYMB   
  ,NTR,3
@@ -543,13 +545,13 @@
  7,A+X,1
  7,ATX,36B
  ,NTR,22B
- *0414B:7,X-A,31B
- ,UZA,*0402B
+ ВЫЗОВ_IMUI_6:7,X-A,31B
+ ,UZA,ВЫЗОВ_RSYMB_2
  ,UTC,GAN/7
  ,XTA,
  ,NTR,3
  7,A-X,2
- 14,VTM,*0630B
+ 14,VTM,К18
  13,VJM,I*MU*I  
  7,A+X,1
  7,ATX,37B
@@ -559,27 +561,27 @@
  ,XTA,
  ,NTR,22B
  15,AEX,
- ,UZA,*0425B
- ,UJ,*0427B
- *0425B:7,XTA,12B
+ ,UZA,ПЕР_10
+ ,UJ,ПЕР_31
+ ПЕР_10:7,XTA,12B
  7,ATX,37B
  ,NTR,3
  ,NTR,22B
- *0427B:7,XTA,37B
+ ПЕР_31:7,XTA,37B
  7,ATX,40B
  ,NTR,3
  ,NTR,22B
- ,UJ,*0444B
- *0432B:14,VTM,*0607B
+ ,UJ,ПЕР_23
+ ВЫЗОВ_RSYMB_3:14,VTM,К1
  ,ITS,14
- 14,VTM,*0624B
+ 14,VTM,К14
  ,ITS,14
- ,WTC,*0657B
+ ,WTC,V19
  1,VTM,
  1,UTC,GAQ/7
  14,VTM,
  ,ITS,14
- 14,VTM,*0653B
+ 14,VTM,V15
  ,ITS,14
  13,VJM,RSYMB   
  ,NTR,3
@@ -589,36 +591,36 @@
  7,A+X,11B
  7,ATX,40B
  ,NTR,22B
- *0444B:7,X-A,33B
- ,UZA,*0432B
+ ПЕР_23:7,X-A,33B
+ ,UZA,ВЫЗОВ_RSYMB_3
  7,XTA,27B
  ,NTR,3
  7,A+X,1
  7,ATX,27B
  7,X-A,2
  ,NTR,22B
- ,UZA,*0305B
- *0451B:7,XTA,1
+ ,UZA,БЛОК_STAND_3
+ БЛОК_REGIM4_2:7,XTA,1
  ,ITS,
  ,UTC,GAQ/5
  ,XTA,
  15,AEX,
- ,U1A,*0455B
- ,UJ,*0456B
- *0455B:,UJ,*0540B
- *0456B:,UTC,GAL/0
+ ,U1A,ПЕРЕХОД_18
+ ,UJ,ВЫЗОВ_IDII_3
+ ПЕРЕХОД_18:,UJ,БЛОК_APJ_3
+ ВЫЗОВ_IDII_3:,UTC,GAL/0
  ,XTA,
  ,NTR,3
  ,UTC,GAK/7
  ,A-X,
- 14,VTM,*0621B
+ 14,VTM,К11
  13,VJM,I*DI*I  
  7,A-X,2
  7,ATX,21B
  ,UTC,GAN/7
  ,XTA,
  7,A-X,2
- 14,VTM,*0630B
+ 14,VTM,К18
  13,VJM,I*MU*I  
  7,A+X,1
  7,ATX,41B
@@ -628,18 +630,18 @@
  ,XTA,
  ,NTR,22B
  15,AEX,
- ,UZA,*0473B
- ,UJ,*0475B
- *0473B:7,XTA,12B
+ ,UZA,ПЕР_10_2
+ ,UJ,ВЫЗОВ_IDII_4
+ ПЕР_10_2:7,XTA,12B
  7,ATX,41B
  ,NTR,3
  ,NTR,22B
- *0475B:7,XTA,5
+ ВЫЗОВ_IDII_4:7,XTA,5
  7,ATX,42B
  ,NTR,3
  ,UTC,GAN/5
  ,XTA,
- 14,VTM,*0621B
+ 14,VTM,К11
  13,VJM,I*DI*I  
  ,UTC,GAK/7
  ,A+X,
@@ -648,16 +650,16 @@
  7,XTA,1
  7,ATX,44B
  ,NTR,22B
- *0505B:14,VTM,*0606B
+ ВЫЗОВ_RSYMB_4:14,VTM,К0
  ,ITS,14
- 14,VTM,*0661B
+ 14,VTM,V21
  ,ITS,14
- ,WTC,*0660B
+ ,WTC,V20
  1,VTM,
  1,UTC,GAQ/7
  14,VTM,
  ,ITS,14
- 14,VTM,*0662B
+ 14,VTM,V22
  ,ITS,14
  13,VJM,RSYMB   
  ,NTR,3
@@ -673,7 +675,7 @@
  7,ATX,44B
  7,X-A,2
  ,NTR,22B
- ,UZA,*0505B
+ ,UZA,ВЫЗОВ_RSYMB_4
  7,XTA,43B
  ,NTR,3
  7,A-X,6
@@ -684,40 +686,40 @@
  7,ATX,46B
  14,VTM,GAK/2
  ,ITS,14
- 14,VTM,*0665B
+ 14,VTM,V25
  ,ITS,14
- 14,VTM,*0665B
+ 14,VTM,V25
  ,ITS,14
- ,WTC,*0660B
+ ,WTC,V20
  1,VTM,
  1,UTC,GAQ/7
  14,VTM,
  ,ITS,14
- 14,VTM,*0662B
+ 14,VTM,V22
  ,ITS,14
- 14,VTM,*0664B
+ 14,VTM,V24
  ,ITS,14
  ,NTR,22B
  13,VJM,RASPS   
  ,NTR,3
  ,NTR,22B
- *0540B:7,XTA,7
+ БЛОК_APJ_3:7,XTA,7
  ,ITS,
  ,UTC,*APJ*   
  ,XTA,
  15,AEX,
- ,UZA,*0544B
- ,UJ,*0545B
- *0544B:,UJ,*0575B
- *0545B:7,XTA,1
+ ,UZA,ПЕРЕХОД_19
+ ,UJ,БЛОК_NUST1_2
+ ПЕРЕХОД_19:,UJ,ПЕРЕХОД_21
+ БЛОК_NUST1_2:7,XTA,1
  ,ITS,
  ,UTC,GAQ/1
  ,XTA,
  15,AEX,
- ,UZA,*0551B
- ,UJ,*0552B
- *0551B:,UJ,*0557B
- *0552B:13,VJM,BEGSTR  
+ ,UZA,ПЕРЕХОД_20
+ ,UJ,ВЫЗОВ_BEGSTR
+ ПЕРЕХОД_20:,UJ,ВЫЗОВ_WTBACK
+ ВЫЗОВ_BEGSTR:13,VJM,BEGSTR  
  ,UTC,GAN/7
  ,XTA,
  ,NTR,3
@@ -725,8 +727,8 @@
  ,UTC,*NDAB*  
  ,ATX,
  ,NTR,22B
- ,UJ,*0575B
- *0557B:7,XTA,25B
+ ,UJ,ПЕРЕХОД_21
+ ВЫЗОВ_WTBACK:7,XTA,25B
  ,UTC,GAK/7
  ,ATX,
  ,NTR,3
@@ -751,10 +753,10 @@
  ,UTC,*NDAB*  
  ,ATX,
  ,NTR,22B
- *0575B:,UJ,*0603B
- *0576B:7,MTJ,8
+ ПЕРЕХОД_21:,UJ,ВОЗВРАТ_2
+ ВОЗВРАТ:7,MTJ,8
  14,MTJ,10
- 7,VTM,*0617B
+ 7,VTM,К9
  ,ITS,13
  ,ITS,1
  ,ITS,8
@@ -762,45 +764,45 @@
  ,NTR,3
  ,NTR,2
  10,UJ,
- *0603B:,STI,
+ ВОЗВРАТ_2:,STI,
  ,STI,7
  ,STI,1
  ,STI,8
  8,UJ,
- *0606B:,ISO, 6H------ . 055 055 055 055 055 055 
- *0607B:,ISO, 6HIIIIII . 111 111 111 111 111 111 
- *0610B:,ISO, 6H...... . 056 056 056 056 056 056 
+ К0:,ISO, 6H------ . 055 055 055 055 055 055 
+ К1:,ISO, 6HIIIIII . 111 111 111 111 111 111 
+ К2:,ISO, 6H...... . 056 056 056 056 056 056 
  ,ISO, 6H       . 040 040 040 040 040 040 
  ,ISO, 6H('47'   P . 050 047 040 040 040 120 
  ,ISO, 6HUSLAPI . 125 123 114 101 120 111 
  ,ISO, 6HS  '47',1 . 123 040 040 047 054 061 
  ,ISO, 6H0I8)   . 060 111 070 051 040 040 
- *0616B:,ISO, 6H(1H1)  . 050 061 110 061 051 040 
- *0617B:,INT,0
- *0620B:,INT,1
- *0621B:,INT,2
+ К8:,ISO, 6H(1H1)  . 050 061 110 061 051 040 
+ К9:,INT,0
+ К10:,INT,1
+ К11:,INT,2
  ,INT,3
  ,INT,5
- *0624B:,INT,6
+ К14:,INT,6
  ,INT,9
  ,INT,10
  ,INT,21
- *0630B:,INT,22
+ К18:,INT,22
  ,INT,23
  ,INT,64
  ,INT,2400
- *0634B:,BSS,1
- *0635B:,BSS,1
- *0636B:,BSS,5
- *0643B:,BSS,3
- *0646B:,BSS,5
- *0653B:,BSS,1
- *0654B:,BSS,1
- *0655B:,BSS,2
- *0657B:,BSS,1
- *0660B:,BSS,1
- *0661B:,BSS,1
- *0662B:,BSS,2
- *0664B:,BSS,1
- *0665B:,BSS,1
+ V0:,BSS,1
+ V1:,BSS,1
+ V2:,BSS,5
+ V7:,BSS,3
+ V10:,BSS,5
+ V15:,BSS,1
+ V16:,BSS,1
+ V17:,BSS,2
+ V19:,BSS,1
+ V20:,BSS,1
+ V21:,BSS,1
+ V22:,BSS,2
+ V24:,BSS,1
+ V25:,BSS,1
  ,END,

@@ -16,14 +16,14 @@
  GAL/7:,EQU,*NDABL* +1
  GAM/0:,EQU,*SEK*   -32767
  GAM/1:,EQU,*SEK*   +1
- 14,VTM,*0001B
- ,UJ,*0027B
- *0001B:7,XTA,1
+ 14,VTM,ПЕР_1
+ ,UJ,ВОЗВРАТ
+ ПЕР_1:7,XTA,1
  7,ATX,3
  ,NTR,3
  ,NTR,22B
- *0003B:7,XTA,
- ,WTC,*0042B
+ БЛОК_V0:7,XTA,
+ ,WTC,V0
  1,VTM,
  1,UTC,GAM/0
  ,ATX,
@@ -33,33 +33,33 @@
  7,ATX,3
  7,X-A,2
  ,NTR,22B
- ,UZA,*0003B
+ ,UZA,БЛОК_V0
  7,XTA,1
  ,ITS,
  ,UTC,GAK/3
  ,XTA,
  15,AEX,
- ,UZA,*0015B
- ,UJ,*0020B
- *0015B:7,XTA,1
+ ,UZA,БЛОК_SEK
+ ,UJ,БЛОК_TAB
+ БЛОК_SEK:7,XTA,1
  ,UTC,*SEK*   
  ,ATX,
  ,NTR,3
  ,NTR,22B
- *0020B:7,XTA,1
+ БЛОК_TAB:7,XTA,1
  ,ITS,
  ,UTC,*TAB*   
  ,XTA,
  15,AEX,
- ,UZA,*0024B
- ,UJ,*0026B
- *0024B:7,XTA,1
+ ,UZA,БЛОК_SEK1
+ ,UJ,ПЕРЕХОД_2
+ БЛОК_SEK1:7,XTA,1
  ,UTC,GAM/1
  ,ATX,
- *0026B:,UJ,*0034B
- *0027B:7,MTJ,8
+ ПЕРЕХОД_2:,UJ,ВОЗВРАТ_2
+ ВОЗВРАТ:7,MTJ,8
  14,MTJ,10
- 7,VTM,*0037B
+ 7,VTM,К0
  ,ITS,13
  ,ITS,1
  ,ITS,8
@@ -67,13 +67,13 @@
  ,NTR,3
  ,NTR,2
  10,UJ,
- *0034B:,STI,
+ ВОЗВРАТ_2:,STI,
  ,STI,7
  ,STI,1
  ,STI,8
  8,UJ,
- *0037B:,INT,0
+ К0:,INT,0
  ,INT,1
  ,INT,2
- *0042B:,BSS,1
+ V0:,BSS,1
  ,END,

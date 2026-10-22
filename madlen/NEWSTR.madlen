@@ -8,18 +8,18 @@
  GAK/7:,EQU,*NDAB*  +2
  BEGSTR  :,SUBP,
  ENDSTR  :,SUBP,
- 14,VTM,*0001B
- ,UJ,*0022B
- *0001B:,UTC,GAK/3
+ 14,VTM,БЛОК_STR25
+ ,UJ,ВОЗВРАТ
+ БЛОК_STR25:,UTC,GAK/3
  ,XTA,
  ,ITS,
  ,UTC,GAK/2
  ,XTA,
  15,AEX,
- ,UZA,*0005B
- ,UJ,*0006B
- *0005B:,UJ,*0016B
- *0006B:,UTC,GAK/6
+ ,UZA,ПЕРЕХОД_2
+ ,UJ,ВЫЗОВ_ENDSTR
+ ПЕРЕХОД_2:,UJ,БЛОК_STR25_2
+ ВЫЗОВ_ENDSTR:,UTC,GAK/6
  ,XTA,
  7,ATX,1
  ,NTR,3
@@ -30,30 +30,30 @@
  ,UTC,GAK/6
  ,XTA,
  15,AEX,
- ,UZA,*0015B
- ,UJ,*0016B
- *0015B:13,VJM,BEGSTR  
- *0016B:,UTC,GAK/3
+ ,UZA,ВЫЗОВ_BEGSTR
+ ,UJ,БЛОК_STR25_2
+ ВЫЗОВ_BEGSTR:13,VJM,BEGSTR  
+ БЛОК_STR25_2:,UTC,GAK/3
  ,XTA,
  ,NTR,3
  7,A+X,
  ,UTC,GAK/2
  ,ATX,
  ,NTR,22B
- ,UJ,*0027B
- *0022B:7,MTJ,8
+ ,UJ,ВОЗВРАТ_2
+ ВОЗВРАТ:7,MTJ,8
  14,MTJ,10
- 7,VTM,*0031B
+ 7,VTM,К0
  ,ITS,13
  ,ITS,8
  ,ITS,
  ,NTR,3
  ,NTR,2
  10,UJ,
- *0027B:,STI,
+ ВОЗВРАТ_2:,STI,
  ,STI,7
  ,STI,8
  8,UJ,
- *0031B:,INT,3
+ К0:,INT,3
  ,BSS,1
  ,END,

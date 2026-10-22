@@ -2,19 +2,19 @@
  *WHO*   :,LC,2
  GAK/2:,EQU,*WHO*   +1
  RSYMB   :,SUBP,
- 14,VTM,*0001B
- ,UJ,*0026B
- *0001B:7,XTA,-1
+ 14,VTM,ВЫЗОВ_RSYMB
+ ,UJ,ПЕР_6
+ ВЫЗОВ_RSYMB:7,XTA,-1
  7,ATX,5
  ,NTR,3
- ,WTC,*0044B
+ ,WTC,V1
  14,VTM,
  ,ITS,14
- 14,VTM,*0040B
+ 14,VTM,К3
  ,ITS,14
- 14,VTM,*0043B
+ 14,VTM,V0
  ,ITS,14
- 14,VTM,*0041B
+ 14,VTM,К4
  ,ITS,14
  ,NTR,22B
  13,VJM,RSYMB   
@@ -29,24 +29,24 @@
  7,XTA,5
  ,NTR,22B
  15,AEX,
- ,UZA,*0017B
- ,UJ,*0022B
- *0017B:7,XTA,
+ ,UZA,БЛОК_WHO1
+ ,UJ,БЛОК_WHO1_2
+ БЛОК_WHO1:7,XTA,
  ,UTC,GAK/2
  ,ATX,
  ,NTR,3
  ,NTR,22B
- *0022B:7,XTA,4
+ БЛОК_WHO1_2:7,XTA,4
  ,NTR,3
  ,UTC,GAK/2
  ,A-X,
  ,UTC,*WHO*   
  ,ATX,
  ,NTR,22B
- ,UJ,*0033B
- *0026B:7,MTJ,8
+ ,UJ,ВОЗВРАТ
+ ПЕР_6:7,MTJ,8
  14,MTJ,10
- 7,VTM,*0036B
+ 7,VTM,К1
  7,STX,6
  ,ITS,13
  ,ITS,8
@@ -54,16 +54,16 @@
  ,NTR,3
  ,NTR,2
  10,UJ,
- *0033B:,STI,
+ ВОЗВРАТ:,STI,
  ,STI,7
  ,STI,8
  8,UJ,
  ,ISO, 6H       . 040 040 040 040 040 040 
- *0036B:,INT,1
+ К1:,INT,1
  ,INT,2
- *0040B:,INT,5
- *0041B:,INT,6
+ К3:,INT,5
+ К4:,INT,6
  ,INT,7
- *0043B:,BSS,1
- *0044B:,BSS,1
+ V0:,BSS,1
+ V1:,BSS,1
  ,END,

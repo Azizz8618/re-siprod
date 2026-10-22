@@ -1,3 +1,5 @@
+CКОНЕЦ ТЕКСТОВОЙ СТРОКИ.
+C
  ENDSTR  :,NAME, NEW DTRAN
  *NDAB*  :,LC,4
  GAK/2:,EQU,*NDAB*  +1
@@ -12,9 +14,9 @@
  BEGPG   :,SUBP,
  ENDPG   :,SUBP,
  GAL/5:,EQU,*REGIM* +1
- 14,VTM,*0001B
- ,UJ,*0016B
- *0001B:,UTC,*NDAB*  
+ 14,VTM,БЛОК_NDAB
+ ,UJ,ВОЗВРАТ
+ БЛОК_NDAB:,UTC,*NDAB*  
  ,XTA,
  ,NTR,3
  ,UTC,GAK/6
@@ -25,26 +27,26 @@
  ,A+X,
  7,A-X,
  ,NTR,22B
- ,U1A,*0010B
- ,UJ,*0011B
- *0010B:,UJ,*0014B
- *0011B:13,VJM,ENDPG   
+ ,U1A,ПЕРЕХОД_2
+ ,UJ,ВЫЗОВ_ENDPG
+ ПЕРЕХОД_2:,UJ,ВЫЗОВ_TOPAGE
+ ВЫЗОВ_ENDPG:13,VJM,ENDPG   
  13,VJM,BEGPG   
- ,UJ,*0015B
- *0014B:13,VJM,TOPAGE  
- *0015B:,UJ,*0023B
- *0016B:7,MTJ,8
+ ,UJ,ПЕРЕХОД_3
+ ВЫЗОВ_TOPAGE:13,VJM,TOPAGE  
+ ПЕРЕХОД_3:,UJ,ВОЗВРАТ_2
+ ВОЗВРАТ:7,MTJ,8
  14,MTJ,10
- 7,VTM,*0025B
+ 7,VTM,К0
  ,ITS,13
  ,ITS,8
  ,ITS,
  ,NTR,3
  ,NTR,2
  10,UJ,
- *0023B:,STI,
+ ВОЗВРАТ_2:,STI,
  ,STI,7
  ,STI,8
  8,UJ,
- *0025B:,INT,1
+ К0:,INT,1
  ,END,

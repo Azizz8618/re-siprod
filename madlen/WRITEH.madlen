@@ -1,3 +1,6 @@
+CГЕНЕРАТОР РЕЖИМА *HCH: ИЕРАРХИЧЕСКАЯ СХЕМА,
+CУЗЕЛ И 2-5 ПОДЧИНЁННЫХ УЗЛОВ.
+C
  WRITEH  :,NAME, NEW DTRAN
  *NUNU*  :,LC,1
  *NUST*  :,LC,10
@@ -9,45 +12,45 @@
  WRILIN  :,SUBP,
  ONEPLA  :,SUBP,
  WRIKOR  :,SUBP,
- 14,VTM,*0001B
- ,UJ,*0021B
- *0001B:7,XTA,
+ 14,VTM,БЛОК_GOT
+ ,UJ,ВОЗВРАТ
+ БЛОК_GOT:7,XTA,
  ,ITS,
  ,UTC,*GOT*   
  ,XTA,
  15,AEX,
- ,UZA,*0005B
- ,UJ,*0006B
- *0005B:,UJ,*0013B
- *0006B:14,VTM,*0030B
+ ,UZA,ПЕРЕХОД_2
+ ,UJ,ВЫЗОВ_WRIKOR
+ ПЕРЕХОД_2:,UJ,ВЫЗОВ_ONEPLA
+ ВЫЗОВ_WRIKOR:14,VTM,К0
  ,ITS,14
- 14,VTM,*0031B
+ 14,VTM,К1
  ,ITS,14
- 14,VTM,*0032B
+ 14,VTM,К2
  ,ITS,14
  13,VJM,WRIKOR  
  ,NTR,3
  ,NTR,22B
- *0013B:13,VJM,ONEPLA  
+ ВЫЗОВ_ONEPLA:13,VJM,ONEPLA  
  13,VJM,WRILIN  
  13,VJM,WRIHOR  
  13,VJM,WRIVER  
  13,VJM,TWOPLA  
- ,UJ,*0026B
- *0021B:7,MTJ,8
+ ,UJ,ВОЗВРАТ_2
+ ВОЗВРАТ:7,MTJ,8
  14,MTJ,10
- 7,VTM,*0031B
+ 7,VTM,К1
  ,ITS,13
  ,ITS,8
  ,ITS,
  ,NTR,3
  ,NTR,2
  10,UJ,
- *0026B:,STI,
+ ВОЗВРАТ_2:,STI,
  ,STI,7
  ,STI,8
  8,UJ,
- *0030B:,ISO, 6H*P     . 052 120 040 040 040 040 
- *0031B:,INT,1
- *0032B:,INT,2
+ К0:,ISO, 6H*P     . 052 120 040 040 040 040 
+ К1:,INT,1
+ К2:,INT,2
  ,END,

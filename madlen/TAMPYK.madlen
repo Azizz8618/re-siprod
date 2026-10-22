@@ -1,3 +1,5 @@
+CРАЗБОР ТАБЛИЧНОГО РАЗДЕЛА ПУСКОВ.
+C
  TAMPYK  :,NAME, NEW DTRAN
  *REGIM* :,LC,16
  *SCANER*:,LC,3
@@ -18,9 +20,9 @@
  RSYMB   :,SUBP,
  SCAN    :,SUBP,
  GAM/4:,EQU,*BEN*   +2
- 14,VTM,*0001B
- ,UJ,*0050B
- *0001B:7,XTA,
+ 14,VTM,ВЫЗОВ_SCAN
+ ,UJ,ВОЗВРАТ
+ ВЫЗОВ_SCAN:7,XTA,
  ,UTC,GAL/5
  ,ATX,
  ,NTR,3
@@ -45,20 +47,20 @@
  ,XTA,
  ,NTR,22B
  15,AEX,
- ,UZA,*0017B
- ,UJ,*0022B
- *0017B:7,XTA,-1
+ ,UZA,БЛОК_BEN14
+ ,UJ,ВЫЗОВ_RSYMB
+ БЛОК_BEN14:7,XTA,-1
  ,UTC,GAL/5
  ,ATX,
  ,NTR,3
  ,NTR,22B
- *0022B:14,VTM,*STR*   
+ ВЫЗОВ_RSYMB:14,VTM,*STR*   
  ,ITS,14
  14,VTM,GAL/0
  ,ITS,14
- 14,VTM,*0063B
+ 14,VTM,V0
  ,ITS,14
- 14,VTM,*0061B
+ 14,VTM,К2
  ,ITS,14
  13,VJM,RSYMB   
  ,NTR,3
@@ -67,43 +69,43 @@
  ,ITS,
  7,XTA,3
  15,AEX,
- ,U1A,*0033B
- ,UJ,*0040B
- *0033B:7,XTA,-1
+ ,U1A,БЛОК_BEN14_2
+ ,UJ,ВЫЗОВ_TARPOZ
+ БЛОК_BEN14_2:7,XTA,-1
  ,ITS,
  ,UTC,GAL/5
  ,XTA,
  15,AEX,
- ,UZA,*0037B
- ,UJ,*0040B
- *0037B:,UJ,*0047B
- *0040B:13,VJM,TARPOZ  
+ ,UZA,ПЕРЕХОД_2
+ ,UJ,ВЫЗОВ_TARPOZ
+ ПЕРЕХОД_2:,UJ,ПЕРЕХОД_4
+ ВЫЗОВ_TARPOZ:13,VJM,TARPOZ  
  7,XTA,
  ,ITS,
  ,UTC,GAM/4
  ,XTA,
  15,AEX,
- ,UZA,*0045B
- ,UJ,*0046B
- *0045B:,UJ,*0047B
- *0046B:13,VJM,TAMTXT  
- *0047B:,UJ,*0055B
- *0050B:7,MTJ,8
+ ,UZA,ПЕРЕХОД_3
+ ,UJ,ВЫЗОВ_TAMTXT
+ ПЕРЕХОД_3:,UJ,ПЕРЕХОД_4
+ ВЫЗОВ_TAMTXT:13,VJM,TAMTXT  
+ ПЕРЕХОД_4:,UJ,ВОЗВРАТ_2
+ ВОЗВРАТ:7,MTJ,8
  14,MTJ,10
- 7,VTM,*0060B
+ 7,VTM,К1
  ,ITS,13
  ,ITS,8
  ,ITS,
  ,NTR,3
  ,NTR,2
  10,UJ,
- *0055B:,STI,
+ ВОЗВРАТ_2:,STI,
  ,STI,7
  ,STI,8
  8,UJ,
  ,ISO, 6H       . 040 040 040 040 040 040 
- *0060B:,INT,0
- *0061B:,INT,6
+ К1:,INT,0
+ К2:,INT,6
  ,INT,8
- *0063B:,BSS,2
+ V0:,BSS,2
  ,END,

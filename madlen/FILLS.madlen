@@ -1,31 +1,33 @@
+CЗАПОЛНЕНИЕ НЕСКОЛЬКИХ СТРОК.
+C
  FILLS   :,NAME, NEW DTRAN
  *STR*   :,LC,27
  GAK/2:,EQU,*STR*   +24
  GAK/3:,EQU,*STR*   +25
  GAK/4:,EQU,*STR*   +26
  FILL    :,SUBP,
- 14,VTM,*0001B
- ,UJ,*0012B
- *0001B:,UTC,GAK/4
+ 14,VTM,ВЫЗОВ_FILL
+ ,UJ,ПЕР_2
+ ВЫЗОВ_FILL:,UTC,GAK/4
  ,XTA,
  ,NTR,3
  ,UTC,GAK/2
  ,A-X,
  7,A+X,
  7,ATX,1
- 14,VTM,*0022B
+ 14,VTM,V0
  ,ITS,14
- ,WTC,*0023B
+ ,WTC,V1
  14,VTM,
  ,ITS,14
  ,NTR,22B
  13,VJM,FILL    
  ,NTR,3
  ,NTR,22B
- ,UJ,*0017B
- *0012B:7,MTJ,8
+ ,UJ,ВОЗВРАТ
+ ПЕР_2:7,MTJ,8
  14,MTJ,10
- 7,VTM,*0021B
+ 7,VTM,К0
  7,STX,2
  ,ITS,13
  ,ITS,8
@@ -33,11 +35,11 @@
  ,NTR,3
  ,NTR,2
  10,UJ,
- *0017B:,STI,
+ ВОЗВРАТ:,STI,
  ,STI,7
  ,STI,8
  8,UJ,
- *0021B:,INT,1
- *0022B:,BSS,1
- *0023B:,BSS,1
+ К0:,INT,1
+ V0:,BSS,1
+ V1:,BSS,1
  ,END,

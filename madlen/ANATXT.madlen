@@ -23,9 +23,9 @@
  RWINF   :,SUBP,
  SYTINT  :,SUBP,
  SCAN    :,SUBP,
- 14,VTM,*0001B
- ,UJ,*0152B
- *0001B:7,XTA,
+ 14,VTM,БЛОК_TXT1
+ ,UJ,ВОЗВРАТ
+ БЛОК_TXT1:7,XTA,
  ,UTC,GAL/2
  ,ATX,
  ,NTR,3
@@ -38,16 +38,16 @@
  7,XTA,
  7,ATX,7
  ,NTR,22B
- *0010B:13,VJM,SCAN    
+ ВЫЗОВ_SCAN:13,VJM,SCAN    
  7,XTA,4
  ,ITS,
  ,UTC,GAL/6
  ,XTA,
  15,AEX,
- ,U1A,*0015B
- ,UJ,*0016B
- *0015B:,UJ,*0072B
- *0016B:,UTC,*SCANER*
+ ,U1A,ПЕРЕХОД_2
+ ,UJ,ВЫЗОВ_SYTINT
+ ПЕРЕХОД_2:,UJ,БЛОК_SCANER1
+ ВЫЗОВ_SYTINT:,UTC,*SCANER*
  ,XTA,
  ,NTR,3
  7,A-X,1
@@ -55,9 +55,9 @@
  7,ATX,11B
  14,VTM,*INS*   
  ,ITS,14
- 14,VTM,*0172B
+ 14,VTM,V2
  ,ITS,14
- 14,VTM,*0173B
+ 14,VTM,V3
  ,ITS,14
  ,NTR,22B
  13,VJM,SYTINT  
@@ -74,22 +74,22 @@
  ,UTC,GAL/6
  ,XTA,
  15,AEX,
- ,UZA,*0035B
- ,UJ,*0036B
- *0035B:,UJ,*0052B
- *0036B:7,XTA,
+ ,UZA,ПЕРЕХОД_3
+ ,UJ,БЛОК_TXT1_2
+ ПЕРЕХОД_3:,UJ,ВЫЗОВ_RWINF
+ БЛОК_TXT1_2:7,XTA,
  ,ITS,
  ,UTC,GAL/2
  ,XTA,
  15,AEX,
- ,UZA,*0042B
- ,UJ,*0045B
- *0042B:7,XTA,10B
+ ,UZA,БЛОК_TXT1_3
+ ,UJ,БЛОК_SCANER
+ БЛОК_TXT1_3:7,XTA,10B
  ,UTC,GAL/2
  ,ATX,
  ,NTR,3
  ,NTR,22B
- *0045B:7,XTA,
+ БЛОК_SCANER:7,XTA,
  7,ATX,7
  ,NTR,3
  ,UTC,*SCANER*
@@ -98,8 +98,8 @@
  ,UTC,*SCANER*
  ,ATX,
  ,NTR,22B
- ,UJ,*0130B
- *0052B:7,XTA,12B
+ ,UJ,БЛОК_SCANER_4
+ ВЫЗОВ_RWINF:7,XTA,12B
  ,UTC,*TXT*   
  ,ATX,
  ,NTR,3
@@ -128,16 +128,16 @@
  ,UTC,GAM/2
  ,ATX,
  ,NTR,22B
- ,UJ,*0142B
- *0072B:7,XTA,5
+ ,UJ,БЛОК_TXT1_5
+ БЛОК_SCANER1:7,XTA,5
  ,ITS,
  ,UTC,GAL/6
  ,XTA,
  15,AEX,
- ,U1A,*0076B
- ,UJ,*0077B
- *0076B:,UJ,*0105B
- *0077B:,UTC,*SCANER*
+ ,U1A,ПЕРЕХОД_4
+ ,UJ,БЛОК_SCANER_2
+ ПЕРЕХОД_4:,UJ,БЛОК_SCANER1_2
+ БЛОК_SCANER_2:,UTC,*SCANER*
  ,XTA,
  ,NTR,3
  7,A-X,7
@@ -148,16 +148,16 @@
  ,UTC,GAL/4
  ,ATX,
  ,NTR,22B
- ,UJ,*0142B
- *0105B:7,XTA,3
+ ,UJ,БЛОК_TXT1_5
+ БЛОК_SCANER1_2:7,XTA,3
  ,ITS,
  ,UTC,GAL/6
  ,XTA,
  15,AEX,
- ,UZA,*0111B
- ,UJ,*0112B
- *0111B:,UJ,*0125B
- *0112B:7,XTA,
+ ,UZA,ПЕРЕХОД_5
+ ,UJ,БЛОК_TXT1_4
+ ПЕРЕХОД_5:,UJ,ПЕР_7
+ БЛОК_TXT1_4:7,XTA,
  7,ATX,7
  ,NTR,3
  7,XTA,
@@ -166,66 +166,66 @@
  ,XTA,
  ,NTR,22B
  15,AEX,
- ,U1A,*0120B
- ,UJ,*0121B
- *0120B:,UJ,*0130B
- *0121B:,UTC,*SCANER*
+ ,U1A,ПЕРЕХОД_6
+ ,UJ,БЛОК_SCANER_3
+ ПЕРЕХОД_6:,UJ,БЛОК_SCANER_4
+ БЛОК_SCANER_3:,UTC,*SCANER*
  ,XTA,
  ,NTR,3
  7,A-X,1
  ,UTC,GAL/2
  ,ATX,
  ,NTR,22B
- ,UJ,*0130B
- *0125B:7,XTA,7
+ ,UJ,БЛОК_SCANER_4
+ ПЕР_7:7,XTA,7
  ,NTR,3
  7,A+X,1
  7,ATX,7
  ,NTR,22B
- *0130B:,UTC,*SCANER*
+ БЛОК_SCANER_4:,UTC,*SCANER*
  ,XTA,
  ,NTR,3
  ,UTC,GAK/4
  ,A-X,
  ,NTR,22B
- ,UZA,*0134B
- ,UJ,*0135B
- *0134B:,UJ,*0136B
- *0135B:,UJ,*0010B
- *0136B:,UTC,*SCANER*
+ ,UZA,ПЕРЕХОД_7
+ ,UJ,ПЕРЕХОД_8
+ ПЕРЕХОД_7:,UJ,БЛОК_SCANER_5
+ ПЕРЕХОД_8:,UJ,ВЫЗОВ_SCAN
+ БЛОК_SCANER_5:,UTC,*SCANER*
  ,XTA,
  ,NTR,3
  7,A-X,1
  ,UTC,GAL/3
  ,ATX,
  ,NTR,22B
- *0142B:7,XTA,
+ БЛОК_TXT1_5:7,XTA,
  ,ITS,
  ,UTC,GAL/2
  ,XTA,
  15,AEX,
- ,UZA,*0146B
- ,UJ,*0151B
- *0146B:7,XTA,
+ ,UZA,БЛОК_TXT2
+ ,UJ,ПЕРЕХОД_9
+ БЛОК_TXT2:7,XTA,
  ,UTC,GAL/3
  ,ATX,
  ,NTR,3
  ,NTR,22B
- *0151B:,UJ,*0157B
- *0152B:7,MTJ,8
+ ПЕРЕХОД_9:,UJ,ВОЗВРАТ_2
+ ВОЗВРАТ:7,MTJ,8
  14,MTJ,10
- 7,VTM,*0161B
+ 7,VTM,К0
  ,ITS,13
  ,ITS,8
  ,ITS,
  ,NTR,3
  ,NTR,2
  10,UJ,
- *0157B:,STI,
+ ВОЗВРАТ_2:,STI,
  ,STI,7
  ,STI,8
  8,UJ,
- *0161B:,INT,0
+ К0:,INT,0
  ,INT,1
  ,INT,2
  ,INT,8
@@ -233,6 +233,6 @@
  ,INT,22
  ,INT,25
  ,BSS,2
- *0172B:,BSS,1
- *0173B:,BSS,1
+ V2:,BSS,1
+ V3:,BSS,1
  ,END,

@@ -1,39 +1,41 @@
+CЗАПОЛНЕНИЕ ТАБЛИЧНЫХ ПОЛЕЙ.
+C
  PILDYK  :,NAME, NEW DTRAN
  RSYMB   :,SUBP,
- 14,VTM,*0001B
- ,UJ,*0020B
- *0001B:,WTC,*0034B
+ 14,VTM,БЛОК_V2
+ ,UJ,ПЕР_6
+ БЛОК_V2:,WTC,V2
  ,XTA,
  7,ATX,1
  ,NTR,3
  ,NTR,22B
- ,UJ,*0016B
- *0004B:,WTC,*0037B
+ ,UJ,БЛОК_V3
+ ВЫЗОВ_RSYMB:,WTC,V5
  14,VTM,
  ,ITS,14
- 14,VTM,*0031B
+ 14,VTM,К0
  ,ITS,14
- ,WTC,*0033B
+ ,WTC,V1
  14,VTM,
  ,ITS,14
- 14,VTM,*0032B
+ 14,VTM,V0
  ,ITS,14
  13,VJM,RSYMB   
  ,NTR,3
  ,NTR,22B
  7,XTA,1
  ,NTR,3
- ,WTC,*0036B
+ ,WTC,V4
  ,A+X,
  7,ATX,1
  ,NTR,22B
- *0016B:,WTC,*0035B
+ БЛОК_V3:,WTC,V3
  ,X-A,
- ,UZA,*0004B
- ,UJ,*0027B
- *0020B:7,MTJ,8
+ ,UZA,ВЫЗОВ_RSYMB
+ ,UJ,ВОЗВРАТ
+ ПЕР_6:7,MTJ,8
  14,MTJ,10
- 7,VTM,*0031B
+ 7,VTM,К0
  7,STX,6
  7,STX,5
  7,STX,4
@@ -45,15 +47,15 @@
  ,NTR,3
  ,NTR,2
  10,UJ,
- *0027B:,STI,
+ ВОЗВРАТ:,STI,
  ,STI,7
  ,STI,8
  8,UJ,
- *0031B:,INT,6
- *0032B:,BSS,1
- *0033B:,BSS,1
- *0034B:,BSS,1
- *0035B:,BSS,1
- *0036B:,BSS,1
- *0037B:,BSS,1
+ К0:,INT,6
+ V0:,BSS,1
+ V1:,BSS,1
+ V2:,BSS,1
+ V3:,BSS,1
+ V4:,BSS,1
+ V5:,BSS,1
  ,END,

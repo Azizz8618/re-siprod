@@ -12,45 +12,45 @@
  GAL/3:,EQU,*SEK*   +2
  GAL/4:,EQU,GAK/3+3
  GAL/5:,EQU,GAK/3+2
- 14,VTM,*0001B
- ,UJ,*0037B
- *0001B:,UTC,GAL/1
+ 14,VTM,БЛОК_SEK3
+ ,UJ,ВОЗВРАТ
+ БЛОК_SEK3:,UTC,GAL/1
  ,XTA,
  ,NTR,3
  ,UTC,GAL/2
  ,A-X,
  ,NTR,22B
- ,U1A,*0005B
- ,UJ,*0006B
- *0005B:,UJ,*0032B
- *0006B:,UTC,GAL/2
+ ,U1A,ПЕРЕХОД_2
+ ,UJ,БЛОК_LYG3
+ ПЕРЕХОД_2:,UJ,БЛОК_LYG4
+ БЛОК_LYG3:,UTC,GAL/2
  ,XTA,
  ,ITS,
  ,UTC,GAL/1
  ,XTA,
  15,AEX,
- ,U1A,*0012B
- ,UJ,*0013B
- *0012B:,UJ,*0026B
- *0013B:7,XTA,
+ ,U1A,ПЕРЕХОД_3
+ ,UJ,БЛОК_REGIM
+ ПЕРЕХОД_3:,UJ,БЛОК_SEK3_2
+ БЛОК_REGIM:7,XTA,
  ,ITS,
  ,UTC,*REGIM* 
  ,XTA,
  15,AEX,
- ,U1A,*0017B
- ,UJ,*0020B
- *0017B:,UJ,*0032B
- *0020B:,UTC,GAL/3
+ ,U1A,ПЕРЕХОД_4
+ ,UJ,БЛОК_SEK2
+ ПЕРЕХОД_4:,UJ,БЛОК_LYG4
+ БЛОК_SEK2:,UTC,GAL/3
  ,XTA,
  ,NTR,3
  ,X-A,
  ,UTC,GAL/4
  ,A+X,
  ,NTR,22B
- ,UZA,*0025B
- ,UJ,*0026B
- *0025B:,UJ,*0032B
- *0026B:,UTC,GAL/1
+ ,UZA,ПЕРЕХОД_5
+ ,UJ,БЛОК_SEK3_2
+ ПЕРЕХОД_5:,UJ,БЛОК_LYG4
+ БЛОК_SEK3_2:,UTC,GAL/1
  ,XTA,
  ,UTC,GAL/2
  ,ATX,
@@ -58,7 +58,7 @@
  ,XTA,
  ,UTC,GAL/4
  ,ATX,
- *0032B:,UTC,GAL/5
+ БЛОК_LYG4:,UTC,GAL/5
  ,XTA,
  ,UTC,GAL/3
  ,ATX,
@@ -66,19 +66,19 @@
  ,XTA,
  ,UTC,GAL/1
  ,ATX,
- ,UJ,*0044B
- *0037B:7,MTJ,8
+ ,UJ,ВОЗВРАТ_2
+ ВОЗВРАТ:7,MTJ,8
  14,MTJ,10
- 7,VTM,*0046B
+ 7,VTM,К0
  ,ITS,13
  ,ITS,8
  ,ITS,
  ,NTR,3
  ,NTR,2
  10,UJ,
- *0044B:,STI,
+ ВОЗВРАТ_2:,STI,
  ,STI,7
  ,STI,8
  8,UJ,
- *0046B:,INT,1
+ К0:,INT,1
  ,END,

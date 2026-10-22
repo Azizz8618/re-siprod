@@ -20,17 +20,17 @@
  GAM/3:,EQU,*FORMA* -32767
  GAM/4:,EQU,*LOL*   +7
  GAM/5:,EQU,*FORMA* +7
- 14,VTM,*0001B
- ,UJ,*0101B
- *0001B:7,XTA,5
+ 14,VTM,БЛОК_ARPI
+ ,UJ,ВОЗВРАТ
+ БЛОК_ARPI:7,XTA,5
  ,ITS,
  ,UTC,*ARPI*  
  ,XTA,
  15,AEX,
- ,UZA,*0005B
- ,UJ,*0006B
- *0005B:,UJ,*0035B
- *0006B:,UTC,GAK/2
+ ,UZA,ПЕРЕХОД_2
+ ,UJ,ВЫЗОВ_IDII
+ ПЕРЕХОД_2:,UJ,ПЕР_1
+ ВЫЗОВ_IDII:,UTC,GAK/2
  ,XTA,
  7,ATX,6
  ,NTR,3
@@ -39,41 +39,41 @@
  ,ATX,
  ,UTC,GAL/2
  ,XTA,
- 14,VTM,*0113B
+ 14,VTM,К2
  13,VJM,I*DI*I  
  7,ATX,7
  ,UTC,GAL/2
  ,XTA,
  ,ITS,
  7,XTA,7
- 14,VTM,*0113B
+ 14,VTM,К2
  13,VJM,I*MU*I  
  ,NTR,22B
  15,AEX,
- ,UZA,*0026B
+ ,UZA,ПЕРЕХОД_3
   :7,XTA,5
  ,ITS,
  ,UTC,*REGIM* 
  ,XTA,
  15,AEX,
- ,UZA,*0026B
- ,UJ,*0027B
- *0026B:,UJ,*0031B
- *0027B:13,VJM,ENDPG   
+ ,UZA,ПЕРЕХОД_3
+ ,UJ,ВЫЗОВ_ENDPG
+ ПЕРЕХОД_3:,UJ,ВЫЗОВ_ENDPG_2
+ ВЫЗОВ_ENDPG:13,VJM,ENDPG   
  13,VJM,BEGPG   
- *0031B:13,VJM,ENDPG   
+ ВЫЗОВ_ENDPG_2:13,VJM,ENDPG   
  7,XTA,6
  ,UTC,GAK/2
  ,ATX,
  ,NTR,3
  ,NTR,22B
- *0035B:7,XTA,1
+ ПЕР_1:7,XTA,1
  7,ATX,10B
  ,NTR,3
  ,NTR,22B
- *0037B:,WTC,*0121B
+ БЛОК_V2:,WTC,V2
  1,VTM,
- 1,UTC,*0123B
+ 1,UTC,V4
  ,XTA,
  1,UTC,GAM/1
  ,ATX,
@@ -83,28 +83,28 @@
  7,ATX,10B
  7,X-A,3
  ,NTR,22B
- ,UZA,*0037B
+ ,UZA,БЛОК_V2
  7,XTA,1
  7,ATX,10B
  ,NTR,3
  ,NTR,22B
- *0050B:,WTC,*0121B
+ БЛОК_V2_2:,WTC,V2
  1,VTM,
- 1,UTC,*0121B
+ 1,UTC,V2
  ,XTA,
  1,UTC,GAM/2
  ,ATX,
- ,WTC,*0121B
+ ,WTC,V2
  1,VTM,
- 1,UTC,*0121B
+ 1,UTC,V2
  ,XTA,
  1,UTC,GAM/3
  ,ATX,
- 1,UTC,*0121B
+ 1,UTC,V2
  ,XTA,
  1,UTC,GAM/4
  ,ATX,
- 1,UTC,*0121B
+ 1,UTC,V2
  ,XTA,
  1,UTC,GAM/5
  ,ATX,
@@ -114,7 +114,7 @@
  7,ATX,10B
  7,X-A,4
  ,NTR,22B
- ,UZA,*0050B
+ ,UZA,БЛОК_V2_2
  7,XTA,5
  ,UTC,*REGIM* 
  ,ATX,
@@ -131,13 +131,13 @@
  ,XTA,
  ,NTR,22B
  15,AEX,
- ,U1A,*0077B
- ,UJ,*0100B
- *0077B:13,VJM,BEGPG   
- *0100B:,UJ,*0106B
- *0101B:7,MTJ,8
+ ,U1A,ВЫЗОВ_BEGPG
+ ,UJ,ПЕРЕХОД_4
+ ВЫЗОВ_BEGPG:13,VJM,BEGPG   
+ ПЕРЕХОД_4:,UJ,ВОЗВРАТ_2
+ ВОЗВРАТ:7,MTJ,8
  14,MTJ,10
- 7,VTM,*0111B
+ 7,VTM,К0
  ,ITS,13
  ,ITS,1
  ,ITS,8
@@ -145,27 +145,27 @@
  ,NTR,3
  ,NTR,2
  10,UJ,
- *0106B:,STI,
+ ВОЗВРАТ_2:,STI,
  ,STI,7
  ,STI,1
  ,STI,8
  8,UJ,
- *0111B:,INT,0
+ К0:,INT,0
  ,INT,1
- *0113B:,INT,2
+ К2:,INT,2
  ,INT,6
  ,INT,8
  ,INT,10
  ,BSS,11
  ,DATA,
- *0117B:,INT,84
+ V0:,INT,84
  ,INT,70
- *0121B:,INT,11
- *0122B:,INT,67
- *0123B:,INT,6
+ V2:,INT,11
+ V3:,INT,67
+ V4:,INT,6
  ,INT,6
  ,INT,60
  ,INT,4
- 8,SET,*0117B
- 1,   ,*0122B
+ 8,SET,V0
+ 1,   ,V3
  ,END,

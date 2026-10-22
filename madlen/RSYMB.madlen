@@ -1,3 +1,5 @@
+CРАЗБОР СИМВОЛА (КОД СИМВОЛА ИЗ ТЕКСТА).
+C
  RSYMB   :,NAME, NEW DTRAN
  KONSTA  :,SUBP,
  SYTOBIN :,SUBP,
@@ -6,7 +8,7 @@
  GAK/5:,EQU,SYTOBIN +3
  GAK/6:,EQU,SYTOBIN +4
  GAK/7:,EQU,SYTOBIN +5
- *0000B:,ITS,7
+ ВЫЗОВ_KONSTA:,ITS,7
  ,ITS,13
  13,VJM,KONSTA  
  10,STX,11B
@@ -19,10 +21,10 @@
  ,ITA,7
  9,UTM,-7
  8,AAX,4
- ,UZA,*0011B
+ ,UZA,ВЫЗОВ_SYTOBI5
  15,UTM,-2
- ,UJ,*0021B
- *0011B:9,MTJ,11
+ ,UJ,ВЫЗОВ_KONSTA_2
+ ВЫЗОВ_SYTOBI5:9,MTJ,11
  15,XTA,
  ,STI,9
  ,ATI,12
@@ -34,10 +36,10 @@
  ,ATI,9
  ,ITA,7
  8,AAX,4
- ,U1A,*0021B
+ ,U1A,ВЫЗОВ_KONSTA_2
  13,VJM,GAK/3
  13,VJM,GAK/4
- *0021B:10,XTA,14B
+ ВЫЗОВ_KONSTA_2:10,XTA,14B
  ,STI,7
  ,NTR,6
  10,WTC,11B
@@ -49,25 +51,25 @@
  ,ATI,9
  9,XTA,
  8,X-A,3
- ,UZA,*0041B
+ ,UZA,ВОЗВРАТ
  ,ITS,6
  ,ITS,13
  10,STX,12B
  10,STX,15B
  ,STI,6
  6,UTM,1
- 13,VJM,*0000B
+ 13,VJM,ВЫЗОВ_KONSTA
  15,UTM,1
- *0035B:6,VZM,*0043B
+ ВЫЗОВ_SYTOBI1:6,VZM,ВОЗВРАТ_2
  13,VJM,GAK/3
  6,UTM,1
  13,VJM,GAK/4
- ,UJ,*0035B
+ ,UJ,ВЫЗОВ_SYTOBI1
   :13,UJ,
- *0041B:15,UTM,-4
+ ВОЗВРАТ:15,UTM,-4
  15,XTA,
  13,UJ,
- *0043B:10,XTS,15B
+ ВОЗВРАТ_2:10,XTS,15B
  10,XTS,12B
  ,STI,13
  ,STI,6

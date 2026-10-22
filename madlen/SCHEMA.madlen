@@ -1,3 +1,9 @@
+CГЛАВНАЯ ПРОГРАММА СИПРОДА: ЧИТАЕТ ВХОДНОЙ ПОТОК,
+CРАЗБИРАЕТ ЕГО НА БЛОКИ (*RED, *NOT, *SUB, *IPO, *HCH)
+CПО ТАБЛИЦЕ КЛЮЧЕВЫХ СЛОВ И ПЕРЕДАЁТ УПРАВЛЕНИЕ
+CОБРАБОТЧИКУ БЛОКА.  ВЫЗЫВАЕТ SPAUD, REDTXT, LOADGO,
+CENDKOR, WRIKOR, ENDPG, TOPAGE, GOSTAS, SYTINT, KLAIDA.
+C
  SCHEMA  :,NAME, NEW DTRAN
  *BLO*   :,LC,1
  *RUSIS* :,LC,1
@@ -58,14 +64,14 @@
  GAR/2:,EQU,*EGO*   -32767
  GAR/3:,EQU,*REGIM* +8
  GAR/4:,EQU,GAL/1-32767
- 14,VTM,*0001B
- ,UJ,*0645B
- *0001B:7,XTA,1
+ 14,VTM,ПЕР_1
+ ,UJ,ВОЗВРАТ
+ ПЕР_1:7,XTA,1
  7,ATX,31B
  ,NTR,3
  ,NTR,22B
- *0003B:7,XTA,1
- ,WTC,*0712B
+ БЛОК_V1:7,XTA,1
+ ,WTC,V1
  1,VTM,
  1,UTC,GAQ/2
  ,ATX,
@@ -75,7 +81,7 @@
  7,ATX,31B
  7,X-A,15B
  ,NTR,22B
- ,UZA,*0003B
+ ,UZA,БЛОК_V1
  7,XTA,11B
  ,UTC,*REGIM* 
  ,ATX,
@@ -83,8 +89,8 @@
  7,XTA,1
  7,ATX,32B
  ,NTR,22B
- *0015B:7,XTA,-3
- ,WTC,*0713B
+ ЧТЕНИЕ_РЕЖИМА:7,XTA,-3
+ ,WTC,V2
  1,VTM,
  1,UTC,GAQ/4
  ,ATX,
@@ -94,7 +100,7 @@
  7,ATX,32B
  7,X-A,17B
  ,NTR,22B
- ,UZA,*0015B
+ ,UZA,ЧТЕНИЕ_РЕЖИМА
  7,XTA,
  ,UTC,*FOP*   
  ,ATX,
@@ -118,7 +124,7 @@
  ,ATX,
  ,NTR,22B
  13,VJM,START   
- *0037B:,UTC,*GOT*   
+ БЛОК_GOT:,UTC,*GOT*   
  ,XTA,
  ,NTR,3
  7,A+X,1
@@ -131,10 +137,10 @@
  ,UTC,GAK/6
  ,A-X,
  ,NTR,22B
- ,U1A,*0047B
- ,UJ,*0050B
- *0047B:,UJ,*0055B
- *0050B:14,VTM,*0725B
+ ,U1A,ПЕРЕХОД
+ ,UJ,ЗАПРОС_СТРОКИ
+ ПЕРЕХОД:,UJ,РАЗБОР_КОМАНДЫ
+ ЗАПРОС_СТРОКИ:14,VTM,V12
  ,ITS,14
  13,VJM,GETSTR  
  ,UTC,GAK/5
@@ -143,25 +149,26 @@
  ,ATX,
  ,NTR,3
  ,NTR,22B
- *0055B:13,VJM,SCAN    
+C ВЫЗОВ SCAN: ЧТЕНИЕ СИМВОЛА ПОСЛЕ '*'.
+ РАЗБОР_КОМАНДЫ:13,VJM,SCAN    
  7,XTA,7
  ,ITS,
  ,UTC,GAN/4
  ,XTA,
  15,AEX,
- ,UZA,*0062B
- ,UJ,*0070B
- *0062B:,UTC,*SCANER*
+ ,UZA,БЛОК_SCANER
+ ,UJ,ЧТЕНИЕ_СИМВОЛА
+ БЛОК_SCANER:,UTC,*SCANER*
  ,XTA,
  ,NTR,3
  ,X-A,
  ,UTC,GAK/6
  ,A+X,
  ,NTR,22B
- ,UZA,*0067B
- ,UJ,*0070B
- *0067B:,UJ,*0055B
- *0070B:7,XTA,-3
+ ,UZA,ПЕРЕХОД_2
+ ,UJ,ЧТЕНИЕ_СИМВОЛА
+ ПЕРЕХОД_2:,UJ,РАЗБОР_КОМАНДЫ
+ ЧТЕНИЕ_СИМВОЛА:7,XTA,-3
  7,ATX,35B
  ,NTR,3
  7,XTA,
@@ -173,13 +180,13 @@
  7,ATX,30B
  14,VTM,*INS*   
  ,ITS,14
- 14,VTM,*0711B
+ 14,VTM,V0
  ,ITS,14
- 14,VTM,*0716B
+ 14,VTM,V5
  ,ITS,14
- 14,VTM,*0662B
+ 14,VTM,К4
  ,ITS,14
- 14,VTM,*0664B
+ 14,VTM,К6
  ,ITS,14
  ,NTR,22B
  13,VJM,RNSYMB  
@@ -189,34 +196,35 @@
  7,ATX,31B
  ,NTR,3
  ,NTR,22B
- *0106B:,UTC,*BLO*   
+ БЛОК_BLO:,UTC,*BLO*   
  ,XTA,
  ,NTR,3
  7,A+X,1
  ,UTC,*BLO*   
  ,ATX,
- ,WTC,*0712B
+ ,WTC,V1
  1,VTM,
- 1,UTC,*0772B
+ 1,UTC,V49
  ,XTA,
  ,ITS,
  7,XTA,35B
  ,NTR,22B
  15,AEX,
- ,UZA,*0116B
- ,UJ,*0117B
- *0116B:,UJ,*0124B
- *0117B:7,XTA,31B
+ ,UZA,ПЕРЕХОД_3
+ ,UJ,ОШИБКА_БЛОКА
+ ПЕРЕХОД_3:,UJ,БЛОК_SCANER_2
+C ВЫЗОВ KLAIDA: ОШИБКА РАЗБОРА БЛОКА.
+ ОШИБКА_БЛОКА:7,XTA,31B
  ,NTR,3
  7,A+X,1
  7,ATX,31B
  7,X-A,7
  ,NTR,22B
- ,UZA,*0106B
- 14,VTM,*0702B
+ ,UZA,БЛОК_BLO
+ 14,VTM,К20
  ,ITS,14
  13,VJM,KLAIDA  
- *0124B:,UTC,*SCANER*
+ БЛОК_SCANER_2:,UTC,*SCANER*
  ,XTA,
  ,NTR,3
  7,A+X,2
@@ -228,10 +236,10 @@
  ,XTA,
  ,NTR,22B
  15,AEX,
- ,U1A,*0133B
- ,UJ,*0134B
- *0133B:,UJ,*0142B
- *0134B:7,XTA,11B
+ ,U1A,ПЕРЕХОД_4
+ ,UJ,БЛОК_STANN
+ ПЕРЕХОД_4:,UJ,БЛОК_BLO_2
+ БЛОК_STANN:7,XTA,11B
  ,UTC,*STANN* 
  ,ATX,
  ,NTR,3
@@ -241,55 +249,55 @@
  ,UTC,*GOT*   
  ,ATX,
  ,NTR,22B
- ,UJ,*0037B
- *0142B:7,XTA,6
+ ,UJ,БЛОК_GOT
+ БЛОК_BLO_2:7,XTA,6
  ,ITS,
  ,UTC,*BLO*   
  ,XTA,
  15,AEX,
- ,U1A,*0146B
- ,UJ,*0147B
- *0146B:,UJ,*0224B
- *0147B:7,XTA,-3
+ ,U1A,ПЕРЕХОД_5
+ ,UJ,ПЕР_30
+ ПЕРЕХОД_5:,UJ,БЛОК_FOP
+ ПЕР_30:7,XTA,-3
  7,ATX,36B
  ,NTR,3
  ,NTR,22B
- *0151B:,UTC,*SCANER*
+ БЛОК_SCANER_3:,UTC,*SCANER*
  ,XTA,
  ,NTR,3
  ,UTC,GAK/6
  ,A-X,
  ,NTR,22B
- ,UZA,*0155B
- ,UJ,*0156B
- *0155B:,UJ,*0215B
- *0156B:13,VJM,SCAN    
+ ,UZA,ПЕРЕХОД_6
+ ,UJ,РАЗБОР_КОМАНДЫ_2
+ ПЕРЕХОД_6:,UJ,БЛОК_SCANER_4
+ РАЗБОР_КОМАНДЫ_2:13,VJM,SCAN    
  7,XTA,7
  ,ITS,
  ,UTC,GAN/4
  ,XTA,
  15,AEX,
- ,UZA,*0163B
- ,UJ,*0164B
- *0163B:,UJ,*0151B
- *0164B:7,XTA,16B
+ ,UZA,ПЕРЕХОД_7
+ ,UJ,БЛОК_SCANER1
+ ПЕРЕХОД_7:,UJ,БЛОК_SCANER_3
+ БЛОК_SCANER1:7,XTA,16B
  ,ITS,
  ,UTC,GAN/4
  ,XTA,
  15,AEX,
- ,U1A,*0170B
- ,UJ,*0171B
- *0170B:,UJ,*0215B
- *0171B:,UTC,*SCANER*
+ ,U1A,ПЕРЕХОД_8
+ ,UJ,ВЫВОД_СИСТЕМЫ
+ ПЕРЕХОД_8:,UJ,БЛОК_SCANER_4
+ ВЫВОД_СИСТЕМЫ:,UTC,*SCANER*
  ,XTA,
  ,NTR,3
  7,A-X,1
  7,ATX,37B
  14,VTM,*INS*   
  ,ITS,14
- 14,VTM,*0720B
+ 14,VTM,V7
  ,ITS,14
- 14,VTM,*0714B
+ 14,VTM,V3
  ,ITS,14
  ,NTR,22B
  13,VJM,SYTINT  
@@ -303,13 +311,13 @@
  ,X-A,
  7,A+X,11B
  ,NTR,22B
- ,U1A,*0206B
- ,UJ,*0210B
- *0206B:7,XTA,11B
+ ,U1A,ПЕР_9
+ ,UJ,БЛОК_RPT
+ ПЕР_9:7,XTA,11B
  7,ATX,33B
  ,NTR,3
  ,NTR,22B
- *0210B:7,XTA,33B
+ БЛОК_RPT:7,XTA,33B
  ,UTC,*RPT*   
  ,ATX,
  ,NTR,3
@@ -319,7 +327,7 @@
  ,UTC,*SCANER*
  ,ATX,
  ,NTR,22B
- *0215B:,UTC,*SCANER*
+ БЛОК_SCANER_4:,UTC,*SCANER*
  ,XTA,
  ,NTR,3
  7,A-X,1
@@ -331,62 +339,63 @@
  ,UTC,*GOT*   
  ,ATX,
  ,NTR,22B
- ,UJ,*0037B
- *0224B:7,XTA,2
+ ,UJ,БЛОК_GOT
+ БЛОК_FOP:7,XTA,2
  ,ITS,
  ,UTC,*FOP*   
  ,XTA,
  15,AEX,
- ,U1A,*0233B
+ ,U1A,ПЕРЕХОД_9
  7,XTA,3
  ,ITS,
  ,UTC,*BLO*   
  ,XTA,
  15,AEX,
- ,UZA,*0233B
- ,UJ,*0234B
- *0233B:,UJ,*0240B
- *0234B:13,VJM,GOSTAS  
+ ,UZA,ПЕРЕХОД_9
+ ,UJ,ПРОВЕРКА_ФОРМАТА
+ ПЕРЕХОД_9:,UJ,БЛОК_BLO_3
+C ВЫЗОВ GOSTAS: ОФОРМЛЕНИЕ ПО ГОСТ.
+ ПРОВЕРКА_ФОРМАТА:13,VJM,GOSTAS  
  7,XTA,
  ,UTC,*NUST*  
  ,ATX,
  ,NTR,3
  ,NTR,22B
- *0240B:7,XTA,3
+ БЛОК_BLO_3:7,XTA,3
  ,ITS,
  ,UTC,*BLO*   
  ,XTA,
  15,AEX,
- ,UZA,*0244B
- ,UJ,*0247B
- *0244B:7,XTA,
+ ,UZA,БЛОК_GOT_2
+ ,UJ,БЛОК_BLO_4
+ БЛОК_GOT_2:7,XTA,
  ,UTC,*GOT*   
  ,ATX,
  ,NTR,3
  ,NTR,22B
- *0247B:7,XTA,3
+ БЛОК_BLO_4:7,XTA,3
  ,ITS,
  ,UTC,*BLO*   
  ,XTA,
  15,AEX,
- ,UZA,*0256B
+ ,UZA,ПЕРЕХОД_10
  7,XTA,5
  ,ITS,
  ,UTC,*BLO*   
  ,XTA,
  15,AEX,
- ,UZA,*0256B
- ,UJ,*0257B
- *0256B:,UJ,*0467B
- *0257B:7,XTA,2
+ ,UZA,ПЕРЕХОД_10
+ ,UJ,БЛОК_FOP_2
+ ПЕРЕХОД_10:,UJ,БЛОК_BLO_8
+ БЛОК_FOP_2:7,XTA,2
  ,ITS,
  ,UTC,*FOP*   
  ,XTA,
  15,AEX,
- ,U1A,*0263B
- ,UJ,*0264B
- *0263B:,UJ,*0301B
- *0264B:,UTC,GAQ/5
+ ,U1A,ПЕРЕХОД_11
+ ,UJ,БЛОК_PAGE3
+ ПЕРЕХОД_11:,UJ,БЛОК_GOT_3
+ БЛОК_PAGE3:,UTC,GAQ/5
  ,XTA,
  ,NTR,3
  ,UTC,GAQ/6
@@ -396,10 +405,10 @@
  ,XTA,
  7,A-X,40B
  ,NTR,22B
- ,U1A,*0272B
- ,UJ,*0273B
- *0272B:13,VJM,TOPAGE  
- *0273B:7,XTA,11B
+ ,U1A,ФОРМИРОВАНИЕ_СТРАНИЦЫ
+ ,UJ,КОНЕЦ_СТРАНИЦЫ
+ ФОРМИРОВАНИЕ_СТРАНИЦЫ:13,VJM,TOPAGE  
+ КОНЕЦ_СТРАНИЦЫ:7,XTA,11B
  ,UTC,GAM/0
  ,ATX,
  ,NTR,3
@@ -410,45 +419,45 @@
  ,ATX,
  ,NTR,3
  ,NTR,22B
- *0301B:7,XTA,1
+ БЛОК_GOT_3:7,XTA,1
  ,ITS,
  ,UTC,*GOT*   
  ,XTA,
  15,AEX,
- ,UZA,*0305B
- ,UJ,*0312B
- *0305B:14,VTM,*0660B
+ ,UZA,ЗАПИСЬ_РЕДАКТОРА
+ ,UJ,БЛОК_BLO_5
+ ЗАПИСЬ_РЕДАКТОРА:14,VTM,К2
  ,ITS,14
- 14,VTM,*0662B
+ 14,VTM,К4
  ,ITS,14
- 14,VTM,*0666B
+ 14,VTM,К8
  ,ITS,14
  13,VJM,WRIKOR  
  ,NTR,3
  ,NTR,22B
- *0312B:7,XTA,2
+ БЛОК_BLO_5:7,XTA,2
  ,ITS,
  ,UTC,*BLO*   
  ,XTA,
  15,AEX,
- ,UZA,*0321B
+ ,UZA,ПЕРЕХОД_12
  7,XTA,4
  ,ITS,
  ,UTC,*BLO*   
  ,XTA,
  15,AEX,
- ,UZA,*0321B
- ,UJ,*0322B
- *0321B:,UJ,*0366B
- *0322B:7,XTA,1
+ ,UZA,ПЕРЕХОД_12
+ ,UJ,БЛОК_FOP_3
+ ПЕРЕХОД_12:,UJ,БЛОК_FOP_4
+ БЛОК_FOP_3:7,XTA,1
  ,ITS,
  ,UTC,*FOP*   
  ,XTA,
  15,AEX,
- ,UZA,*0326B
- ,UJ,*0327B
- *0326B:,UJ,*0467B
- *0327B:7,XTA,
+ ,UZA,ПЕРЕХОД_13
+ ,UJ,БЛОК_STAND
+ ПЕРЕХОД_13:,UJ,БЛОК_BLO_8
+ БЛОК_STAND:7,XTA,
  ,UTC,*STAND* 
  ,ATX,
  ,NTR,3
@@ -460,23 +469,23 @@
  ,XTA,
  ,NTR,22B
  15,AEX,
- ,UZA,*0336B
- ,UJ,*0340B
- *0336B:7,XTA,14B
+ ,UZA,ПЕР_12
+ ,UJ,ВЫЗОВ_WRIKOR
+ ПЕР_12:7,XTA,14B
  7,ATX,41B
  ,NTR,3
  ,NTR,22B
- *0340B:14,VTM,*1003B
+ ВЫЗОВ_WRIKOR:14,VTM,V58
  ,ITS,14
- 14,VTM,*0722B
+ 14,VTM,V9
  ,ITS,14
- 14,VTM,*0673B
+ 14,VTM,К13
  ,ITS,14
  13,VJM,WRIKOR  
  ,NTR,3
  ,NTR,22B
  7,XTA,41B
- 14,VTM,*0671B
+ 14,VTM,К11
  13,VJM,I*DI*I  
  7,ATX,41B
  ,NTR,3
@@ -486,15 +495,15 @@
  7,XTA,1
  7,ATX,31B
  ,NTR,22B
- *0353B:7,XTA,31B
+ БЛОК_V10:7,XTA,31B
  ,NTR,3
  7,A+X,41B
  7,ATX,42B
- ,WTC,*0723B
+ ,WTC,V10
  1,VTM,
- 1,UTC,*0756B
+ 1,UTC,V37
  ,XTA,
- ,WTC,*0712B
+ ,WTC,V1
  2,VTM,
  2,UTC,GAR/0
  ,ATX,
@@ -505,24 +514,24 @@
  7,ATX,31B
  7,X-A,5
  ,NTR,22B
- ,UZA,*0353B
- ,UJ,*0467B
- *0366B:7,XTA,10B
+ ,UZA,БЛОК_V10
+ ,UJ,БЛОК_BLO_8
+ БЛОК_FOP_4:7,XTA,10B
  ,ITS,
  ,UTC,*FOP*   
  ,XTA,
  15,AEX,
- ,UZA,*0372B
- ,UJ,*0377B
- *0372B:7,XTA,4
+ ,UZA,БЛОК_BLO_6
+ ,UJ,БЛОК_STANN_2
+ БЛОК_BLO_6:7,XTA,4
  ,ITS,
  ,UTC,*BLO*   
  ,XTA,
  15,AEX,
- ,U1A,*0376B
- ,UJ,*0377B
- *0376B:,UJ,*0467B
- *0377B:7,XTA,
+ ,U1A,ПЕРЕХОД_14
+ ,UJ,БЛОК_STANN_2
+ ПЕРЕХОД_14:,UJ,БЛОК_BLO_8
+ БЛОК_STANN_2:7,XTA,
  7,ATX,41B
  ,NTR,3
  7,XTA,11B
@@ -531,14 +540,14 @@
  ,XTA,
  ,NTR,22B
  15,AEX,
- ,U1A,*0405B
- ,UJ,*0406B
- *0405B:,UJ,*0416B
- *0406B:14,VTM,*0657B
+ ,U1A,ПЕРЕХОД_15
+ ,UJ,ВЫЗОВ_WRIKOR_2
+ ПЕРЕХОД_15:,UJ,ВЫЗОВ_WRIKOR_3
+ ВЫЗОВ_WRIKOR_2:14,VTM,К1
  ,ITS,14
- 14,VTM,*0662B
+ 14,VTM,К4
  ,ITS,14
- 14,VTM,*0665B
+ 14,VTM,К7
  ,ITS,14
  13,VJM,WRIKOR  
  ,NTR,3
@@ -547,51 +556,52 @@
  7,ATX,41B
  ,NTR,3
  ,NTR,22B
- ,UJ,*0422B
- *0416B:14,VTM,*1007B
+ ,UJ,БЛОК_BLO_7
+ ВЫЗОВ_WRIKOR_3:14,VTM,V62
  ,ITS,14
- 14,VTM,*0662B
+ 14,VTM,К4
  ,ITS,14
- 14,VTM,*0674B
+ 14,VTM,К14
  ,ITS,14
  13,VJM,WRIKOR  
- *0422B:7,XTA,4
+ БЛОК_BLO_7:7,XTA,4
  ,ITS,
  ,UTC,*BLO*   
  ,XTA,
  15,AEX,
- ,U1A,*0426B
- ,UJ,*0427B
- *0426B:,UJ,*0447B
- *0427B:7,XTA,
+ ,U1A,ПЕРЕХОД_16
+ ,UJ,БЛОК_FOP_5
+ ПЕРЕХОД_16:,UJ,КОНЕЦ_БЛОКА
+ БЛОК_FOP_5:7,XTA,
  ,ITS,
  ,UTC,*FOP*   
  ,XTA,
  15,AEX,
- ,UZA,*0436B
+ ,UZA,ПЕРЕХОД_17
  7,XTA,2
  ,ITS,
  ,UTC,*FOP*   
  ,XTA,
  15,AEX,
- ,UZA,*0436B
- ,UJ,*0437B
- *0436B:,UJ,*0447B
- *0437B:14,VTM,*1003B
+ ,UZA,ПЕРЕХОД_17
+ ,UJ,ЗАПИСЬ_РЕДАКТОРА_2
+ ПЕРЕХОД_17:,UJ,КОНЕЦ_БЛОКА
+ ЗАПИСЬ_РЕДАКТОРА_2:14,VTM,V58
  ,ITS,14
- 14,VTM,*0662B
+ 14,VTM,К4
  ,ITS,14
- 14,VTM,*0662B
- ,ITS,14
- 13,VJM,WRIKOR  
- 14,VTM,*1003B
- ,ITS,14
- 14,VTM,*0665B
- ,ITS,14
- 14,VTM,*0662B
+ 14,VTM,К4
  ,ITS,14
  13,VJM,WRIKOR  
- *0447B:13,VJM,ENDKOR  
+ 14,VTM,V58
+ ,ITS,14
+ 14,VTM,К7
+ ,ITS,14
+ 14,VTM,К4
+ ,ITS,14
+ 13,VJM,WRIKOR  
+C ВЫЗОВ ENDKOR: КОНЕЦ ОБРАБОТКИ БЛОКА.
+ КОНЕЦ_БЛОКА:13,VJM,ENDKOR  
  7,XTA,10B
  ,UTC,*FOP*   
  ,ATX,
@@ -599,15 +609,15 @@
  7,XTA,1
  7,ATX,31B
  ,NTR,22B
- *0454B:7,XTA,31B
+ БЛОК_V10_2:7,XTA,31B
  ,NTR,3
  7,A+X,41B
  7,ATX,42B
- ,WTC,*0723B
+ ,WTC,V10
  1,VTM,
- 1,UTC,*0742B
+ 1,UTC,V25
  ,XTA,
- ,WTC,*0712B
+ ,WTC,V1
  2,VTM,
  2,UTC,GAR/0
  ,ATX,
@@ -618,16 +628,16 @@
  7,ATX,31B
  7,X-A,5
  ,NTR,22B
- ,UZA,*0454B
- *0467B:,WTC,*BLO*   
- ,UJ,*0467B
- ,UJ,*0476B
-  :,UJ,*0504B
-  :,UJ,*0507B
-  :,UJ,*0512B
-  :,UJ,*0551B
-  :,UJ,*0565B
- *0476B:14,VTM,*0705B
+ ,UZA,БЛОК_V10_2
+ БЛОК_BLO_8:,WTC,*BLO*   
+ ,UJ,БЛОК_BLO_8
+ ,UJ,ЗАГРУЗКА_ОВЕРЛЕЯ
+  :,UJ,ЗАГРУЗКА_ОВЕРЛЕЯ_2
+  :,UJ,ЗАГРУЗКА_ОВЕРЛЕЯ_3
+  :,UJ,БЛОК_FOP_6
+  :,UJ,ЗАГРУЗКА_ОВЕРЛЕЯ_4
+  :,UJ,ЗАПИСЬ_РЕДАКТОРА_3
+ ЗАГРУЗКА_ОВЕРЛЕЯ:14,VTM,К23
  ,ITS,14
  13,VJM,LOADGO  
  ,UTC,GAK/6
@@ -637,24 +647,24 @@
  ,UTC,*SCANER*
  ,ATX,
  ,NTR,22B
- ,UJ,*0577B
- *0504B:14,VTM,*0710B
+ ,UJ,БЛОК_RUSIS
+ ЗАГРУЗКА_ОВЕРЛЕЯ_2:14,VTM,К26
  ,ITS,14
  13,VJM,LOADGO  
- ,UJ,*0577B
- *0507B:14,VTM,*0704B
+ ,UJ,БЛОК_RUSIS
+ ЗАГРУЗКА_ОВЕРЛЕЯ_3:14,VTM,К22
  ,ITS,14
  13,VJM,LOADGO  
- ,UJ,*0577B
- *0512B:7,XTA,2
+ ,UJ,БЛОК_RUSIS
+ БЛОК_FOP_6:7,XTA,2
  ,ITS,
  ,UTC,*FOP*   
  ,XTA,
  15,AEX,
- ,UZA,*0516B
- ,UJ,*0517B
- *0516B:,UJ,*0547B
- *0517B:7,XTA,
+ ,UZA,ПЕРЕХОД_18
+ ,UJ,ПРОВЕРКА_ФОРМАТА_2
+ ПЕРЕХОД_18:,UJ,ВЫВОД_ТЕКСТА
+ ПРОВЕРКА_ФОРМАТА_2:7,XTA,
  ,UTC,*NUST*  
  ,ATX,
  ,NTR,3
@@ -671,22 +681,22 @@
  ,UTC,*FOP*   
  ,XTA,
  15,AEX,
- ,UZA,*0534B
+ ,UZA,ПЕРЕХОД_19
  7,XTA,2
  ,ITS,
  ,UTC,*FOP*   
  ,XTA,
  15,AEX,
- ,UZA,*0534B
- ,UJ,*0535B
- *0534B:,UJ,*0547B
- *0535B:13,VJM,ENDPG   
+ ,UZA,ПЕРЕХОД_19
+ ,UJ,КОНЕЦ_СТРАНИЦЫ_2
+ ПЕРЕХОД_19:,UJ,ВЫВОД_ТЕКСТА
+ КОНЕЦ_СТРАНИЦЫ_2:13,VJM,ENDPG   
  7,XTA,1
  7,ATX,31B
  ,NTR,3
  ,NTR,22B
- *0540B:7,XTA,-3
- ,WTC,*0712B
+ БЛОК_V1_2:7,XTA,-3
+ ,WTC,V1
  1,VTM,
  1,UTC,GAR/2
  ,ATX,
@@ -696,17 +706,18 @@
  7,ATX,31B
  7,X-A,22B
  ,NTR,22B
- ,UZA,*0540B
- *0547B:13,VJM,REDTXT  
- ,UJ,*0617B
- *0551B:7,XTA,
+ ,UZA,БЛОК_V1_2
+C ВЫЗОВ REDTXT: ВЫВОД ТЕКСТА РЕЖИМА *RED.
+ ВЫВОД_ТЕКСТА:13,VJM,REDTXT  
+ ,UJ,БЛОК_NUSTA
+ ЗАГРУЗКА_ОВЕРЛЕЯ_4:7,XTA,
  ,UTC,*STV*   
  ,ATX,
  ,NTR,3
  7,XTA,
  ,UTC,GAN/2
  ,ATX,
- 14,VTM,*0707B
+ 14,VTM,К25
  ,ITS,14
  ,NTR,22B
  13,VJM,LOADGO  
@@ -721,12 +732,12 @@
  ,UTC,GAN/2
  ,ATX,
  ,NTR,22B
- ,UJ,*0617B
- *0565B:14,VTM,*0773B
+ ,UJ,БЛОК_NUSTA
+ ЗАПИСЬ_РЕДАКТОРА_3:14,VTM,V50
  ,ITS,14
- 14,VTM,*0701B
+ 14,VTM,К19
  ,ITS,14
- 14,VTM,*0671B
+ 14,VTM,К11
  ,ITS,14
  13,VJM,WRIKOR  
  13,VJM,ENDKOR  
@@ -740,14 +751,15 @@
  ,UTC,*FIN*   
  ,ATX,
  ,NTR,22B
- *0577B:7,XTA,1
+ БЛОК_RUSIS:7,XTA,1
  ,UTC,*RUSIS* 
  ,ATX,
  ,NTR,3
  ,NTR,22B
- *0602B:14,VTM,*0725B
+C ВЫЗОВ SPAUD: РАЗБОР КОМАНДЫ УПРАВЛЕНИЯ РЕЖИМА *RED.
+ ВЫЗОВ_SPAUD:14,VTM,V12
  ,ITS,14
- 14,VTM,*0724B
+ 14,VTM,V11
  ,ITS,14
  13,VJM,SPAUD   
  7,XTA,
@@ -755,25 +767,25 @@
  ,UTC,GAL/2
  ,XTA,
  15,AEX,
- ,U1A,*0611B
- ,UJ,*0612B
- *0611B:,UJ,*0602B
- *0612B:7,XTA,1
+ ,U1A,ПЕРЕХОД_20
+ ,UJ,ПЕР_1_2
+ ПЕРЕХОД_20:,UJ,ВЫЗОВ_SPAUD
+ ПЕР_1_2:7,XTA,1
  7,ATX,31B
  ,NTR,3
  ,NTR,22B
- *0614B:7,XTA,-3
- ,WTC,*0712B
+ БЛОК_V1_3:7,XTA,-3
+ ,WTC,V1
  1,VTM,
  1,UTC,GAR/4
  ,ATX,
- *0617B:7,XTA,31B
+ БЛОК_NUSTA:7,XTA,31B
  ,NTR,3
  7,A+X,1
  7,ATX,31B
  7,X-A,25B
  ,NTR,22B
- ,UZA,*0614B
+ ,UZA,БЛОК_V1_3
  7,XTA,
  ,UTC,*NUSTA* 
  ,ATX,
@@ -790,25 +802,25 @@
  ,XTA,
  ,NTR,22B
  15,AEX,
- ,U1A,*0634B
- ,UJ,*0635B
- *0634B:,UJ,*0640B
- *0635B:7,XTA,2
+ ,U1A,ПЕРЕХОД_21
+ ,UJ,БЛОК_FOP_7
+ ПЕРЕХОД_21:,UJ,ПЕР_9_2
+ БЛОК_FOP_7:7,XTA,2
  ,UTC,*FOP*   
  ,ATX,
  ,NTR,3
  ,NTR,22B
- *0640B:7,XTA,11B
+ ПЕР_9_2:7,XTA,11B
  ,ITS,
  7,XTA,34B
  15,AEX,
- ,U1A,*0643B
- ,UJ,*0644B
- *0643B:,UJ,*0037B
- *0644B:,UJ,*0653B
- *0645B:7,MTJ,8
+ ,U1A,ПЕРЕХОД_22
+ ,UJ,ПЕРЕХОД_23
+ ПЕРЕХОД_22:,UJ,БЛОК_GOT
+ ПЕРЕХОД_23:,UJ,ВОЗВРАТ_2
+ ВОЗВРАТ:7,MTJ,8
  14,MTJ,10
- 7,VTM,*0661B
+ 7,VTM,К3
  ,ITS,13
  ,ITS,1
  ,ITS,2
@@ -817,58 +829,58 @@
  ,NTR,3
  ,NTR,2
  10,UJ,
- *0653B:,STI,
+ ВОЗВРАТ_2:,STI,
  ,STI,7
  ,STI,2
  ,STI,1
  ,STI,8
  8,UJ,
- *0656B:,ISO, 6H       . 040 040 040 040 040 040 
- *0657B:,ISO, 6H*0STA  . 052 060 123 124 101 040 
- *0660B:,ISO, 6H*RG*RU . 052 122 107 052 122 125 
- *0661B:,INT,0
- *0662B:,INT,1
+ К0:,ISO, 6H       . 040 040 040 040 040 040 
+ К1:,ISO, 6H*0STA  . 052 060 123 124 101 040 
+ К2:,ISO, 6H*RG*RU . 052 122 107 052 122 125 
+ К3:,INT,0
+ К4:,INT,1
  ,INT,3
- *0664B:,INT,4
- *0665B:,INT,5
- *0666B:,INT,6
+ К6:,INT,4
+ К7:,INT,5
+ К8:,INT,6
  ,INT,7
  ,INT,8
- *0671B:,INT,2
+ К11:,INT,2
  ,INT,10
- *0673B:,INT,11
- *0674B:,INT,12
+ К13:,INT,11
+ К14:,INT,12
  ,INT,13
  ,INT,16
  ,INT,19
  ,INT,24
- *0701B:,INT,31
- *0702B:,INT,100
+ К19:,INT,31
+ К20:,INT,100
  ,INT,2400
- *0704B:,ISO, 6HNOTFOR . 116 117 124 106 117 122 
- *0705B:,ISO, 6HWRITEH . 127 122 111 124 105 110 
+ К22:,ISO, 6HNOTFOR . 116 117 124 106 117 122 
+ К23:,ISO, 6HWRITEH . 127 122 111 124 105 110 
  ,INT,1400
- *0707B:,ISO, 6HPAPAPR . 120 101 120 101 120 122 
- *0710B:,ISO, 6HWRIIPO . 127 122 111 111 120 117 
+ К25:,ISO, 6HPAPAPR . 120 101 120 101 120 122 
+ К26:,ISO, 6HWRIIPO . 127 122 111 111 120 117 
  ,BSS,49
- *0772B:,BSS,1
- *0773B:,BSS,8
- *1003B:,BSS,4
- *1007B:,BSS,2
+ V49:,BSS,1
+ V50:,BSS,8
+ V58:,BSS,4
+ V62:,BSS,2
  ,DATA,
- *0711B:,INT,34
- *0712B:,INT,61
- *0713B:,INT,33
- *0714B:,INT,3
+ V0:,INT,34
+ V1:,INT,61
+ V2:,INT,33
+ V3:,INT,3
  ,INT,60
- *0716B:,INT,3
+ V5:,INT,3
  ,INT,8
- *0720B:,INT,67
+ V7:,INT,67
  ,INT,4
- *0722B:,INT,6
- *0723B:,INT,60
- *0724B:,INT,4
- *0725B:,INT,17
+ V9:,INT,6
+ V10:,INT,60
+ V11:,INT,4
+ V12:,INT,17
  ,INT,95
  ,INT,16
  ,INT,16
@@ -880,31 +892,31 @@
  ,INT,15
  ,INT,40
  ,INT,15
- *0741B:,ISO, 6H*0MCP1 . 052 060 115 103 120 061 
- *0742B:,ISO, 6H02 41  . 060 062 040 064 061 040 
- *0743B:,ISO, 6H*0MCP1 . 052 060 115 103 120 061 
+ V24:,ISO, 6H*0MCP1 . 052 060 115 103 120 061 
+ V25:,ISO, 6H02 41  . 060 062 040 064 061 040 
+ V26:,ISO, 6H*0MCP1 . 052 060 115 103 120 061 
  ,ISO, 6H12 48  . 061 062 040 064 070 040 
- *0745B:,ISO, 6H*0MCP6 . 052 060 115 103 120 066 
+ V28:,ISO, 6H*0MCP6 . 052 060 115 103 120 066 
  ,ISO, 6H8 66   . 070 040 066 066 040 040 
- *0747B:,ISO, 6H*HCH   . 052 110 103 110 040 040 
+ V30:,ISO, 6H*HCH   . 052 110 103 110 040 040 
  ,ISO, 6H*IPO   . 052 111 120 117 040 040 
  ,ISO, 6H*NOT   . 052 116 117 124 040 040 
  ,ISO, 6H*RED   . 052 122 105 104 040 040 
  ,ISO, 6H*SUB   . 052 123 125 102 040 040 
  ,ISO, 6H*END   . 052 105 116 104 040 040 
  ,ISO, 6H*REP   . 052 122 105 120 040 040 
- *0756B:,ISO, 6H*STA   . 052 123 124 101 040 040 
- *0757B:,ISO, 6H       . 040 040 040 040 040 040 
- 12,SET,*0711B
- 1,   ,*0743B
- 12,SET,*0725B
- 1,   ,*0757B
- 4,SET,*0741B
- 1,   ,*1003B
- 2,SET,*0745B
- 1,   ,*1007B
- 8,SET,*0747B
- 1,   ,*0773B
- 1,SET,*0757B
- 1,   ,*0656B
+ V37:,ISO, 6H*STA   . 052 123 124 101 040 040 
+ V38:,ISO, 6H       . 040 040 040 040 040 040 
+ 12,SET,V0
+ 1,   ,V26
+ 12,SET,V12
+ 1,   ,V38
+ 4,SET,V24
+ 1,   ,V58
+ 2,SET,V28
+ 1,   ,V62
+ 8,SET,V30
+ 1,   ,V50
+ 1,SET,V38
+ 1,   ,К0
  ,END,

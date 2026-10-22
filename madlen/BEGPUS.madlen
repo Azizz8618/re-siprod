@@ -15,22 +15,22 @@
  GAL/7:,EQU,GAK/4-32767
  I*DI*I  :,SUBP,
  I*MU*I  :,SUBP,
- 14,VTM,*0001B
- ,UJ,*0102B
- *0001B:7,XTA,4
+ 14,VTM,БЛОК_JAU
+ ,UJ,ВОЗВРАТ
+ БЛОК_JAU:7,XTA,4
  ,ITS,
  ,UTC,*JAU*   
  ,XTA,
  15,AEX,
- ,UZA,*0005B
- ,UJ,*0006B
- *0005B:,UJ,*0017B
- *0006B:7,XTA,1
+ ,UZA,ПЕРЕХОД_2
+ ,UJ,ПЕР_1
+ ПЕРЕХОД_2:,UJ,БЛОК_FOR
+ ПЕР_1:7,XTA,1
  7,ATX,13B
  ,NTR,3
  ,NTR,22B
- *0010B:7,XTA,-1
- ,WTC,*0126B
+ БЛОК_V1:7,XTA,-1
+ ,WTC,V1
  1,VTM,
  1,UTC,GAL/7
  ,ATX,
@@ -40,8 +40,8 @@
  7,ATX,13B
  7,X-A,11B
  ,NTR,22B
- ,UZA,*0010B
- *0017B:,UTC,*FOR*   
+ ,UZA,БЛОК_V1
+ БЛОК_FOR:,UTC,*FOR*   
  ,XTA,
  ,NTR,3
  7,A+X,1
@@ -55,14 +55,14 @@
  ,XTA,
  ,NTR,22B
  15,AEX,
- ,U1A,*0027B
- ,UJ,*0031B
- *0027B:7,XTA,2
+ ,U1A,ПЕР_2
+ ,UJ,ВЫЗОВ_IDII
+ ПЕР_2:7,XTA,2
  7,ATX,14B
  ,NTR,3
  ,NTR,22B
- *0031B:7,XTA,3
- 14,VTM,*0127B
+ ВЫЗОВ_IDII:7,XTA,3
+ 14,VTM,V2
  13,VJM,I*DI*I  
  7,ATX,15B
  ,NTR,3
@@ -73,24 +73,24 @@
  ,X-A,
  7,A+X,15B
  ,NTR,22B
- ,U1A,*0041B
- ,UJ,*0043B
- *0041B:14,VTM,*0121B
+ ,U1A,ВЫЗОВ_KLAIDA
+ ,UJ,БЛОК_FOR_2
+ ВЫЗОВ_KLAIDA:14,VTM,К7
  ,ITS,14
  13,VJM,KLAIDA  
- *0043B:,UTC,*FOR*   
+ БЛОК_FOR_2:,UTC,*FOR*   
  ,XTA,
  ,NTR,3
  7,A-X,3
  7,A+X,14B
  ,NTR,22B
- ,UZA,*0047B
- ,UJ,*0051B
- *0047B:7,XTA,10B
+ ,UZA,ПЕР_8
+ ,UJ,БЛОК_FOR3
+ ПЕР_8:7,XTA,10B
  7,ATX,16B
  ,NTR,3
  ,NTR,22B
- *0051B:,UTC,GAL/0
+ БЛОК_FOR3:,UTC,GAL/0
  ,XTA,
  ,NTR,3
  7,A+X,16B
@@ -103,14 +103,14 @@
  ,XTA,
  ,NTR,22B
  15,AEX,
- ,U1A,*0061B
- ,UJ,*0062B
- *0061B:,UJ,*0101B
- *0062B:,UTC,*FOR*   
+ ,U1A,ПЕРЕХОД_3
+ ,UJ,ВЫЗОВ_IDII_2
+ ПЕРЕХОД_3:,UJ,ПЕРЕХОД_4
+ ВЫЗОВ_IDII_2:,UTC,*FOR*   
  ,XTA,
- 14,VTM,*0115B
+ 14,VTM,К3
  13,VJM,I*DI*I  
- 14,VTM,*0115B
+ 14,VTM,К3
  13,VJM,I*MU*I  
  7,ATX,17B
  ,NTR,3
@@ -125,19 +125,19 @@
  7,XTA,17B
  ,NTR,22B
  15,AEX,
- ,UZA,*0075B
- ,UJ,*0101B
- *0075B:,UTC,GAK/7
+ ,UZA,БЛОК_FOR2
+ ,UJ,ПЕРЕХОД_4
+ БЛОК_FOR2:,UTC,GAK/7
  ,XTA,
  ,NTR,3
  7,A+X,7
  ,UTC,GAK/7
  ,ATX,
  ,NTR,22B
- *0101B:,UJ,*0107B
- *0102B:7,MTJ,8
+ ПЕРЕХОД_4:,UJ,ВОЗВРАТ_2
+ ВОЗВРАТ:7,MTJ,8
  14,MTJ,10
- 7,VTM,*0113B
+ 7,VTM,К1
  ,ITS,13
  ,ITS,1
  ,ITS,8
@@ -145,23 +145,23 @@
  ,NTR,3
  ,NTR,2
  10,UJ,
- *0107B:,STI,
+ ВОЗВРАТ_2:,STI,
  ,STI,7
  ,STI,1
  ,STI,8
  8,UJ,
   :,ISO, 6H       . 040 040 040 040 040 040 
- *0113B:,INT,0
+ К1:,INT,0
  ,INT,1
- *0115B:,INT,2
+ К3:,INT,2
  ,INT,4
  ,INT,10
  ,INT,64
- *0121B:,INT,101
+ К7:,INT,101
  ,INT,128
  ,INT,2400
  ,INT,4800
  ,BSS,1
- *0126B:,BSS,1
- *0127B:,BSS,4
+ V1:,BSS,1
+ V2:,BSS,4
  ,END,

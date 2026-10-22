@@ -1,23 +1,25 @@
+CСИНХРОНИЗАЦИЯ ВЫВОДА С ТЕКСТОВЫМ ПОТОКОМ.
+C
  SYTINT  :,NAME, NEW DTRAN
  RINT    :,SUBP,
  RSYMB   :,SUBP,
- 14,VTM,*0001B
- ,UJ,*0072B
- *0001B:7,XTA,-4
+ 14,VTM,БЛОК_V6
+ ,UJ,ПЕР_9
+ БЛОК_V6:7,XTA,-4
  7,ATX,2
  ,NTR,3
- ,WTC,*0120B
+ ,WTC,V6
  ,XTA,
  7,ATX,3
  ,NTR,22B
- *0005B:,WTC,*0117B
+ ВЫЗОВ_RSYMB:,WTC,V5
  14,VTM,
  ,ITS,14
- 14,VTM,*0113B
+ 14,VTM,V1
  ,ITS,14
- 14,VTM,*0112B
+ 14,VTM,V0
  ,ITS,14
- 14,VTM,*0111B
+ 14,VTM,К7
  ,ITS,14
  13,VJM,RSYMB   
  ,NTR,3
@@ -27,39 +29,39 @@
  ,X-A,
  7,A+X,-5
  ,NTR,22B
- ,U1A,*0017B
- ,UJ,*0020B
- *0017B:,UJ,*0025B
- *0020B:7,XTA,2
+ ,U1A,ПЕРЕХОД_2
+ ,UJ,ПЕР_2
+ ПЕРЕХОД_2:,UJ,ПЕР_3
+ ПЕР_2:7,XTA,2
  ,NTR,3
  7,A-X,-6
  ,NTR,22B
- ,U1A,*0023B
- ,UJ,*0024B
- *0023B:,UJ,*0025B
- *0024B:,UJ,*0030B
- *0025B:7,XTA,3
+ ,U1A,ПЕРЕХОД_3
+ ,UJ,ПЕРЕХОД_4
+ ПЕРЕХОД_3:,UJ,ПЕР_3
+ ПЕРЕХОД_4:,UJ,ПЕР_3_2
+ ПЕР_3:7,XTA,3
  ,NTR,3
  7,A+X,
  7,ATX,3
  ,NTR,22B
- ,UJ,*0005B
- *0030B:7,XTA,3
+ ,UJ,ВЫЗОВ_RSYMB
+ ПЕР_3_2:7,XTA,3
  7,ATX,4
  ,NTR,3
  ,NTR,22B
- *0032B:7,XTA,4
+ ВЫЗОВ_RSYMB_2:7,XTA,4
  ,NTR,3
  7,A+X,
  7,ATX,4
- ,WTC,*0117B
+ ,WTC,V5
  14,VTM,
  ,ITS,14
- 14,VTM,*0114B
+ 14,VTM,V2
  ,ITS,14
- 14,VTM,*0112B
+ 14,VTM,V0
  ,ITS,14
- 14,VTM,*0111B
+ 14,VTM,К7
  ,ITS,14
  ,NTR,22B
  13,VJM,RSYMB   
@@ -70,46 +72,46 @@
  ,X-A,
  7,A+X,-5
  ,NTR,22B
- ,U1A,*0047B
- ,UJ,*0050B
- *0047B:,UJ,*0055B
- *0050B:7,XTA,2
+ ,U1A,ПЕРЕХОД_5
+ ,UJ,ПЕР_2_2
+ ПЕРЕХОД_5:,UJ,ВЫЗОВ_RINT
+ ПЕР_2_2:7,XTA,2
  ,NTR,3
  7,A-X,-6
  ,NTR,22B
- ,U1A,*0053B
- ,UJ,*0054B
- *0053B:,UJ,*0055B
- *0054B:,UJ,*0032B
- *0055B:7,XTA,4
+ ,U1A,ПЕРЕХОД_6
+ ,UJ,ПЕРЕХОД_7
+ ПЕРЕХОД_6:,UJ,ВЫЗОВ_RINT
+ ПЕРЕХОД_7:,UJ,ВЫЗОВ_RSYMB_2
+ ВЫЗОВ_RINT:7,XTA,4
  ,NTR,3
  7,A-X,3
  7,ATX,5
- ,WTC,*0117B
+ ,WTC,V5
  14,VTM,
  ,ITS,14
- 14,VTM,*0113B
+ 14,VTM,V1
  ,ITS,14
- 14,VTM,*0115B
+ 14,VTM,V3
  ,ITS,14
- ,WTC,*0121B
+ ,WTC,V7
  14,VTM,
  ,ITS,14
- 14,VTM,*0116B
+ 14,VTM,V4
  ,ITS,14
  ,NTR,22B
  13,VJM,RINT    
  ,NTR,3
  ,NTR,22B
  7,XTA,4
- ,WTC,*0120B
+ ,WTC,V6
  ,ATX,
  ,NTR,3
  ,NTR,22B
- ,UJ,*0100B
- *0072B:7,MTJ,8
+ ,UJ,ВОЗВРАТ
+ ПЕР_9:7,MTJ,8
  14,MTJ,10
- 7,VTM,*0110B
+ 7,VTM,К6
  7,STX,11B
  7,STX,10B
  7,STX,7
@@ -119,7 +121,7 @@
  ,NTR,3
  ,NTR,2
  10,UJ,
- *0100B:,STI,
+ ВОЗВРАТ:,STI,
  ,STI,7
  ,STI,8
  8,UJ,
@@ -129,14 +131,14 @@
  ,ISO, 6H(I7,'47'S . 050 111 067 054 047 123 
  ,ISO, 6HKAICIU . 113 101 111 103 111 125 
  ,ISO, 6HS'47')    . 123 047 051 040 040 040 
- *0110B:,INT,1
- *0111B:,INT,6
- *0112B:,BSS,1
- *0113B:,BSS,1
- *0114B:,BSS,1
- *0115B:,BSS,1
- *0116B:,BSS,1
- *0117B:,BSS,1
- *0120B:,BSS,1
- *0121B:,BSS,1
+ К6:,INT,1
+ К7:,INT,6
+ V0:,BSS,1
+ V1:,BSS,1
+ V2:,BSS,1
+ V3:,BSS,1
+ V4:,BSS,1
+ V5:,BSS,1
+ V6:,BSS,1
+ V7:,BSS,1
  ,END,

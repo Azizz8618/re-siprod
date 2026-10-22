@@ -25,9 +25,9 @@
  I*DI*I  :,SUBP,
  I*MU*I  :,SUBP,
  GAN/2:,EQU,GAK/4-32767
- 14,VTM,*0001B
- ,UJ,*0072B
- *0001B:7,XTA,
+ 14,VTM,БЛОК_FOR
+ ,UJ,ВОЗВРАТ
+ БЛОК_FOR:7,XTA,
  ,UTC,*FOR*   
  ,ATX,
  ,NTR,3
@@ -41,24 +41,24 @@
  ,XTA,
  ,NTR,22B
  15,AEX,
- ,U1A,*0011B
- ,UJ,*0012B
- *0011B:,UJ,*0022B
- *0012B:,UTC,GAK/7
+ ,U1A,ПЕРЕХОД_2
+ ,UJ,БЛОК_FOR2
+ ПЕРЕХОД_2:,UJ,ВЫЗОВ_BEGPUS
+ БЛОК_FOR2:,UTC,GAK/7
  ,XTA,
  ,NTR,3
  7,A-X,12B
  ,NTR,22B
- ,U1A,*0016B
- ,UJ,*0022B
- *0016B:,UTC,GAK/7
+ ,U1A,БЛОК_FOR2_2
+ ,UJ,ВЫЗОВ_BEGPUS
+ БЛОК_FOR2_2:,UTC,GAK/7
  ,XTA,
  ,NTR,3
  7,A+X,11B
  ,UTC,GAK/7
  ,ATX,
  ,NTR,22B
- *0022B:,UTC,GAM/5
+ ВЫЗОВ_BEGPUS:,UTC,GAM/5
  ,XTA,
  ,UTC,GAL/0
  ,ATX,
@@ -93,7 +93,7 @@
  13,VJM,BEGPUS  
  ,UTC,GAL/2
  ,XTA,
- 14,VTM,*0104B
+ 14,VTM,К2
  13,VJM,I*DI*I  
  ,NTR,3
  7,A-X,3
@@ -103,22 +103,22 @@
  7,ATX,13B
  ,UTC,GAK/6
  ,XTA,
- 14,VTM,*0112B
+ 14,VTM,К8
  13,VJM,I*MU*I  
  7,A-X,7
  7,ATX,14B
- 14,VTM,*0117B
+ 14,VTM,V2
  ,ITS,14
- 14,VTM,*0103B
+ 14,VTM,К1
  ,ITS,14
- ,WTC,*0116B
+ ,WTC,V1
  1,VTM,
  1,UTC,GAN/2
  14,VTM,
  ,ITS,14
- 14,VTM,*0115B
+ 14,VTM,V0
  ,ITS,14
- 14,VTM,*0107B
+ 14,VTM,К5
  ,ITS,14
  ,NTR,22B
  13,VJM,RNSYMB  
@@ -134,10 +134,10 @@
  ,UTC,*JAU*   
  ,ATX,
  ,NTR,22B
- ,UJ,*0077B
- *0072B:7,MTJ,8
+ ,UJ,ВОЗВРАТ_2
+ ВОЗВРАТ:7,MTJ,8
  14,MTJ,10
- 7,VTM,*0102B
+ 7,VTM,К0
  ,ITS,13
  ,ITS,1
  ,ITS,8
@@ -145,27 +145,27 @@
  ,NTR,3
  ,NTR,2
  10,UJ,
- *0077B:,STI,
+ ВОЗВРАТ_2:,STI,
  ,STI,7
  ,STI,1
  ,STI,8
  8,UJ,
- *0102B:,INT,0
- *0103B:,INT,1
- *0104B:,INT,2
+ К0:,INT,0
+ К1:,INT,1
+ К2:,INT,2
  ,INT,3
  ,INT,4
- *0107B:,INT,7
+ К5:,INT,7
  ,INT,10
  ,INT,21
- *0112B:,INT,22
+ К8:,INT,22
  ,INT,64
  ,INT,70
  ,BSS,2
- *0117B:,BSS,2
+ V2:,BSS,2
  ,DATA,
- *0115B:,ISO, 6HTURINY . 124 125 122 111 116 131 
- *0116B:,ISO, 6HS      . 123 040 040 040 040 040 
- 2,SET,*0115B
- 1,   ,*0117B
+ V0:,ISO, 6HTURINY . 124 125 122 111 116 131 
+ V1:,ISO, 6HS      . 123 040 040 040 040 040 
+ 2,SET,V0
+ 1,   ,V2
  ,END,
