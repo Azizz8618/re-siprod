@@ -101,6 +101,37 @@ def parse_cmd(line):
     return lab, op, operand, comment
 
 
+def show_draft(cmds, table, refs, args):
+    """Черновик пояснений к элементам данных модуля."""
+    pos = {c[0]: i for i, c in enumerate(cmds)}
+    for word in sorted(table):
+        name, kind, val = table[word]
+        if args.kind and group_of(name, kind, val) != args.kind:
+            continue
+        used = refs.get(word, [])
+        if not used:
+            print('        "%s": "В КОДЕ НЕ ИСПОЛЬЗУЕТСЯ",' % name)
+            continue
+        targets = {}
+        for idx, operand, op in used:
+            k = pos.get(idx)
+            if k is None:
+                continue
+            pushed = (k + 1 < len(cmds) and cmds[k + 1][2] == "ITS")
+            call = ""
+            for j in range(k + 1, min(k + 12, len(cmds))):
+                if cmds[j][2] == "VJM":
+                    call = cmds[j][3].strip().split("(")[0]
+                    break
+            kind_ref = ("ПАРАМЕТР ВЫЗОВА" if pushed and call else
+                        ("ПЕРЕДАЁТСЯ В " + call if call else "ИСПОЛЬЗУЕТСЯ"))
+            targets.setdefault("%s %s" % (kind_ref, call) if call else kind_ref,
+                               0)
+            targets["%s %s" % (kind_ref, call) if call else kind_ref] += 1
+        txt = "; ".join("%s (%d)" % (t, n) for t, n in targets.items())
+        print('        "%s": "%s",' % (name, txt.upper()[:88]))
+
+
 def show_calls(cmds, table, args):
     """Параметры, передаваемые каждому вызову:Push значений со стека."""
     pushes = []
@@ -138,6 +169,8 @@ def main():
                     help="показывать и неиспользуемые элементы")
     ap.add_argument("--calls", action="store_true",
                     help="показать параметры каждого вызова")
+    ap.add_argument("--draft", action="store_true",
+                    help="черновик пояснений к элементам данных")
     ap.add_argument("--params", type=int, default=8,
                     help="сколько последних параметров показывать")
     args = ap.parse_args()
@@ -148,6 +181,11 @@ def main():
     if table is None:
         print("нет текста МАДЛЕН для модуля %s" % module)
         return 1
+
+    # имя элемента -> слово (ссылки в коде идут и по именам)
+    byname = {}
+    for word, (name, _k, _v) in table.items():
+        byname.setdefault(name, word)
 
     # ссылки: слово -> [(номер строки, операнд, операция)]
     refs = {}
@@ -162,13 +200,20 @@ def main():
         if not m:
             continue
         base, off = m.group(1), m.group(2)
-        if base not in ("КОНСТАНТА", "ПЕРЕМЕННАЯ"):
+        if base in ("КОНСТАНТА", "ПЕРЕМЕННАЯ"):
+            word = int(off, 8) if off else 0
+        elif base in byname:
+            word = byname[base] + (int(off, 8) if off else 0)
+        else:
             continue
-        word = int(off, 8) if off else 0
         refs.setdefault(word, []).append((idx, operand, op))
 
     if args.calls:
         show_calls(cmds, table, args)
+        return 0
+
+    if args.draft:
+        show_draft(cmds, table, refs, args)
         return 0
 
     for word in sorted(table):

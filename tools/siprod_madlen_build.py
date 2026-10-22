@@ -474,6 +474,37 @@ def int_run_purpose(module):
         return "ЧИСЛА: ТАБЛИЦА ЧИСЛОВЫХ КОДОВ МОДУЛЯ"
 
 
+def insert_data_notes(out, module):
+    """Пояснения к элементам данных (tools/siprod_data_notes.py).
+
+    Пояснение печатается строкой «C ...» над объявлением элемента.
+    """
+    try:
+        from siprod_data_notes import DATA_NOTES
+    except ImportError:
+        return out
+    notes = DATA_NOTES.get(module)
+    if not notes:
+        return out
+    final = []
+    used = set()
+    for line in out:
+        m = re.match(r"^\s*([А-ЯЁA-Z_0-9+]+):,(BSS|ISO|INT|LOG|OCT|HEX|BIN)",
+                     line)
+        if m:
+            nm = m.group(1)
+            note = notes.get(nm)
+            if note:
+                final.append(comment(" " + note))
+                used.add(nm)
+        final.append(line)
+    miss = sorted(set(notes) - used)
+    if miss:
+        sys.stderr.write("ВНИМАНИЕ: в %s нет элементов для пояснений: %s\n"
+                         % (module, ", ".join(miss)))
+    return final
+
+
 def name_data(text, module=""):
     """Дать имена объявлениям данных, которым имён нет.
 
@@ -595,15 +626,26 @@ def name_data(text, module=""):
             out2.append(line)
         out = out2
     if renamed:
-        # старое имя -> новое: ссылки и в коде, и в разделе SET
+        # старое имя -> новое: ссылки и в коде, и в разделе SET.
+        # Имена образуют цепочки (КОНСТАНТА+662 -> ЕДИНИЦА -> КОД_2),
+        # поэтому сначала цепочка разворачивается до конечного имени.
+        def final(nm):
+            seen = set()
+            while nm in renamed and nm not in seen:
+                seen.add(nm)
+                nm = renamed[nm]
+            return nm
+
+        mapping = {k: final(k) for k in renamed}
         pat = re.compile("(?<![A-Za-zА-ЯЁ0-9_])(%s)(?![A-Za-zА-ЯЁ0-9_])"
                          % "|".join(re.escape(k)
-                                   for k in sorted(renamed, key=len, reverse=True)))
+                                   for k in sorted(mapping, key=len, reverse=True)))
 
         def repl(mo):
-            return renamed[mo.group(1)]
+            return mapping[mo.group(1)]
 
         out = [pat.sub(repl, line) for line in out]
+    out = insert_data_notes(out, module)
     return "\n".join(out)
 
 
