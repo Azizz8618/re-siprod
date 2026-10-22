@@ -1,135 +1,169 @@
+CENDTUR - МОДУЛЬ СИПРОДА
+CИсточник: личная библиотека (PERSO, зона 2702,
+Cтом 2248), слово 20256 образа SIPROD.BIN
+CДлина при загрузке: 77 слов, 128 команд
+CВход: ENDTUR
+CВыход: F5B (возврат через М12), POP (возврат через М10)
+CВнешние: EGO, FOR, JAU, FT571, FT002, FT003, IDII, IMUI
+CСмещения в EGO: 8601
+CСмещения в FOR: 1
+CСмещения в JAU: 1
+CСмещения в кадре (М7): общие 0-1, 3-10, свои 11
+CРегистры: М1 (индекс: база модуля), М7 (указатель кадра),
+CМ10 (блок вызывающего), М12 (магазин, кадр параметров ОС),
+CМ15 (адрес возврата), М16 (модифицированный адрес),
+CМ17 (контекст задачи)
+CМодификатор адреса: МОДА/МОД задают М16, адрес следующей команды += М16
+C
  ENDTUR  :,NAME, NEW DTRAN
+ M1:,EQU,1B
+ M7:,EQU,7B
+ M10:,EQU,10B
+ M12:,EQU,12B
+ M15:,EQU,15B
+ M16:,EQU,16B
+ M17:,EQU,17B
  *EGO*   :,LC,13401
- GAK/2:,EQU,*EGO*   +8601
+ EGO8601:,EQU,*EGO*   +8601
  *FOR*   :,LC,8
- GAK/4:,EQU,*FOR*   +1
+ FOR1:,EQU,*FOR*   +1
  *JAU*   :,LC,2
- GAK/6:,EQU,*JAU*   +1
+ JAU1:,EQU,*JAU*   +1
  FT*571  :,SUBP,
  FT*002  :,SUBP,
  FT*003  :,SUBP,
  I*DI*I  :,SUBP,
  I*MU*I  :,SUBP,
- GAL/4:,EQU,GAK/4+2
- GAL/5:,EQU,GAK/4+3
- GAL/6:,EQU,GAK/4+6
- GAL/7:,EQU,GAK/2-32767
- 14,VTM,БЛОК_FOR
- ,UJ,ВОЗВРАТ
- БЛОК_FOR:,UTC,*FOR*   
- ,XTA,
- 7,ATX,5
- ,NTR,3
- 7,XTA,
+ FOR3:,EQU,FOR1+2
+ FOR4:,EQU,FOR1+3
+ FOR7:,EQU,FOR1+6
+ EGO41368:,EQU,EGO8601-32767
+ M16,VTM,FORA.FORA(М16)
+ ,UJ,ВОЗВРАТ_В_ОС.F5B
+C
+ FORA:,UTC,*FOR*.FOR
+ ,XTA,.0
+ M7,ATX,5.5(М7)
+ ,NTR,3.'3'
+ M7,XTA,.0(М7)
  ,ITS,
- ,UTC,GAK/6
- ,XTA,
- ,NTR,22B
- 15,AEX,
- ,U1A,ПЕРЕХОД_2
- ,UJ,ВЫЗОВ_IDII
- ПЕРЕХОД_2:,UJ,ВЫЗОВ_IMUI
- ВЫЗОВ_IDII:,UTC,*FOR*   
- ,XTA,
- 14,VTM,К2
- 13,VJM,I*DI*I  
- 7,ATX,5
- ,NTR,3
- 14,VTM,К2
- 13,VJM,I*MU*I  
- 7,ATX,6
- ,UTC,*FOR*   
- ,XTA,
- ,ITS,
- 7,XTA,6
- ,NTR,22B
- 15,AEX,
- ,U1A,ПЕР_5
- ,UJ,ВЫЗОВ_IMUI
- ПЕР_5:7,XTA,5
- ,NTR,3
- 7,A+X,
- 7,ATX,5
- ,NTR,22B
- ВЫЗОВ_IMUI:,UTC,GAL/4
- ,XTA,
- ,NTR,3
- ,UTC,GAL/5
- ,A+X,
- ,UTC,GAL/6
- ,A+X,
- 14,VTM,К3
- 13,VJM,I*MU*I  
- 7,ATX,7
- 7,XTA,
- 7,ATX,10B
- ,NTR,22B
- ВЫЗОВ_IMUI_2:7,XTA,10B
- ,NTR,3
- 7,A-X,
- 7,ATX,4
- 7,XTA,3
- 14,VTM,V0
- 13,VJM,I*MU*I  
- 7,A+X,
- 7,ATX,11B
- 7,A+X,7
- 7,A-X,
- 7,ATX,12B
- 14,VTM,К0
- ,ITS,14
- ,NTR,22B
- 13,VJM,FT*571  
- 7,XTA,11B
- 7,ATX,13B
- ,NTR,3
- ,NTR,22B
- ,UJ,ВЫЗОВ_FT003
- ВЫЗОВ_FT002:,WTC,V7
- 1,VTM,
- 1,UTC,GAL/7
- 14,VTM,
- ,ITS,14
- 13,VJM,FT*002  
- 7,XTA,13B
- ,NTR,3
- 7,A+X,
- 7,ATX,13B
- ,NTR,22B
- ВЫЗОВ_FT003:7,X-A,12B
- ,UZA,ВЫЗОВ_FT002
- 13,VJM,FT*003  
- 7,XTA,10B
- ,NTR,3
- 7,A+X,
- 7,ATX,10B
- 7,XTA,5
- 7,A-X,
- 7,ATX,5
- 7,XTA,
- ,ITS,
- 7,XTA,5
- ,NTR,22B
- 15,AEX,
- ,UZA,ПЕРЕХОД_3
- ,UJ,ПЕРЕХОД_4
- ПЕРЕХОД_3:,UJ,ВЫЗОВ_IMUI_2
- ПЕРЕХОД_4:,UJ,ВОЗВРАТ_2
- ВОЗВРАТ:7,MTJ,8
- 14,MTJ,10
- 7,VTM,К1
- ,ITS,13
- ,ITS,1
- ,ITS,8
- ,ITS,
- ,NTR,3
- ,NTR,2
- 10,UJ,
- ВОЗВРАТ_2:,STI,
- ,STI,7
- ,STI,1
- ,STI,8
- 8,UJ,
+ ,UTC,JAU1.JAU1
+ ,XTA,.0
+ ,NTR,22B.'22'
+ M17,AEX,.0(М17)
+ ,U1A,FORB.FORB
+ ,UJ,FORC.FORC
+C
+ FORB:,UJ,FOR3B.FOR3B
+C
+ FORC:,UTC,*FOR*.0
+ ,XTA,.FOR
+ M16,VTM,К2.0
+ M15,VJM,I*DI*I.К2(М16)
+ M7,ATX,5.IDII(М15)
+ ,NTR,3.5(М7)
+ M16,VTM,К2.'3'
+ M15,VJM,I*MU*I.К2(М16)
+ M7,ATX,6.IMUI(М15)
+ ,UTC,*FOR*.6(М7)
+ ,XTA,.FOR
+ ,ITS,.0
+ M7,XTA,6
+ ,NTR,22B.6(М7)
+ M17,AEX,.'22'
+ ,U1A,FOR3A.0(М17)
+ ,UJ,FOR3B.FOR3A
+C
+ FOR3A:M7,XTA,5.FOR3B
+ ,NTR,3.0
+ M7,A+X,.5(М7)
+ M7,ATX,5.'3'
+ ,NTR,22B.0(М7)
+ FOR3B:,UTC,FOR3.5(М7)
+ ,XTA,.'22'
+ ,NTR,3.0
+ ,UTC,FOR4.FOR3
+ ,A+X,.0
+ ,UTC,FOR7.'3'
+ ,A+X,.FOR4
+ M16,VTM,К3.0
+ M15,VJM,I*MU*I.FOR7
+ M7,ATX,7.0
+ M7,XTA,.К3(М16)
+ M7,ATX,10B.IMUI(М15)
+ ,NTR,22B.0
+ ВЫЗОВ_IMUI:M7,XTA,10B.7(М7)
+ ,NTR,3.0(М7)
+ M7,A-X,.8(М7)
+ M7,ATX,4.'22'
+ M7,XTA,3.8(М7)
+ M16,VTM,V0.'3'
+ M15,VJM,I*MU*I.0(М7)
+ M7,A+X,.4(М7)
+ M7,ATX,11B.3(М7)
+ M7,A+X,7.V0(М16)
+ M7,A-X,.IMUI(М15)
+ M7,ATX,12B.0
+ M16,VTM,К0.0(М7)
+ ,ITS,14.9(М7)
+ ,NTR,22B.7(М7)
+ M15,VJM,FT*571.0(М7)
+ M7,XTA,11B.10(М7)
+ M7,ATX,13B.К0(М16)
+ ,NTR,3.М16
+ ,NTR,22B.'22'
+ ,UJ,ВЫЗОВ_FT003.FT571(М15)
+C
+ EGO413:,WTC,V7.0
+ M1,VTM,.9(М7)
+ M1,UTC,EGO41368.11(М7)
+ M16,VTM,.'3'
+ ,ITS,14.'22'
+ M15,VJM,FT*002.F11
+ M7,XTA,13B.0
+ ,NTR,3.V7
+ M7,A+X,.0(М1)
+ M7,ATX,13B.EGO41368(М1)
+ ,NTR,22B.0(М16)
+ ВЫЗОВ_FT003:M7,X-A,12B.М16
+ ,UZA,EGO413.FT002(М15)
+ M15,VJM,FT*003.11(М7)
+ M7,XTA,10B.'3'
+ ,NTR,3.0(М7)
+ M7,A+X,.11(М7)
+ M7,ATX,10B.'22'
+ M7,XTA,5.0
+ M7,A-X,.10(М7)
+ M7,ATX,5.EGO413
+ M7,XTA,.FT003(М15)
+ ,ITS,.0
+ M7,XTA,5.8(М7)
+ ,NTR,22B.'3'
+ M17,AEX,.0(М7)
+ ,UZA,ЦИКЛ_ПЕРЕХОД.8(М7)
+ ,UJ,ЦИКЛ_ПЕРЕХОД_2.5(М7)
+C
+ ЦИКЛ_ПЕРЕХОД:,UJ,ВЫЗОВ_IMUI.0(М7)
+C
+ ЦИКЛ_ПЕРЕХОД_2:,UJ,POP.5(М7)
+C
+ ВОЗВРАТ_В_ОС:M7,MTJ,8.0(М7)
+ M16,MTJ,10
+ M7,VTM,К1.5(М7)
+ ,ITS,13.'22'
+ ,ITS,1.0(М17)
+ ,ITS,8.F5
+ ,ITS,.F5A
+ ,NTR,3.F8
+ ,NTR,2.0
+ M12,UJ,.POP
+C
+ POP:,STI,.0
+ ,STI,7.М10(М7)
+ ,STI,1.М12(М16)
+ ,STI,8.К1(М7)
+ M10,UJ,.М15
+C
  К0:,ISO, 6H(22A6) . 050 062 062 101 066 051 
  К1:,INT,1
  К2:,INT,2
@@ -137,4 +171,4 @@
  ,INT,2400
  V0:,BSS,7
  V7:,BSS,1
- ,END,
+ ,END,.М1

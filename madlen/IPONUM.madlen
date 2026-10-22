@@ -1,103 +1,132 @@
+CIPONUM - МОДУЛЬ СИПРОДА
+CИсточник: личная библиотека (PERSO, зона 2702,
+Cтом 2248), слово 9408 образа SIPROD.BIN
+CДлина при загрузке: 52 слов, 88 команд
+CВход: IPONUM
+CВыход: WRIIPO:SCANEA, F4A (возврат через М12), F4B (возврат через М10)
+CВнешние: NUM, SCANER, INS, PAGE, NBR, ENDKOR, WRIKOR, GOTOPO, READNB
+CСмещения в INS: 24, 25, 26
+CСмещения в NUM: 2, 3
+CСмещения в PAGE: 1
+CСмещения в SCANER: 1, 2
+CСмещения в кадре (М7): общие 0-1, 3-6, 10
+CРегистры: М7 (указатель кадра), М10 (блок вызывающего),
+CМ12 (магазин, кадр параметров ОС), М15 (адрес возврата),
+CМ16 (модифицированный адрес)
+CМодификатор адреса: МОДА/МОД задают М16, адрес следующей команды += М16
+C
  IPONUM  :,NAME, NEW DTRAN
+ M7:,EQU,7B
+ M10:,EQU,10B
+ M12:,EQU,12B
+ M15:,EQU,15B
+ M16:,EQU,16B
  *NUM*   :,LC,4
- GAK/2:,EQU,*NUM*   +2
- GAK/3:,EQU,*NUM*   +3
+ NUM2:,EQU,*NUM*   +2
+ NUM3:,EQU,*NUM*   +3
  *SCANER*:,LC,3
- GAK/5:,EQU,*SCANER*+1
- GAK/6:,EQU,*SCANER*+2
+ SCANER1:,EQU,*SCANER*+1
+ SCANER2:,EQU,*SCANER*+2
  *INS*   :,LC,27
- GAL/0:,EQU,*INS*   +24
- GAL/1:,EQU,*INS*   +25
- GAL/2:,EQU,*INS*   +26
+ INS24:,EQU,*INS*   +24
+ INS25:,EQU,*INS*   +25
+ INS26:,EQU,*INS*   +26
  *PAGE*  :,LC,6
  *NBR*   :,LC,1
  ENDKOR  :,SUBP,
  WRIKOR  :,SUBP,
  GOTOPO  :,SUBP,
  READNB  :,SUBP,
- GAM/1:,EQU,*PAGE*  +1
- 14,VTM,БЛОК_SCANER
- ,UJ,ВОЗВРАТ
- БЛОК_SCANER:,UTC,*SCANER*
- ,XTA,
- ,NTR,3
- ,UTC,GAL/2
- ,A-X,
- ,NTR,22B
- ,UZA,ПЕРЕХОД_2
- ,UJ,ВЫЗОВ_READNB
- ПЕРЕХОД_2:,UJ,ПЕРЕХОД_3
- ВЫЗОВ_READNB:7,XTA,1
- ,UTC,*NBR*   
- ,ATX,
- ,NTR,3
- ,NTR,22B
- 13,VJM,READNB  
- 7,XTA,
- ,UTC,*NBR*   
- ,ATX,
- ,NTR,3
- ,UTC,GAM/1
- ,XTA,
- ,UTC,GAK/2
- ,A-X,
- 7,A-X,3
- 7,ATX,5
- 7,XTA,5
- ,X-A,
- 7,A+X,
- ,NTR,22B
- ,UZA,ПЕР_1
- ,UJ,ВЫЗОВ_GOTOPO
- ПЕР_1:7,XTA,1
- 7,ATX,5
- ,NTR,3
- ,NTR,22B
- ВЫЗОВ_GOTOPO:14,VTM,V0
- ,ITS,14
- 13,VJM,GOTOPO  
- ,NTR,3
- ,NTR,22B
- 14,VTM,К0
- ,ITS,14
- 14,VTM,К2
- ,ITS,14
- 14,VTM,К3
- ,ITS,14
- 13,VJM,WRIKOR  
- ,NTR,3
- ,NTR,22B
- 7,XTA,4
- ,NTR,3
- ,UTC,GAK/2
- ,A-X,
- 7,A+X,1
- 7,ATX,6
- 14,VTM,*NUM*   
- ,ITS,14
- 14,VTM,V1
- ,ITS,14
- 14,VTM,GAK/2
- ,ITS,14
- ,NTR,22B
- 13,VJM,WRIKOR  
- ,NTR,3
- ,NTR,22B
- 13,VJM,ENDKOR  
- ПЕРЕХОД_3:,UJ,ВОЗВРАТ_2
- ВОЗВРАТ:7,MTJ,8
- 14,MTJ,10
- 7,VTM,К1
- ,ITS,13
- ,ITS,8
- ,ITS,
- ,NTR,3
- ,NTR,2
- 10,UJ,
- ВОЗВРАТ_2:,STI,
+ PAGE1:,EQU,*PAGE*  +1
+ M16,VTM,SCANEA.SCANEA(М16)
+ ,UJ,ВОЗВРАТ_В_ОС.F4A
+C
+ SCANEA:,UTC,*SCANER*.SCANER
+ ,XTA,.0
+ ,NTR,3.'3'
+ ,UTC,INS26.INS26
+ ,A-X,.0
+ ,NTR,22B.'22'
+ ,UZA,NBRA.NBRA
+ ,UJ,NBRB.NBRB
+C
+ NBRA:,UJ,ЦИКЛ_ПЕРЕХОД.F4
+C
+ NBRB:M7,XTA,1.0
+ ,UTC,*NBR*.1(М7)
+ ,ATX,.NBR
+ ,NTR,3.0
+ ,NTR,22B.'3'
+ M15,VJM,READNB.'22'
+ M7,XTA,.READNB(М15)
+ ,UTC,*NBR*.0(М7)
+ ,ATX,.NBR
+ ,NTR,3.0
+ ,UTC,PAGE1.'3'
+ ,XTA,.PAGE1
+ ,UTC,NUM2.0
+ ,A-X,.NUM2
+ M7,A-X,3.0
+ M7,ATX,5.3(М7)
+ M7,XTA,5.5(М7)
+ ,X-A,.5(М7)
+ M7,A+X,.0
+ ,NTR,22B.0(М7)
+ ,UZA,ПЕР_1.'22'
+ ,UJ,ВЫЗОВ_GOTOPO.F1
+C
+ ПЕР_1:M7,XTA,1.F1A
+ M7,ATX,5.1(М7)
+ ,NTR,3.5(М7)
+ ,NTR,22B.'3'
+ ВЫЗОВ_GOTOPO:M16,VTM,V0.'22'
+ ,ITS,14.V0(М16)
+ M15,VJM,GOTOPO.М16
+ ,NTR,3.GOTOPO(М15)
+ ,NTR,22B.0
+ M16,VTM,К0.'3'
+ ,ITS,14.'22'
+ M16,VTM,К2.К0(М16)
+ ,ITS,14.М16
+ M16,VTM,К3.К2(М16)
+ ,ITS,14.М16
+ M15,VJM,WRIKOR.К3(М16)
+ ,NTR,3.М16
+ ,NTR,22B.WRIKOR(М15)
+ M7,XTA,4.0
+ ,NTR,3.'3'
+ ,UTC,NUM2.'22'
+ ,A-X,.4(М7)
+ M7,A+X,1.'3'
+ M7,ATX,6.NUM2
+ M16,VTM,*NUM*.0
+ ,ITS,14.1(М7)
+ M16,VTM,V1.6(М7)
+ ,ITS,14.NUM(М16)
+ M16,VTM,NUM2.М16
+ ,ITS,14.V1(М16)
+ ,NTR,22B.М16
+ M15,VJM,WRIKOR.NUM2(М16)
+ ,NTR,3.М16
+ ,NTR,22B.'22'
+ M15,VJM,ENDKOR.WRIKOR(М15)
+ ЦИКЛ_ПЕРЕХОД:,UJ,ВОЗВРАТ_В_БЛОК.'3'
+C
+ ВОЗВРАТ_В_ОС:M7,MTJ,8.'22'
+ M16,MTJ,10.ENDKOR(М15)
+ M7,VTM,К1.0
+ ,ITS,13.F4B
+ ,ITS,8.0
+ ,ITS,.М10(М7)
+ ,NTR,3.М12(М16)
+ ,NTR,2.К1(М7)
+ M12,UJ,.М15
+C
+ ВОЗВРАТ_В_БЛОК:,STI,.М10
  ,STI,7
- ,STI,8
- 8,UJ,
+ ,STI,8.'3'
+ M10,UJ,.'2'
+C
  К0:,ISO, 6HI P O  . 111 040 120 040 117 040 
  К1:,INT,0
  К2:,INT,1
@@ -106,4 +135,4 @@
  ,INT,12
  V0:,BSS,1
  V1:,BSS,1
- ,END,
+ ,END,.0(М12)

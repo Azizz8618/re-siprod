@@ -1,126 +1,163 @@
+CSCAN - МОДУЛЬ СИПРОДА
+CИсточник: личная библиотека (PERSO, зона 2702,
+Cтом 2248), слово 14848 образа SIPROD.BIN
+CДлина при загрузке: 89 слов, 118 команд
+CВход: SCAN
+CВыход: ANATXT:SCANEA, ANATXT:TXT1B, CHAPAG:F3, DOUBLE:DDRE,
+CFIRCAR:SCANEA, FIRCAR:ADDRA, FIRCAR:F7, FIRCAR:REGIMA, KORNET:INS26A,
+CPAPRAP:F14, PAPRAP:SCANEA, READMK:SCANEA, READNB:SCANEA, READNB:SCANEF,
+CSCHEMA:SCANEA, SCHEMA:SCANEF, SEGTAB:F7, SEGTAB:TXTA, SPAUD:SCANEE,
+CSPAUD:SCANEH, SPAUD:F14, SPAUD:SCANE2, SPAUD:F14A, SPAUD:F11,
+CSPAUD:F15B, SPAUD:F12, SPAUD:F16, SPAUD:F8, SPAUD:REGIMJ, SPAUD:F13,
+CSPAUD:F13A, SPAUD:REGIMN, SPAUD:SCAN52, SPAUD:REGIMW, TAMPYK:BEN14B,
+CTOKREZ:SCANEA, WHATYP:SCANEA, WHATYP:TYPE32, WHATYP:TYPE1C,
+CWRIIPO:SCANEC, WRIIPO:F6, L0146 (возврат через М12),
+CPOP (возврат через М10)
 CРАЗБОР СТРОКИ КОМАНДЫ: ВЫДЕЛЕНИЕ СИМВОЛА ПОСЛЕ '*'
 CИЗВЛЕЧЕНИЕ АДРЕСА, ЧИСЛА И ТЕКСТА ОПЕРАНДА.
+CВнешние: INS, SCANER, KLAIDA, RSYMB, IDII, IMUI, IPOI
+CСмещения в INS: 24, 25, 26
+CСмещения в SCANER: 1, 2
+CАбсолютные символы: N1 = -1
+CСмещения в кадре (М7): общие 0-1, 4-5, 7-10, свои 11-12,
+Cвне кадра 2058
+CРегистры: М1 (индекс: база модуля), М7 (указатель кадра),
+CМ10 (блок вызывающего), М12 (магазин, кадр параметров ОС),
+CМ15 (адрес возврата), М16 (модифицированный адрес)
+CМодификатор адреса: МОДА/МОД задают М16, адрес следующей команды += М16
 C
  SCAN    :,NAME, NEW DTRAN
+ M1:,EQU,1B
+ M7:,EQU,7B
+ M10:,EQU,10B
+ M12:,EQU,12B
+ M15:,EQU,15B
+ M16:,EQU,16B
+ M20:,EQU,20B
  *INS*   :,LC,27
- GAK/2:,EQU,*INS*   +24
- GAK/3:,EQU,*INS*   +25
- GAK/4:,EQU,*INS*   +26
+ INS24:,EQU,*INS*   +24
+ INS25:,EQU,*INS*   +25
+ INS26:,EQU,*INS*   +26
  *SCANER*:,LC,3
- GAK/6:,EQU,*SCANER*+1
- GAK/7:,EQU,*SCANER*+2
+ SCANER1:,EQU,*SCANER*+1
+ SCANER2:,EQU,*SCANER*+2
  KLAIDA  :,SUBP,
  RSYMB   :,SUBP,
  I*DI*I  :,SUBP,
  I*MU*I  :,SUBP,
  I*PO*I  :,SUBP,
- 14,VTM,ЧТЕНИЕ_КОДA
- ,UJ,БЛОК_ПРОДОЛЖЕНИЕ
- ЧТЕНИЕ_КОДA:7,XTA,-1
- 7,ATX,10B
- ,NTR,3
- 14,VTM,*INS*   
- ,ITS,14
- 14,VTM,*SCANER*
- ,ITS,14
- 14,VTM,V1
- ,ITS,14
- 14,VTM,К4
- ,ITS,14
- ,NTR,22B
- 13,VJM,RSYMB   
- ,NTR,3
- ,NTR,22B
- ,UTC,*SCANER*
- ,XTA,
- ,NTR,3
- 7,A+X,
- ,UTC,*SCANER*
- ,ATX,
- 7,XTA,10B
- 14,VTM,К5
- 13,VJM,I*DI*I  
- 7,ATX,11B
- 7,XTA,11B
- ,X-A,
- 7,A+X,5
- ,NTR,22B
- ,U1A,ПРОВЕРКА_КОДA
- ,UJ,ЧТЕНИЕ_ПАРАМЕТРА
- ПРОВЕРКА_КОДA:14,VTM,К7
- ,ITS,14
- 13,VJM,KLAIDA  
- ЧТЕНИЕ_ПАРАМЕТРА:7,XTA,11B
- ,NTR,3
- ,X-A,
- 14,VTM,К5
- 13,VJM,I*MU*I  
- 7,A+X,10B
- 7,ATX,12B
- ,WTC,V2
- 1,VTM,
- 1,UTC,V6
- ,XTA,
- 7,ATX,13B
- 7,XTA,4
- 7,A-X,12B
- 14,VTM,К3
- 13,VJM,I*MU*I  
- 7,ATX,7
- 14,VTM,К2
- ,ITA,14
- 14,VTM,V0
- 13,VJM,I*PO*I  
- 7,ATX,14B
- 7,XTA,13B
- 14,VTM,V5
- 13,VJM,I*DI*I  
- ,UTC,GAK/6
- ,ATX,
- ,UTC,GAK/6
- ,XTA,
- ,X-A,
- 14,VTM,V5
- 13,VJM,I*MU*I  
- 7,A+X,13B
- ,UTC,GAK/6
- ,ATX,
- 7,XTA,1
- 14,VTM,К2
- 13,VJM,I*MU*I  
- 7,ATX,7
- 14,VTM,К2
- 13,VJM,I*MU*I  
- 14,VTM,V0
- 13,VJM,I*MU*I  
- 7,ATX,7
- 7,XTA,14B
- 14,VTM,V0
- 13,VJM,I*DI*I  
- 7,ATX,7
- ,UTC,GAK/6
- ,XTA,
- 14,VTM,V0
- 13,VJM,I*DI*I  
- ,UTC,GAK/6
- ,ATX,
- ,NTR,22B
- ,UJ,ВОЗВРАТ_ИЗ_МОДУЛЯ
- БЛОК_ПРОДОЛЖЕНИЕ:7,MTJ,8
- 14,MTJ,10
- 7,VTM,К1
- ,ITS,13
- ,ITS,1
- ,ITS,8
- ,ITS,
- ,NTR,3
- ,NTR,2
- 10,UJ,
- ВОЗВРАТ_ИЗ_МОДУЛЯ:,STI,
- ,STI,7
- ,STI,1
- ,STI,8
- 8,UJ,
+ M16,VTM,ЧТЕНИЕ_КОДA.F8(М16)
+ ,UJ,БЛОК_ПРОДОЛЖЕНИЕ.L0146
+C
+ ЧТЕНИЕ_КОДA:M7,XTA,-1.'4012'(М7)
+ M7,ATX,10B.8(М7)
+ ,NTR,3.'3'
+ M16,VTM,*INS*.INS(М16)
+ ,ITS,14.М16
+ M16,VTM,*SCANER*.SCANER(М16)
+ ,ITS,14.М16
+ M16,VTM,V1.V1(М16)
+ ,ITS,14.М16
+ M16,VTM,К4.К4(М16)
+ ,ITS,14.М16
+ ,NTR,22B.'22'
+ M15,VJM,RSYMB.RSYMB(М15)
+ ,NTR,3.0
+ ,NTR,22B.'3'
+ ,UTC,*SCANER*.'22'
+ ,XTA,.SCANER
+ ,NTR,3.0
+ M7,A+X,.'3'
+ ,UTC,*SCANER*.0(М7)
+ ,ATX,.SCANER
+ M7,XTA,10B.0
+ M16,VTM,К5.8(М7)
+ M15,VJM,I*DI*I.К5(М16)
+ M7,ATX,11B.IDII(М15)
+ M7,XTA,11B.0
+ ,X-A,.9(М7)
+ M7,A+X,5.9(М7)
+ ,NTR,22B.0
+ ,U1A,ПРОВЕРКА_КОДA.5(М7)
+ ,UJ,ЧТЕНИЕ_ПАРАМЕТРА.'22'
+C
+ ПРОВЕРКА_КОДA:M16,VTM,К7.F9
+ ,ITS,14.F9A
+ M15,VJM,KLAIDA.0
+ ЧТЕНИЕ_ПАРАМЕТРА:M7,XTA,11B.К7(М16)
+ ,NTR,3.М16
+ ,X-A,.KLAIDA(М15)
+ M16,VTM,К5.0
+ M15,VJM,I*MU*I.9(М7)
+ M7,A+X,10B.'3'
+ M7,ATX,12B.0
+ ,WTC,V2.К5(М16)
+ M1,VTM,.IMUI(М15)
+ M1,UTC,V6.0
+ ,XTA,.8(М7)
+ M7,ATX,13B.10(М7)
+ M7,XTA,4.V2
+ M7,A-X,12B.0(М1)
+ M16,VTM,К3.V6(М1)
+ M15,VJM,I*MU*I.0
+ M7,ATX,7.11(М7)
+ M16,VTM,К2.4(М7)
+ ,ITA,14.10(М7)
+ M16,VTM,V0.К3(М16)
+ M15,VJM,I*PO*I.IMUI(М15)
+ M7,ATX,14B.0
+ M7,XTA,13B.7(М7)
+ M16,VTM,V5.К2(М16)
+ M15,VJM,I*DI*I.М16
+ ,UTC,SCANER1.V0(М16)
+ ,ATX,.IPOI(М15)
+ ,UTC,SCANER1.0
+ ,XTA,.12(М7)
+ ,X-A,.11(М7)
+ M16,VTM,V5.V5(М16)
+ M15,VJM,I*MU*I.IDII(М15)
+ M7,A+X,13B.SCANER1
+ ,UTC,SCANER1.0
+ ,ATX,.SCANER1
+ M7,XTA,1.0
+ M16,VTM,К2.0
+ M15,VJM,I*MU*I.V5(М16)
+ M7,ATX,7.IMUI(М15)
+ M16,VTM,К2.0
+ M15,VJM,I*MU*I.11(М7)
+ M16,VTM,V0.SCANER1
+ M15,VJM,I*MU*I.0
+ M7,ATX,7.1(М7)
+ M7,XTA,14B.К2(М16)
+ M16,VTM,V0.IMUI(М15)
+ M15,VJM,I*DI*I.7(М7)
+ M7,ATX,7.К2(М16)
+ ,UTC,SCANER1.IMUI(М15)
+ ,XTA,.0
+ M16,VTM,V0.V0(М16)
+ M15,VJM,I*DI*I.IMUI(М15)
+ ,UTC,SCANER1.7(М7)
+ ,ATX,.12(М7)
+ ,NTR,22B.V0(М16)
+ ,UJ,ВОЗВРАТ_ИЗ_МОДУЛЯ.IDII(М15)
+C
+ БЛОК_ПРОДОЛЖЕНИЕ:M7,MTJ,8.7(М7)
+ M16,MTJ,10.SCANER1
+ M7,VTM,К1.0
+ ,ITS,13.V0(М16)
+ ,ITS,1.IDII(М15)
+ ,ITS,8.0
+ ,ITS,.SCANER1
+ ,NTR,3.0
+ ,NTR,2.'22'
+ M12,UJ,.POP
+C
+ ВОЗВРАТ_ИЗ_МОДУЛЯ:,STI,.М10(М7)
+ ,STI,7.М12(М16)
+ ,STI,1.К1(М7)
+ ,STI,8.М15
+ M10,UJ,.М1
+C
   :,INT,0
  К1:,INT,1
  К2:,INT,2
@@ -130,7 +167,7 @@ C
  ,INT,15
  К7:,INT,50
  ,BSS,22
- ,DATA,
+ ,DATA,.М10
  V0:,INT,709362340500
  V1:,INT,709362340500
  V2:,INT,709362340500
@@ -147,6 +184,6 @@ C
  ,INT,709362340500
  ,INT,709362340500
  ,INT,709362340500
- 16,SET,V0
- 1,   ,V6
- ,END,
+ M20,SET,V0
+ M1,   ,V6.'3'
+ ,END,.'2'

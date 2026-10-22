@@ -1,706 +1,822 @@
+CSEKGIR - МОДУЛЬ СИПРОДА
+CИсточник: личная библиотека (PERSO, зона 2702,
+Cтом 2248), слово 17664 образа SIPROD.BIN
+CДлина при загрузке: 394 слов, 734 команд
+CВход: SEKGIR
+CВыход: RASTXT:SEKDYA, SEGTAB:SEKDYA, SEGTAB:SEKLYA, SEKLYG:SLYC,
+CL1316 (возврат через М12), POP (возврат через М10)
 CРАЗБОР СЕГМЕНТА ГИРЛЯНДЫ (ПРОГОНА).
+CВнешние: SEK, LRE, TAB, REGIM, SUT, LYG, SLY, DYD, NRD, INF, ADR, SEP,
+CPAGE, EGO, SEKDYD, RWINF, WRREM, KOKSON, ADRSEK, KOKSEK, IMUI
+CСмещения в ADR: 1, 2, 3
+CСмещения в DYD: 1, 2
+CСмещения в EGO: 2400, 4800, 7200
+CСмещения в INF: 1, 2
+CСмещения в LYG: 1, 2
+CСмещения в NRD: 24
+CСмещения в PAGE: 3, 4, 5
+CСмещения в SEK: 1, 2, 3
+CСмещения в SEP: 1, 2, 3, 4, 5
+CСмещения в SLY: 1
+CСмещения в SUT: 1
+CСмещения в TAB: 1
+CСмещения в кадре (М7): общие 0-5, 7-10, свои 11, 13-24
+CРегистры: М1 (индекс: база модуля), М7 (указатель кадра),
+CМ10 (блок вызывающего), М12 (магазин, кадр параметров ОС),
+CМ15 (адрес возврата), М16 (модифицированный адрес),
+CМ17 (контекст задачи)
+CМодификатор адреса: МОДА/МОД задают М16, адрес следующей команды += М16
 C
  SEKGIR  :,NAME, NEW DTRAN
+ M1:,EQU,1B
+ M7:,EQU,7B
+ M10:,EQU,10B
+ M12:,EQU,12B
+ M15:,EQU,15B
+ M16:,EQU,16B
+ M17:,EQU,17B
  *SEK*   :,LC,4
  *LRE*   :,LC,20
  *TAB*   :,LC,5
- GAK/4:,EQU,*TAB*   +1
+ TAB1:,EQU,*TAB*   +1
  *REGIM* :,LC,16
  *SUT*   :,LC,2
- GAK/7:,EQU,*SUT*   +1
+ SUT1:,EQU,*SUT*   +1
  *LYG*   :,LC,6
- GAL/1:,EQU,*LYG*   +1
- GAL/2:,EQU,*LYG*   +2
+ LYG1:,EQU,*LYG*   +1
+ LYG2:,EQU,*LYG*   +2
  *SLY*   :,LC,2
- GAL/4:,EQU,*SLY*   +1
+ SLY1:,EQU,*SLY*   +1
  *DYD*   :,LC,3
- GAL/6:,EQU,*DYD*   +1
- GAL/7:,EQU,*DYD*   +2
+ DYD1:,EQU,*DYD*   +1
+ DYD2:,EQU,*DYD*   +2
  *NRD*   :,LC,25
- GAM/1:,EQU,*NRD*   +24
+ NRD24:,EQU,*NRD*   +24
  *INF*   :,LC,3
- GAM/3:,EQU,*INF*   +1
- GAM/4:,EQU,*INF*   +2
+ INF1:,EQU,*INF*   +1
+ INF2:,EQU,*INF*   +2
  *ADR*   :,LC,4
- GAM/6:,EQU,*ADR*   +1
- GAM/7:,EQU,*ADR*   +2
- GAN/0:,EQU,*ADR*   +3
+ ADR1:,EQU,*ADR*   +1
+ ADR2:,EQU,*ADR*   +2
+ ADR3:,EQU,*ADR*   +3
  *SEP*   :,LC,6
- GAN/2:,EQU,*SEP*   +1
- GAN/3:,EQU,*SEP*   +2
- GAN/4:,EQU,*SEP*   +3
- GAN/5:,EQU,*SEP*   +4
- GAN/6:,EQU,*SEP*   +5
+ SEP1:,EQU,*SEP*   +1
+ SEP2:,EQU,*SEP*   +2
+ SEP3:,EQU,*SEP*   +3
+ SEP4:,EQU,*SEP*   +4
+ SEP5:,EQU,*SEP*   +5
  *PAGE*  :,LC,6
- GAO/0:,EQU,*PAGE*  +3
- GAO/1:,EQU,*PAGE*  +4
- GAO/2:,EQU,*PAGE*  +5
+ PAGE3:,EQU,*PAGE*  +3
+ PAGE4:,EQU,*PAGE*  +4
+ PAGE5:,EQU,*PAGE*  +5
  *EGO*   :,LC,13401
- GAO/4:,EQU,*EGO*   +2400
- GAO/5:,EQU,*EGO*   +4800
- GAO/6:,EQU,*EGO*   +7200
+ EGO2400:,EQU,*EGO*   +2400
+ EGO4800:,EQU,*EGO*   +4800
+ EGO7200:,EQU,*EGO*   +7200
  SEKDYD  :,SUBP,
  RWINF   :,SUBP,
  WRREM   :,SUBP,
  KOKSON  :,SUBP,
  ADRSEK  :,SUBP,
  KOKSEK  :,SUBP,
- GAP/5:,EQU,GAL/2+2
+ LYG4:,EQU,LYG2+2
  I*MU*I  :,SUBP,
- GAP/7:,EQU,GAL/2+1
- GAQ/0:,EQU,GAL/2+3
- GAQ/1:,EQU,*SEK*   +1
- GAQ/2:,EQU,*LRE*   -32767
- GAQ/3:,EQU,*SEK*   +3
- GAQ/4:,EQU,*SEK*   +2
- 14,VTM,БЛОК_LYG2
- ,UJ,ВОЗВРАТ
- БЛОК_LYG2:,UTC,GAL/2
- ,XTA,
- 7,ATX,15B
- ,NTR,3
- ,UTC,GAP/5
- ,XTA,
- 7,ATX,16B
- 7,XTA,1
- 7,ATX,17B
- 7,XTA,1
- ,UTC,GAM/4
- ,ATX,
- ,UTC,*TAB*   
- ,XTA,
- 7,ATX,20B
- 7,XTA,1
- 7,ATX,21B
- 7,XTA,1
- 7,ATX,22B
- 7,XTA,7
+ LYG3:,EQU,LYG2+1
+ LYG5:,EQU,LYG2+3
+ SEK1:,EQU,*SEK*   +1
+ LRE32767:,EQU,*LRE*   -32767
+ SEK3:,EQU,*SEK*   +3
+ SEK2:,EQU,*SEK*   +2
+ M16,VTM,LYG2A.LYG2A(М16)
+ ,UJ,ВОЗВРАТ_В_ОС.L1316
+C
+ LYG2A:,UTC,LYG2.LYG2
+ ,XTA,.0
+ M7,ATX,15B.13(М7)
+ ,NTR,3.'3'
+ ,UTC,LYG4.LYG4
+ ,XTA,.0
+ M7,ATX,16B.14(М7)
+ M7,XTA,1.1(М7)
+ M7,ATX,17B.15(М7)
+ M7,XTA,1.1(М7)
+ ,UTC,INF2.INF2
+ ,ATX,.0
+ ,UTC,*TAB*.TAB
+ ,XTA,.0
+ M7,ATX,20B.16(М7)
+ M7,XTA,1.1(М7)
+ M7,ATX,21B.17(М7)
+ M7,XTA,1.1(М7)
+ M7,ATX,22B.18(М7)
+ M7,XTA,7.7(М7)
  ,ITS,
- ,UTC,*SLY*   
- ,XTA,
- ,NTR,22B
- 15,AEX,
- ,UZA,БЛОК_TAB
- ,UJ,ВЫЗОВ_IMUI
- БЛОК_TAB:7,XTA,2
- ,UTC,*TAB*   
- ,ATX,
- ,NTR,3
- ,NTR,22B
- ВЫЗОВ_IMUI:,UTC,GAO/0
- ,XTA,
- ,NTR,3
- ,UTC,GAO/1
- ,A+X,
- 14,VTM,К11
- 13,VJM,I*MU*I  
- 7,A-X,10B
- 7,ATX,23B
- ,NTR,22B
- ,UJ,ВЫЗОВ_KOKSEK
- БЛОК_TAB_2:,UTC,*TAB*   
- ,XTA,
- ,NTR,3
- 7,A+X,2
- ,UTC,*TAB*   
- ,ATX,
- ,NTR,22B
- ВЫЗОВ_KOKSEK:13,VJM,KOKSEK  
- 13,VJM,ADRSEK  
- 7,XTA,7
+ ,UTC,*SLY*.SLY
+ ,XTA,.0
+ ,NTR,22B.'22'
+ M17,AEX,.0(М17)
+ ,UZA,TABA.TABA
+ ,UJ,TABB.TABB
+C
+ TABA:M7,XTA,2.0
+ ,UTC,*TAB*.2(М7)
+ ,ATX,.TAB
+ ,NTR,3.0
+ ,NTR,22B.'3'
+ TABB:,UTC,PAGE3.'22'
+ ,XTA,.0
+ ,NTR,3.PAGE3
+ ,UTC,PAGE4.0
+ ,A+X,.'3'
+ M16,VTM,К11.PAGE4
+ M15,VJM,I*MU*I.0
+ M7,A-X,10B.К11(М16)
+ M7,ATX,23B.IMUI(М15)
+ ,NTR,22B.0
+ ,UJ,KOKSEA.8(М7)
+C
+ TABC:,UTC,*TAB*.19(М7)
+ ,XTA,.'22'
+ ,NTR,3.KOKSEA
+ M7,A+X,2.TAB
+ ,UTC,*TAB*.0
+ ,ATX,.'3'
+ ,NTR,22B.2(М7)
+ KOKSEA:M15,VJM,KOKSEK.TAB
+ M15,VJM,ADRSEK.0
+ M7,XTA,7.'22'
+ ,ITS,.0
+ ,UTC,*SLY*.KOKSEK(М15)
+ ,XTA,.0
+ M17,AEX,.ADRSEK(М15)
+ ,UZA,ВЫЗОВ_IMUI.0
+ ,UJ,ADR1A.7(М7)
+C
+ ВЫЗОВ_IMUI:M7,XTA,11B
+ M16,VTM,LYG1.SLY
+ M15,VJM,I*MU*I.0
+ ,NTR,3.0(М17)
+ M7,A-X,10B.F9
+ ,UTC,ADR1.ADR1A
+ ,ATX,.0
+ ,NTR,22B.9(М7)
+ ADR1A:M7,XTA,1.LYG1(М16)
+ ,UTC,*SEP*.IMUI(М15)
+ ,ATX,.0
+ ,NTR,3.'3'
+ ,NTR,22B.8(М7)
+ ADR1B:M7,XTA,2.ADR1
+ ,ITS,.0
+ ,UTC,INF2.'22'
+ ,XTA,.0
+ M17,AEX,.1(М7)
+ ,U1A,ЦИКЛ_ПЕРЕХОД.SEP
+ M7,XTA,5.0
+ ,ITS,.'3'
+ ,UTC,*SEP*.'22'
+ ,XTA,.0
+ M17,AEX,.2(М7)
+ ,U1A,ЦИКЛ_ПЕРЕХОД
+ ,UJ,ПЕР_7.INF2
+C
+ ЦИКЛ_ПЕРЕХОД:,UJ,SEPA.0
+C
+ ПЕР_7:M7,XTA,7.0(М17)
+ ,ITS,.F5
+ M7,XTA,22B.5(М7)
+ M17,AEX,
+ ,U1A,LYG2B.SEP
+ ,UJ,LYG2C.0
+C
+ LYG2B:,UJ,SEPA.0(М17)
+C
+ LYG2C:,UTC,LYG2.F5
+ ,XTA,.F7
+ M7,ATX,24B.0
+ ,NTR,3.SEPA
+ ,UTC,LYG4.0
+ ,XTA,.7(М7)
+ M7,ATX,25B
+ M7,XTA,7.18(М7)
+ M7,ATX,21B.0(М17)
+ ,UTC,LYG3.LYG2B
+ ,XTA,.LYG2C
+ ,UTC,LYG2.SEPA
+ ,ATX,.0
+ ,UTC,LYG5.LYG2
+ ,XTA,.0
+ ,UTC,LYG4.20(М7)
+ ,ATX,.'3'
+ ,NTR,22B.LYG4
+ ,UJ,SEPH.0
+C
+ SEPA:,UTC,*SEP*.21(М7)
+ ,XTA,.7(М7)
+ ,NTR,3.17(М7)
+ M7,A+X,2.LYG3
+ ,UTC,*SEP*.0
+ ,ATX,.LYG2
+ ,UTC,*SEP*.0
+ ,XTA,.LYG5
+ ,X-A,.0
+ M7,A+X,5.LYG4
+ ,NTR,22B.0
+ ,U1A,SEPB.'22'
+ ,UJ,SEPC.SEPH
+C
+ SEPB:,UJ,LYG2I.0
+C
+ SEPC:,UTC,*SEP*.SEP
+ ,XTA,.0
+ ,NTR,3.'3'
+ M7,A+X,3.2(М7)
+ M7,ATX,26B.SEP
+ M7,XTA,2.0
+ ,ITS,.SEP
+ ,UTC,*SEK*.0
+ ,XTA,.0
+ ,NTR,22B.5(М7)
+ M17,AEX,.'22'
+ ,U1A,SEPD.SEPB
+ ,UJ,SEK1B.SEPC
+C
+ SEPD:M7,XTA,2.0
+ ,ITS,.LYG2I
+ ,UTC,*SEP*.0
+ ,XTA,.SEP
+ M17,AEX,.0
+ ,UZA,SEK1A.'3'
+ ,UJ,SEK1B.3(М7)
+C
+ SEK1A:,UJ,ADR1B.22(М7)
+C
+ SEK1B:M7,XTA,2.2(М7)
  ,ITS,
- ,UTC,*SLY*   
+ ,UTC,SEK1.SEK
+ ,XTA,.0
+ M17,AEX,.'22'
+ ,U1A,SEPE.0(М17)
+ ,UJ,SLYB.SEPD
+C
+ SEPE:M7,XTA,4.SEK1B
+ ,ITS,.0
+ ,UTC,*SEP*.2(М7)
  ,XTA,
- 15,AEX,
- ,UZA,ВЫЗОВ_IMUI_2
- ,UJ,БЛОК_SEP
- ВЫЗОВ_IMUI_2:7,XTA,11B
- 14,VTM,GAL/1
- 13,VJM,I*MU*I  
- ,NTR,3
- 7,A-X,10B
- ,UTC,GAM/6
- ,ATX,
- ,NTR,22B
- БЛОК_SEP:7,XTA,1
- ,UTC,*SEP*   
- ,ATX,
- ,NTR,3
- ,NTR,22B
- БЛОК_INF2:7,XTA,2
+ M17,AEX,.SEP
+ ,UZA,SLYA.0
+ ,UJ,SLYB.0(М17)
+C
+ SLYA:,UJ,ADR1B.SEK1A
+C
+ SLYB:M7,XTA,7.SEK1B
+ ,ITS,.0
+ ,UTC,*SLY*.ADR1B
+ ,XTA,.0
+ M17,AEX,.2(М7)
+ ,UZA,LRE327
+ ,UJ,LRE32A.SEK1
+C
+ LRE327:,UJ,TABE.0
+C
+ LRE32A:M7,XTA,1.0(М17)
+ ,ITS,.SEPE
+ ,WTC,V10.SLYB
+ M1,VTM,.0
+ M1,UTC,LRE32767.4(М7)
+ ,XTA,
+ M17,AEX,.SEP
+ ,UZA,ЦИКЛ_ПЕРЕХОД_2.0
+ ,UJ,SLYC.0(М17)
+C
+ ЦИКЛ_ПЕРЕХОД_2:,UJ,ADR1B.SLYA
+C
+ SLYC:,UJ,TABE.SLYB
+C
+ SLYD:M7,XTA,7.0
+ ,ITS,.ADR1B
+ ,UTC,*SLY*.0
+ ,XTA,.7(М7)
+ M17,AEX,
+ ,UZA,INF2A.SLY
+ ,UJ,KOKSOA.0
+C
+ INF2A:M7,XTA,2.0(М17)
+ ,ITS,.LRE327
+ ,UTC,INF2.LRE32A
+ ,XTA,.0
+ M17,AEX,.TABE
+ ,UZA,ЦИКЛ_ПЕРЕХОД_3.0
+ ,UJ,KOKSOA.1(М7)
+C
+ ЦИКЛ_ПЕРЕХОД_3:,UJ,ADR1B
+C
+ KOKSOA:M15,VJM,KOKSON.V10
+ M7,XTA,3.0(М1)
+ ,ITS,.LRE32767(М1)
+ ,UTC,*SEP*.0
+ ,XTA,.0(М17)
+ M17,AEX,.F1
+ ,U1A,ЦИКЛ_ПЕРЕХОД_4.SLYC
+ ,UJ,ПЕР_7_2.0
+C
+ ЦИКЛ_ПЕРЕХОД_4:,UJ,WRREMA.ADR1B
+C
+ ПЕР_7_2:M7,XTA,7.0
+ ,ITS,.TABE
+ M7,XTA,22B.0
+ M17,AEX,.7(М7)
+ ,UZA,SEK3A
+ ,UJ,SEK3B.SLY
+C
+ SEK3A:,UJ,LYG2I.0
+C
+ SEK3B:,UTC,SEK3.0(М17)
+ ,XTA,.INF2A
+ ,ITS,.KOKSOA
+ ,UTC,LYG2.0
+ ,XTA,.2(М7)
+ M17,AEX,
+ ,U1A,REGIMA.INF2
+ ,UJ,REGIMB.0
+C
+ REGIMA:,UJ,LYG2I.0(М17)
+C
+ REGIMB:M7,XTA,2.F2
+ ,ITS,.KOKSOA
+ ,UTC,*REGIM*.0
+ ,XTA,.ADR1B
+ M17,AEX,.0
+ ,UZA,SEK2A.KOKSON(М15)
+ ,UJ,WRREMA.0
+C
+ SEK2A:,UTC,SEK2.3(М7)
+ ,XTA,
+ ,ITS,.SEP
+ ,UTC,LYG4.0
+ ,XTA,.0(М17)
+ M17,AEX,.F3
+ ,U1A,ЦИКЛ_ПЕРЕХОД_5.F7A
+ ,UJ,WRREMA.0
+C
+ ЦИКЛ_ПЕРЕХОД_5:,UJ,LYG2I.WRREMA
+C
+ WRREMA:M15,VJM,WRREM.0
+ M7,XTA,7.7(М7)
  ,ITS,
- ,UTC,GAM/4
- ,XTA,
- 15,AEX,
- ,U1A,ПЕРЕХОД_2
- 7,XTA,5
- ,ITS,
- ,UTC,*SEP*   
- ,XTA,
- 15,AEX,
- ,U1A,ПЕРЕХОД_2
- ,UJ,ПЕР_7
- ПЕРЕХОД_2:,UJ,БЛОК_SEP_2
- ПЕР_7:7,XTA,7
- ,ITS,
- 7,XTA,22B
- 15,AEX,
- ,U1A,ПЕРЕХОД_3
- ,UJ,БЛОК_LYG2_2
- ПЕРЕХОД_3:,UJ,БЛОК_SEP_2
- БЛОК_LYG2_2:,UTC,GAL/2
- ,XTA,
- 7,ATX,24B
- ,NTR,3
- ,UTC,GAP/5
- ,XTA,
- 7,ATX,25B
- 7,XTA,7
- 7,ATX,21B
- ,UTC,GAP/7
- ,XTA,
- ,UTC,GAL/2
- ,ATX,
- ,UTC,GAQ/0
- ,XTA,
- ,UTC,GAP/5
- ,ATX,
- ,NTR,22B
- ,UJ,БЛОК_SEP_9
- БЛОК_SEP_2:,UTC,*SEP*   
- ,XTA,
- ,NTR,3
- 7,A+X,2
- ,UTC,*SEP*   
- ,ATX,
- ,UTC,*SEP*   
- ,XTA,
+ ,UTC,*SLY*.18(М7)
+ ,XTA,.0(М17)
+ M17,AEX,.SEK3A
+ ,UZA,SEPF.SEK3B
+ ,UJ,ПЕР_7_3.LYG2I
+C
+ SEPF:,UTC,*SEP*.0
+ ,XTA,.SEK3
+ ,NTR,3.0
  ,X-A,
- 7,A+X,5
- ,NTR,22B
- ,U1A,ПЕРЕХОД_4
- ,UJ,БЛОК_SEP_3
- ПЕРЕХОД_4:,UJ,БЛОК_LYG2_5
- БЛОК_SEP_3:,UTC,*SEP*   
- ,XTA,
+ M7,A+X,3.LYG2
+ ,NTR,22B.0
+ ,U1A,ЦИКЛ_ПЕРЕХОД_6.0(М17)
+ ,UJ,ПЕР_7_3.REGIMA
+C
+ ЦИКЛ_ПЕРЕХОД_6:,UJ,ПЕР_7_4.REGIMB
+C
+ ПЕР_7_3:,UJ,LYG2I.LYG2I
+C
+ M7,XTA,7.0
+ ,ITS,.2(М7)
+ M7,XTA,17B
+ M17,AEX,.REGIM
+ ,UZA,TABD.0
+ ,UJ,TABE.0(М17)
+C
+ TABD:,UJ,ПЕР_7_4.SEK2A
+C
+ TABE:,UTC,*TAB*.WRREMA
+ ,XTA,.0
+ ,UTC,INF1.SEK2
+ ,ATX,.0
  ,NTR,3
- 7,A+X,3
- 7,ATX,26B
- 7,XTA,2
- ,ITS,
- ,UTC,*SEK*   
- ,XTA,
- ,NTR,22B
- 15,AEX,
- ,U1A,БЛОК_SEP_4
- ,UJ,БЛОК_SEK1
- БЛОК_SEP_4:7,XTA,2
- ,ITS,
- ,UTC,*SEP*   
- ,XTA,
- 15,AEX,
- ,UZA,ПЕРЕХОД_5
- ,UJ,БЛОК_SEK1
- ПЕРЕХОД_5:,UJ,БЛОК_INF2
- БЛОК_SEK1:7,XTA,2
- ,ITS,
- ,UTC,GAQ/1
- ,XTA,
- 15,AEX,
- ,U1A,БЛОК_SEP_5
- ,UJ,БЛОК_SLY
- БЛОК_SEP_5:7,XTA,4
- ,ITS,
- ,UTC,*SEP*   
- ,XTA,
- 15,AEX,
- ,UZA,ПЕРЕХОД_6
- ,UJ,БЛОК_SLY
- ПЕРЕХОД_6:,UJ,БЛОК_INF2
- БЛОК_SLY:7,XTA,7
- ,ITS,
- ,UTC,*SLY*   
- ,XTA,
- 15,AEX,
- ,UZA,ПЕРЕХОД_7
- ,UJ,БЛОК_V10
- ПЕРЕХОД_7:,UJ,БЛОК_TAB_3
- БЛОК_V10:7,XTA,1
- ,ITS,
- ,WTC,V10
- 1,VTM,
- 1,UTC,GAQ/2
- ,XTA,
- 15,AEX,
- ,UZA,ПЕРЕХОД_8
- ,UJ,ПЕРЕХОД_9
- ПЕРЕХОД_8:,UJ,БЛОК_INF2
- ПЕРЕХОД_9:,UJ,БЛОК_TAB_3
- БЛОК_SLY_2:7,XTA,7
- ,ITS,
- ,UTC,*SLY*   
- ,XTA,
- 15,AEX,
- ,UZA,БЛОК_INF2_2
- ,UJ,ВЫЗОВ_KOKSON
- БЛОК_INF2_2:7,XTA,2
- ,ITS,
- ,UTC,GAM/4
- ,XTA,
- 15,AEX,
- ,UZA,ПЕРЕХОД_10
- ,UJ,ВЫЗОВ_KOKSON
- ПЕРЕХОД_10:,UJ,БЛОК_INF2
- ВЫЗОВ_KOKSON:13,VJM,KOKSON  
- 7,XTA,3
- ,ITS,
- ,UTC,*SEP*   
- ,XTA,
- 15,AEX,
- ,U1A,ПЕРЕХОД_11
- ,UJ,ПЕР_7_2
- ПЕРЕХОД_11:,UJ,ВЫЗОВ_WRREM
- ПЕР_7_2:7,XTA,7
- ,ITS,
- 7,XTA,22B
- 15,AEX,
- ,UZA,ПЕРЕХОД_12
- ,UJ,БЛОК_SEK3
- ПЕРЕХОД_12:,UJ,БЛОК_LYG2_5
- БЛОК_SEK3:,UTC,GAQ/3
- ,XTA,
- ,ITS,
- ,UTC,GAL/2
- ,XTA,
- 15,AEX,
- ,U1A,ПЕРЕХОД_13
- ,UJ,БЛОК_REGIM
- ПЕРЕХОД_13:,UJ,БЛОК_LYG2_5
- БЛОК_REGIM:7,XTA,2
- ,ITS,
- ,UTC,*REGIM* 
- ,XTA,
- 15,AEX,
- ,UZA,БЛОК_SEK2
- ,UJ,ВЫЗОВ_WRREM
- БЛОК_SEK2:,UTC,GAQ/4
- ,XTA,
- ,ITS,
- ,UTC,GAP/5
- ,XTA,
- 15,AEX,
- ,U1A,ПЕРЕХОД_14
- ,UJ,ВЫЗОВ_WRREM
- ПЕРЕХОД_14:,UJ,БЛОК_LYG2_5
- ВЫЗОВ_WRREM:13,VJM,WRREM   
- 7,XTA,7
- ,ITS,
- ,UTC,*SLY*   
- ,XTA,
- 15,AEX,
- ,UZA,БЛОК_SEP_6
- ,UJ,ПЕР_7_3
- БЛОК_SEP_6:,UTC,*SEP*   
- ,XTA,
+ M7,XTA,3.LYG4
+ ,ITS,.0
+ ,UTC,*SEP*.0(М17)
+ ,XTA,.F2A
+ ,NTR,22B.WRREMA
+ M17,AEX,.LYG2I
+ ,UZA,TABF.0
+ ,UJ,TABG.WRREM(М15)
+C
+ TABF:,UTC,*TAB*.0
+ ,XTA,.7(М7)
  ,NTR,3
- ,X-A,
- 7,A+X,3
+ M7,A+X,12B.SLY
+ ,UTC,INF1.0
+ ,ATX,.0(М17)
+ ,NTR,22B.SEPF
+ TABG:,UTC,*SEP*.F7C
+ ,XTA,.0
+ ,NTR,3.SEP
+ ,X-A,.0
+ M7,A+X,3.'3'
+ ,NTR,22B.0
+ ,U1A,SUTA.3(М7)
+ ,UJ,SUTB.'22'
+C
+ SUTA:,UJ,SEPG.F7B
+C
+ SUTB:,UTC,*SUT*.F7C
+ ,XTA,.F7F
+ M7,ATX,27B.0
+ ,NTR,3.LYG2I
+ ,UTC,*SUT*.7(М7)
+ ,XTA,
+ ,UTC,*INF*.15(М7)
+ ,ATX,.0(М17)
+ ,NTR,22B.TABD
+ M15,VJM,RWINF.TABE
+ ,UTC,*INF*.0
+ ,XTA,.F7F
+ ,UTC,*SUT*.0
+ ,ATX,.TAB
+ ,NTR,3.0
+ M7,XTA,7.INF1
+ ,ITS,.0
+ ,UTC,*SLY*.'3'
+ ,XTA,.3(М7)
  ,NTR,22B
- ,U1A,ПЕРЕХОД_15
- ,UJ,ПЕР_7_3
- ПЕРЕХОД_15:,UJ,ПЕР_7_4
- ПЕР_7_3:,UJ,БЛОК_LYG2_5
- 7,XTA,7
- ,ITS,
- 7,XTA,17B
- 15,AEX,
- ,UZA,ПЕРЕХОД_16
- ,UJ,БЛОК_TAB_3
- ПЕРЕХОД_16:,UJ,ПЕР_7_4
- БЛОК_TAB_3:,UTC,*TAB*   
- ,XTA,
- ,UTC,GAM/3
- ,ATX,
- ,NTR,3
- 7,XTA,3
- ,ITS,
- ,UTC,*SEP*   
- ,XTA,
- ,NTR,22B
- 15,AEX,
- ,UZA,БЛОК_TAB_4
- ,UJ,БЛОК_SEP_7
- БЛОК_TAB_4:,UTC,*TAB*   
- ,XTA,
- ,NTR,3
- 7,A+X,12B
- ,UTC,GAM/3
- ,ATX,
- ,NTR,22B
- БЛОК_SEP_7:,UTC,*SEP*   
- ,XTA,
- ,NTR,3
- ,X-A,
- 7,A+X,3
- ,NTR,22B
- ,U1A,ПЕРЕХОД_17
- ,UJ,ВЫЗОВ_RWINF
- ПЕРЕХОД_17:,UJ,БЛОК_SEP_8
- ВЫЗОВ_RWINF:,UTC,*SUT*   
- ,XTA,
- 7,ATX,27B
- ,NTR,3
- ,UTC,*SUT*   
- ,XTA,
- ,UTC,*INF*   
- ,ATX,
- ,NTR,22B
- 13,VJM,RWINF   
- ,UTC,*INF*   
- ,XTA,
- ,UTC,*SUT*   
- ,ATX,
- ,NTR,3
- 7,XTA,7
- ,ITS,
- ,UTC,*SLY*   
- ,XTA,
- ,NTR,22B
- 15,AEX,
- ,U1A,ПЕРЕХОД_18
- ,UJ,ПЕРЕХОД_19
- ПЕРЕХОД_18:,UJ,БЛОК_LYG2_5
- ПЕРЕХОД_19:,UJ,БЛОК_SLY_2
- ,UJ,БЛОК_LYG2_5
- БЛОК_SEP_8:7,XTA,5
- ,ITS,
- ,UTC,*SEP*   
- ,XTA,
- 15,AEX,
- ,UZA,БЛОК_TAB_5
- ,UJ,ВЫЗОВ_RWINF_2
- БЛОК_TAB_5:,UTC,*TAB*   
- ,XTA,
- ,NTR,3
- 7,A+X,12B
- ,UTC,GAM/3
- ,ATX,
- ,NTR,22B
- ВЫЗОВ_RWINF_2:,UTC,GAK/7
- ,XTA,
- ,UTC,*INF*   
- ,ATX,
- ,NTR,3
- ,NTR,22B
- 13,VJM,RWINF   
- ,UTC,*INF*   
- ,XTA,
- ,UTC,GAK/7
- ,ATX,
- ,NTR,3
- 7,XTA,7
- ,ITS,
- ,UTC,*SLY*   
- ,XTA,
- ,NTR,22B
- 15,AEX,
- ,UZA,ПЕРЕХОД_20
- ,UJ,БЛОК_V10_2
- ПЕРЕХОД_20:,UJ,БЛОК_SLY_2
- БЛОК_V10_2:7,XTA,1
- ,ITS,
- ,WTC,V10
- 1,VTM,
- 1,UTC,GAQ/2
- ,XTA,
- 15,AEX,
- ,U1A,ПЕРЕХОД_21
- ,UJ,ПЕР_7_4
- ПЕРЕХОД_21:,UJ,БЛОК_LYG2_5
- ПЕР_7_4:7,XTA,7
- ,ITS,
- 7,XTA,17B
- 15,AEX,
- ,UZA,ПЕРЕХОД_22
- ,UJ,ВЫЗОВ_SEKDYD
- ПЕРЕХОД_22:,UJ,БЛОК_DYD
- ВЫЗОВ_SEKDYD:7,XTA,7
- 7,ATX,17B
- ,NTR,3
- ,NTR,22B
- 13,VJM,SEKDYD  
+ M17,AEX,.SEP
+ ,U1A,ЦИКЛ_ПЕРЕХОД_7.0
+ ,UJ,ЦИКЛ_ПЕРЕХОД_8.'22'
+C
+ ЦИКЛ_ПЕРЕХОД_7:,UJ,LYG2I.0(М17)
+C
+ ЦИКЛ_ПЕРЕХОД_8:,UJ,SLYD.TABF
+C
+ ,UJ,LYG2I.TABG
+C
+ SEPG:M7,XTA,5.0
+ ,ITS,.TAB
+ ,UTC,*SEP*.0
+ ,XTA,.'3'
+ M17,AEX,.10(М7)
+ ,UZA,TABH.INF1
+ ,UJ,TABI.0
+C
+ TABH:,UTC,*TAB*.'22'
+ ,XTA,.0
+ ,NTR,3.SEP
+ M7,A+X,12B.0
+ ,UTC,INF1.'3'
+ ,ATX,.0
+ ,NTR,22B.3(М7)
+ TABI:,UTC,SUT1.'22'
+ ,XTA,.SUTA
+ ,UTC,*INF*.SUTB
+ ,ATX,.SEPG
+ ,NTR,3.0
+ ,NTR,22B.SUT
+ M15,VJM,RWINF.0
+ ,UTC,*INF*.23(М7)
+ ,XTA,.'3'
+ ,UTC,SUT1.SUT
+ ,ATX,.0
+ ,NTR,3.INF
+ M7,XTA,7.0
+ ,ITS,.'22'
+ ,UTC,*SLY*.RWINF(М15)
+ ,XTA,.INF
+ ,NTR,22B.0
+ M17,AEX,.SUT
+ ,UZA,LRE32B.0
+ ,UJ,LRE32C.'3'
+C
+ LRE32B:,UJ,SLYD.7(М7)
+C
+ LRE32C:M7,XTA,1
+ ,ITS,.SLY
+ ,WTC,V10.0
+ M1,VTM,.'22'
+ M1,UTC,LRE32767.0(М17)
+ ,XTA,.F7D
+ M17,AEX,.F7E
+ ,U1A,ЦИКЛ_ПЕРЕХОД_9.0
+ ,UJ,ПЕР_7_4.LYG2I
+C
+ ЦИКЛ_ПЕРЕХОД_9:,UJ,LYG2I.0
+C
+ ПЕР_7_4:M7,XTA,7.SLYD
+ ,ITS,.LYG2I
+ M7,XTA,17B.5(М7)
+ M17,AEX,
+ ,UZA,ЦИКЛ_ПЕРЕХОД_10.SEP
+ ,UJ,ВЫЗОВ_SEKDYD.0
+C
+ ЦИКЛ_ПЕРЕХОД_10:,UJ,DYDB.0(М17)
+C
+ ВЫЗОВ_SEKDYD:M7,XTA,7.TABH
+ M7,ATX,17B.TABI
+ ,NTR,3.0
+ ,NTR,22B.TAB
+ M15,VJM,SEKDYD.0
+ ,UTC,*DYD*.'3'
+ ,XTA,.10(М7)
+ ,NTR,3.INF1
+ ,X-A,.0
+ M7,A+X,2.'22'
+ ,NTR,22B.0
+ ,U1A,DYDA.SUT1
+ ,UJ,DYDB.0
+C
+ DYDA:M7,XTA,7.INF
+ M7,ATX,22B.0
+ ,NTR,3.'3'
+ ,NTR,22B.'22'
+ DYDB:,UTC,*DYD*.RWINF(М15)
+ ,XTA,.0
+ ,NTR,3.INF
+ M7,A-X,2.0
+ ,UTC,*DYD*.SUT1
+ ,ATX,.0
+ M7,XTA,1.'3'
+ ,ITS,.7(М7)
  ,UTC,*DYD*   
- ,XTA,
+ ,XTA,.SLY
+ ,NTR,22B.0
+ M17,AEX,.'22'
+ ,UZA,PAGE3A.0(М17)
+ ,UJ,PAGE3B.LRE32B
+C
+ PAGE3A:,UJ,SEPH.LRE32C
+C
+ PAGE3B:,UTC,PAGE3.0
+ ,XTA,.SLYD
+ M16,VTM,К11.0
+ M15,VJM,I*MU*I.1(М7)
  ,NTR,3
- ,X-A,
- 7,A+X,2
- ,NTR,22B
- ,U1A,ПЕР_7_5
- ,UJ,БЛОК_DYD
- ПЕР_7_5:7,XTA,7
- 7,ATX,22B
- ,NTR,3
- ,NTR,22B
- БЛОК_DYD:,UTC,*DYD*   
- ,XTA,
- ,NTR,3
- 7,A-X,2
- ,UTC,*DYD*   
- ,ATX,
- 7,XTA,1
+ M7,A+X,2.V10
+ ,UTC,SEP4.0(М1)
+ ,ATX,.LRE32767(М1)
+ M7,XTA,2.0
+ ,ITS,.0(М17)
+ ,UTC,*REGIM*.F1A
+ ,XTA,.F7F
+ ,NTR,22B.0
+ M17,AEX,.LYG2I
+ ,UZA,LYG2D.0
+ ,UJ,LYG2E.7(М7)
+C
+ LYG2D:,UJ,LYG4A
+C
+ LYG2E:,UTC,LYG2.15(М7)
+ ,XTA,.0(М17)
+ ,NTR,3.F15
+ M7,A+X,2.F7G
+ ,UTC,LYG2.DYDB
+ ,ATX,.0
+ ,NTR,22B.7(М7)
+ ,UJ,SEP1A.15(М7)
+C
+ LYG4A:,UTC,LYG4.'3'
+ ,XTA,.'22'
+ ,NTR,3.SEKDYD(М15)
+ M7,A+X,2.0
+ ,UTC,LYG4.DYD
+ ,ATX,.0
+ M7,XTA,13B.'3'
+ M7,ATX,30B.0
+ M7,XTA,3.2(М7)
+ ,ITS,.'22'
+ ,UTC,LYG4.DYDA
+ ,XTA,.DYDB
+ ,NTR,22B.7(М7)
+ M17,AEX,.18(М7)
+ ,U1A,LYG4B.'3'
+ ,UJ,LYG4C.'22'
+C
+ LYG4B:,UJ,LYG4D.DYD
+C
+ LYG4C:M7,XTA,1.0
+ ,UTC,LYG4.'3'
+ ,ATX,.2(М7)
+ ,UTC,LYG2.DYD
+ ,XTA,.0
+ ,NTR,3.1(М7)
+ M7,A+X,2
+ ,UTC,LYG2.DYD
+ ,ATX,.0
+ M7,XTA,13B.'22'
+ ,X-A,.0(М17)
+ M7,ATX,30B.PAGE3A
+ ,NTR,22B.PAGE3B
+ LYG4D:,UTC,SEP1.SEPH
+ ,XTA,.0
+ ,NTR,3.PAGE3
+ M7,A+X,30B.0
+ ,UTC,SEP1.К11(М16)
+ ,ATX,.IMUI(М15)
+ M7,XTA,23B.'3'
+ ,UTC,SEP4.2(М7)
+ ,A-X,.SEP4
+ M16,VTM,К8.0
+ M15,VJM,I*MU*I.2(М7)
+ ,UTC,SEP1
+ ,A+X,.REGIM
+ ,UTC,SEP2.0
+ ,ATX,.'22'
+ ,NTR,22B.0(М17)
+ SEP1A:M7,XTA,2.LYG2D
+ ,ITS,.LYG2E
+ ,UTC,*DYD*.LYG4A
+ ,XTA,.0
+ M17,AEX,.LYG2
+ ,UZA,ADR1C.0
+ ,UJ,SEP1B.'3'
+C
+ ADR1C:,UTC,ADR1.2(М7)
+ ,XTA,.LYG2
+ ,NTR,3.0
+ ,UTC,SEP4.'22'
+ ,A-X,.SEP1A
+ M16,VTM,К8.LYG4
+ M15,VJM,I*MU*I.0
+ ,UTC,SEP1.'3'
+ ,A+X,.2(М7)
+ ,UTC,SEP2.LYG4
+ ,ATX,.0
+ ,NTR,22B.11(М7)
+ SEP1B:,UJ,WRREMA.24(М7)
+C
+ SEPH:M7,XTA,4.3(М7)
  ,ITS,
- ,UTC,*DYD*   
- ,XTA,
- ,NTR,22B
- 15,AEX,
- ,UZA,ПЕРЕХОД_23
- ,UJ,ВЫЗОВ_IMUI_3
- ПЕРЕХОД_23:,UJ,БЛОК_SEP_9
- ВЫЗОВ_IMUI_3:,UTC,GAO/0
- ,XTA,
- 14,VTM,К11
- 13,VJM,I*MU*I  
- ,NTR,3
- 7,A+X,2
- ,UTC,GAN/5
+ ,UTC,*SEP*.LYG4
+ ,XTA,.0
+ M17,AEX,.'22'
+ ,UZA,ЦИКЛ_ПЕРЕХОД_11.0(М17)
+ ,UJ,ПЕР_7_5.LYG4B
+C
+ ЦИКЛ_ПЕРЕХОД_11:,UJ,LYG2I.LYG4C
+C
+ ПЕР_7_5:M7,XTA,7.LYG4D
+ ,ITS,.0
+ M7,XTA,22B.1(М7)
+ M17,AEX,.LYG4
+ ,U1A,SEPI.0
+ ,UJ,SEPJ.LYG2
+C
+ SEPI:,UJ,LYG2I.0
+C
+ SEPJ:M7,XTA,3.'3'
+ ,UTC,*SEP*.2(М7)
+ ,ATX,.LYG2
+ ,NTR,3.0
+ ,NTR,22B.11(М7)
+ M15,VJM,ADRSEK.0
+ M7,XTA,7.24(М7)
+ ,ITS,.'22'
+ ,UTC,*SLY*.0
+ ,XTA,.SEP1
+ M17,AEX,.0
+ ,UZA,ВЫЗОВ_IMUI_2.'3'
+ ,UJ,KOKSOB.24(М7)
+C
+ ВЫЗОВ_IMUI_2:M7,XTA,11B.SEP1
+ M16,VTM,LYG1.0
+ M15,VJM,I*MU*I.19(М7)
+ ,NTR,3.SEP4
+ M7,A-X,10B.0
+ ,UTC,ADR1.К8(М16)
+ ,ATX,.IMUI(М15)
+ ,NTR,22B.0
+ KOKSOB:M15,VJM,KOKSON.SEP1
+ ,UTC,*TAB*.0
+ ,XTA,.SEP2
+ ,NTR,3.0
+ M7,A+X,12B.'22'
+ ,UTC,INF1.0
+ ,ATX,.2(М7)
+ M7,XTA,27B
+ ,UTC,*INF*.DYD
+ ,ATX,.0
+ ,NTR,22B.0(М17)
+ M15,VJM,RWINF.ADR1C
+ ,UTC,*INF*.SEP1B
+ ,XTA,.0
+ ,UTC,*SUT*.ADR1
+ ,ATX,.0
+ ,NTR,3.'3'
+ M7,XTA,2.SEP4
+ ,ITS,.0
+ ,UTC,INF2.К8(М16)
+ ,XTA,.IMUI(М15)
+ ,NTR,22B.0
+ M17,AEX,.SEP1
+ ,UZA,ЦИКЛ_ПЕРЕХОД_12.0
+ ,UJ,WRREMB.SEP2
+C
+ ЦИКЛ_ПЕРЕХОД_12:,UJ,ПЕР_7_6.0
+C
+ WRREMB:M15,VJM,WRREM.'22'
+ ПЕР_7_6:M7,XTA,7.0
+ ,ITS,.WRREMA
+ M7,XTA,21B.0
+ M17,AEX,.4(М7)
+ ,U1A,LYG2F
+ ,UJ,LYG2G.SEP
+C
+ LYG2F:,UJ,LYG2H.0
+C
+ LYG2G:M7,XTA,24B.0(М17)
+ ,UTC,LYG2.F4
+ ,ATX,.F7H
+ ,NTR,3.0
+ M7,XTA,25B.LYG2I
+ ,UTC,LYG4.0
+ ,ATX,.7(М7)
+ M7,XTA,1
+ M7,ATX,21B.18(М7)
+ ,NTR,22B.0(М17)
+ LYG2H:M7,XTA,5.SEPI
+ ,UTC,*SEP*.SEPJ
+ ,ATX,.LYG2I
+ ,NTR,3.0
+ ,NTR,22B.3(М7)
+ LYG2I:M7,XTA,15B.SEP
+ ,UTC,LYG2.0
+ ,ATX,.'3'
+ ,NTR,3.'22'
+ M7,XTA,16B.ADRSEK(М15)
+ ,UTC,LYG4.7(М7)
  ,ATX,
- 7,XTA,2
- ,ITS,
- ,UTC,*REGIM* 
- ,XTA,
- ,NTR,22B
- 15,AEX,
- ,UZA,ПЕРЕХОД_24
- ,UJ,БЛОК_LYG2_3
- ПЕРЕХОД_24:,UJ,БЛОК_LYG4
- БЛОК_LYG2_3:,UTC,GAL/2
- ,XTA,
- ,NTR,3
- 7,A+X,2
- ,UTC,GAL/2
- ,ATX,
- ,NTR,22B
- ,UJ,БЛОК_DYD_2
- БЛОК_LYG4:,UTC,GAP/5
- ,XTA,
- ,NTR,3
- 7,A+X,2
- ,UTC,GAP/5
- ,ATX,
- 7,XTA,13B
- 7,ATX,30B
- 7,XTA,3
- ,ITS,
- ,UTC,GAP/5
- ,XTA,
- ,NTR,22B
- 15,AEX,
- ,U1A,ПЕРЕХОД_25
- ,UJ,БЛОК_LYG4_2
- ПЕРЕХОД_25:,UJ,ВЫЗОВ_IMUI_4
- БЛОК_LYG4_2:7,XTA,1
- ,UTC,GAP/5
- ,ATX,
- ,UTC,GAL/2
- ,XTA,
- ,NTR,3
- 7,A+X,2
- ,UTC,GAL/2
- ,ATX,
- 7,XTA,13B
- ,X-A,
- 7,ATX,30B
- ,NTR,22B
- ВЫЗОВ_IMUI_4:,UTC,GAN/2
- ,XTA,
- ,NTR,3
- 7,A+X,30B
- ,UTC,GAN/2
- ,ATX,
- 7,XTA,23B
- ,UTC,GAN/5
- ,A-X,
- 14,VTM,К8
- 13,VJM,I*MU*I  
- ,UTC,GAN/2
- ,A+X,
- ,UTC,GAN/3
- ,ATX,
- ,NTR,22B
- БЛОК_DYD_2:7,XTA,2
- ,ITS,
- ,UTC,*DYD*   
- ,XTA,
- 15,AEX,
- ,UZA,ВЫЗОВ_IMUI_5
- ,UJ,ПЕРЕХОД_26
- ВЫЗОВ_IMUI_5:,UTC,GAM/6
- ,XTA,
- ,NTR,3
- ,UTC,GAN/5
- ,A-X,
- 14,VTM,К8
- 13,VJM,I*MU*I  
- ,UTC,GAN/2
- ,A+X,
- ,UTC,GAN/3
- ,ATX,
- ,NTR,22B
- ПЕРЕХОД_26:,UJ,ВЫЗОВ_WRREM
- БЛОК_SEP_9:7,XTA,4
- ,ITS,
- ,UTC,*SEP*   
- ,XTA,
- 15,AEX,
- ,UZA,ПЕРЕХОД_27
- ,UJ,ПЕР_7_6
- ПЕРЕХОД_27:,UJ,БЛОК_LYG2_5
- ПЕР_7_6:7,XTA,7
- ,ITS,
- 7,XTA,22B
- 15,AEX,
- ,U1A,ПЕРЕХОД_28
- ,UJ,ВЫЗОВ_ADRSEK
- ПЕРЕХОД_28:,UJ,БЛОК_LYG2_5
- ВЫЗОВ_ADRSEK:7,XTA,3
- ,UTC,*SEP*   
- ,ATX,
- ,NTR,3
- ,NTR,22B
- 13,VJM,ADRSEK  
- 7,XTA,7
- ,ITS,
- ,UTC,*SLY*   
- ,XTA,
- 15,AEX,
- ,UZA,ВЫЗОВ_IMUI_6
- ,UJ,ВЫЗОВ_KOKSON_2
- ВЫЗОВ_IMUI_6:7,XTA,11B
- 14,VTM,GAL/1
- 13,VJM,I*MU*I  
- ,NTR,3
- 7,A-X,10B
- ,UTC,GAM/6
- ,ATX,
- ,NTR,22B
- ВЫЗОВ_KOKSON_2:13,VJM,KOKSON  
+ M7,XTA,1.SLY
+ M7,ATX,17B.0
+ ,UTC,*SEP*.0(М17)
+ ,XTA,.F9A
+ M7,A-X,5.KOKSOB
+ ,NTR,22B.0
+ ,U1A,SLYE.9(М7)
+ ,UJ,SLYF.LYG1(М16)
+C
+ SLYE:,UJ,ADR1B.IMUI(М15)
+C
+ SLYF:M7,XTA,7.0
+ ,ITS,.'3'
+ ,UTC,*SLY*.8(М7)
+ ,XTA,.ADR1
+ M17,AEX,.0
+ ,U1A,TABJ.'22'
+ ,UJ,TABK.0
+C
+ TABJ:,UJ,SUT1C.KOKSON(М15)
+C
+ TABK:,UTC,*TAB*.0
+ ,XTA,.TAB
+ ,NTR,3.0
+ ,UTC,NRD24.'3'
+ ,A-X,.10(М7)
+ M7,A+X,2.INF1
+ ,NTR,22B.0
+ ,U1A,SUT1A.23(М7)
+ ,UJ,SUT1B.INF
+C
+ SUT1A:,UJ,TABC.0
+C
+ SUT1B:M7,XTA,.'22'
+ ,UTC,SUT1.RWINF(М15)
+ ,ATX,.0
+ ,NTR,3.INF
+ M7,XTA,.0
+ ,UTC,*SUT*.SUT
+ ,ATX,.0
+ ,NTR,22B.'3'
+ SUT1C:M7,XTA,20B.2(М7)
  ,UTC,*TAB*   
- ,XTA,
- ,NTR,3
- 7,A+X,12B
- ,UTC,GAM/3
- ,ATX,
- 7,XTA,27B
- ,UTC,*INF*   
- ,ATX,
- ,NTR,22B
- 13,VJM,RWINF   
- ,UTC,*INF*   
- ,XTA,
- ,UTC,*SUT*   
- ,ATX,
- ,NTR,3
- 7,XTA,2
- ,ITS,
- ,UTC,GAM/4
- ,XTA,
- ,NTR,22B
- 15,AEX,
- ,UZA,ПЕРЕХОД_29
- ,UJ,ВЫЗОВ_WRREM_2
- ПЕРЕХОД_29:,UJ,ПЕР_7_7
- ВЫЗОВ_WRREM_2:13,VJM,WRREM   
- ПЕР_7_7:7,XTA,7
- ,ITS,
- 7,XTA,21B
- 15,AEX,
- ,U1A,ПЕРЕХОД_30
- ,UJ,БЛОК_LYG2_4
- ПЕРЕХОД_30:,UJ,БЛОК_SEP_10
- БЛОК_LYG2_4:7,XTA,24B
- ,UTC,GAL/2
- ,ATX,
- ,NTR,3
- 7,XTA,25B
- ,UTC,GAP/5
- ,ATX,
- 7,XTA,1
- 7,ATX,21B
- ,NTR,22B
- БЛОК_SEP_10:7,XTA,5
- ,UTC,*SEP*   
- ,ATX,
- ,NTR,3
- ,NTR,22B
- БЛОК_LYG2_5:7,XTA,15B
- ,UTC,GAL/2
- ,ATX,
- ,NTR,3
- 7,XTA,16B
- ,UTC,GAP/5
- ,ATX,
- 7,XTA,1
- 7,ATX,17B
- ,UTC,*SEP*   
- ,XTA,
- 7,A-X,5
- ,NTR,22B
- ,U1A,ПЕРЕХОД_31
- ,UJ,БЛОК_SLY_3
- ПЕРЕХОД_31:,UJ,БЛОК_INF2
- БЛОК_SLY_3:7,XTA,7
- ,ITS,
- ,UTC,*SLY*   
- ,XTA,
- 15,AEX,
- ,U1A,ПЕРЕХОД_32
- ,UJ,БЛОК_TAB_6
- ПЕРЕХОД_32:,UJ,БЛОК_TAB_7
- БЛОК_TAB_6:,UTC,*TAB*   
- ,XTA,
- ,NTR,3
- ,UTC,GAM/1
- ,A-X,
- 7,A+X,2
- ,NTR,22B
- ,U1A,ПЕРЕХОД_33
- ,UJ,БЛОК_SUT1
- ПЕРЕХОД_33:,UJ,БЛОК_TAB_2
- БЛОК_SUT1:7,XTA,
- ,UTC,GAK/7
- ,ATX,
- ,NTR,3
- 7,XTA,
- ,UTC,*SUT*   
- ,ATX,
- ,NTR,22B
- БЛОК_TAB_7:7,XTA,20B
- ,UTC,*TAB*   
- ,ATX,
- ,NTR,3
- 7,XTA,15B
- ,UTC,GAL/2
- ,ATX,
- 7,XTA,16B
- ,UTC,GAP/5
- ,ATX,
- ,NTR,22B
- ,UJ,ВОЗВРАТ_2
- ВОЗВРАТ:7,MTJ,8
- 14,MTJ,10
- 7,VTM,К2
- ,ITS,13
- ,ITS,1
- ,ITS,8
- ,ITS,
- ,NTR,3
- ,NTR,2
- 10,UJ,
- ВОЗВРАТ_2:,STI,
- ,STI,7
- ,STI,1
- ,STI,8
- 8,UJ,
+ ,ATX,.INF2
+ ,NTR,3.0
+ M7,XTA,15B.'22'
+ ,UTC,LYG2.0(М17)
+ ,ATX,.F2B
+ M7,XTA,16B.WRREMB
+ ,UTC,LYG4.0
+ ,ATX,.F7I
+ ,NTR,22B.0
+ ,UJ,POP.WRREM(М15)
+C
+ ВОЗВРАТ_В_ОС:M7,MTJ,8.0
+ M16,MTJ,10.7(М7)
+ M7,VTM,К2
+ ,ITS,13.17(М7)
+ ,ITS,1.0(М17)
+ ,ITS,8.LYG2F
+ ,ITS,.LYG2G
+ ,NTR,3.LYG2H
+ ,NTR,2.0
+ M12,UJ,.20(М7)
+C
+ POP:,STI,.LYG2
+ ,STI,7.0
+ ,STI,1.'3'
+ ,STI,8.21(М7)
+ M10,UJ,.LYG4
+C
   :,ISO, 6H       . 040 040 040 040 040 040 
  ,ISO, 6H------ . 055 055 055 055 055 055 
  К2:,LOG,0
@@ -717,4 +833,4 @@ C
  ,INT,64
  ,BSS,10
  V10:,BSS,3
- ,END,
+ ,END,.0

@@ -1,138 +1,164 @@
+CWRIHOR - МОДУЛЬ СИПРОДА
+CИсточник: личная библиотека (PERSO, зона 2702,
+Cтом 2248), слово 7712 образа SIPROD.BIN
+CДлина при загрузке: 79 слов, 132 команд
+CВход: WRIHOR
+CВыход: WRITEH:F0B, L0166 (возврат через М12), POP (возврат через М10)
+CВнешние: PAGE, NUM, KOMA, WHO, HOWSMB, RASPS, WRIKOR, IDII
+CСмещения в KOMA: 2, 7
+CСмещения в NUM: 2, 3
+CСмещения в PAGE: 1
+CСмещения в WHO: 1
+CСмещения в кадре (М7): общие 0-1, 8-10
+CРегистры: М7 (указатель кадра), М10 (блок вызывающего),
+CМ12 (магазин, кадр параметров ОС), М15 (адрес возврата),
+CМ16 (модифицированный адрес)
+CМодификатор адреса: МОДА/МОД задают М16, адрес следующей команды += М16
+C
  WRIHOR  :,NAME, NEW DTRAN
+ M7:,EQU,7B
+ M10:,EQU,10B
+ M12:,EQU,12B
+ M15:,EQU,15B
+ M16:,EQU,16B
  *PAGE*  :,LC,6
  *NUM*   :,LC,4
- GAK/3:,EQU,*NUM*   +2
- GAK/4:,EQU,*NUM*   +3
+ NUM2:,EQU,*NUM*   +2
+ NUM3:,EQU,*NUM*   +3
  *KOMA*  :,LC,8
- GAK/6:,EQU,*KOMA*  +2
- GAK/7:,EQU,*KOMA*  +7
+ KOMA2:,EQU,*KOMA*  +2
+ KOMA7:,EQU,*KOMA*  +7
  *WHO*   :,LC,2
- GAL/1:,EQU,*WHO*   +1
+ WHO1:,EQU,*WHO*   +1
  HOWSMB  :,SUBP,
  RASPS   :,SUBP,
  WRIKOR  :,SUBP,
- GAL/5:,EQU,*PAGE*  +1
+ PAGE1:,EQU,*PAGE*  +1
  I*DI*I  :,SUBP,
- 14,VTM,ВЫЗОВ_IDII
- ,UJ,ВОЗВРАТ
- ВЫЗОВ_IDII:,UTC,GAL/5
- ,XTA,
- ,NTR,3
- ,X-A,
- 14,VTM,К3
- 13,VJM,I*DI*I  
- ,UTC,GAL/5
- ,A+X,
- 7,ATX,10B
- ,UTC,GAL/5
- ,XTA,
- 14,VTM,К6
- 13,VJM,I*DI*I  
- 7,A+X,
- 7,ATX,11B
- 14,VTM,GAK/7
- ,ITS,14
- 14,VTM,К1
- ,ITS,14
- 14,VTM,К1
- ,ITS,14
- ,NTR,22B
- 13,VJM,WRIKOR  
- 14,VTM,V1
- ,ITS,14
- 14,VTM,К7
- ,ITS,14
- 14,VTM,К7
- ,ITS,14
- 14,VTM,V2
- ,ITS,14
- 14,VTM,К5
- ,ITS,14
- 14,VTM,К2
- ,ITS,14
- 13,VJM,RASPS   
- ,NTR,3
- ,NTR,22B
- 14,VTM,V2
- ,ITS,14
- 13,VJM,HOWSMB  
- ,NTR,3
- ,NTR,22B
- 14,VTM,V2
- ,ITS,14
- 14,VTM,*WHO*   
- ,ITS,14
- 14,VTM,GAL/1
- ,ITS,14
- 13,VJM,WRIKOR  
- ,NTR,3
- ,NTR,22B
- 14,VTM,GAK/6
- ,ITS,14
- 14,VTM,К4
- ,ITS,14
- 14,VTM,К1
- ,ITS,14
- 13,VJM,WRIKOR  
- 14,VTM,GAK/7
- ,ITS,14
- 14,VTM,К1
- ,ITS,14
- 14,VTM,К1
- ,ITS,14
- 13,VJM,WRIKOR  
- 14,VTM,V0
- ,ITS,14
- 14,VTM,К8
- ,ITS,14
- 14,VTM,К8
- ,ITS,14
- 14,VTM,V3
- ,ITS,14
- 14,VTM,К5
- ,ITS,14
- 14,VTM,К2
- ,ITS,14
- 13,VJM,RASPS   
- ,NTR,3
- ,NTR,22B
- 14,VTM,V3
- ,ITS,14
- 13,VJM,HOWSMB  
- ,NTR,3
- ,NTR,22B
- 14,VTM,V3
- ,ITS,14
- 14,VTM,*WHO*   
- ,ITS,14
- 14,VTM,GAL/1
- ,ITS,14
- 13,VJM,WRIKOR  
- ,NTR,3
- ,NTR,22B
- 14,VTM,К0
- ,ITS,14
- 14,VTM,К1
- ,ITS,14
- 14,VTM,К4
- ,ITS,14
- 13,VJM,WRIKOR  
- ,NTR,3
- ,NTR,22B
- ,UJ,ВОЗВРАТ_2
- ВОЗВРАТ:7,MTJ,8
- 14,MTJ,10
- 7,VTM,К1
- ,ITS,13
- ,ITS,8
- ,ITS,
- ,NTR,3
- ,NTR,2
- 10,UJ,
- ВОЗВРАТ_2:,STI,
- ,STI,7
- ,STI,8
- 8,UJ,
+ M16,VTM,PAGE1A.PAGE1A(М16)
+ ,UJ,ВОЗВРАТ_В_ОС.L0166
+C
+ PAGE1A:,UTC,PAGE1.PAGE1
+ ,XTA,.0
+ ,NTR,3.'3'
+ ,X-A,.0
+ M16,VTM,К3.К3(М16)
+ M15,VJM,I*DI*I.IDII(М15)
+ ,UTC,PAGE1.PAGE1
+ ,A+X,.0
+ M7,ATX,10B.8(М7)
+ ,UTC,PAGE1.PAGE1
+ ,XTA,.0
+ M16,VTM,К6.К6(М16)
+ M15,VJM,I*DI*I.IDII(М15)
+ M7,A+X,.0
+ M7,ATX,11B.0(М7)
+ M16,VTM,KOMA7.9(М7)
+ ,ITS,14.KOMA7(М16)
+ M16,VTM,К1.М16
+ ,ITS,14.К1(М16)
+ M16,VTM,К1.М16
+ ,ITS,14.К1(М16)
+ ,NTR,22B.М16
+ M15,VJM,WRIKOR.'22'
+ M16,VTM,V1.WRIKOR(М15)
+ ,ITS,14.V1(М16)
+ M16,VTM,К7.М16
+ ,ITS,14.К7(М16)
+ M16,VTM,К7.М16
+ ,ITS,14.К7(М16)
+ M16,VTM,V2.М16
+ ,ITS,14.V2(М16)
+ M16,VTM,К5.М16
+ ,ITS,14.К5(М16)
+ M16,VTM,К2.М16
+ ,ITS,14.К2(М16)
+ M15,VJM,RASPS.М16
+ ,NTR,3.RASPS(М15)
+ ,NTR,22B.0
+ M16,VTM,V2.'3'
+ ,ITS,14.'22'
+ M15,VJM,HOWSMB.V2(М16)
+ ,NTR,3.М16
+ ,NTR,22B.HOWSMB(М15)
+ M16,VTM,V2.0
+ ,ITS,14.'3'
+ M16,VTM,*WHO*.'22'
+ ,ITS,14.V2(М16)
+ M16,VTM,WHO1.М16
+ ,ITS,14.WHO(М16)
+ M15,VJM,WRIKOR.М16
+ ,NTR,3.WHO1(М16)
+ ,NTR,22B.М16
+ M16,VTM,KOMA2.WRIKOR(М15)
+ ,ITS,14.0
+ M16,VTM,К4.'3'
+ ,ITS,14.'22'
+ M16,VTM,К1.KOMA2(М16)
+ ,ITS,14.М16
+ M15,VJM,WRIKOR.К4(М16)
+ M16,VTM,KOMA7.М16
+ ,ITS,14.К1(М16)
+ M16,VTM,К1.М16
+ ,ITS,14.WRIKOR(М15)
+ M16,VTM,К1.0
+ ,ITS,14.KOMA7(М16)
+ M15,VJM,WRIKOR.М16
+ M16,VTM,V0.К1(М16)
+ ,ITS,14.М16
+ M16,VTM,К8.К1(М16)
+ ,ITS,14.М16
+ M16,VTM,К8.WRIKOR(М15)
+ ,ITS,14.0
+ M16,VTM,V3.V0(М16)
+ ,ITS,14.М16
+ M16,VTM,К5.К8(М16)
+ ,ITS,14.М16
+ M16,VTM,К2.К8(М16)
+ ,ITS,14.М16
+ M15,VJM,RASPS.V3(М16)
+ ,NTR,3.М16
+ ,NTR,22B.К5(М16)
+ M16,VTM,V3.М16
+ ,ITS,14.К2(М16)
+ M15,VJM,HOWSMB.М16
+ ,NTR,3.RASPS(М15)
+ ,NTR,22B.0
+ M16,VTM,V3.'3'
+ ,ITS,14.'22'
+ M16,VTM,*WHO*.V3(М16)
+ ,ITS,14.М16
+ M16,VTM,WHO1.HOWSMB(М15)
+ ,ITS,14.0
+ M15,VJM,WRIKOR.'3'
+ ,NTR,3.'22'
+ ,NTR,22B.V3(М16)
+ M16,VTM,К0.М16
+ ,ITS,14.WHO(М16)
+ M16,VTM,К1.М16
+ ,ITS,14.WHO1(М16)
+ M16,VTM,К4.М16
+ ,ITS,14.WRIKOR(М15)
+ M15,VJM,WRIKOR.0
+ ,NTR,3.'3'
+ ,NTR,22B.'22'
+ ,UJ,POP.К0(М16)
+C
+ ВОЗВРАТ_В_ОС:M7,MTJ,8.М16
+ M16,MTJ,10.К1(М16)
+ M7,VTM,К1.М16
+ ,ITS,13.К4(М16)
+ ,ITS,8.М16
+ ,ITS,.WRIKOR(М15)
+ ,NTR,3.0
+ ,NTR,2.'3'
+ M12,UJ,.'22'
+C
+ POP:,STI,.POP
+ ,STI,7.0
+ ,STI,8.М10(М7)
+ M10,UJ,.М12(М16)
+C
  К0:,ISO, 6HC-*/   . 103 055 052 057 040 040 
  К1:,INT,1
  К2:,INT,2
@@ -146,4 +172,4 @@
  V1:,BSS,1
  V2:,BSS,1
  V3:,BSS,1
- ,END,
+ ,END,.К1(М7)

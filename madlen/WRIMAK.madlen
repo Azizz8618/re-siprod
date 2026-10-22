@@ -1,109 +1,141 @@
+CWRIMAK - МОДУЛЬ СИПРОДА
+CИсточник: личная библиотека (PERSO, зона 2702,
+Cтом 2248), слово 19584 образа SIPROD.BIN
+CДлина при загрузке: 62 слов, 106 команд
+CВход: WRIMAK
+CВыход: SPAUD:SCAN30, F1E (возврат через М12), F1F (возврат через М10)
+CВнешние: MKR, RMK, NRM, VIE, KLAIDA, RNSYMB, IMUI
+CСмещения в MKR: 500, 501
+CСмещения в VIE: 1
+CСмещения в кадре (М7): общие 0-2, 4, 6-8, 10
+CРегистры: М7 (указатель кадра), М10 (блок вызывающего),
+CМ12 (магазин, кадр параметров ОС), М15 (адрес возврата),
+CМ16 (модифицированный адрес), М17 (контекст задачи)
+CМодификатор адреса: МОДА/МОД задают М16, адрес следующей команды += М16
+C
  WRIMAK  :,NAME, NEW DTRAN
+ M7:,EQU,7B
+ M10:,EQU,10B
+ M12:,EQU,12B
+ M15:,EQU,15B
+ M16:,EQU,16B
+ M17:,EQU,17B
  *MKR*   :,LC,502
- GAK/2:,EQU,*MKR*   +500
- GAK/3:,EQU,*MKR*   +501
+ MKR500:,EQU,*MKR*   +500
+ MKR501:,EQU,*MKR*   +501
  *RMK*   :,LC,250
  *NRM*   :,LC,1
  *VIE*   :,LC,2
- GAK/7:,EQU,*VIE*   +1
+ VIE1:,EQU,*VIE*   +1
  KLAIDA  :,SUBP,
  RNSYMB  :,SUBP,
  I*MU*I  :,SUBP,
- 14,VTM,БЛОК_NRM
- ,UJ,ВОЗВРАТ
- БЛОК_NRM:,UTC,*NRM*   
- ,XTA,
- ,NTR,3
- ,X-A,
- ,UTC,GAK/3
- ,A+X,
+ M16,VTM,NRMA.NRMA(М16)
+ ,UJ,ВОЗВРАТ_В_ОС.F1E
+C
+ NRMA:,UTC,*NRM*.NRM
+ ,XTA,.0
+ ,NTR,3.'3'
+ ,X-A,.0
+ ,UTC,MKR501.MKR501
+ ,A+X,.0
+ ,NTR,22B.'22'
+ ,UZA,ЦИКЛ_ПЕРЕХОД.F4
+ ,UJ,ПЕР_4.F4A
+C
+ ЦИКЛ_ПЕРЕХОД:,UJ,NRMB.0
+C
+ ПЕР_4:M7,XTA,4.NRMB
+ M7,ATX,6.0
+ ,NTR,3.4(М7)
+ ,NTR,22B.6(М7)
+ ,UJ,ADDR.'3'
+C
+ NRMB:,UTC,*NRM*.'22'
+ ,XTA,.ADDR
+ M16,VTM,К2.0
+ M15,VJM,I*MU*I.NRM
+ ,NTR,3.0
+ M7,A-X,1.К2(М16)
+ M7,ATX,7.IMUI(М15)
+ M7,A-X,2.'3'
+ M7,ATX,10B.1(М7)
+ M7,XTA,.7(М7)
+ ,UTC,*VIE*.2(М7)
+ ,ATX,.8(М7)
+ M7,XTA,.0(М7)
+ ,UTC,VIE1.VIE
+ ,ATX,.0
+ M7,XTA,1.0(М7)
+ ,ITS,.VIE1
+ ,UTC,*NRM*.0
+ ,XTA,.1(М7)
  ,NTR,22B
- ,UZA,ПЕРЕХОД_2
- ,UJ,ПЕР_4
- ПЕРЕХОД_2:,UJ,ВЫЗОВ_IMUI
- ПЕР_4:7,XTA,4
- 7,ATX,6
- ,NTR,3
- ,NTR,22B
- ,UJ,ВЫЗОВ_KLAIDA
- ВЫЗОВ_IMUI:,UTC,*NRM*   
- ,XTA,
- 14,VTM,К2
- 13,VJM,I*MU*I  
- ,NTR,3
- 7,A-X,1
- 7,ATX,7
- 7,A-X,2
- 7,ATX,10B
- 7,XTA,
- ,UTC,*VIE*   
- ,ATX,
- 7,XTA,
- ,UTC,GAK/7
- ,ATX,
- 7,XTA,1
- ,ITS,
- ,UTC,*NRM*   
- ,XTA,
- ,NTR,22B
- 15,AEX,
- ,U1A,ПЕРЕХОД_3
- ,UJ,ПЕРЕХОД_4
- ПЕРЕХОД_3:,UJ,ВЫЗОВ_RNSYMB
- ПЕРЕХОД_4:,UJ,ВЫЗОВ_RNSYMB_2
- ВЫЗОВ_RNSYMB:14,VTM,*RMK*   
- ,ITS,14
- 14,VTM,V3
- ,ITS,14
- 14,VTM,*VIE*   
- ,ITS,14
- 14,VTM,К3
- ,ITS,14
- 14,VTM,К2
- ,ITS,14
- 13,VJM,RNSYMB  
- ,NTR,3
- ,NTR,22B
- ВЫЗОВ_RNSYMB_2:14,VTM,*RMK*   
- ,ITS,14
- 14,VTM,V2
- ,ITS,14
- 14,VTM,GAK/7
- ,ITS,14
- 14,VTM,К3
- ,ITS,14
- 14,VTM,К2
- ,ITS,14
- 13,VJM,RNSYMB  
- ,NTR,3
- ,NTR,22B
- ,UTC,*VIE*   
- ,XTA,
- ,NTR,3
- 7,A+X,1
- ,UTC,*VIE*   
- ,ATX,
- ,NTR,22B
- ,UJ,ПЕРЕХОД_5
- ВЫЗОВ_KLAIDA:14,VTM,V1
- ,ITS,14
- 13,VJM,KLAIDA  
- ,NTR,3
- ,NTR,22B
- ПЕРЕХОД_5:,UJ,ВОЗВРАТ_2
- ВОЗВРАТ:7,MTJ,8
- 14,MTJ,10
- 7,VTM,К0
- ,ITS,13
- ,ITS,8
- ,ITS,
- ,NTR,3
- ,NTR,2
- 10,UJ,
- ВОЗВРАТ_2:,STI,
- ,STI,7
- ,STI,8
- 8,UJ,
+ M17,AEX,.NRM
+ ,U1A,ЦИКЛ_ПЕРЕХОД_2.0
+ ,UJ,ЦИКЛ_ПЕРЕХОД_3.'22'
+C
+ ЦИКЛ_ПЕРЕХОД_2:,UJ,ВЫЗОВ_RNSYMB.0(М17)
+C
+ ЦИКЛ_ПЕРЕХОД_3:,UJ,ВЫЗОВ_RNSYMB_2.F1
+C
+ ВЫЗОВ_RNSYMB:M16,VTM,*RMK*.F1A
+ ,ITS,14.0
+ M16,VTM,V3.F1B
+ ,ITS,14.0
+ M16,VTM,*VIE*.F1C
+ ,ITS,14.0
+ M16,VTM,К3.RMK(М16)
+ ,ITS,14.М16
+ M16,VTM,К2.V3(М16)
+ ,ITS,14.М16
+ M15,VJM,RNSYMB.VIE(М16)
+ ,NTR,3.М16
+ ,NTR,22B.К3(М16)
+ ВЫЗОВ_RNSYMB_2:M16,VTM,*RMK*.М16
+ ,ITS,14.К2(М16)
+ M16,VTM,V2.М16
+ ,ITS,14.RNSYMB(М15)
+ M16,VTM,VIE1.0
+ ,ITS,14.'3'
+ M16,VTM,К3.'22'
+ ,ITS,14.RMK(М16)
+ M16,VTM,К2.М16
+ ,ITS,14.V2(М16)
+ M15,VJM,RNSYMB.М16
+ ,NTR,3.VIE1(М16)
+ ,NTR,22B.М16
+ ,UTC,*VIE*.К3(М16)
+ ,XTA,.М16
+ ,NTR,3.К2(М16)
+ M7,A+X,1.М16
+ ,UTC,*VIE*.RNSYMB(М15)
+ ,ATX,.0
+ ,NTR,22B.'3'
+ ,UJ,ЦИКЛ_ПЕРЕХОД_4.'22'
+C
+ ADDR:M16,VTM,V1.VIE
+ ,ITS,14.0
+ M15,VJM,KLAIDA.'3'
+ ,NTR,3.1(М7)
+ ,NTR,22B.VIE
+ ЦИКЛ_ПЕРЕХОД_4:,UJ,ВОЗВРАТ_В_БЛОК.0
+C
+ ВОЗВРАТ_В_ОС:M7,MTJ,8.'22'
+ M16,MTJ,10.F1D
+ M7,VTM,К0.V1(М16)
+ ,ITS,13.М16
+ ,ITS,8.KLAIDA(М15)
+ ,ITS,.0
+ ,NTR,3.'3'
+ ,NTR,2.'22'
+ M12,UJ,.F1F
+C
+ ВОЗВРАТ_В_БЛОК:,STI,.0
+ ,STI,7.М10(М7)
+ ,STI,8.М12(М16)
+ M10,UJ,.К0(М7)
+C
  К0:,INT,0
  ,INT,1
  К2:,INT,2
@@ -113,4 +145,4 @@
  V1:,BSS,1
  V2:,BSS,1
  V3:,BSS,1
- ,END,
+ ,END,.М15

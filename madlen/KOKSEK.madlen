@@ -1,77 +1,110 @@
+CKOKSEK - МОДУЛЬ СИПРОДА
+CИсточник: личная библиотека (PERSO, зона 2702,
+Cтом 2248), слово 18592 образа SIPROD.BIN
+CДлина при загрузке: 35 слов, 62 команд
+CВход: KOKSEK
+CВыход: RASTXT:INS25A, SEKGIR:F9, F1 (возврат через М12),
+CPOP (возврат через М10)
+CВнешние: SEK, SLY, LYG, TAB, NUST, NDAB, NDABL
+CСмещения в LYG: 1, 2
+CСмещения в NDAB: 1
+CСмещения в NDABL: 1
+CСмещения в SEK: 1
+CСмещения в SLY: 1
+CСмещения в TAB: 1, 3, 4
+CСмещения в кадре (М7): общие 0-3, 10
+CРегистры: М1 (индекс: база модуля), М7 (указатель кадра),
+CМ10 (блок вызывающего), М12 (магазин, кадр параметров ОС),
+CМ15 (адрес возврата), М16 (модифицированный адрес),
+CМ17 (контекст задачи)
+CМодификатор адреса: МОДА/МОД задают М16, адрес следующей команды += М16
+C
  KOKSEK  :,NAME, NEW DTRAN
+ M1:,EQU,1B
+ M7:,EQU,7B
+ M10:,EQU,10B
+ M12:,EQU,12B
+ M16:,EQU,16B
+ M17:,EQU,17B
  *SEK*   :,LC,4
  *SLY*   :,LC,2
- GAK/3:,EQU,*SLY*   +1
+ SLY1:,EQU,*SLY*   +1
  *LYG*   :,LC,6
- GAK/5:,EQU,*LYG*   +1
- GAK/6:,EQU,*LYG*   +2
+ LYG1:,EQU,*LYG*   +1
+ LYG2:,EQU,*LYG*   +2
  *TAB*   :,LC,5
- GAL/0:,EQU,*TAB*   +1
- GAL/1:,EQU,*TAB*   +3
- GAL/2:,EQU,*TAB*   +4
+ TAB1:,EQU,*TAB*   +1
+ TAB3:,EQU,*TAB*   +3
+ TAB4:,EQU,*TAB*   +4
  *NUST*  :,LC,10
  *NDAB*  :,LC,4
- GAL/5:,EQU,*NDAB*  +1
+ NDAB1:,EQU,*NDAB*  +1
  *NDABL* :,LC,2
- GAL/7:,EQU,*NDABL* +1
- GAM/0:,EQU,*SEK*   -32767
- GAM/1:,EQU,*SEK*   +1
- 14,VTM,ПЕР_1
- ,UJ,ВОЗВРАТ
- ПЕР_1:7,XTA,1
- 7,ATX,3
- ,NTR,3
- ,NTR,22B
- БЛОК_V0:7,XTA,
- ,WTC,V0
- 1,VTM,
- 1,UTC,GAM/0
- ,ATX,
-  :7,XTA,3
- ,NTR,3
- 7,A+X,1
- 7,ATX,3
- 7,X-A,2
- ,NTR,22B
- ,UZA,БЛОК_V0
- 7,XTA,1
- ,ITS,
- ,UTC,GAK/3
+ NDABL1:,EQU,*NDABL* +1
+ SEK32767:,EQU,*SEK*   -32767
+ SEK1:,EQU,*SEK*   +1
+ M16,VTM,SEK327.SEK327(М16)
+ ,UJ,ВОЗВРАТ_В_ОС.F1
+C
+ SEK327:M7,XTA,1.1(М7)
+ M7,ATX,3.3(М7)
+ ,NTR,3.'3'
+ ,NTR,22B.'22'
+ SEK32A:M7,XTA,.0(М7)
+ ,WTC,V0.V0
+ M1,VTM,.0(М1)
+ M1,UTC,SEK32767.SEK32767(М1)
+ ,ATX,.0
+  :7,XTA,3.0
+ ,NTR,3.3(М7)
+ M7,A+X,1.'3'
+ M7,ATX,3.1(М7)
+ M7,X-A,2.3(М7)
+ ,NTR,22B.2(М7)
+ ,UZA,SEK32A.'22'
+ M7,XTA,1.SEK32A
+ ,ITS,.1(М7)
+ ,UTC,SLY1
+ ,XTA,.SLY1
+ M17,AEX,.0
+ ,UZA,SEKA.0(М17)
+ ,UJ,SEKB.SEKA
+C
+ SEKA:M7,XTA,1.SEKB
+ ,UTC,*SEK*.1(М7)
+ ,ATX,.SEK
+ ,NTR,3.0
+ ,NTR,22B.'3'
+ SEKB:M7,XTA,1.'22'
+ ,ITS,.0
+ ,UTC,*TAB*.1(М7)
  ,XTA,
- 15,AEX,
- ,UZA,БЛОК_SEK
- ,UJ,БЛОК_TAB
- БЛОК_SEK:7,XTA,1
- ,UTC,*SEK*   
- ,ATX,
- ,NTR,3
- ,NTR,22B
- БЛОК_TAB:7,XTA,1
- ,ITS,
- ,UTC,*TAB*   
- ,XTA,
- 15,AEX,
- ,UZA,БЛОК_SEK1
- ,UJ,ПЕРЕХОД_2
- БЛОК_SEK1:7,XTA,1
- ,UTC,GAM/1
- ,ATX,
- ПЕРЕХОД_2:,UJ,ВОЗВРАТ_2
- ВОЗВРАТ:7,MTJ,8
- 14,MTJ,10
- 7,VTM,К0
- ,ITS,13
- ,ITS,1
- ,ITS,8
- ,ITS,
- ,NTR,3
- ,NTR,2
- 10,UJ,
- ВОЗВРАТ_2:,STI,
+ M17,AEX,.TAB
+ ,UZA,SEK1A.0
+ ,UJ,SEK1B.0(М17)
+C
+ SEK1A:M7,XTA,1.SEK1A
+ ,UTC,SEK1.SEK1B
+ ,ATX,.0
+ SEK1B:,UJ,POP.1(М7)
+C
+ ВОЗВРАТ_В_ОС:M7,MTJ,8.SEK1
+ M16,MTJ,10.0
+ M7,VTM,К0.0
+ ,ITS,13.POP
+ ,ITS,1.0
+ ,ITS,8.М10(М7)
+ ,ITS,.М12(М16)
+ ,NTR,3.К0(М7)
+ ,NTR,2.М15
+ M12,UJ,.М1
+C
+ POP:,STI,.М10
  ,STI,7
- ,STI,1
- ,STI,8
- 8,UJ,
+ ,STI,1.'3'
+ ,STI,8.'2'
+ M10,UJ,.0(М12)
+C
  К0:,INT,0
  ,INT,1
  ,INT,2

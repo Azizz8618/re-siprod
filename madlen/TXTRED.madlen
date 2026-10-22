@@ -1,71 +1,97 @@
+CTXTRED - МОДУЛЬ СИПРОДА
+CИсточник: личная библиотека (PERSO, зона 2702,
+Cтом 2248), слово 16160 образа SIPROD.BIN
+CДлина при загрузке: 38 слов, 64 команд
+CВход: TXTRED
+CВыход: PAPRAP:EGO86F, F5 (возврат через М12), POP (возврат через М10)
+CВнешние: RPT, EGO, RUSIS, SPAUD
+CСмещения в EGO: 7200, 8600, 8601
+CСмещения в кадре (М7): общие 0-2, 5, 10
+CРегистры: М7 (указатель кадра), М10 (блок вызывающего),
+CМ12 (магазин, кадр параметров ОС), М15 (адрес возврата),
+CМ16 (модифицированный адрес)
+CМодификатор адреса: МОДА/МОД задают М16, адрес следующей команды += М16
+C
  TXTRED  :,NAME, NEW DTRAN
+ M7:,EQU,7B
+ M10:,EQU,10B
+ M12:,EQU,12B
+ M15:,EQU,15B
+ M16:,EQU,16B
  *RPT*   :,LC,1
  *EGO*   :,LC,13401
- GAK/3:,EQU,*EGO*   +7200
- GAK/4:,EQU,*EGO*   +8600
- GAK/5:,EQU,*EGO*   +8601
+ EGO7200:,EQU,*EGO*   +7200
+ EGO8600:,EQU,*EGO*   +8600
+ EGO8601:,EQU,*EGO*   +8601
  *RUSIS* :,LC,1
  SPAUD   :,SUBP,
- 14,VTM,БЛОК_V2
- ,UJ,ПЕР_5
- БЛОК_V2:,WTC,V2
- ,XTA,
- ,UTC,*RPT*   
- ,ATX,
- ,NTR,3
- ,UTC,*RPT*   
- ,XTA,
- ,X-A,
- 7,A+X,2
- ,NTR,22B
- ,U1A,БЛОК_RPT
- ,UJ,БЛОК_RUSIS
- БЛОК_RPT:7,XTA,2
- ,UTC,*RPT*   
- ,ATX,
- ,NTR,3
- ,NTR,22B
- БЛОК_RUSIS:7,XTA,1
- ,UTC,*RUSIS* 
- ,ATX,
- ,NTR,3
- ,NTR,22B
- ВЫЗОВ_SPAUD:14,VTM,V0
- ,ITS,14
- 14,VTM,V1
- ,ITS,14
- 13,VJM,SPAUD   
- ,NTR,3
- ,NTR,22B
- ,UTC,GAK/4
- ,XTA,
- ,NTR,3
- ,X-A,
- 7,A+X,
- ,NTR,22B
- ,U1A,ПЕРЕХОД_2
- ,UJ,БЛОК_RUSIS_2
- ПЕРЕХОД_2:,UJ,ВЫЗОВ_SPAUD
- БЛОК_RUSIS_2:7,XTA,
- ,UTC,*RUSIS* 
- ,ATX,
- ,NTR,3
- ,NTR,22B
- ,UJ,ВОЗВРАТ
- ПЕР_5:7,MTJ,8
- 14,MTJ,10
- 7,VTM,К0
- 7,STX,5
- ,ITS,13
- ,ITS,8
- ,ITS,
- ,NTR,3
- ,NTR,2
- 10,UJ,
- ВОЗВРАТ:,STI,
- ,STI,7
- ,STI,8
- 8,UJ,
+ M16,VTM,RPTA.RPTA(М16)
+ ,UJ,ПЕР_5.F5
+C
+ RPTA:,WTC,V2.V2
+ ,XTA,.0
+ ,UTC,*RPT*.RPT
+ ,ATX,.0
+ ,NTR,3.'3'
+ ,UTC,*RPT*.RPT
+ ,XTA,.0
+ ,X-A,.0
+ M7,A+X,2.2(М7)
+ ,NTR,22B.'22'
+ ,U1A,RPTB.RPTB
+ ,UJ,RPTC.RPTC
+C
+ RPTB:M7,XTA,2.2(М7)
+ ,UTC,*RPT*.RPT
+ ,ATX,.0
+ ,NTR,3.'3'
+ ,NTR,22B.'22'
+ RPTC:M7,XTA,1.0
+ ,UTC,*RUSIS*.1(М7)
+ ,ATX,.RUSIS
+ ,NTR,3.0
+ ,NTR,22B.'3'
+ RPTD:M16,VTM,V0.'22'
+ ,ITS,14.0
+ M16,VTM,V1.V0(М16)
+ ,ITS,14.М16
+ M15,VJM,SPAUD.V1(М16)
+ ,NTR,3.М16
+ ,NTR,22B.SPAUD(М15)
+ ,UTC,EGO8600.0
+ ,XTA,.'3'
+ ,NTR,3.'22'
+ ,X-A,.EGO8600
+ M7,A+X,.0
+ ,NTR,22B.'3'
+ ,U1A,RUSISA.0
+ ,UJ,RUSISB.0(М7)
+C
+ RUSISA:,UJ,RPTD.'22'
+C
+ RUSISB:M7,XTA,.RUSISA
+ ,UTC,*RUSIS*.RUSISB
+ ,ATX,.RPTD
+ ,NTR,3.0
+ ,NTR,22B.0(М7)
+ ,UJ,POP.RUSIS
+C
+ ПЕР_5:M7,MTJ,8.0
+ M16,MTJ,10.'3'
+ M7,VTM,К0.'22'
+ M7,STX,5.POP
+ ,ITS,13.М10(М7)
+ ,ITS,8.М12(М16)
+ ,ITS,.К0(М7)
+ ,NTR,3.5(М7)
+ ,NTR,2.М15
+ M12,UJ,.М10
+C
+ POP:,STI,
+ ,STI,7.'3'
+ ,STI,8.'2'
+ M10,UJ,.0(М12)
+C
  К0:,INT,0
  ,INT,1
  ,INT,10

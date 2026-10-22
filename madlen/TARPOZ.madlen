@@ -1,272 +1,326 @@
+CTARPOZ - МОДУЛЬ СИПРОДА
+CИсточник: личная библиотека (PERSO, зона 2702,
+Cтом 2248), слово 19008 образа SIPROD.BIN
+CДлина при загрузке: 148 слов, 272 команд
+CВход: TARPOZ
+CВыход: ONESTR:F13, TAMPYK:F0, F1 (возврат через М12),
+CF1A (возврат через М10)
 CРАЗБОР ТАБЛИЧНОГО РАЗДЕЛА ПОЗИЦИЙ.
+CВнешние: BEN, STR, RAI, REGIM, SCANER, RSYMB
+CСмещения в BEN: 1, 2, 3, 13, 14
+CСмещения в RAI: 1
+CСмещения в REGIM: 2
+CСмещения в SCANER: 1, 2
+CСмещения в STR: 24, 25, 26
+CАбсолютные символы: N1 = -1
+CСмещения в кадре (М7): общие 0-1, 3-10, вне кадра 2067
+CРегистры: М7 (указатель кадра), М10 (блок вызывающего),
+CМ12 (магазин, кадр параметров ОС), М15 (адрес возврата),
+CМ16 (модифицированный адрес), М17 (контекст задачи)
+CМодификатор адреса: МОДА/МОД задают М16, адрес следующей команды += М16
 C
  TARPOZ  :,NAME, NEW DTRAN
+ M7:,EQU,7B
+ M10:,EQU,10B
+ M12:,EQU,12B
+ M15:,EQU,15B
+ M16:,EQU,16B
+ M17:,EQU,17B
  *BEN*   :,LC,15
- GAK/2:,EQU,*BEN*   +1
- GAK/3:,EQU,*BEN*   +2
- GAK/4:,EQU,*BEN*   +3
- GAK/5:,EQU,*BEN*   +13
- GAK/6:,EQU,*BEN*   +14
+ BEN1:,EQU,*BEN*   +1
+ BEN2:,EQU,*BEN*   +2
+ BEN3:,EQU,*BEN*   +3
+ BEN13:,EQU,*BEN*   +13
+ BEN14:,EQU,*BEN*   +14
  *STR*   :,LC,27
- GAL/0:,EQU,*STR*   +24
- GAL/1:,EQU,*STR*   +25
- GAL/2:,EQU,*STR*   +26
+ STR24:,EQU,*STR*   +24
+ STR25:,EQU,*STR*   +25
+ STR26:,EQU,*STR*   +26
  *RAI*   :,LC,2
- GAL/4:,EQU,*RAI*   +1
+ RAI1:,EQU,*RAI*   +1
  *REGIM* :,LC,16
  *SCANER*:,LC,3
- GAL/7:,EQU,*SCANER*+1
- GAM/0:,EQU,*SCANER*+2
+ SCANER1:,EQU,*SCANER*+1
+ SCANER2:,EQU,*SCANER*+2
  RSYMB   :,SUBP,
- GAM/2:,EQU,*REGIM* +2
- 14,VTM,БЛОК_REGIM2
- ,UJ,ВОЗВРАТ
- БЛОК_REGIM2:,UTC,GAM/2
- ,XTA,
- ,UTC,*BEN*   
- ,ATX,
- ,NTR,3
- 7,XTA,
- ,UTC,GAK/5
- ,ATX,
- 7,XTA,
- ,UTC,GAK/3
- ,ATX,
- 7,XTA,
- 7,ATX,5
- 7,XTA,
- 7,ATX,6
- ,UTC,GAL/4
- ,XTA,
- 7,ATX,7
- 7,XTA,-1
- 7,ATX,10B
- ,NTR,22B
- ВЫЗОВ_RSYMB:14,VTM,*STR*   
- ,ITS,14
- 14,VTM,V3
- ,ITS,14
- 14,VTM,V4
- ,ITS,14
- 14,VTM,К3
- ,ITS,14
- 13,VJM,RSYMB   
- ,NTR,3
- ,NTR,22B
- 7,XTA,-1
- ,ITS,
- 7,XTA,10B
- 15,AEX,
- ,U1A,ПЕРЕХОД_2
- ,UJ,ПЕР_0
- ПЕРЕХОД_2:,UJ,ПЕР_0_2
- ПЕР_0:7,XTA,
- ,ITS,
- 7,XTA,6
- 15,AEX,
- ,UZA,ПЕРЕХОД_3
- ,UJ,БЛОК_BEN1
- ПЕРЕХОД_3:,UJ,БЛОК_STR26_2
- БЛОК_BEN1:7,XTA,5
- ,NTR,3
- 7,A+X,1
- 7,ATX,5
- ,UTC,GAK/2
- ,ATX,
- 7,XTA,5
- ,UTC,*BEN*   
+ REGIM2:,EQU,*REGIM* +2
+ M16,VTM,REGIMA.REGIMA(М16)
+ ,UJ,ВОЗВРАТ_В_ОС.F1
+C
+ REGIMA:,UTC,REGIM2.REGIM2
+ ,XTA,.0
+ ,UTC,*BEN*.BEN
+ ,ATX,.0
+ ,NTR,3.'3'
+ M7,XTA,.0(М7)
+ ,UTC,BEN13.BEN13
+ ,ATX,.0
+ M7,XTA,.0(М7)
+ ,UTC,BEN2.BEN2
+ ,ATX,.0
+ M7,XTA,.0(М7)
+ M7,ATX,5.5(М7)
+ M7,XTA,.0(М7)
+ M7,ATX,6.6(М7)
+ ,UTC,RAI1.RAI1
+ ,XTA,.0
+ M7,ATX,7.7(М7)
+ M7,XTA,-1.'4023'(М7)
+ M7,ATX,10B.8(М7)
+ ,NTR,22B.'22'
+ REGIMB:M16,VTM,*STR*.0
+ ,ITS,14.STR(М16)
+ M16,VTM,V3.М16
+ ,ITS,14.V3(М16)
+ M16,VTM,V4.М16
+ ,ITS,14.V4(М16)
+ M16,VTM,К3.М16
+ ,ITS,14.К3(М16)
+ M15,VJM,RSYMB.М16
+ ,NTR,3.RSYMB(М15)
+ ,NTR,22B.0
+ M7,XTA,-1.'3'
+ ,ITS,.'22'
+ M7,XTA,10B.'4023'(М7)
+ M17,AEX,
+ ,U1A,ЦИКЛ_ПЕРЕХОД.8(М7)
+ ,UJ,ПЕР_0.0(М17)
+C
+ ЦИКЛ_ПЕРЕХОД:,UJ,ПЕР_0_2.F8
+C
+ ПЕР_0:M7,XTA,.F0
+ ,ITS,.F0C
+ M7,XTA,6.0
+ M17,AEX,.0(М7)
+ ,UZA,BEN1A
+ ,UJ,BEN1B.6(М7)
+C
+ BEN1A:,UJ,RAIC.0(М17)
+C
+ BEN1B:M7,XTA,5.BEN1A
+ ,NTR,3.BEN1B
+ M7,A+X,1.RAIC
+ M7,ATX,5.0
+ ,UTC,BEN1.5(М7)
+ ,ATX,.'3'
+ M7,XTA,5.1(М7)
+ ,UTC,*BEN*.5(М7)
+ ,A-X,.BEN1
+ ,NTR,22B.0
+ ,U1A,BEN2A.5(М7)
+ ,UJ,BEN2B.BEN
+C
+ BEN2A:,UJ,RAIC.0
+C
+ BEN2B:M7,XTA,.'22'
+ M7,ATX,5.BEN2A
+ ,NTR,3.BEN2B
+ ,UTC,BEN2.RAIC
+ ,XTA,.0
+ M7,A+X,1.0(М7)
+ ,UTC,BEN2.5(М7)
+ ,ATX,.'3'
+ ,UTC,BEN2.BEN2
+ ,XTA,.0
+ ,X-A,.1(М7)
+ M7,A+X,3.BEN2
+ ,NTR,22B.0
+ ,U1A,ЦИКЛ_ПЕРЕХОД_2.BEN2
+ ,UJ,ВЫЗОВ_RSYMB.0
+C
+ ЦИКЛ_ПЕРЕХОД_2:,UJ,BEN13B.0
+C
+ ВЫЗОВ_RSYMB:M16,VTM,V3.3(М7)
+ ,ITS,14.'22'
+ M16,VTM,К3.F0A
+ ,ITS,14.F0B
+ M16,VTM,BEN3.0
+ ,ITS,14.BEN13B
+ M16,VTM,BEN2.0
+ ,ITS,14.V3(М16)
+ M15,VJM,RSYMB.М16
+ ,NTR,3.К3(М16)
+ ,NTR,22B.М16
+ M7,XTA,7.BEN3(М16)
+ M7,ATX,11B.М16
+ ,NTR,3.BEN2(М16)
+ ,NTR,22B.М16
+ ВЫЗОВ_RSYMB_2:M7,XTA,11B.RSYMB(М15)
+ ,NTR,3.0
+ M7,A+X,1.'3'
+ M7,ATX,11B.'22'
+ M16,VTM,*STR*.7(М7)
+ ,ITS,14.9(М7)
+ M16,VTM,V5.'3'
+ ,ITS,14.'22'
+ M16,VTM,V4.9(М7)
+ ,ITS,14.'3'
+ M16,VTM,К3.1(М7)
+ ,ITS,14.9(М7)
+ ,NTR,22B.STR(М16)
+ M15,VJM,RSYMB.М16
+ ,NTR,3.V5(М16)
+ ,NTR,22B.М16
+ M7,XTA,-1.V4(М16)
+ ,ITS,.М16
+ M7,XTA,10B.К3(М16)
+ M17,AEX,.М16
+ ,UZA,STR26A.'22'
+ ,UJ,ПЕР_8.RSYMB(М15)
+C
+ STR26A:M7,XTA,11B.'3'
+ ,NTR,3.'22'
+ ,UTC,STR26.'4023'(М7)
  ,A-X,
- ,NTR,22B
- ,U1A,ПЕРЕХОД_4
- ,UJ,БЛОК_BEN2
- ПЕРЕХОД_4:,UJ,БЛОК_STR26_2
- БЛОК_BEN2:7,XTA,
- 7,ATX,5
+ ,NTR,22B.8(М7)
+ ,U1A,ЦИКЛ_ПЕРЕХОД_3.0(М17)
+ ,UJ,ПЕР_8.STR26A
+C
+ ЦИКЛ_ПЕРЕХОД_3:,UJ,ВЫЗОВ_RSYMB_2.F9B
+C
+ ПЕР_8:M7,XTA,-1.9(М7)
+ ,ITS,.'3'
+ M7,XTA,10B.STR26
+ M17,AEX,.0
+ ,U1A,BEN1C.'22'
+ ,UJ,BEN1D.F9A
+C
+ BEN1C:,UJ,ПЕР_9.F9B
+C
+ BEN1D:M7,XTA,11B.0
+ ,NTR,3.F9
+ M7,A-X,7.0
+ M7,ATX,4.'4023'(М7)
+ ,UTC,BEN1
+ ,XTA,.8(М7)
+ M7,A+X,4.0(М17)
+ ,UTC,BEN1.BEN1C
+ ,ATX,.BEN1D
+ ,NTR,22B.F9C
+ ,UJ,BEN13A.0
+C
+ ПЕР_9:M7,XTA,11B.9(М7)
+ M7,ATX,7.'3'
+ ,NTR,3.7(М7)
+ ,NTR,22B.4(М7)
+ ПЕР_0_2:M7,XTA,.BEN1
+ ,ITS,.0
+ M7,XTA,6.4(М7)
+ M17,AEX,.BEN1
+ ,UZA,RAIA.0
+ ,UJ,RAIB.'22'
+C
+ RAIA:M7,XTA,7.BEN13A
+ ,UTC,*RAI*.0
+ ,ATX,.9(М7)
+ ,NTR,3.7(М7)
+ ,NTR,22B.'3'
+ RAIB:M7,XTA,1.'22'
+ M7,ATX,6.0(М7)
  ,NTR,3
- ,UTC,GAK/3
- ,XTA,
- 7,A+X,1
- ,UTC,GAK/3
- ,ATX,
- ,UTC,GAK/3
- ,XTA,
- ,X-A,
- 7,A+X,3
- ,NTR,22B
- ,U1A,ПЕРЕХОД_5
- ,UJ,ВЫЗОВ_RSYMB_2
- ПЕРЕХОД_5:,UJ,ПЕРЕХОД_13
- ВЫЗОВ_RSYMB_2:14,VTM,V3
- ,ITS,14
- 14,VTM,К3
- ,ITS,14
- 14,VTM,GAK/4
- ,ITS,14
- 14,VTM,GAK/3
- ,ITS,14
- 13,VJM,RSYMB   
+ M7,XTA,.6(М7)
+ M7,ATX,5.0(М17)
+ ,NTR,22B.RAIA
+ RAIC:M7,XTA,7.RAIB
+ ,NTR,3.7(М7)
+ M7,A+X,1.RAI
+ M7,ATX,7.0
+ M7,XTA,7.'3'
+ ,X-A,.'22'
+ ,UTC,STR26.0
+ ,A+X,.1(М7)
+ ,NTR,22B.6(М7)
+ ,UZA,ЦИКЛ_ПЕРЕХОД_4.'3'
+ ,UJ,ПЕР_0_3.0(М7)
+C
+ ЦИКЛ_ПЕРЕХОД_4:,UJ,REGIMB.5(М7)
+C
+ ПЕР_0_3:M7,XTA,.'22'
+ ,ITS,.7(М7)
+ M7,XTA,6.'3'
+ M17,AEX,.1(М7)
+ ,UZA,ЦИКЛ_ПЕРЕХОД_5.7(М7)
+ ,UJ,ПЕР_8_2.7(М7)
+C
+ ЦИКЛ_ПЕРЕХОД_5:,UJ,BEN13A.0
+C
+ ПЕР_8_2:M7,XTA,-1.STR26
+ ,ITS,.0
+ M7,XTA,10B.'22'
+ M17,AEX,.F7
+ ,U1A,BEN1E.F0D
+ ,UJ,BEN1F.0
+C
+ BEN1E:,UJ,BEN13B.REGIMB
+C
+ BEN1F:,UTC,BEN1.0
+ ,XTA,.0(М7)
  ,NTR,3
- ,NTR,22B
- 7,XTA,7
- 7,ATX,11B
- ,NTR,3
- ,NTR,22B
- ВЫЗОВ_RSYMB_3:7,XTA,11B
- ,NTR,3
- 7,A+X,1
- 7,ATX,11B
- 14,VTM,*STR*   
- ,ITS,14
- 14,VTM,V5
- ,ITS,14
- 14,VTM,V4
- ,ITS,14
- 14,VTM,К3
- ,ITS,14
- ,NTR,22B
- 13,VJM,RSYMB   
- ,NTR,3
- ,NTR,22B
- 7,XTA,-1
+ ,UTC,*BEN*.6(М7)
+ ,A-X,.0(М17)
+ ,NTR,22B.F6
+ ,UZA,BEN14A.F6A
+ ,UJ,BEN14B.BEN13A
+C
+ BEN14A:,UJ,BEN13A.0
+C
+ BEN14B:M7,XTA,-1.'4023'(М7)
  ,ITS,
- 7,XTA,10B
- 15,AEX,
- ,UZA,БЛОК_STR26
- ,UJ,ПЕР_8
- БЛОК_STR26:7,XTA,11B
- ,NTR,3
- ,UTC,GAL/2
- ,A-X,
- ,NTR,22B
- ,U1A,ПЕРЕХОД_6
- ,UJ,ПЕР_8
- ПЕРЕХОД_6:,UJ,ВЫЗОВ_RSYMB_3
- ПЕР_8:7,XTA,-1
- ,ITS,
- 7,XTA,10B
- 15,AEX,
- ,U1A,ПЕРЕХОД_7
- ,UJ,БЛОК_BEN1_2
- ПЕРЕХОД_7:,UJ,ПЕР_9
- БЛОК_BEN1_2:7,XTA,11B
- ,NTR,3
- 7,A-X,7
- 7,ATX,4
- ,UTC,GAK/2
- ,XTA,
- 7,A+X,4
- ,UTC,GAK/2
- ,ATX,
- ,NTR,22B
- ,UJ,БЛОК_BEN13
- ПЕР_9:7,XTA,11B
- 7,ATX,7
- ,NTR,3
- ,NTR,22B
- ПЕР_0_2:7,XTA,
- ,ITS,
- 7,XTA,6
- 15,AEX,
- ,UZA,БЛОК_RAI
- ,UJ,ПЕР_1
- БЛОК_RAI:7,XTA,7
- ,UTC,*RAI*   
- ,ATX,
- ,NTR,3
- ,NTR,22B
- ПЕР_1:7,XTA,1
- 7,ATX,6
- ,NTR,3
- 7,XTA,
- 7,ATX,5
- ,NTR,22B
- БЛОК_STR26_2:7,XTA,7
- ,NTR,3
- 7,A+X,1
- 7,ATX,7
- 7,XTA,7
- ,X-A,
- ,UTC,GAL/2
+ ,UTC,BEN14.8(М7)
+ ,XTA,.0(М17)
+ M17,AEX,.BEN1E
+ ,U1A,BEN2C.BEN1F
+ ,UJ,BEN2D.BEN13B
+C
+ BEN2C:,UJ,BEN13B.0
+C
+ BEN2D:,UTC,BEN2.BEN1
+ ,XTA,.0
+ ,NTR,3.'3'
+ M7,A+X,1.BEN
+ ,UTC,BEN2.0
+ ,ATX,.'22'
+ ,UTC,STR26.BEN14A
+ ,XTA,.BEN14B
+ ,UTC,BEN1.BEN13A
+ ,A-X,.0
+ ,UTC,*BEN*.'4023'(М7)
  ,A+X,
- ,NTR,22B
- ,UZA,ПЕРЕХОД_8
- ,UJ,ПЕР_0_3
- ПЕРЕХОД_8:,UJ,ВЫЗОВ_RSYMB
- ПЕР_0_3:7,XTA,
- ,ITS,
- 7,XTA,6
- 15,AEX,
- ,UZA,ПЕРЕХОД_9
- ,UJ,ПЕР_8_2
- ПЕРЕХОД_9:,UJ,БЛОК_BEN13
- ПЕР_8_2:7,XTA,-1
- ,ITS,
- 7,XTA,10B
- 15,AEX,
- ,U1A,ПЕРЕХОД_10
- ,UJ,БЛОК_BEN1_3
- ПЕРЕХОД_10:,UJ,ПЕРЕХОД_13
- БЛОК_BEN1_3:,UTC,GAK/2
- ,XTA,
- ,NTR,3
- ,UTC,*BEN*   
- ,A-X,
- ,NTR,22B
- ,UZA,ПЕРЕХОД_11
- ,UJ,БЛОК_BEN14
- ПЕРЕХОД_11:,UJ,БЛОК_BEN13
- БЛОК_BEN14:7,XTA,-1
- ,ITS,
- ,UTC,GAK/6
- ,XTA,
- 15,AEX,
- ,U1A,ПЕРЕХОД_12
- ,UJ,ВЫЗОВ_RSYMB_4
- ПЕРЕХОД_12:,UJ,ПЕРЕХОД_13
- ВЫЗОВ_RSYMB_4:,UTC,GAK/3
- ,XTA,
- ,NTR,3
- 7,A+X,1
- ,UTC,GAK/3
- ,ATX,
- ,UTC,GAL/2
- ,XTA,
- ,UTC,GAK/2
- ,A-X,
- ,UTC,*BEN*   
- ,A+X,
- 7,ATX,12B
- 14,VTM,V6
- ,ITS,14
- 14,VTM,К3
- ,ITS,14
- 14,VTM,GAK/4
- ,ITS,14
- 14,VTM,GAK/3
- ,ITS,14
- ,NTR,22B
- 13,VJM,RSYMB   
- ,NTR,3
- ,NTR,22B
- БЛОК_BEN13:7,XTA,1
- ,UTC,GAK/5
- ,ATX,
- ,NTR,3
- ,NTR,22B
- ПЕРЕХОД_13:,UJ,ВОЗВРАТ_2
- ВОЗВРАТ:7,MTJ,8
- 14,MTJ,10
- 7,VTM,К1
- ,ITS,13
- ,ITS,8
- ,ITS,
- ,NTR,3
- ,NTR,2
- 10,UJ,
- ВОЗВРАТ_2:,STI,
- ,STI,7
- ,STI,8
- 8,UJ,
+ M7,ATX,12B.BEN14
+ M16,VTM,V6.0
+ ,ITS,14.0(М17)
+ M16,VTM,К3.BEN2C
+ ,ITS,14.BEN2D
+ M16,VTM,BEN3.0
+ ,ITS,14.BEN13B
+ M16,VTM,BEN2.0
+ ,ITS,14.BEN2
+ ,NTR,22B.0
+ M15,VJM,RSYMB.'3'
+ ,NTR,3.1(М7)
+ ,NTR,22B.BEN2
+ BEN13A:M7,XTA,1.0
+ ,UTC,BEN13.STR26
+ ,ATX,.0
+ ,NTR,3.BEN1
+ ,NTR,22B.0
+ BEN13B:,UJ,ВОЗВРАТ_В_БЛОК.BEN
+C
+ ВОЗВРАТ_В_ОС:M7,MTJ,8.0
+ M16,MTJ,10.10(М7)
+ M7,VTM,К1.V6(М16)
+ ,ITS,13.М16
+ ,ITS,8.К3(М16)
+ ,ITS,.М16
+ ,NTR,3.BEN3(М16)
+ ,NTR,2.М16
+ M12,UJ,.BEN2(М16)
+C
+ ВОЗВРАТ_В_БЛОК:,STI,.М16
+ ,STI,7.'22'
+ ,STI,8.RSYMB(М15)
+ M10,UJ,.0
+C
  ,ISO, 6H       . 040 040 040 040 040 040 
  К1:,INT,0
  ,INT,1
@@ -277,4 +331,4 @@ C
  V4:,BSS,1
  V5:,BSS,1
  V6:,BSS,1
- ,END,
+ ,END,.'3'

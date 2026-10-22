@@ -1,49 +1,66 @@
+CSKZONA - МОДУЛЬ СИПРОДА
+CИсточник: личная библиотека (PERSO, зона 2702,
+Cтом 2248), слово 5120 образа SIPROD.BIN
+CДлина при загрузке: 27 слов, 52 команд
+CВход: SKZONA
+CВыход: SKZOND (возврат через М15)
+CАбсолютные символы: A31745 = 31745, A4096 = 4096
+CРегистры: М11 (буфер, счётчик), М12 (магазин, кадр параметров ОС),
+CМ13 (счётчик), М15 (адрес возврата)
+CМодификатор адреса: МОДА/МОД задают М16, адрес следующей команды += М16
+C
  SKZONA  :,NAME, NEW DTRAN
- ,STI,9
- ,STI,11
- ,UTC,V0
- ,STX,
- 10,VTM,
- БЛОК_GETA:11,XTA,
- ,ATI,11
- ,ITA,11
- 10,UTC,ЧТЕНИЕ_2
- ,AEX,
- ,UTC,ЧТЕНИЕ
- ,ATX,
- 9,XTA,
- ,ASN,64-12
- ,UTC,ЧТЕНИЕ
- ,AEX,
- ,UTC,ЧТЕНИЕ
- ,CTX,
-  :,UTC,ЧТЕНИЕ
- ,*70,
- 10,V1M,БЛОК_V0_2
- 11,VTM,76001B
- БЛОК_SKZONA1024:,UTC,B       
- 11,XTA,1777B
- ,WTC,V0
- 11,ATX,1777B
- 11,VLM,БЛОК_SKZONA1024
- БЛОК_V0_2:13,UJ,
-  :,STI,9
- ,STI,11
- ,UTC,V0
- ,STX,
- 10,VTM,76001B
- БЛОК_V0_3:,WTC,V0
- 10,XTA,1777B
- ,UTC,B       
- 10,ATX,1777B
- 10,VLM,БЛОК_V0_3
- 10,VTM,1
- ,UJ,БЛОК_GETA
- ЧТЕНИЕ:,XTA,
- ,STI,
- ЧТЕНИЕ_2:,XTA,
- ,ATX,
- ,ATX,
- ,ATX,
+ M11:,EQU,11B
+ M12:,EQU,12B
+ M13:,EQU,13B
+ M15:,EQU,15B
+ ,STI,9.М11
+ ,STI,11.М13
+ ,UTC,V0.V0
+ ,STX,.0
+ M12,VTM,.0(М12)
+ SKZONB:M13,XTA,.0
+ ,ATI,11.0(М13)
+ ,ITA,11.М13
+ M12,UTC,GETA.М13
+ ,AEX,.GETA(М12)
+ ,UTC,GET.0
+ ,ATX,.GET
+ M11,XTA,.0
+ ,ASN,64-12.0(М11)
+ ,UTC,GET.64-12
+ ,AEX,.GET
+ ,UTC,GET.0
+ ,CTX,.GET
+  :,UTC,GET.0
+ ,*70,.0
+ M12,V1M,SKZOND.GET
+ M13,VTM,76001B.0
+ SKZONC:,UTC,B.SKZOND(М12)
+ M13,XTA,1777B.A31745(М13)
+ ,WTC,V0.SKZONA1024
+ M13,ATX,1777B.'1777'(М13)
+ M13,VLM,SKZONC.V0
+ SKZOND:M15,UJ,.'1777'(М13)
+C
+  :,STI,9.SKZONC(М13)
+ ,STI,11.0
+ ,UTC,V0.0(М15)
+ ,STX,.0
+ M12,VTM,76001B.М11
+ SKZONE:,WTC,V0.М13
+ M12,XTA,1777B.V0
+ ,UTC,B.0
+ M12,ATX,1777B.A31745(М12)
+ M12,VLM,SKZONE.0
+ M12,VTM,1.V0
+ ,UJ,SKZONB.'1777'(М12)
+C
+ GET:,XTA,.SKZONA1024
+ ,STI,.'1777'(М12)
+ GETA:,XTA,.SKZONE(М12)
+ ,ATX,.1(М12)
+ ,ATX,.SKZONB
+ ,ATX,.0
  V0:,BSS,1
- ,END,
+ ,END,.'4004'

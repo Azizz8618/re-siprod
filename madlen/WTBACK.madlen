@@ -1,99 +1,132 @@
+CWTBACK - МОДУЛЬ СИПРОДА
+CИсточник: личная библиотека (PERSO, зона 2702,
+Cтом 2248), слово 18816 образа SIPROD.BIN
+CДлина при загрузке: 54 слов, 98 команд
+CВход: WTBACK
+CВыход: BEGPG:PAGE3D, RASTXT:STR25A, F2 (возврат через М12),
+CF2A (возврат через М10)
+CВнешние: PUS, REGIM, STR
+CСмещения в STR: 24, 25, 26
+CСмещения в кадре (М7): общие 0-4, 10
+CРегистры: М7 (указатель кадра), М10 (блок вызывающего),
+CМ12 (магазин, кадр параметров ОС), М15 (адрес возврата),
+CМ16 (модифицированный адрес), М17 (контекст задачи)
+CМодификатор адреса: МОДА/МОД задают М16, адрес следующей команды += М16
+C
  WTBACK  :,NAME, NEW DTRAN
+ M7:,EQU,7B
+ M10:,EQU,10B
+ M12:,EQU,12B
+ M16:,EQU,16B
+ M17:,EQU,17B
  *PUS*   :,LC,1
  *REGIM* :,LC,16
  *STR*   :,LC,27
- GAK/4:,EQU,*STR*   +24
- GAK/5:,EQU,*STR*   +25
- GAK/6:,EQU,*STR*   +26
- 14,VTM,БЛОК_REGIM
- ,UJ,ВОЗВРАТ
- БЛОК_REGIM:7,XTA,1
+ STR24:,EQU,*STR*   +24
+ STR25:,EQU,*STR*   +25
+ STR26:,EQU,*STR*   +26
+ M16,VTM,REGIMA.REGIMA(М16)
+ ,UJ,ВОЗВРАТ_В_ОС.F2
+C
+ REGIMA:M7,XTA,1.1(М7)
  ,ITS,
- ,UTC,*REGIM* 
+ ,UTC,*REGIM*.REGIM
+ ,XTA,.0
+ M17,AEX,.0(М17)
+ ,U1A,PUSA.PUSA
+ ,UJ,PUSB.PUSB
+C
+ PUSA:,UJ,STR25E.0
+C
+ PUSB:M7,XTA,.STR25E
+ ,ITS,.0
+ ,UTC,*PUS*.0(М7)
  ,XTA,
- 15,AEX,
- ,U1A,ПЕРЕХОД_2
- ,UJ,БЛОК_PUS
- ПЕРЕХОД_2:,UJ,ПЕРЕХОД_5
- БЛОК_PUS:7,XTA,
- ,ITS,
- ,UTC,*PUS*   
- ,XTA,
- 15,AEX,
- ,UZA,БЛОК_STR25
- ,UJ,БЛОК_PUS_2
- БЛОК_STR25:,UTC,GAK/5
- ,XTA,
+ M17,AEX,.PUS
+ ,UZA,STR25A.0
+ ,UJ,PUSD.0(М17)
+C
+ STR25A:,UTC,STR25.STR25A
+ ,XTA,.PUSD
+ ,NTR,3.0
+ M7,A-X,3.STR25
+ ,NTR,22B.0
+ ,U1A,PUSC.'3'
+ ,UJ,PUSD.3(М7)
+C
+ PUSC:,UJ,STR25E.'22'
+C
+ PUSD:M7,XTA,1.PUSC
+ ,ITS,.PUSD
+ ,UTC,*PUS*.0
+ ,XTA,.STR25E
+ M17,AEX,.0
+ ,UZA,STR25B.1(М7)
+ ,UJ,PUSF
+C
+ STR25B:,UTC,STR25.PUS
+ ,XTA,.0
+ ,NTR,3.0(М17)
+ M7,A-X,3.STR25B
+ ,NTR,22B.PUSF
+ ,UZA,PUSE.0
+ ,UJ,PUSF.STR25
+C
+ PUSE:,UJ,STR25E.0
+C
+ PUSF:M7,XTA,2.'3'
+ M7,ATX,4.3(М7)
+ ,NTR,3.'22'
+ M7,XTA,.PUSE
+ ,ITS,.PUSF
+ ,UTC,*PUS*.0
+ ,XTA,.STR25E
+ ,NTR,22B.0
+ M17,AEX,.2(М7)
+ ,UZA,STR25C.4(М7)
+ ,UJ,STR25D.'3'
+C
+ STR25C:M7,XTA,2.0(М7)
  ,NTR,3
- 7,A-X,3
- ,NTR,22B
- ,U1A,ПЕРЕХОД_3
- ,UJ,БЛОК_PUS_2
- ПЕРЕХОД_3:,UJ,ПЕРЕХОД_5
- БЛОК_PUS_2:7,XTA,1
- ,ITS,
- ,UTC,*PUS*   
- ,XTA,
- 15,AEX,
- ,UZA,БЛОК_STR25_2
- ,UJ,БЛОК_PUS_3
- БЛОК_STR25_2:,UTC,GAK/5
- ,XTA,
- ,NTR,3
- 7,A-X,3
- ,NTR,22B
- ,UZA,ПЕРЕХОД_4
- ,UJ,БЛОК_PUS_3
- ПЕРЕХОД_4:,UJ,ПЕРЕХОД_5
- БЛОК_PUS_3:7,XTA,2
- 7,ATX,4
- ,NTR,3
- 7,XTA,
- ,ITS,
- ,UTC,*PUS*   
- ,XTA,
- ,NTR,22B
- 15,AEX,
- ,UZA,ПЕР_2
- ,UJ,БЛОК_STR25_3
- ПЕР_2:7,XTA,2
- ,NTR,3
- ,X-A,
- 7,ATX,4
- ,NTR,22B
- БЛОК_STR25_3:,UTC,GAK/5
- ,XTA,
- ,NTR,3
- 7,A+X,4
- ,UTC,GAK/5
- ,ATX,
- ,UTC,GAK/6
- ,XTA,
- 7,A+X,4
- ,UTC,GAK/6
- ,ATX,
- ,UTC,GAK/5
- ,XTA,
- ,UTC,GAK/4
- ,ATX,
- ,NTR,22B
- ПЕРЕХОД_5:,UJ,ВОЗВРАТ_2
- ВОЗВРАТ:7,MTJ,8
- 14,MTJ,10
- 7,VTM,К0
- ,ITS,13
- ,ITS,8
- ,ITS,
- ,NTR,3
- ,NTR,2
- 10,UJ,
- ВОЗВРАТ_2:,STI,
- ,STI,7
- ,STI,8
- 8,UJ,
+ ,X-A,.PUS
+ M7,ATX,4.0
+ ,NTR,22B.'22'
+ STR25D:,UTC,STR25.0(М17)
+ ,XTA,.STR25C
+ ,NTR,3.STR25D
+ M7,A+X,4.0
+ ,UTC,STR25.2(М7)
+ ,ATX,.'3'
+ ,UTC,STR26.0
+ ,XTA,.4(М7)
+ M7,A+X,4.'22'
+ ,UTC,STR26.0
+ ,ATX,.STR25
+ ,UTC,STR25.0
+ ,XTA,.'3'
+ ,UTC,STR24.4(М7)
+ ,ATX,.STR25
+ ,NTR,22B.0
+ STR25E:,UJ,ВОЗВРАТ_В_БЛОК.STR26
+C
+ ВОЗВРАТ_В_ОС:M7,MTJ,8.0
+ M16,MTJ,10.4(М7)
+ M7,VTM,К0.STR26
+ ,ITS,13.0
+ ,ITS,8.STR25
+ ,ITS,.0
+ ,NTR,3.STR24
+ ,NTR,2.0
+ M12,UJ,.'22'
+C
+ ВОЗВРАТ_В_БЛОК:,STI,.F2A
+ ,STI,7.0
+ ,STI,8.М10(М7)
+ M10,UJ,.М12(М16)
+C
  К0:,INT,0
  ,INT,1
  ,INT,64
  ,INT,70
  ,BSS,1
- ,END,
+ ,END,.К0(М7)

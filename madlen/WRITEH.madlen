@@ -1,7 +1,26 @@
+CWRITEH - МОДУЛЬ СИПРОДА
+CИсточник: личная библиотека (PERSO, зона 2702,
+Cтом 2248), слово 7488 образа SIPROD.BIN
+CДлина при загрузке: 27 слов, 48 команд
+CВход: WRITEH
+CВыход: F0B (возврат через М12), F0C (возврат через М10)
 CГЕНЕРАТОР РЕЖИМА *HCH: ИЕРАРХИЧЕСКАЯ СХЕМА,
 CУЗЕЛ И 2-5 ПОДЧИНЁННЫХ УЗЛОВ.
+CВнешние: NUNU, NUST, GOT, REGIM, TWOPLA, WRIVER, WRIHOR, WRILIN,
+CONEPLA, WRIKOR
+CСмещения в кадре (М7): общие 0-1, 10
+CРегистры: М7 (указатель кадра), М10 (блок вызывающего),
+CМ12 (магазин, кадр параметров ОС), М15 (адрес возврата),
+CМ16 (модифицированный адрес), М17 (контекст задачи)
+CМодификатор адреса: МОДА/МОД задают М16, адрес следующей команды += М16
 C
  WRITEH  :,NAME, NEW DTRAN
+ M7:,EQU,7B
+ M10:,EQU,10B
+ M12:,EQU,12B
+ M15:,EQU,15B
+ M16:,EQU,16B
+ M17:,EQU,17B
  *NUNU*  :,LC,1
  *NUST*  :,LC,10
  *GOT*   :,LC,1
@@ -12,45 +31,51 @@ C
  WRILIN  :,SUBP,
  ONEPLA  :,SUBP,
  WRIKOR  :,SUBP,
- 14,VTM,БЛОК_GOT
- ,UJ,ВОЗВРАТ
- БЛОК_GOT:7,XTA,
+ M16,VTM,GOTA.GOTA(М16)
+ ,UJ,ВОЗВРАТ_В_ОС.F0B
+C
+ GOTA:M7,XTA,.0(М7)
  ,ITS,
- ,UTC,*GOT*   
- ,XTA,
- 15,AEX,
- ,UZA,ПЕРЕХОД_2
- ,UJ,ВЫЗОВ_WRIKOR
- ПЕРЕХОД_2:,UJ,ВЫЗОВ_ONEPLA
- ВЫЗОВ_WRIKOR:14,VTM,К0
- ,ITS,14
- 14,VTM,К1
- ,ITS,14
- 14,VTM,К2
- ,ITS,14
- 13,VJM,WRIKOR  
- ,NTR,3
- ,NTR,22B
- ВЫЗОВ_ONEPLA:13,VJM,ONEPLA  
- 13,VJM,WRILIN  
- 13,VJM,WRIHOR  
- 13,VJM,WRIVER  
- 13,VJM,TWOPLA  
- ,UJ,ВОЗВРАТ_2
- ВОЗВРАТ:7,MTJ,8
- 14,MTJ,10
- 7,VTM,К1
- ,ITS,13
- ,ITS,8
- ,ITS,
- ,NTR,3
- ,NTR,2
- 10,UJ,
- ВОЗВРАТ_2:,STI,
- ,STI,7
- ,STI,8
- 8,UJ,
+ ,UTC,*GOT*.GOT
+ ,XTA,.0
+ M17,AEX,.0(М17)
+ ,UZA,ЦИКЛ_ПЕРЕХОД.F0
+ ,UJ,ВЫЗОВ_WRIKOR.F0A
+C
+ ЦИКЛ_ПЕРЕХОД:,UJ,ONEPLB.0
+C
+ ВЫЗОВ_WRIKOR:M16,VTM,К0.ONEPLB
+ ,ITS,14.0
+ M16,VTM,К1.К0(М16)
+ ,ITS,14.М16
+ M16,VTM,К2.К1(М16)
+ ,ITS,14.М16
+ M15,VJM,WRIKOR.К2(М16)
+ ,NTR,3.М16
+ ,NTR,22B.WRIKOR(М15)
+ ONEPLB:M15,VJM,ONEPLA.0
+ M15,VJM,WRILIN.'3'
+ M15,VJM,WRIHOR.'22'
+ M15,VJM,WRIVER.ONEPLA(М15)
+ M15,VJM,TWOPLA.0
+ ,UJ,ВОЗВРАТ_В_БЛОК.WRILIN(М15)
+C
+ ВОЗВРАТ_В_ОС:M7,MTJ,8.0
+ M16,MTJ,10.WRIHOR(М15)
+ M7,VTM,К1.0
+ ,ITS,13.WRIVER(М15)
+ ,ITS,8.0
+ ,ITS,.TWOPLA(М15)
+ ,NTR,3.0
+ ,NTR,2.F0C
+ M12,UJ,.0
+C
+ ВОЗВРАТ_В_БЛОК:,STI,.М10(М7)
+ ,STI,7.М12(М16)
+ ,STI,8.К1(М7)
+ M10,UJ,.М15
+C
  К0:,ISO, 6H*P     . 052 120 040 040 040 040 
  К1:,INT,1
  К2:,INT,2
- ,END,
+ ,END,.М10

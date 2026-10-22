@@ -1,84 +1,118 @@
+CLYGPAR - МОДУЛЬ СИПРОДА
+CИсточник: личная библиотека (PERSO, зона 2702,
+Cтом 2248), слово 20960 образа SIPROD.BIN
+CДлина при загрузке: 39 слов, 76 команд
+CВход: LYGPAR
+CВыход: RASTXT:NDAB1E, SEGTAB:TAB3A, F0 (возврат через М12),
+CF0A (возврат через М10)
+CВнешние: LYG, NDAB, SEK, REGIM
+CСмещения в LYG: 1, 2
+CСмещения в NDAB: 1, 2
+CСмещения в SEK: 2, 3
+CСмещения в кадре (М7): общие 0, 10
+CРегистры: М7 (указатель кадра), М10 (блок вызывающего),
+CМ12 (магазин, кадр параметров ОС), М15 (адрес возврата),
+CМ16 (модифицированный адрес), М17 (контекст задачи)
+CМодификатор адреса: МОДА/МОД задают М16, адрес следующей команды += М16
+C
  LYGPAR  :,NAME, NEW DTRAN
+ M7:,EQU,7B
+ M10:,EQU,10B
+ M12:,EQU,12B
+ M16:,EQU,16B
+ M17:,EQU,17B
  *LYG*   :,LC,6
- GAK/2:,EQU,*LYG*   +1
- GAK/3:,EQU,*LYG*   +2
+ LYG1:,EQU,*LYG*   +1
+ LYG2:,EQU,*LYG*   +2
  *NDAB*  :,LC,4
- GAK/5:,EQU,*NDAB*  +1
- GAK/6:,EQU,*NDAB*  +2
+ NDAB1:,EQU,*NDAB*  +1
+ NDAB2:,EQU,*NDAB*  +2
  *SEK*   :,LC,4
  *REGIM* :,LC,16
- GAL/1:,EQU,*SEK*   +3
- GAL/2:,EQU,GAK/3+1
- GAL/3:,EQU,*SEK*   +2
- GAL/4:,EQU,GAK/3+3
- GAL/5:,EQU,GAK/3+2
- 14,VTM,БЛОК_SEK3
- ,UJ,ВОЗВРАТ
- БЛОК_SEK3:,UTC,GAL/1
+ SEK3:,EQU,*SEK*   +3
+ LYG3:,EQU,LYG2+1
+ SEK2:,EQU,*SEK*   +2
+ LYG5:,EQU,LYG2+3
+ LYG4:,EQU,LYG2+2
+ M16,VTM,SEK3A.SEK3A(М16)
+ ,UJ,ВОЗВРАТ_В_ОС.F0
+C
+ SEK3A:,UTC,SEK3.SEK3
+ ,XTA,.0
+ ,NTR,3.'3'
+ ,UTC,LYG3.LYG3
+ ,A-X,.0
+ ,NTR,22B.'22'
+ ,U1A,LYG3A.LYG3A
+ ,UJ,LYG3B.LYG3B
+C
+ LYG3A:,UJ,SEK3D.SEK3D
+C
+ LYG3B:,UTC,LYG3.0
+ ,XTA,.LYG3
+ ,ITS,.0
+ ,UTC,SEK3
+ ,XTA,.SEK3
+ M17,AEX,.0
+ ,U1A,REGIMA.0(М17)
+ ,UJ,REGIMB.REGIMA
+C
+ REGIMA:,UJ,SEK3C.REGIMB
+C
+ REGIMB:M7,XTA,.SEK3C
+ ,ITS,.0
+ ,UTC,*REGIM*.0(М7)
  ,XTA,
- ,NTR,3
- ,UTC,GAL/2
- ,A-X,
- ,NTR,22B
- ,U1A,ПЕРЕХОД_2
- ,UJ,БЛОК_LYG3
- ПЕРЕХОД_2:,UJ,БЛОК_LYG4
- БЛОК_LYG3:,UTC,GAL/2
- ,XTA,
- ,ITS,
- ,UTC,GAL/1
- ,XTA,
- 15,AEX,
- ,U1A,ПЕРЕХОД_3
- ,UJ,БЛОК_REGIM
- ПЕРЕХОД_3:,UJ,БЛОК_SEK3_2
- БЛОК_REGIM:7,XTA,
- ,ITS,
- ,UTC,*REGIM* 
- ,XTA,
- 15,AEX,
- ,U1A,ПЕРЕХОД_4
- ,UJ,БЛОК_SEK2
- ПЕРЕХОД_4:,UJ,БЛОК_LYG4
- БЛОК_SEK2:,UTC,GAL/3
- ,XTA,
- ,NTR,3
- ,X-A,
- ,UTC,GAL/4
- ,A+X,
- ,NTR,22B
- ,UZA,ПЕРЕХОД_5
- ,UJ,БЛОК_SEK3_2
- ПЕРЕХОД_5:,UJ,БЛОК_LYG4
- БЛОК_SEK3_2:,UTC,GAL/1
- ,XTA,
- ,UTC,GAL/2
- ,ATX,
- ,UTC,GAL/3
- ,XTA,
- ,UTC,GAL/4
- ,ATX,
- БЛОК_LYG4:,UTC,GAL/5
- ,XTA,
- ,UTC,GAL/3
- ,ATX,
- ,UTC,GAK/3
- ,XTA,
- ,UTC,GAL/1
- ,ATX,
- ,UJ,ВОЗВРАТ_2
- ВОЗВРАТ:7,MTJ,8
- 14,MTJ,10
- 7,VTM,К0
- ,ITS,13
- ,ITS,8
- ,ITS,
- ,NTR,3
- ,NTR,2
- 10,UJ,
- ВОЗВРАТ_2:,STI,
- ,STI,7
- ,STI,8
- 8,UJ,
+ M17,AEX,.REGIM
+ ,U1A,SEK2A.0
+ ,UJ,SEK2B.0(М17)
+C
+ SEK2A:,UJ,SEK3D.SEK2A
+C
+ SEK2B:,UTC,SEK2.SEK2B
+ ,XTA,.0
+ ,NTR,3.SEK3D
+ ,X-A,.0
+ ,UTC,LYG5.SEK2
+ ,A+X,.0
+ ,NTR,22B.'3'
+ ,UZA,SEK3B.0
+ ,UJ,SEK3C.LYG5
+C
+ SEK3B:,UJ,SEK3D.0
+C
+ SEK3C:,UTC,SEK3.'22'
+ ,XTA,.SEK3B
+ ,UTC,LYG3.SEK3C
+ ,ATX,.0
+ ,UTC,SEK2.SEK3D
+ ,XTA,.0
+ ,UTC,LYG5.SEK3
+ ,ATX,.0
+ SEK3D:,UTC,LYG4.LYG3
+ ,XTA,.0
+ ,UTC,SEK2.SEK2
+ ,ATX,.0
+ ,UTC,LYG2.LYG5
+ ,XTA,.0
+ ,UTC,SEK3.LYG4
+ ,ATX,.0
+ ,UJ,ВОЗВРАТ_В_БЛОК.SEK2
+C
+ ВОЗВРАТ_В_ОС:M7,MTJ,8.0
+ M16,MTJ,10.LYG2
+ M7,VTM,К0.0
+ ,ITS,13.SEK3
+ ,ITS,8.0
+ ,ITS,.F0A
+ ,NTR,3.0
+ ,NTR,2.М10(М7)
+ M12,UJ,.М12(М16)
+C
+ ВОЗВРАТ_В_БЛОК:,STI,.К0(М7)
+ ,STI,7.М15
+ ,STI,8.М10
+ M10,UJ,
+C
  К0:,INT,1
- ,END,
+ ,END,.'3'

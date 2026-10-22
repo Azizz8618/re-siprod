@@ -1,80 +1,106 @@
+CSTART - МОДУЛЬ СИПРОДА
+CИсточник: личная библиотека (PERSO, зона 2702,
+Cтом 2248), слово 6496 образа SIPROD.BIN
+CДлина при загрузке: 31 слов, 52 команд
+CВход: START
+CВыход: SCHEMA:GOTA, F1 (возврат через М12), POP (возврат через М10)
 CНАЧАЛО ОБРАБОТКИ ВХОДНОГО ПОТОКА.
+CВнешние: KORT, EGO, FOP, KOMA, NUNU
+CСмещения в EGO: 7200, 8600, 8601
+CСмещения в KOMA: 2, 7
+CСмещения в KORT: 14
+CАбсолютные символы: N1 = -1
+CСмещения в кадре (М7): общие 0-3, 10, вне кадра 2060
+CРегистры: М1 (индекс: база модуля), М7 (указатель кадра),
+CМ10 (блок вызывающего), М12 (магазин, кадр параметров ОС),
+CМ15 (адрес возврата), М16 (модифицированный адрес)
+CМодификатор адреса: МОДА/МОД задают М16, адрес следующей команды += М16
 C
  START   :,NAME, NEW DTRAN
+ M1:,EQU,1B
+ M2:,EQU,2B
+ M7:,EQU,7B
+ M10:,EQU,10B
+ M12:,EQU,12B
+ M16:,EQU,16B
  *KORT*  :,LC,15
- GAK/2:,EQU,*KORT*  +14
+ KORT14:,EQU,*KORT*  +14
  *EGO*   :,LC,13401
- GAK/4:,EQU,*EGO*   +7200
- GAK/5:,EQU,*EGO*   +8600
- GAK/6:,EQU,*EGO*   +8601
+ EGO7200:,EQU,*EGO*   +7200
+ EGO8600:,EQU,*EGO*   +8600
+ EGO8601:,EQU,*EGO*   +8601
  *FOP*   :,LC,1
  *KOMA*  :,LC,8
- GAL/1:,EQU,*KOMA*  +2
- GAL/2:,EQU,*KOMA*  +7
+ KOMA2:,EQU,*KOMA*  +2
+ KOMA7:,EQU,*KOMA*  +7
  *NUNU*  :,LC,1
- GAL/5:,EQU,*KORT*  -32767
- 14,VTM,БЛОК_FOP
- ,UJ,ВОЗВРАТ
- БЛОК_FOP:7,XTA,
- ,UTC,*FOP*   
- ,ATX,
- ,NTR,3
- 7,XTA,1
- 7,ATX,3
- ,NTR,22B
- БЛОК_V0:7,XTA,-1
- ,WTC,V0
- 1,VTM,
- 1,UTC,GAL/5
- ,ATX,
-  :7,XTA,3
- ,NTR,3
- 7,A+X,1
- 7,ATX,3
- 7,X-A,2
- ,NTR,22B
- ,UZA,БЛОК_V0
- 7,XTA,1
- ,UTC,GAK/2
- ,ATX,
- ,NTR,3
- 7,XTA,
- ,UTC,GAK/5
- ,ATX,
- 7,XTA,1
- ,UTC,*NUNU*  
- ,ATX,
- ,NTR,22B
- ,UJ,ВОЗВРАТ_2
- ВОЗВРАТ:7,MTJ,8
- 14,MTJ,10
- 7,VTM,К1
- ,ITS,13
- ,ITS,1
- ,ITS,8
- ,ITS,
- ,NTR,3
- ,NTR,2
- 10,UJ,
- ВОЗВРАТ_2:,STI,
- ,STI,7
- ,STI,1
+ KORT32767:,EQU,*KORT*  -32767
+ M16,VTM,FOPA.FOPA(М16)
+ ,UJ,ВОЗВРАТ_В_ОС.F1
+C
+ FOPA:M7,XTA,.0(М7)
+ ,UTC,*FOP*.FOP
+ ,ATX,.0
+ ,NTR,3.'3'
+ M7,XTA,1.1(М7)
+ M7,ATX,3.3(М7)
+ ,NTR,22B.'22'
+ FOPB:M7,XTA,-1.0
+ ,WTC,V0.'4014'(М7)
+ M1,VTM,.V0
+ M1,UTC,KORT32767.0(М1)
+ ,ATX,.KORT32767(М1)
+  :7,XTA,3.0
+ ,NTR,3.0
+ M7,A+X,1.3(М7)
+ M7,ATX,3.'3'
+ M7,X-A,2.1(М7)
+ ,NTR,22B.3(М7)
+ ,UZA,FOPB.2(М7)
+ M7,XTA,1.'22'
+ ,UTC,KORT14.FOPB
+ ,ATX,.1(М7)
+ ,NTR,3.KORT14
+ M7,XTA,.0
+ ,UTC,EGO8600.'3'
+ ,ATX,.0(М7)
+ M7,XTA,1.EGO8600
+ ,UTC,*NUNU*.0
+ ,ATX,.1(М7)
+ ,NTR,22B.NUNU
+ ,UJ,POP.0
+C
+ ВОЗВРАТ_В_ОС:M7,MTJ,8.'22'
+ M16,MTJ,10.POP
+ M7,VTM,К1.0
+ ,ITS,13.М10(М7)
+ ,ITS,1.М12(М16)
+ ,ITS,8.К1(М7)
+ ,ITS,.М15
+ ,NTR,3.М1
+ ,NTR,2.М10
+ M12,UJ,
+C
+ POP:,STI,.'3'
+ ,STI,7.'2'
+ ,STI,1.0(М12)
  ,STI,8
- 8,UJ,
+ M10,UJ,.М7
+C
   :,ISO, 6H       . 040 040 040 040 040 040 
  К1:,INT,0
  ,INT,1
  ,INT,14
  ,BSS,1
- ,DATA,
+ ,DATA,.М1
  V0:,ISO, 6H123456 . 061 062 063 064 065 066 
  ,ISO, 6H7890   . 067 070 071 060 040 040 
  V2:,ISO, 6H*)$(I- . 052 051 044 050 111 055 
  V3:,ISO, 6HSLFGC/ . 123 114 106 107 103 057 
- 2,SET,V0
- 1,   ,*KOMA*  
- 1,SET,V2
- 1,   ,GAL/2
- 1,SET,V3
- 1,   ,GAL/1
+ M2,SET,V0.М10
+ M1,   ,*KOMA*.0(М10)
+ M1,SET,V2.0
+ M1,   ,KOMA7
+ M1,SET,V3
+ M1,   ,KOMA2
  ,END,

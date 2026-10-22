@@ -1,6 +1,6 @@
 #!/bin/sh
-# Сравнение работы СИПРОДа из исходной библиотеки (PERSO зоны 2702 тома
-# 2248) и из библиотеки, записанной заново tools/siprod_perso.py.
+# Сравнение работы СИПРОДа из библиотеки тома (ПЕРСО зоны 01267 тома
+# 2348) и из библиотеки, записанной заново tools/siprod_perso.py.
 #
 # Проверяются два образа: исходный siprod.bin и собранный из
 # откомментированных текстов (make build).
@@ -9,10 +9,11 @@ set -eu
 ROOT=$(cd "$(dirname "$0")/../.." && pwd)
 D=$ROOT/tests/siprod
 ZONE=${ZONE:-3900}
+VOL=${VOL:-2348}
 
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
-cp /usr/local/share/besm6/2248 "$work/2248"
+cp "/usr/local/share/besm6/$VOL" "$work/$VOL"
 SIPROD_WORK=$work
 export SIPROD_WORK
 

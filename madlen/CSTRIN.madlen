@@ -1,107 +1,132 @@
+CCSTRIN - МОДУЛЬ СИПРОДА
+CИсточник: личная библиотека (PERSO, зона 2702,
+Cтом 2248), слово 9248 образа SIPROD.BIN
+CДлина при загрузке: 63 слов, 106 команд
+CВход: CSTRIN
+CВыход: NAMENF:F9B, NOTFOR:TYPEA, NOTFOR:F0, NOTFOR:ENDKOB,
+CTARNYB:TYPEA, TARNYB:NOTFE, TARNYB:F1A, F8 (возврат через М12),
+CPOP (возврат через М10)
+CВнешние: WHO, ENDKOR, HOWSMB, RASPS, WRIKOR
+CСмещения в WHO: 1
+CСмещения в кадре (М7): общие 1, 7-8, 10
+CРегистры: М7 (указатель кадра), М10 (блок вызывающего),
+CМ12 (магазин, кадр параметров ОС), М15 (адрес возврата),
+CМ16 (модифицированный адрес)
+CМодификатор адреса: МОДА/МОД задают М16, адрес следующей команды += М16
+C
  CSTRIN  :,NAME, NEW DTRAN
+ M7:,EQU,7B
+ M10:,EQU,10B
+ M12:,EQU,12B
+ M15:,EQU,15B
+ M16:,EQU,16B
  *WHO*   :,LC,2
- GAK/2:,EQU,*WHO*   +1
+ WHO1:,EQU,*WHO*   +1
  ENDKOR  :,SUBP,
  HOWSMB  :,SUBP,
  RASPS   :,SUBP,
  WRIKOR  :,SUBP,
- 14,VTM,ВЫЗОВ_WRIKOR
- ,UJ,ПЕР_8
- ВЫЗОВ_WRIKOR:14,VTM,К0
- ,ITS,14
- 14,VTM,К1
- ,ITS,14
- 14,VTM,К3
- ,ITS,14
- 13,VJM,WRIKOR  
- ,NTR,3
- ,NTR,22B
- ,WTC,V2
- 14,VTM,
- ,ITS,14
- 14,VTM,К5
- ,ITS,14
- 14,VTM,К5
- ,ITS,14
- 14,VTM,V0
- ,ITS,14
- 14,VTM,К3
- ,ITS,14
- 14,VTM,К2
- ,ITS,14
- 13,VJM,RASPS   
- ,NTR,3
- ,NTR,22B
- 14,VTM,V0
- ,ITS,14
- 13,VJM,HOWSMB  
- ,NTR,3
- ,NTR,22B
- 14,VTM,V0
- ,ITS,14
- 14,VTM,*WHO*   
- ,ITS,14
- 14,VTM,GAK/2
- ,ITS,14
- 13,VJM,WRIKOR  
- ,NTR,3
- ,NTR,22B
- 14,VTM,К0
- ,ITS,14
- 14,VTM,К4
- ,ITS,14
- 14,VTM,К1
- ,ITS,14
- 13,VJM,WRIKOR  
- ,NTR,3
- ,NTR,22B
- ,WTC,V3
- 14,VTM,
- ,ITS,14
- 14,VTM,К5
- ,ITS,14
- 14,VTM,К5
- ,ITS,14
- 14,VTM,V1
- ,ITS,14
- 14,VTM,К3
- ,ITS,14
- 14,VTM,К2
- ,ITS,14
- 13,VJM,RASPS   
- ,NTR,3
- ,NTR,22B
- 14,VTM,V1
- ,ITS,14
- 13,VJM,HOWSMB  
- ,NTR,3
- ,NTR,22B
- 14,VTM,V1
- ,ITS,14
- 14,VTM,*WHO*   
- ,ITS,14
- 14,VTM,GAK/2
- ,ITS,14
- 13,VJM,WRIKOR  
- ,NTR,3
- ,NTR,22B
- 13,VJM,ENDKOR  
- ,UJ,ВОЗВРАТ
- ПЕР_8:7,MTJ,8
- 14,MTJ,10
- 7,VTM,К1
- 7,STX,10B
- 7,STX,7
- ,ITS,13
- ,ITS,8
- ,ITS,
- ,NTR,3
- ,NTR,2
- 10,UJ,
- ВОЗВРАТ:,STI,
- ,STI,7
- ,STI,8
- 8,UJ,
+ M16,VTM,ADDR.ADDR(М16)
+ ,UJ,ПЕР_8.F8
+C
+ ADDR:M16,VTM,К0.К0(М16)
+ ,ITS,14.М16
+ M16,VTM,К1.К1(М16)
+ ,ITS,14.М16
+ M16,VTM,К3.К3(М16)
+ ,ITS,14.М16
+ M15,VJM,WRIKOR.WRIKOR(М15)
+ ,NTR,3.0
+ ,NTR,22B.'3'
+ ,WTC,V2.'22'
+ M16,VTM,.V2
+ ,ITS,14.0(М16)
+ M16,VTM,К5.М16
+ ,ITS,14.К5(М16)
+ M16,VTM,К5.М16
+ ,ITS,14.К5(М16)
+ M16,VTM,V0.М16
+ ,ITS,14.V0(М16)
+ M16,VTM,К3.М16
+ ,ITS,14.К3(М16)
+ M16,VTM,К2.М16
+ ,ITS,14.К2(М16)
+ M15,VJM,RASPS.М16
+ ,NTR,3.RASPS(М15)
+ ,NTR,22B.'3'
+ M16,VTM,V0.'22'
+ ,ITS,14.V0(М16)
+ M15,VJM,HOWSMB.М16
+ ,NTR,3.HOWSMB(М15)
+ ,NTR,22B.0
+ M16,VTM,V0.'3'
+ ,ITS,14.'22'
+ M16,VTM,*WHO*.V0(М16)
+ ,ITS,14.М16
+ M16,VTM,WHO1.WHO(М16)
+ ,ITS,14.М16
+ M15,VJM,WRIKOR.WHO1(М16)
+ ,NTR,3.М16
+ ,NTR,22B.WRIKOR(М15)
+ M16,VTM,К0.0
+ ,ITS,14.'3'
+ M16,VTM,К4.'22'
+ ,ITS,14.К0(М16)
+ M16,VTM,К1.М16
+ ,ITS,14.К4(М16)
+ M15,VJM,WRIKOR.М16
+ ,NTR,3.К1(М16)
+ ,NTR,22B.М16
+ ,WTC,V3.WRIKOR(М15)
+ M16,VTM,.0
+ ,ITS,14.'3'
+ M16,VTM,К5.'22'
+ ,ITS,14.V3
+ M16,VTM,К5.0(М16)
+ ,ITS,14.М16
+ M16,VTM,V1.К5(М16)
+ ,ITS,14.М16
+ M16,VTM,К3.К5(М16)
+ ,ITS,14.М16
+ M16,VTM,К2.V1(М16)
+ ,ITS,14.М16
+ M15,VJM,RASPS.К3(М16)
+ ,NTR,3.М16
+ ,NTR,22B.К2(М16)
+ M16,VTM,V1.М16
+ ,ITS,14.RASPS(М15)
+ M15,VJM,HOWSMB.'3'
+ ,NTR,3.'22'
+ ,NTR,22B.V1(М16)
+ M16,VTM,V1.М16
+ ,ITS,14.HOWSMB(М15)
+ M16,VTM,*WHO*.0
+ ,ITS,14.'3'
+ M16,VTM,WHO1.'22'
+ ,ITS,14.V1(М16)
+ M15,VJM,WRIKOR.М16
+ ,NTR,3.WHO(М16)
+ ,NTR,22B.М16
+ M15,VJM,ENDKOR.WHO1(М16)
+ ,UJ,POP.М16
+C
+ ПЕР_8:M7,MTJ,8.WRIKOR(М15)
+ M16,MTJ,10.0
+ M7,VTM,К1.'3'
+ M7,STX,10B.'22'
+ M7,STX,7.ENDKOR(М15)
+ ,ITS,13.0
+ ,ITS,8.POP
+ ,ITS,.0
+ ,NTR,3.М10(М7)
+ ,NTR,2.М12(М16)
+ M12,UJ,.К1(М7)
+C
+ POP:,STI,.8(М7)
+ ,STI,7.7(М7)
+ ,STI,8.М15
+ M10,UJ,.М10
+C
  К0:,ISO, 6H*0MCS  . 052 060 115 103 123 040 
  К1:,INT,1
  К2:,INT,2

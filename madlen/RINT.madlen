@@ -1,159 +1,199 @@
+CRINT - МОДУЛЬ СИПРОДА
+CИсточник: личная библиотека (PERSO, зона 2702,
+Cтом 2248), слово 5472 образа SIPROD.BIN
+CДлина при загрузке: 80 слов, 160 команд
+CВход: RINT
+CВыход: AIRB:L9, AIRB:L9A, AIRB:PUSH, AORB:L9, AORB:L9A, RASPI:L20,
+CRASPI:OR, RASPI:ORA, RASPI:L18, RINT:L17, RINT:L20, RINT:L20+1,
+CRSYMB:L0022, RSYMB:LOOP, SYTINT:F9, WRNGR:L14,
+CSYTOBA (возврат через ячейка 0), L9 (возврат через ячейка 0),
+CL14A (возврат через ячейка 0), L15 (возврат через ячейка 0),
+CL20 (возврат через ячейка 0)
+CВнешние: SYTOBI, KONSTA
+CСмещения в SYTOBI: 1, 2, 3, 4, 5
+CАбсолютные символы: N2 = -2
+CСмещения в кадре (М7): общие 0, 9, свои 14, 20
+CРегистры: М7 (указатель кадра), М10 (блок вызывающего),
+CМ11 (буфер, счётчик), М12 (магазин, кадр параметров ОС), М13 (счётчик),
+CМ14 (смещение в буфере), М15 (адрес возврата),
+CМ16 (модифицированный адрес), М17 (контекст задачи)
+CМодификатор адреса: МОДА/МОД задают М16, адрес следующей команды += М16
+C
  RINT    :,NAME, NEW DTRAN
+ M7:,EQU,7B
+ M10:,EQU,10B
+ M11:,EQU,11B
+ M12:,EQU,12B
+ M13:,EQU,13B
+ M14:,EQU,14B
+ M15:,EQU,15B
+ M16:,EQU,16B
+ M17:,EQU,17B
  SYTOBIN :,SUBP,
  KONSTA  :,SUBP,
- GAK/3:,EQU,SYTOBIN +1
- GAK/4:,EQU,SYTOBIN +2
- GAK/5:,EQU,SYTOBIN +3
- GAK/6:,EQU,SYTOBIN +4
- GAK/7:,EQU,SYTOBIN +5
- ,ITS,13
- 13,VJM,KONSTA  
- ,ITS,7
- 7,VTM,БЛОК_С9
- ,ITS,7
- 10,STX,20B
- 10,STX,14B
- 10,STX,11B
- 10,STX,16B
- ВЫЗОВ_SYTOBI5:,ATI,14
- 10,STX,26B
- 10,STX,21B
- ,ATI,9
- 10,STX,22B
- ,ATI,12
- 10,ATX,25B
- 10,WTC,21B
- ,XTA,
- ,NTR,3
- 8,A+X,3
- 8,AAX,10B
- 10,ATX,12B
- ,X-A,
- ,UZA,ЧТЕНИЕ_4
- ,ATI,11
- 9,XTA,
- 13,VJM,GAK/7
- ,ITA,7
- 8,AAX,4
- ,U1A,ЧТЕНИЕ
- 7,J+M,12
- 8,XTA,3
- 10,WTC,16B
- ,ATX,
- ,ITA,9
- ,X-A,
- ,ATI,9
- ,XTA,
- 10,ATX,7
- 11,UTM,1
- ВЫЗОВ_SYTOBI1:13,VJM,GAK/3
- 10,XTA,10B
- 13,VJM,GAK/6
- 7,V1M,ЧТЕНИЕ_2
- 13,VJM,SYTOBIN 
- 11,VLM,ВЫЗОВ_SYTOBI1
- 10,XTS,14B
- ,STI,7
- 10,WTC,20B
- ,UJ,
- БЛОК_С9:8,AAX,11B
- ,U1A,ЧТЕНИЕ_3
- 10,XTA,7
- 8,AOX,3
- 14,STX,
- ,NTR,6
- 10,WTC,11B
- ,UJ,
- ЧТЕНИЕ:8,XTA,10B
- 8,AEX,
- ,UJ,БЛОК_С14
- ЧТЕНИЕ_2:10,XTA,12B
- ,ATI,9
- 9,J+M,11
- ,ITA,11
- ,UJ,БЛОК_С14
- ЧТЕНИЕ_3:8,XTA,10B
- 8,AEX,7
- ,UJ,БЛОК_С14
- ЧТЕНИЕ_4:8,XTA,10B
- БЛОК_С14:8,AOX,3
- 10,WTC,16B
- ,STX,
- 10,WTC,14B
- 7,VTM,
- ,NTR,6
- 10,WTC,11B
- ,UJ,
- ВЫЗОВ_KONSTA_2:15,UTM,-2
- 8,XTA,10B
- 8,AOX,3
- 10,WTC,17B
- ,STX,
- 10,WTC,14B
- 7,VTM,
- ,NTR,6
- 10,WTC,11B
- ,UJ,
- ,ITS,13
- 13,VJM,KONSTA  
- 10,STX,11B
- 10,STX,17B
- 10,STX,16B
- 10,STX,24B
- 10,ATX,23B
- ,ITA,7
- 7,VTM,ВЫЗОВ_KONSTA_3
- ,ITS,7
- 10,STX,20B
- 10,STX,14B
- ,UJ,ВЫЗОВ_SYTOBI5
- ВЫЗОВ_KONSTA_3:10,WTC,24B
- ,XTA,
- 8,A+X,3
- ,ATI,11
- 8,XTA,3
- 10,WTC,17B
- ,ATX,
- 10,WTC,23B
- ,XTA,
- 8,X-A,3
- ,ATI,9
- 11,UTC,
- 8,XTA,11B
- 11,UTC,
- 9,ASN,64+0
- 8,AEX,2
- 14,AAX,
- 10,XTS,7
- 11,ASN,64-48
- 15,ATX,
- ,YTA,
- ,U1A,ВЫЗОВ_KONSTA_2
- 15,XTA,
- 9,ASN,64+48
- 15,AOX,
- 14,ATX,
- 15,XTA,
- ,NTR,6
- 10,WTC,11B
- ,UJ,
- ,ITS,13
- 13,VJM,KONSTA  
- ,NTR,3
- 10,STX,11B
- 10,STX,17B
- ,ATI,11
- 10,STX,24B
- ,ATI,9
- 10,ATX,23B
- ,ITA,7
- 10,STX,14B
- ,ATI,14
- 10,STX,26B
- ,ATI,12
- 10,ATX,25B
- 12,XTA,
- 8,AAX,10B
- 10,ATX,7
- ,UJ,ВЫЗОВ_KONSTA_3
- ,END,
+ SYTOBI1:,EQU,SYTOBIN +1
+ SYTOBI2:,EQU,SYTOBIN +2
+ SYTOBI3:,EQU,SYTOBIN +3
+ SYTOBI4:,EQU,SYTOBIN +4
+ SYTOBI5:,EQU,SYTOBIN +5
+ ,ITS,13.М15
+ M15,VJM,KONSTA.KONSTA(М15)
+ ,ITS,7.М7
+ M7,VTM,БЛОК_С9.L9(М7)
+ ,ITS,7.М7
+ M12,STX,20B.16(М12)
+ M12,STX,14B.12(М12)
+ M12,STX,11B.9(М12)
+ M12,STX,16B.14(М12)
+ ВЫЗОВ_SYTOBI5:,ATI,14.0
+ M12,STX,26B.М16
+ M12,STX,21B.22(М12)
+ ,ATI,9.17(М12)
+ M12,STX,22B.М11
+ ,ATI,12.18(М12)
+ M12,ATX,25B.М14
+ M12,WTC,21B.21(М12)
+ ,XTA,.17(М12)
+ ,NTR,3.0
+ M10,A+X,3.'3'
+ M10,AAX,10B.3(М10)
+ M12,ATX,12B.8(М10)
+ ,X-A,.10(М12)
+ ,UZA,ЧТЕНИЕ_ПОЛЯ_8_БЛОКА.0
+ ,ATI,11.L14
+ M11,XTA,.М13
+ M15,VJM,SYTOBI5.0(М11)
+ ,ITA,7.SYTOBI5(М15)
+ M10,AAX,4.М7
+ ,U1A,GET.4(М10)
+ M7,J+M,12.GET
+ M10,XTA,3.М14(М7)
+ M12,WTC,16B.3(М10)
+ ,ATX,.14(М12)
+ ,ITA,9.0
+ ,X-A,.М11
+ ,ATI,9.0
+ ,XTA,.М11
+ M12,ATX,7.0
+ M13,UTM,1.7(М12)
+ SYTOBA:M15,VJM,SYTOBI1.1(М13)
+ M12,XTA,10B.0
+ M15,VJM,SYTOBI4.SYTOBI1(М15)
+ M7,V1M,GETA.0
+ M15,VJM,SYTOBIN.8(М12)
+ M13,VLM,SYTOBA.SYTOBI4(М15)
+ M12,XTS,14B.GETA(М7)
+ ,STI,7.SYTOBI(М15)
+ M12,WTC,20B.SYTOBA(М13)
+ ,UJ,.12(М12)
+C
+ БЛОК_С9:M10,AAX,11B.М7
+ ,U1A,GETB.16(М12)
+ M12,XTA,7.0
+ M10,AOX,3.0
+ M16,STX,.9(М10)
+ ,NTR,6.GETB
+ M12,WTC,11B.7(М12)
+ ,UJ,.3(М10)
+C
+ GET:M10,XTA,10B.0(М16)
+ M10,AEX,.'6'
+ ,UJ,БЛОК_С14.9(М12)
+C
+ GETA:M12,XTA,12B.0
+ ,ATI,9.8(М10)
+ M11,J+M,11.0(М10)
+ ,ITA,11.L14A
+ ,UJ,БЛОК_С14.0
+C
+ GETB:M10,XTA,10B.10(М12)
+ M10,AEX,7.М11
+ ,UJ,БЛОК_С14.М13(М11)
+C
+ ЧТЕНИЕ_ПОЛЯ_8_БЛОКА:M10,XTA,10B.М13
+ БЛОК_С14:M10,AOX,3.L14A
+ M12,WTC,16B.0
+ ,STX,.8(М10)
+ M12,WTC,14B.7(М10)
+ M7,VTM,.L14A
+ ,NTR,6.0
+ M12,WTC,11B.8(М10)
+ ,UJ,.0
+C
+ ВЫЗОВ_KONSTA:M17,UTM,-2.3(М10)
+ M10,XTA,10B.14(М12)
+ M10,AOX,3.0
+ M12,WTC,17B.12(М12)
+ ,STX,.0(М7)
+ M12,WTC,14B.'6'
+ M7,VTM,.9(М12)
+ ,NTR,6.0
+ M12,WTC,11B.N2(М17)
+ ,UJ,.8(М10)
+C
+ ,ITS,13.3(М10)
+ M15,VJM,KONSTA.15(М12)
+ M12,STX,11B.0
+ M12,STX,17B.12(М12)
+ M12,STX,16B.0(М7)
+ M12,STX,24B.'6'
+ M12,ATX,23B.9(М12)
+ ,ITA,7.0
+ M7,VTM,ВЫЗОВ_KONSTA_2.М15
+ ,ITS,7.KONSTA(М15)
+ M12,STX,20B.9(М12)
+ M12,STX,14B.15(М12)
+ ,UJ,ВЫЗОВ_SYTOBI5.14(М12)
+C
+ ВЫЗОВ_KONSTA_2:M12,WTC,24B.20(М12)
+ ,XTA,.19(М12)
+ M10,A+X,3.М7
+ ,ATI,11.L20(М7)
+ M10,XTA,3.М7
+ M12,WTC,17B.16(М12)
+ ,ATX,.12(М12)
+ M12,WTC,23B.L17
+ ,XTA,.0
+ M10,X-A,3.20(М12)
+ ,ATI,9.0
+ M13,UTC,.3(М10)
+ M10,XTA,11B.М13
+ M13,UTC,.3(М10)
+ M11,ASN,64+0.15(М12)
+ M10,AEX,2.0
+ M16,AAX,.19(М12)
+ M12,XTS,7.0
+ M13,ASN,64-48.3(М10)
+ M17,ATX,.М11
+ ,YTA,.0(М13)
+ ,U1A,ВЫЗОВ_KONSTA.9(М10)
+ M17,XTA,.0(М13)
+ M11,ASN,64+48.64(М11)
+ M17,AOX,.2(М10)
+ M16,ATX,.0(М16)
+ M17,XTA,.7(М12)
+ ,NTR,6.64-48(М13)
+ M12,WTC,11B.0(М17)
+ ,UJ,.64-64
+C
+ ,ITS,13.L15
+ M15,VJM,KONSTA.0(М17)
+ ,NTR,3.64+48(М11)
+ M12,STX,11B.0(М17)
+ M12,STX,17B.0(М16)
+ ,ATI,11.0(М17)
+ M12,STX,24B.'6'
+ ,ATI,9.9(М12)
+ M12,ATX,23B.0
+ ,ITA,7.М15
+ M12,STX,14B.KONSTA(М15)
+ ,ATI,14.'3'
+ M12,STX,26B.9(М12)
+ ,ATI,12.15(М12)
+ M12,ATX,25B.М13
+ M14,XTA,.20(М12)
+ M10,AAX,10B.М11
+ M12,ATX,7.19(М12)
+ ,UJ,ВЫЗОВ_KONSTA_2.М7
+C
+ ,END,.12(М12)

@@ -1,78 +1,106 @@
+CPAPAPR - МОДУЛЬ СИПРОДА
+CИсточник: личная библиотека (PERSO, зона 2702,
+Cтом 2248), слово 9504 образа SIPROD.BIN
+CДлина при загрузке: 34 слов, 54 команд
+CВход: PAPAPR
+CВыход: F5 (возврат через М12), POP (возврат через М10)
 CГЕНЕРАТОР РЕЖИМА *SUB: ПАСПОРТ ПОДПРОГРАММЫ,
 CРАЗДЕЛЫ 1-10, ШАПКИ ЧЕРЕЗ RMAKR.
+CВнешние: COMCON, EGO, INS, NUST, RUSIS, PAPRAP, RMAKR, IMUI
+CСмещения в COMCON: 19, 20
+CСмещения в EGO: 7200, 8600, 8601
+CСмещения в INS: 24, 25, 26
+CАбсолютные символы: N1 = -1
+CСмещения в кадре (М7): общие 0-1, 3-5, 10, вне кадра 2064
+CРегистры: М1 (индекс: база модуля), М7 (указатель кадра),
+CМ10 (блок вызывающего), М12 (магазин, кадр параметров ОС),
+CМ15 (адрес возврата), М16 (модифицированный адрес)
+CМодификатор адреса: МОДА/МОД задают М16, адрес следующей команды += М16
 C
  PAPAPR  :,NAME, NEW DTRAN
+ M1:,EQU,1B
+ M7:,EQU,7B
+ M10:,EQU,10B
+ M12:,EQU,12B
+ M14:,EQU,14B
+ M15:,EQU,15B
+ M16:,EQU,16B
  *COMCON*:,LC,21
- GAK/2:,EQU,*COMCON*+20
+ COMCON20:,EQU,*COMCON*+20
  *EGO*   :,LC,13401
- GAK/4:,EQU,*EGO*   +7200
- GAK/5:,EQU,*EGO*   +8600
- GAK/6:,EQU,*EGO*   +8601
+ EGO7200:,EQU,*EGO*   +7200
+ EGO8600:,EQU,*EGO*   +8600
+ EGO8601:,EQU,*EGO*   +8601
  *INS*   :,LC,27
- GAL/0:,EQU,*INS*   +24
- GAL/1:,EQU,*INS*   +25
- GAL/2:,EQU,*INS*   +26
+ INS24:,EQU,*INS*   +24
+ INS25:,EQU,*INS*   +25
+ INS26:,EQU,*INS*   +26
  *NUST*  :,LC,10
  *RUSIS* :,LC,1
  PAPRAP  :,SUBP,
  RMAKR   :,SUBP,
  I*MU*I  :,SUBP,
- GAM/1:,EQU,GAK/4-32767
- GAM/4:,EQU,*COMCON*+19
- 14,VTM,ВЫЗОВ_IMUI
- ,UJ,ВОЗВРАТ
- ВЫЗОВ_IMUI:,UTC,GAK/5
- ,XTA,
- 14,VTM,GAK/2
- 13,VJM,I*MU*I  
- ,NTR,3
- 7,A+X,
- 7,ATX,4
- 7,ATX,5
- ,NTR,22B
- ,UJ,ВЫЗОВ_RMAKR
- БЛОК_V1:7,XTA,-1
- ,WTC,V1
- 1,VTM,
- 1,UTC,GAM/1
- ,ATX,
-  :7,XTA,5
- ,NTR,3
- 7,A+X,
- 7,ATX,5
- ,NTR,22B
- ВЫЗОВ_RMAKR:7,X-A,3
- ,UZA,БЛОК_V1
- 14,VTM,К2
- ,ITS,14
- 13,VJM,RMAKR   
- 14,VTM,К3
- ,ITS,14
- 13,VJM,RMAKR   
- 13,VJM,PAPRAP  
- ,UJ,ВОЗВРАТ_2
- ВОЗВРАТ:7,MTJ,8
- 14,MTJ,10
- 7,VTM,К1
- ,ITS,13
- ,ITS,1
- ,ITS,8
- ,ITS,
- ,NTR,3
- ,NTR,2
- 10,UJ,
- ВОЗВРАТ_2:,STI,
- ,STI,7
+ EGO39967:,EQU,EGO7200-32767
+ COMCON19:,EQU,*COMCON*+19
+ M16,VTM,EGO860.EGO860(М16)
+ ,UJ,ВОЗВРАТ_В_ОС.F5
+C
+ EGO860:,UTC,EGO8600.EGO8600
+ ,XTA,.0
+ M16,VTM,COMCON20.COMCON20(М16)
+ M15,VJM,I*MU*I.IMUI(М15)
+ ,NTR,3.'3'
+ M7,A+X,.0(М7)
+ M7,ATX,4.4(М7)
+ M7,ATX,5.5(М7)
+ ,NTR,22B.'22'
+ ,UJ,EGO39A.EGO39A
+C
+ EGO399:M7,XTA,-1.'4020'(М7)
+ ,WTC,V1.V1
+ M1,VTM,.0(М1)
+ M1,UTC,EGO39967.EGO39967(М1)
+ ,ATX,.0
+  :7,XTA,5.0
+ ,NTR,3.5(М7)
+ M7,A+X,.'3'
+ M7,ATX,5.0(М7)
+ ,NTR,22B.5(М7)
+ EGO39A:M7,X-A,3.'22'
+ ,UZA,EGO399.0
+ M16,VTM,К2.3(М7)
+ ,ITS,14.EGO399
+ M15,VJM,RMAKR.К2(М16)
+ M16,VTM,К3.М16
+ ,ITS,14.RMAKR(М15)
+ M15,VJM,RMAKR.0
+ M15,VJM,PAPRAP.К3(М16)
+ ,UJ,POP.М16
+C
+ ВОЗВРАТ_В_ОС:M7,MTJ,8.RMAKR(М15)
+ M16,MTJ,10.0
+ M7,VTM,К1.PAPRAP(М15)
+ ,ITS,13.0
+ ,ITS,1.POP
+ ,ITS,8.0
+ ,ITS,.М10(М7)
+ ,NTR,3.М12(М16)
+ ,NTR,2.К1(М7)
+ M12,UJ,.М15
+C
+ POP:,STI,.М1
+ ,STI,7.М10
  ,STI,1
- ,STI,8
- 8,UJ,
+ ,STI,8.'3'
+ M10,UJ,.'2'
+C
   :,ISO, 6H       . 040 040 040 040 040 040 
  К1:,INT,1
  К2:,INT,18
  К3:,INT,19
  ,INT,1400
  ,BSS,2
- ,DATA,
+ ,DATA,.0(М12)
  V0:,ISO, 6H0=     . 060 075 040 040 040 040 
  V1:,ISO, 6H1=     . 061 075 040 040 040 040 
  ,ISO, 6H2=     . 062 075 040 040 040 040 
@@ -87,10 +115,10 @@ C
  ,ISO, 6H11=    . 061 061 075 040 040 040 
  V12:,ISO, 6H$$     . 044 044 040 040 040 040 
  V13:,INT,14
- 12,SET,V0
- 1,   ,*COMCON*
- 1,SET,V12
- 1,   ,GAM/4
- 1,SET,V13
- 1,   ,GAK/2
+ M14,SET,V0
+ M1,   ,*COMCON*.М7
+ M1,SET,V12.М1
+ M1,   ,COMCON19.М10
+ M1,SET,V13.0(М10)
+ M1,   ,COMCON20.0
  ,END,

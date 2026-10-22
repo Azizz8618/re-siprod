@@ -96,6 +96,34 @@ LABEL_NAMES = {
         0o21: "ПЕЧАТЬ_СООБЩЕНИЯ",
         0o27: "ВОЗВРАТ_ИЗ_МОДУЛЯ",
     },
+    # AIRB - разбор адреса блока: перебор байтов, счётчик адреса.
+    "AIRB": {
+        0o75: "ВОЗВРАТ_ПОСЛЕ_РАЗБОРА",
+        0o76: "ЧТЕНИЕ_ПРИЗНАКА_ИЗ_КОНТЕКСТА",
+        0o77: "ЗАПИСЬ_БАЙТА_В_БУФЕР",
+        0o101: "СЧЁТ_АДРЕСА_В_БУФЕРЕ",
+        0o103: "ЧТЕНИЕ_ПОЛЯ_БЛОКА_ВЫЗЫВАЮЩЕГО",
+    },
+    # RASPI - разбор адреса поля: берёт поле блока вызывающего.
+    "RASPI": {
+        0o20: "ПОЛЕ_БЛОКА_ВЫЗЫВАЮЩЕГО",
+    },
+    # RINT - разбор целого числа.
+    "RINT": {
+        0o46: "ЧТЕНИЕ_ПОЛЯ_8_БЛОКА",
+    },
+    # SYTOBIN - перевод числа в двоичный вид.
+    "SYTOBIN": {
+        0o22: "СДВИГ_СЧЁТЧИКА_НА_7",
+        0o61: "ДЕЛЕНИЕ_В_ЦИКЛЕ",
+        0o66: "ЗАВЕРШЕНИЕ_ПРЕОБРАЗОВАНИЯ",
+    },
+    # WRNGR - вывод номера ошибки: перевод числа в текст.
+    "WRNGR": {
+        0o55: "ВЫВОД_ЧИСЛА_В_ТЕКСТ",
+        0o115: "ЧТЕНИЕ_ПОЛЯ_8_БЛОКА",
+        0o75: "ПЕРЕХОД_К_ADDR",
+    },
 }
 
 
@@ -115,6 +143,29 @@ def role_of(instr):
     }.get(instr, "ПРОЦЕДУРА")
 
 
+# Операции, для которых важно, к какому символу они обращаются: имя
+# символа входит в имя метки ("ЗАПИСЬ_К0", "АДРЕС_N5").
+SYMBOL_OPS = ("СЧ", "ЗП", "ЗПМ", "УИА", "СЛИА", "СЛИ", "И", "ИЛИ",
+              "НТЖ", "ВЧ", "ВЧОБ", "СЛ", "СЛЦ", "СЧИМ", "СЧМ")
+
+
+def symbol_of(op):
+    """Символ, к которому обращается операция.
+
+    Операнд в разборе БЕМШ записан как `СИМВОЛ(РЕГИСТР)` или
+    `СМЕЩЕНИЕ(РЕГИСТР)`: `К0(М7)`, `N5(М7)`, `KONSTA(М15)`, `0(М12)`.
+    Шестнадцатеричные константы разбор помечает префиксом `С`
+    (`С4004` - смещение 4004), в имя метки префикс не нужен.
+    """
+    if not op:
+        return ""
+    base = op.split("(")[0].strip().strip("'")
+    if len(base) > 1 and base[0] == "С" and all(
+            c in "0123456789ABCDEF" for c in base[1:]):
+        base = base[1:]
+    return base
+
+
 def sanitize(s):
     """Имя символа пригодно для метки МАДЛЕН: буквы, цифры, подчёркивание."""
     s = "".join(ch for ch in s.upper() if ch.isalnum() or ch == "_")
@@ -123,7 +174,21 @@ def sanitize(s):
         return "СИМВОЛ"
     if s[0].isdigit():
         s = "С" + s
+    # имена регистров (M11, M12, ...) заняты объявлениями EQU
+    if re.match(r"^M[0-9]", s):
+        s = "С" + s
     return s[:24]
+
+
+# Имена, оставленные разборщиком без смысла: V12 (переменная), К5
+# (константа), F123 и L9 (метки без имени).  Смысловые имена из
+# исходника (PUSH, ADDR, SCAN1A, REGIMA...) в этот список не входят.
+GENERIC_RE = re.compile(r"^(V|К|F|L)[0-9]*[A-ZА-Я]?$")
+
+
+def meaningful(name):
+    """Имя из исходника несёт смысл (в отличие от V12, К5, F123, L9)."""
+    return bool(name) and not GENERIC_RE.match(name)
 
 
 def unique(base, used):
@@ -149,6 +214,9 @@ def module_table(lib, name):
     known = sorted(labels)
     byoff = {off: half for off, half in insns}
     manual = LABEL_NAMES.get(name, {})
+    name2off = {}
+    for off, nm in labels.items():
+        name2off.setdefault(nm, off)
 
     # признаки каждого блока: вызовы, общие блоки, локальные переменные,
     # переход (куда и назад ли) и число команд в блоке
@@ -157,6 +225,8 @@ def module_table(lib, name):
         nxt = known[i + 1] if i + 1 < len(known) else None
         calls, commons, locs = [], [], []
         ret = jump = back = False
+        target = None
+        ret_reg = ""
         count = 0
         for o, half in insns:
             if o < off:
@@ -179,13 +249,18 @@ def module_table(lib, name):
                     locs.append(m.group(1))
             elif instr == "ПБ":
                 if re.match(r"^0\(М\d+\)$", op):
+                    # возврат: запоминаем регистр, через который он идёт
                     ret = True
+                    ret_reg = op.split("(")[1].rstrip(")")
                 else:
                     jump = True
-                    m = re.match(r"^L?(\d+)$", op)
-                    if m and 2 * int(m.group(1)) < off:
-                        back = True
-        feats[off] = (calls, commons, locs, ret, jump, back, count)
+                    tgt = name2off.get(op.split("(")[0])
+                    if tgt is not None:
+                        target = tgt // 2
+                        if 2 * int(re.sub(r"\D", "", op) or 0) < off:
+                            back = True
+        feats[off] = (calls, commons, locs, ret, jump, back, count,
+                      target, ret_reg if ret else "")
 
     names, used = {}, set()
     # сперва ручные имена
@@ -193,7 +268,22 @@ def module_table(lib, name):
         if word * 2 in labels:
             names[word] = nm
             used.add(nm)
-    # затем автоматические
+    # затем исходные имена меток (из разбора БЕМШ): если имя несёт
+    # смысл (PUSH, ADDR, SCAN1A, REGIMA...), оно лучше выдуманного
+    for off in known:
+        word = off // 2
+        if word in names:
+            continue
+        src = labels[off]
+        if not meaningful(src):
+            continue
+        if off >= 2 * cmdwords and src[:1] in "КV":
+            continue            # данные модуля - их имена не меняем
+        nm = unique(sanitize(src), used)
+        used.add(nm)
+        names[word] = nm
+    # затем автоматические - по содержанию блока
+    targets = {}
     for off in known:
         word = off // 2
         if word in names:
@@ -204,11 +294,15 @@ def module_table(lib, name):
             names[word] = labels[off]
             used.add(labels[off])
             continue
-        calls, commons, locs, ret, jump, back, count = feats[off]
+        (calls, commons, locs, ret, jump, back, count,
+         target, ret_reg) = feats[off]
         half = byoff.get(off)
         instr = ""
+        op = ""
         if half is not None:
-            instr = (decode(half)["name"] or "").upper()
+            dec = decode(half)
+            instr = (dec["name"] or "").upper()
+            op = operand_text(dec, ext, labels, name)
         if calls:
             base = "ВЫЗОВ_" + sanitize(calls[0])
         elif commons:
@@ -216,16 +310,35 @@ def module_table(lib, name):
         elif locs:
             base = "ПЕР_" + locs[0]
         elif ret:
-            base = "ВОЗВРАТ"
+            # возврат: через М15 - вызывающему модулю, через М12 - в ОС,
+            # через М10 - в вызывающий блок
+            base = {"М15": "ВОЗВРАТ_ВЫЗЫВАЮЩЕМУ",
+                    "М12": "ВОЗВРАТ_В_ОС",
+                    "М10": "ВОЗВРАТ_В_БЛОК"}.get(ret_reg, "ВОЗВРАТ")
         elif back:
             # цель обратного перехода - начало цикла
             base = "ЦИКЛ_" + role_of(instr).replace(" ", "_")
         elif jump and count <= 2:
-            # блок состоит из одного перехода - называем по его смыслу
+            # блок состоит из одного перехода - называем по цели
             base = "ПЕРЕХОД"
+            if target is not None:
+                targets[word] = target
         else:
-            base = role_of(instr)
+            role = role_of(instr).replace(" ", "_")
+            sym = symbol_of(op)
+            if instr in SYMBOL_OPS and sym and not sym.isdigit():
+                base = role + "_" + sanitize(sym)
+            elif instr in SYMBOL_OPS and sym and sym.isdigit():
+                base = role + "_" + sym
+            else:
+                base = role
         nm = unique(base, used)
+        used.add(nm)
+        names[word] = nm
+    # имена вида "ПЕРЕХОД" уточняем целью перехода (её имя уже известно)
+    for word, target in targets.items():
+        base = "ПЕРЕХОД_" + names.get(target, "МЕТКА")
+        nm = unique(sanitize(base), used)
         used.add(nm)
         names[word] = nm
     return names

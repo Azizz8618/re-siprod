@@ -1,113 +1,145 @@
+CNAMENF - МОДУЛЬ СИПРОДА
+CИсточник: личная библиотека (PERSO, зона 2702,
+Cтом 2248), слово 8608 образа SIPROD.BIN
+CДлина при загрузке: 78 слов, 104 команд
+CВход: NAMENF
+CВыход: APNOTF:F1C, F1A (возврат через М12), F1B (возврат через М10)
+CВнешние: INS, SCANER, PAGE, WHO, ENDKOR, GETSTR, WRIKOR, CSTRIN
+CСмещения в INS: 24, 25, 26
+CСмещения в PAGE: 1
+CСмещения в SCANER: 1, 2
+CСмещения в WHO: 1
+CСмещения в кадре (М7): общие 0-1, 4, 6-10
+CРегистры: М7 (указатель кадра), М10 (блок вызывающего),
+CМ12 (магазин, кадр параметров ОС), М15 (адрес возврата),
+CМ16 (модифицированный адрес), М17 (контекст задачи)
+CМодификатор адреса: МОДА/МОД задают М16, адрес следующей команды += М16
+C
  NAMENF  :,NAME, NEW DTRAN
+ M7:,EQU,7B
+ M10:,EQU,10B
+ M12:,EQU,12B
+ M15:,EQU,15B
+ M16:,EQU,16B
+ M17:,EQU,17B
  *INS*   :,LC,27
- GAK/2:,EQU,*INS*   +24
- GAK/3:,EQU,*INS*   +25
- GAK/4:,EQU,*INS*   +26
+ INS24:,EQU,*INS*   +24
+ INS25:,EQU,*INS*   +25
+ INS26:,EQU,*INS*   +26
  *SCANER*:,LC,3
- GAK/6:,EQU,*SCANER*+1
- GAK/7:,EQU,*SCANER*+2
+ SCANER1:,EQU,*SCANER*+1
+ SCANER2:,EQU,*SCANER*+2
  *PAGE*  :,LC,6
  *WHO*   :,LC,2
- GAL/2:,EQU,*WHO*   +1
+ WHO1:,EQU,*WHO*   +1
  ENDKOR  :,SUBP,
  GETSTR  :,SUBP,
  WRIKOR  :,SUBP,
  CSTRIN  :,SUBP,
- GAL/7:,EQU,*PAGE*  +1
- 14,VTM,БЛОК_PAGE1
- ,UJ,ВОЗВРАТ
- БЛОК_PAGE1:7,XTA,
- 7,ATX,7
- ,NTR,3
- 7,XTA,4
- 7,ATX,10B
- ,UTC,GAL/7
- ,XTA,
- 7,A-X,6
- 7,ATX,11B
- 7,XTA,11B
- ,X-A,
- 7,A+X,6
- ,NTR,22B
- ,UZA,ПЕРЕХОД_2
- ,UJ,ВЫЗОВ_CSTRIN
- ПЕРЕХОД_2:,UJ,ВЫЗОВ_WRIKOR
- ВЫЗОВ_CSTRIN:14,VTM,V1
- ,ITS,14
- 14,VTM,V2
- ,ITS,14
- 13,VJM,CSTRIN  
- ,NTR,3
- ,NTR,22B
- ВЫЗОВ_WRIKOR:14,VTM,К0
- ,ITS,14
- 14,VTM,К2
- ,ITS,14
- 14,VTM,К3
- ,ITS,14
- 13,VJM,WRIKOR  
- ,NTR,3
- ,NTR,22B
- 7,XTA,1
- ,ITS,
- 7,XTA,7
- 15,AEX,
- ,UZA,ПЕРЕХОД_3
+ PAGE1:,EQU,*PAGE*  +1
+ M16,VTM,PAGE1A.PAGE1A(М16)
+ ,UJ,ВОЗВРАТ_В_ОС.F1A
+C
+ PAGE1A:M7,XTA,.0(М7)
+ M7,ATX,7.7(М7)
+ ,NTR,3.'3'
+ M7,XTA,4.4(М7)
+ M7,ATX,10B.8(М7)
+ ,UTC,PAGE1.PAGE1
+ ,XTA,.0
+ M7,A-X,6.6(М7)
+ M7,ATX,11B.9(М7)
+ M7,XTA,11B.9(М7)
+ ,X-A,.0
+ M7,A+X,6.6(М7)
+ ,NTR,22B.'22'
+ ,UZA,ПЕРЕХОД_ВЫЗОВ_WRIKOR.F9
+ ,UJ,ВЫЗОВ_CSTRIN.F9A
+C
+ ПЕРЕХОД_ВЫЗОВ_WRIKOR:,UJ,ВЫЗОВ_WRIKOR.0
+C
+ ВЫЗОВ_CSTRIN:M16,VTM,V1.F9B
+ ,ITS,14.0
+ M16,VTM,V2.V1(М16)
+ ,ITS,14.М16
+ M15,VJM,CSTRIN.V2(М16)
+ ,NTR,3.М16
+ ,NTR,22B.CSTRIN(М15)
+ ВЫЗОВ_WRIKOR:M16,VTM,К0.0
+ ,ITS,14.'3'
+ M16,VTM,К2.'22'
+ ,ITS,14.К0(М16)
+ M16,VTM,К3.М16
+ ,ITS,14.К2(М16)
+ M15,VJM,WRIKOR.М16
+ ,NTR,3.К3(М16)
+ ,NTR,22B.М16
+ M7,XTA,1.WRIKOR(М15)
+ ,ITS,.0
+ M7,XTA,7.'3'
+ M17,AEX,.'22'
+ ,UZA,ЦИКЛ_ПЕРЕХОД.1(М7)
  ,UJ,ВЫЗОВ_GETSTR
- ПЕРЕХОД_3:,UJ,ПЕРЕХОД_4
- ВЫЗОВ_GETSTR:14,VTM,V4
- ,ITS,14
- 13,VJM,GETSTR  
- ,UTC,GAK/4
- ,XTA,
- ,NTR,3
- ,UTC,GAK/3
- ,A-X,
- 7,ATX,12B
- 14,VTM,К0
- ,ITS,14
- 14,VTM,К4
- ,ITS,14
- 14,VTM,К6
- ,ITS,14
- ,NTR,22B
- 13,VJM,WRIKOR  
- ,NTR,3
- ,NTR,22B
- 14,VTM,*INS*   
- ,ITS,14
- 14,VTM,GAK/3
- ,ITS,14
- 14,VTM,V3
- ,ITS,14
- 13,VJM,WRIKOR  
- ,NTR,3
- ,NTR,22B
- 13,VJM,ENDKOR  
- 7,XTA,1
- 7,ATX,10B
- ,NTR,3
- ,UTC,GAL/7
- ,XTA,
- 7,ATX,11B
- 7,XTA,1
- 7,ATX,7
- ,NTR,22B
- ,UJ,ВЫЗОВ_CSTRIN
- ПЕРЕХОД_4:,UJ,ВОЗВРАТ_2
- ВОЗВРАТ:7,MTJ,8
- 14,MTJ,10
- 7,VTM,К1
- ,ITS,13
- ,ITS,8
- ,ITS,
- ,NTR,3
- ,NTR,2
- 10,UJ,
- ВОЗВРАТ_2:,STI,
- ,STI,7
- ,STI,8
- 8,UJ,
+C
+ ЦИКЛ_ПЕРЕХОД:,UJ,ЦИКЛ_ПЕРЕХОД_2.7(М7)
+C
+ ВЫЗОВ_GETSTR:M16,VTM,V4.0(М17)
+ ,ITS,14.F7
+ M15,VJM,GETSTR.F7A
+ ,UTC,INS26.F1
+ ,XTA,.0
+ ,NTR,3.V4(М16)
+ ,UTC,INS25.М16
+ ,A-X,.GETSTR(М15)
+ M7,ATX,12B.0
+ M16,VTM,К0.INS26
+ ,ITS,14.0
+ M16,VTM,К4.'3'
+ ,ITS,14.INS25
+ M16,VTM,К6.0
+ ,ITS,14.10(М7)
+ ,NTR,22B.К0(М16)
+ M15,VJM,WRIKOR.М16
+ ,NTR,3.К4(М16)
+ ,NTR,22B.М16
+ M16,VTM,*INS*.К6(М16)
+ ,ITS,14.М16
+ M16,VTM,INS25.'22'
+ ,ITS,14.WRIKOR(М15)
+ M16,VTM,V3.'3'
+ ,ITS,14.'22'
+ M15,VJM,WRIKOR.INS(М16)
+ ,NTR,3.М16
+ ,NTR,22B.INS25(М16)
+ M15,VJM,ENDKOR.М16
+ M7,XTA,1.V3(М16)
+ M7,ATX,10B.М16
+ ,NTR,3.WRIKOR(М15)
+ ,UTC,PAGE1.0
+ ,XTA,.'3'
+ M7,ATX,11B.'22'
+ M7,XTA,1.ENDKOR(М15)
+ M7,ATX,7.0
+ ,NTR,22B.1(М7)
+ ,UJ,ВЫЗОВ_CSTRIN.8(М7)
+C
+ ЦИКЛ_ПЕРЕХОД_2:,UJ,ВОЗВРАТ_В_БЛОК.'3'
+C
+ ВОЗВРАТ_В_ОС:M7,MTJ,8.PAGE1
+ M16,MTJ,10.0
+ M7,VTM,К1.9(М7)
+ ,ITS,13.1(М7)
+ ,ITS,8.7(М7)
+ ,ITS,.'22'
+ ,NTR,3.F9A
+ ,NTR,2.F1B
+ M12,UJ,.0
+C
+ ВОЗВРАТ_В_БЛОК:,STI,.М10(М7)
+ ,STI,7.М12(М16)
+ ,STI,8.К1(М7)
+ M10,UJ,.М15
+C
  К0:,ISO, 6H*2/*T  . 052 062 057 052 124 040 
  К1:,INT,0
  К2:,INT,1
@@ -121,4 +153,4 @@
  V2:,BSS,1
  V3:,BSS,1
  V4:,BSS,14
- ,END,
+ ,END,.М10

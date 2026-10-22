@@ -1,98 +1,135 @@
+CENDKOR - МОДУЛЬ СИПРОДА
+CИсточник: личная библиотека (PERSO, зона 2702,
+Cтом 2248), слово 6400 образа SIPROD.BIN
+CДлина при загрузке: 54 слов, 90 команд
+CВход: ENDKOR
+CВыход: APNOTF:F1C, CSTRIN:F8, IPONUM:F4, NAMENF:F1, NOTFOR:INS25A,
+CNOTFOR:TYPEA, NOTFOR:F0, NOTFOR:F0A, ONEPLA:L0320, ONEPLA:L0320,
+CONEPLA:L0320, ONEPLA:L0320, RASKOM:F1, RASKOM:F20A, SCHEMA:FOPJ,
+CSCHEMA:NUSTE, TARNYB:TYPEA, TARNYB:TYPE1A, TARNYB:NOTFE, TARNYB:F1A,
+CTWOPLA:F0, TWOPLA:F13A, TWOPLA:F3, TWOPLA:NUM3F, TWOPLA:F13C,
+CWRIIPO:IPONUA, WRIIPO:SCANEG, WRIIPO:F11A, WRIKOR:F3A, WRILIN:F7B,
+CWRIVER:CENA, F0A (возврат через М12), F0B (возврат через М10)
 CЗАКРЫТИЕ БУФЕРА ВЫВОДА.
+CВнешние: EGO, KORT, KLAIDA, IMUI
+CСмещения в EGO: 7200, 8600, 8601
+CСмещения в KORT: 14
+CАбсолютные символы: N1 = -1
+CСмещения в кадре (М7): общие 0-2, 5-7, 10, вне кадра 2059
+CРегистры: М1 (индекс: база модуля), М2 (рабочий регистр),
+CМ7 (указатель кадра), М10 (блок вызывающего),
+CМ12 (магазин, кадр параметров ОС), М15 (адрес возврата),
+CМ16 (модифицированный адрес), М17 (контекст задачи)
+CМодификатор адреса: МОДА/МОД задают М16, адрес следующей команды += М16
 C
  ENDKOR  :,NAME, NEW DTRAN
+ M1:,EQU,1B
+ M2:,EQU,2B
+ M7:,EQU,7B
+ M10:,EQU,10B
+ M12:,EQU,12B
+ M15:,EQU,15B
+ M16:,EQU,16B
+ M17:,EQU,17B
  *EGO*   :,LC,13401
- GAK/2:,EQU,*EGO*   +7200
- GAK/3:,EQU,*EGO*   +8600
- GAK/4:,EQU,*EGO*   +8601
+ EGO7200:,EQU,*EGO*   +7200
+ EGO8600:,EQU,*EGO*   +8600
+ EGO8601:,EQU,*EGO*   +8601
  *KORT*  :,LC,15
- GAK/6:,EQU,*KORT*  +14
+ KORT14:,EQU,*KORT*  +14
  KLAIDA  :,SUBP,
  I*MU*I  :,SUBP,
- GAL/1:,EQU,*KORT*  -32767
- GAL/2:,EQU,GAK/2-32767
- 14,VTM,БЛОК_KORT14
- ,UJ,ВОЗВРАТ
- БЛОК_KORT14:7,XTA,
+ KORT32767:,EQU,*KORT*  -32767
+ EGO39967:,EQU,EGO7200-32767
+ M16,VTM,KORT1A.KORT1A(М16)
+ ,UJ,ВОЗВРАТ_В_ОС.F0A
+C
+ KORT1A:M7,XTA,.0(М7)
  ,ITS,
- ,UTC,GAK/6
- ,XTA,
- 15,AEX,
- ,UZA,ПЕРЕХОД_2
- ,UJ,БЛОК_EGO8600
- ПЕРЕХОД_2:,UJ,ПЕРЕХОД_3
- БЛОК_EGO8600:,UTC,GAK/3
- ,XTA,
- ,NTR,3
- 7,A-X,2
- ,NTR,22B
- ,UZA,ВЫЗОВ_KLAIDA
- ,UJ,ВЫЗОВ_IMUI
- ВЫЗОВ_KLAIDA:14,VTM,К4
- ,ITS,14
- 13,VJM,KLAIDA  
- ВЫЗОВ_IMUI:,UTC,GAK/3
- ,XTA,
- 14,VTM,К2
- 13,VJM,I*MU*I  
- 7,ATX,5
- ,NTR,3
- 7,XTA,
- 7,ATX,6
- ,NTR,22B
- БЛОК_V2:7,XTA,5
- ,NTR,3
- 7,A+X,6
- 7,ATX,7
- ,WTC,V2
- 1,VTM,
- 1,UTC,GAL/1
- ,XTA,
- ,WTC,V3
- 2,VTM,
- 2,UTC,GAL/2
- ,ATX,
- 7,XTA,-1
- ,WTC,V2
- 1,VTM,
- 1,UTC,GAL/1
- ,ATX,
- ,NTR,22B
- 7,XTA,6
- ,NTR,3
- 7,A+X,
- 7,ATX,6
- 7,X-A,1
- ,NTR,22B
- ,UZA,БЛОК_V2
- 7,XTA,
- ,UTC,GAK/6
- ,ATX,
- ,NTR,3
- ,UTC,GAK/3
- ,XTA,
- 7,A+X,
- ,UTC,GAK/3
- ,ATX,
- ,NTR,22B
- ПЕРЕХОД_3:,UJ,ВОЗВРАТ_2
- ВОЗВРАТ:7,MTJ,8
- 14,MTJ,10
- 7,VTM,К1
- ,ITS,13
- ,ITS,1
- ,ITS,2
- ,ITS,8
- ,ITS,
- ,NTR,3
- ,NTR,2
- 10,UJ,
- ВОЗВРАТ_2:,STI,
- ,STI,7
- ,STI,2
+ ,UTC,KORT14.KORT14
+ ,XTA,.0
+ M17,AEX,.0(М17)
+ ,UZA,EGO860.EGO860
+ ,UJ,EGO86A.EGO86A
+C
+ EGO860:,UJ,KORT3A.0
+C
+ EGO86A:,UTC,EGO8600.KORT3A
+ ,XTA,.0
+ ,NTR,3.EGO8600
+ M7,A-X,2.0
+ ,NTR,22B.'3'
+ ,UZA,ВЫЗОВ_KLAIDA.2(М7)
+ ,UJ,EGO86B.'22'
+C
+ ВЫЗОВ_KLAIDA:M16,VTM,К4.F0
+ ,ITS,14.EGO86B
+ M15,VJM,KLAIDA.0
+ EGO86B:,UTC,EGO8600.К4(М16)
+ ,XTA,.М16
+ M16,VTM,К2.KLAIDA(М15)
+ M15,VJM,I*MU*I.0
+ M7,ATX,5.EGO8600
+ ,NTR,3.0
+ M7,XTA,.К2(М16)
+ M7,ATX,6.IMUI(М15)
+ ,NTR,22B.5(М7)
+ KORT32:M7,XTA,5.'3'
+ ,NTR,3.0(М7)
+ M7,A+X,6.6(М7)
+ M7,ATX,7.'22'
+ ,WTC,V2.0
+ M1,VTM,.5(М7)
+ M1,UTC,KORT32767.'3'
+ ,XTA,.6(М7)
+ ,WTC,V3.7(М7)
+ M2,VTM,.V2
+ M2,UTC,EGO39967.0(М1)
+ ,ATX,.KORT32767(М1)
+ M7,XTA,-1.0
+ ,WTC,V2.V3
+ M1,VTM,.0(М2)
+ M1,UTC,KORT32767.EGO39967(М2)
+ ,ATX,.0
+ ,NTR,22B.'4013'(М7)
+ M7,XTA,6.V2
+ ,NTR,3.0(М1)
+ M7,A+X,.KORT32767(М1)
+ M7,ATX,6.0
+ M7,X-A,1.'22'
+ ,NTR,22B.6(М7)
+ ,UZA,KORT32.'3'
+ M7,XTA,.0(М7)
+ ,UTC,KORT14.6(М7)
+ ,ATX,.1(М7)
+ ,NTR,3.'22'
+ ,UTC,EGO8600.KORT32
+ ,XTA,.0(М7)
+ M7,A+X,.KORT14
+ ,UTC,EGO8600.0
+ ,ATX,.'3'
+ ,NTR,22B.EGO8600
+ KORT3A:,UJ,ВОЗВРАТ_В_БЛОК.0
+C
+ ВОЗВРАТ_В_ОС:M7,MTJ,8.0(М7)
+ M16,MTJ,10.EGO8600
+ M7,VTM,К1.0
+ ,ITS,13.'22'
+ ,ITS,1.0
+ ,ITS,2.F0B
+ ,ITS,8.0
+ ,ITS,.М10(М7)
+ ,NTR,3.М12(М16)
+ ,NTR,2.К1(М7)
+ M12,UJ,.М15
+C
+ ВОЗВРАТ_В_БЛОК:,STI,.М1
+ ,STI,7.М2
+ ,STI,2.М10
  ,STI,1
- ,STI,8
- 8,UJ,
+ ,STI,8.'3'
+ M10,UJ,.'2'
+C
  ,ISO, 6H       . 040 040 040 040 040 040 
  К1:,INT,1
  К2:,INT,14
@@ -101,4 +138,4 @@ C
  ,BSS,2
  V2:,BSS,1
  V3:,BSS,1
- ,END,
+ ,END,.0(М12)

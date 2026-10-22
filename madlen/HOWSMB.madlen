@@ -1,63 +1,92 @@
+CHOWSMB - МОДУЛЬ СИПРОДА
+CИсточник: личная библиотека (PERSO, зона 2702,
+Cтом 2248), слово 6880 образа SIPROD.BIN
+CДлина при загрузке: 37 слов, 58 команд
+CВход: HOWSMB
+CВыход: APNOTF:ENDKOA, CSTRIN:F8, CSTRIN:F8, GOTOPO:F5, RASKOM:F1B,
+CTARNYB:NOTFH, TARNYB:F1, WRIHOR:L0166, WRIHOR:L0166, WRILIN:F7B,
+CWRILIN:F7B, WRINUM:F0, WRIVER:F18, F6 (возврат через М12),
+CPOP (возврат через М10)
+CВнешние: WHO, RSYMB
+CСмещения в WHO: 1
+CАбсолютные символы: N1 = -1
+CСмещения в кадре (М7): общие 0-1, 4-6, 10, вне кадра 2052
+CРегистры: М7 (указатель кадра), М10 (блок вызывающего),
+CМ12 (магазин, кадр параметров ОС), М15 (адрес возврата),
+CМ16 (модифицированный адрес), М17 (контекст задачи)
+CМодификатор адреса: МОДА/МОД задают М16, адрес следующей команды += М16
+C
  HOWSMB  :,NAME, NEW DTRAN
+ M7:,EQU,7B
+ M10:,EQU,10B
+ M12:,EQU,12B
+ M15:,EQU,15B
+ M16:,EQU,16B
+ M17:,EQU,17B
  *WHO*   :,LC,2
- GAK/2:,EQU,*WHO*   +1
+ WHO1:,EQU,*WHO*   +1
  RSYMB   :,SUBP,
- 14,VTM,ВЫЗОВ_RSYMB
- ,UJ,ПЕР_6
- ВЫЗОВ_RSYMB:7,XTA,-1
- 7,ATX,5
- ,NTR,3
- ,WTC,V1
- 14,VTM,
- ,ITS,14
- 14,VTM,К3
- ,ITS,14
- 14,VTM,V0
- ,ITS,14
- 14,VTM,К4
- ,ITS,14
- ,NTR,22B
- 13,VJM,RSYMB   
- ,NTR,3
- ,NTR,22B
- 7,XTA,1
- ,UTC,GAK/2
- ,ATX,
- ,NTR,3
- 7,XTA,-1
+ M16,VTM,ВЫЗОВ_RSYMB.F5(М16)
+ ,UJ,ПЕР_6.F6
+C
+ ВЫЗОВ_RSYMB:M7,XTA,-1.'4004'(М7)
+ M7,ATX,5.5(М7)
+ ,NTR,3.'3'
+ ,WTC,V1.V1
+ M16,VTM,.0(М16)
+ ,ITS,14.М16
+ M16,VTM,К3.К3(М16)
+ ,ITS,14.М16
+ M16,VTM,V0.V0(М16)
+ ,ITS,14.М16
+ M16,VTM,К4.К4(М16)
+ ,ITS,14.М16
+ ,NTR,22B.'22'
+ M15,VJM,RSYMB.RSYMB(М15)
+ ,NTR,3.'3'
+ ,NTR,22B.'22'
+ M7,XTA,1.1(М7)
+ ,UTC,WHO1.WHO1
+ ,ATX,.0
+ ,NTR,3.'3'
+ M7,XTA,-1.'4004'(М7)
  ,ITS,
- 7,XTA,5
- ,NTR,22B
- 15,AEX,
- ,UZA,БЛОК_WHO1
- ,UJ,БЛОК_WHO1_2
- БЛОК_WHO1:7,XTA,
- ,UTC,GAK/2
- ,ATX,
- ,NTR,3
- ,NTR,22B
- БЛОК_WHO1_2:7,XTA,4
- ,NTR,3
- ,UTC,GAK/2
- ,A-X,
- ,UTC,*WHO*   
- ,ATX,
- ,NTR,22B
- ,UJ,ВОЗВРАТ
- ПЕР_6:7,MTJ,8
- 14,MTJ,10
- 7,VTM,К1
- 7,STX,6
- ,ITS,13
- ,ITS,8
- ,ITS,
- ,NTR,3
+ M7,XTA,5.5(М7)
+ ,NTR,22B.'22'
+ M17,AEX,.0(М17)
+ ,UZA,WHO1A.WHO1A
+ ,UJ,WHO1B.WHO1B
+C
+ WHO1A:M7,XTA,.0
+ ,UTC,WHO1.0(М7)
+ ,ATX,.WHO1
+ ,NTR,3.0
+ ,NTR,22B.'3'
+ WHO1B:M7,XTA,4.'22'
+ ,NTR,3.0
+ ,UTC,WHO1.4(М7)
+ ,A-X,.'3'
+ ,UTC,*WHO*.WHO1
+ ,ATX,.0
+ ,NTR,22B.WHO
+ ,UJ,POP.0
+C
+ ПЕР_6:M7,MTJ,8.'22'
+ M16,MTJ,10.POP
+ M7,VTM,К1.М10(М7)
+ M7,STX,6.М12(М16)
+ ,ITS,13.К1(М7)
+ ,ITS,8.6(М7)
+ ,ITS,.М15
+ ,NTR,3.М10
  ,NTR,2
- 10,UJ,
- ВОЗВРАТ:,STI,
- ,STI,7
+ M12,UJ,.'3'
+C
+ POP:,STI,.'2'
+ ,STI,7.0(М12)
  ,STI,8
- 8,UJ,
+ M10,UJ,.М7
+C
  ,ISO, 6H       . 040 040 040 040 040 040 
  К1:,INT,1
  ,INT,2
@@ -66,4 +95,4 @@
  ,INT,7
  V0:,BSS,1
  V1:,BSS,1
- ,END,
+ ,END,.М10

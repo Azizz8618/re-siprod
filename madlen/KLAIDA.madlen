@@ -1,69 +1,101 @@
+CKLAIDA - МОДУЛЬ СИПРОДА
+CИсточник: личная библиотека (PERSO, зона 2702,
+Cтом 2248), слово 15104 образа SIPROD.BIN
+CДлина при загрузке: 48 слов, 60 команд
+CВход: KLAIDA
+CВыход: BEGPUS:FORA, BEGSTR:NDAB1A, CHAPAG:SCANEA, CHAPAG:SCANEB,
+CENDKOR:EGO86B, ENDPG:SEK3C, HEADIN:HEDB, PAPRAP:F15, RASTXT:TXT2A,
+CREADMK:F2B, READNB:F1B, SCAN:F9A, SCHEMA:SCANEB, SEGTAB:STR327,
+CSEKLYG:SEK3A, SPAUD:SCANEQ, SPAUD:SCANES, SPAUD:SCANET, SPAUD:SCANEU,
+CSPAUD:F1B, SPAUD:SEGTAA, SPAUD:SCANE1, SPAUD:SCAN00, SPAUD:SCAN01,
+CSPAUD:SCAN02, SPAUD:REGIMH, SPAUD:SCANI, SPAUD:REGIMI, SPAUD:SCAN18,
+CSPAUD:SCAN19, SPAUD:NUST1A, SPAUD:REGIMM, SPAUD:SCAN23, SPAUD:SCAN24,
+CSPAUD:STR24C, SPAUD:REGIMV, SPAUD:L5544, TOKREZ:F6A, WRIIPO:F11B,
+CWRILIN:F7C, WRIMAK:F1D, F2 (возврат через М12),
+CF2A (возврат через М10)
 CВЫВОД СООБЩЕНИЯ ОБ ОШИБКЕ: 'ERROR NR. N' И ОБРАЗ
 CПЕРФОКАРТЫ, ПОСЛЕ ЧЕГО ЗАДАЧА ОСТАНАВЛИВАЕТСЯ.
+CВнешние: INS, FT571, FT002, FT003, STOP
+CСмещения в INS: 24, 25, 26
+CСмещения в кадре (М7): общие 0-3, 10, свои 14
+CРегистры: М1 (индекс: база модуля), М7 (указатель кадра),
+CМ10 (блок вызывающего), М12 (магазин, кадр параметров ОС),
+CМ15 (адрес возврата), М16 (модифицированный адрес)
+CМодификатор адреса: МОДА/МОД задают М16, адрес следующей команды += М16
 C
  KLAIDA  :,NAME, NEW DTRAN
+ M1:,EQU,1B
+ M7:,EQU,7B
+ M10:,EQU,10B
+ M12:,EQU,12B
+ M15:,EQU,15B
+ M16:,EQU,16B
  *INS*   :,LC,27
- GAK/2:,EQU,*INS*   +24
- GAK/3:,EQU,*INS*   +25
- GAK/4:,EQU,*INS*   +26
+ INS24:,EQU,*INS*   +24
+ INS25:,EQU,*INS*   +25
+ INS26:,EQU,*INS*   +26
  FT*571  :,SUBP,
  FT*002  :,SUBP,
  FT*003  :,SUBP,
  STOP*   :,SUBP,
- GAL/1:,EQU,*INS*   -32767
- 14,VTM,ПОДГОТОВКА_СООБЩЕНИЯ
- ,UJ,ПЕР_3
- ПОДГОТОВКА_СООБЩЕНИЯ:14,VTM,К0
- ,ITS,14
- 13,VJM,FT*571  
- ,WTC,V1
- 14,VTM,
- ,ITS,14
- 13,VJM,FT*002  
- ,WTC,V1
- ,XTA,
- ,NTR,3
- ,NTR,22B
- 13,VJM,FT*003  
- 14,VTM,К5
- ,ITS,14
- 13,VJM,FT*571  
- 7,XTA,
- 7,ATX,2
- ,NTR,3
- ,NTR,22B
- ВЫЗОВ_FT002:,WTC,V0
- 1,VTM,
- 1,UTC,GAL/1
- 14,VTM,
- ,ITS,14
- 13,VJM,FT*002  
- 7,XTA,2
- ,NTR,3
- 7,A+X,
- 7,ATX,2
- 7,X-A,1
- ,NTR,22B
- ,UZA,ВЫЗОВ_FT002
- 13,VJM,FT*003  
- 13,VJM,STOP*   
- ,UJ,ВОЗВРАТ
- ПЕР_3:7,MTJ,8
- 14,MTJ,10
- 7,VTM,К14
- 7,STX,3
- ,ITS,13
- ,ITS,1
- ,ITS,8
- ,ITS,
- ,NTR,3
- ,NTR,2
- 10,UJ,
- ВОЗВРАТ:,STI,
+ INS32767:,EQU,*INS*   -32767
+ M16,VTM,ПОДГОТОВКА_СООБЩЕНИЯ.ADDR(М16)
+ ,UJ,ПЕР_3.F2
+C
+ ПОДГОТОВКА_СООБЩЕНИЯ:M16,VTM,К0.К0(М16)
+ ,ITS,14.М16
+ M15,VJM,FT*571.FT571(М15)
+ ,WTC,V1.0
+ M16,VTM,.V1
+ ,ITS,14.0(М16)
+ M15,VJM,FT*002.М16
+ ,WTC,V1.FT002(М15)
+ ,XTA,.V1
+ ,NTR,3.0
+ ,NTR,22B.'3'
+ M15,VJM,FT*003.'22'
+ M16,VTM,К5.FT003(М15)
+ ,ITS,14.0
+ M15,VJM,FT*571.К5(М16)
+ M7,XTA,.М16
+ M7,ATX,2.FT571(М15)
+ ,NTR,3.0
+ ,NTR,22B.0(М7)
+ INS327:,WTC,V0.2(М7)
+ M1,VTM,.'3'
+ M1,UTC,INS32767.'22'
+ M16,VTM,.V0
+ ,ITS,14.0(М1)
+ M15,VJM,FT*002.INS32767(М1)
+ M7,XTA,2.0(М16)
+ ,NTR,3.М16
+ M7,A+X,.FT002(М15)
+ M7,ATX,2.2(М7)
+ M7,X-A,1.'3'
+ ,NTR,22B.0(М7)
+ ,UZA,INS327.2(М7)
+ M15,VJM,FT*003.1(М7)
+ M15,VJM,STOP*.'22'
+ ,UJ,ВОЗВРАТ_В_БЛОК.INS327
+C
+ ПЕР_3:M7,MTJ,8.FT003(М15)
+ M16,MTJ,10.STOP(М15)
+ M7,VTM,К14.0
+ M7,STX,3.F2A
+ ,ITS,13.0
+ ,ITS,1.М10(М7)
+ ,ITS,8.М12(М16)
+ ,ITS,.К14(М7)
+ ,NTR,3.3(М7)
+ ,NTR,2.М15
+ M12,UJ,.М1
+C
+ ВОЗВРАТ_В_БЛОК:,STI,.М10
  ,STI,7
- ,STI,1
- ,STI,8
- 8,UJ,
+ ,STI,1.'3'
+ ,STI,8.'2'
+ M10,UJ,.0(М12)
+C
  К0:,ISO, 6H(//,19 . 050 057 057 054 061 071 
  ,ISO, 6HX,'47'E R . 130 054 047 105 040 122 
  ,ISO, 6H R O R . 040 122 040 117 040 122 
@@ -82,4 +114,4 @@ C
  ,INT,14
  V0:,BSS,1
  V1:,BSS,1
- ,END,
+ ,END,.0

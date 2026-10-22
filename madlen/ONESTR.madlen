@@ -1,241 +1,283 @@
+CONESTR - МОДУЛЬ СИПРОДА
+CИсточник: личная библиотека (PERSO, зона 2702,
+Cтом 2248), слово 10688 образа SIPROD.BIN
+CДлина при загрузке: 153 слов, 220 команд
+CВход: ONESTR
+CВыход: WRILIN:F11, L0314 (возврат через М12), POP (возврат через М10)
+CВнешние: INS, STR, RAI, BEN, ONE, SCANER, RSYMB, TARPOZ
+CСмещения в BEN: 1, 2, 3, 13
+CСмещения в INS: 24, 25, 26
+CСмещения в ONE: 1, 2
+CСмещения в RAI: 1
+CСмещения в SCANER: 1, 2
+CСмещения в STR: 24, 25, 26
+CАбсолютные символы: N1 = -1
+CСмещения в кадре (М7): общие 0-4, 6-10, свои 11-17, вне кадра 2074
+CРегистры: М1 (индекс: база модуля), М7 (указатель кадра),
+CМ10 (блок вызывающего), М12 (магазин, кадр параметров ОС),
+CМ15 (адрес возврата), М16 (модифицированный адрес),
+CМ17 (контекст задачи)
+CМодификатор адреса: МОДА/МОД задают М16, адрес следующей команды += М16
+C
  ONESTR  :,NAME, NEW DTRAN
+ M1:,EQU,1B
+ M7:,EQU,7B
+ M10:,EQU,10B
+ M12:,EQU,12B
+ M15:,EQU,15B
+ M16:,EQU,16B
+ M17:,EQU,17B
  *INS*   :,LC,27
- GAK/2:,EQU,*INS*   +24
- GAK/3:,EQU,*INS*   +25
- GAK/4:,EQU,*INS*   +26
+ INS24:,EQU,*INS*   +24
+ INS25:,EQU,*INS*   +25
+ INS26:,EQU,*INS*   +26
  *STR*   :,LC,27
- GAK/6:,EQU,*STR*   +24
- GAK/7:,EQU,*STR*   +25
- GAL/0:,EQU,*STR*   +26
+ STR24:,EQU,*STR*   +24
+ STR25:,EQU,*STR*   +25
+ STR26:,EQU,*STR*   +26
  *RAI*   :,LC,2
- GAL/2:,EQU,*RAI*   +1
+ RAI1:,EQU,*RAI*   +1
  *BEN*   :,LC,15
- GAL/4:,EQU,*BEN*   +1
- GAL/5:,EQU,*BEN*   +2
- GAL/6:,EQU,*BEN*   +3
- GAL/7:,EQU,*BEN*   +13
+ BEN1:,EQU,*BEN*   +1
+ BEN2:,EQU,*BEN*   +2
+ BEN3:,EQU,*BEN*   +3
+ BEN13:,EQU,*BEN*   +13
  *ONE*   :,LC,3
- GAM/1:,EQU,*ONE*   +1
- GAM/2:,EQU,*ONE*   +2
+ ONE1:,EQU,*ONE*   +1
+ ONE2:,EQU,*ONE*   +2
  *SCANER*:,LC,3
- GAM/4:,EQU,*SCANER*+1
- GAM/5:,EQU,*SCANER*+2
+ SCANER1:,EQU,*SCANER*+1
+ SCANER2:,EQU,*SCANER*+2
  RSYMB   :,SUBP,
  TARPOZ  :,SUBP,
- GAN/0:,EQU,*STR*   -32767
- GAN/1:,EQU,*INS*   -32767
- GAN/3:,EQU,GAL/7+1
- 14,VTM,БЛОК_INS26
- ,UJ,ВОЗВРАТ
- БЛОК_INS26:,UTC,GAK/4
- ,XTA,
- ,NTR,3
- ,UTC,GAK/3
- ,A-X,
- 7,ATX,11B
- 7,A+X,3
+ STR32767:,EQU,*STR*   -32767
+ INS32767:,EQU,*INS*   -32767
+ BEN14:,EQU,BEN13+1
+ M16,VTM,INS26A.INS26A(М16)
+ ,UJ,ВОЗВРАТ_В_ОС.L0314
+C
+ INS26A:,UTC,INS26.INS26
+ ,XTA,.0
+ ,NTR,3.'3'
+ ,UTC,INS25.INS25
+ ,A-X,.0
+ M7,ATX,11B.9(М7)
+ M7,A+X,3.3(М7)
  ,ITS,
- ,UTC,GAM/1
- ,XTA,
- ,NTR,22B
- 15,AEX,
- ,UZA,ПЕРЕХОД_2
- ,UJ,БЛОК_ONE2
- ПЕРЕХОД_2:,UJ,БЛОК_ONE2_3
- БЛОК_ONE2:7,XTA,2
- ,UTC,GAM/2
- ,ATX,
- ,NTR,3
- ,UTC,GAK/7
- ,XTA,
- 7,ATX,12B
- ,UTC,GAL/0
- ,XTA,
- 7,ATX,13B
- 7,XTA,1
- 7,ATX,14B
- ,NTR,22B
- ВЫЗОВ_TARPOZ:,WTC,V4
- 1,VTM,
- 1,UTC,GAN/0
- ,XTA,
- 1,UTC,V9
- ,ATX,
- ,WTC,V4
- 1,VTM,
- 1,UTC,GAN/1
- ,XTA,
- 1,UTC,GAN/0
- ,ATX,
- 7,XTA,14B
- ,NTR,3
- 7,A+X,1
- 7,ATX,14B
- 7,X-A,7
- ,NTR,22B
- ,UZA,ВЫЗОВ_TARPOZ
- ,UTC,GAK/3
- ,XTA,
- ,UTC,GAK/7
- ,ATX,
- ,NTR,3
- ,UTC,GAL/2
- ,ATX,
- ,UTC,GAK/4
- ,XTA,
- 7,A-X,1
- ,UTC,GAL/0
- ,ATX,
- 7,XTA,
- 7,ATX,15B
- ,UTC,GAM/1
- ,XTA,
- 7,A-X,3
- 7,ATX,16B
- 7,XTA,-1
- ,UTC,GAN/3
- ,ATX,
- ,UTC,GAK/7
- ,XTA,
- 7,ATX,17B
- 7,XTA,
- 7,ATX,20B
- ,NTR,22B
- 13,VJM,TARPOZ  
- 7,XTA,
- ,UTC,GAL/2
- ,ATX,
- ,NTR,3
- 7,XTA,12B
- ,UTC,GAK/7
- ,ATX,
- 7,XTA,13B
- ,UTC,GAL/0
- ,ATX,
- 7,XTA,1
- 7,ATX,21B
- ,NTR,22B
- ,UJ,БЛОК_BEN2
- ВЫЗОВ_RSYMB:7,XTA,15B
- ,NTR,3
- 7,A+X,1
- 7,ATX,15B
- 14,VTM,GAL/6
- ,ITS,14
- 14,VTM,V9
- ,ITS,14
- 14,VTM,V8
- ,ITS,14
- 14,VTM,К6
- ,ITS,14
- ,NTR,22B
- 13,VJM,RSYMB   
- ,NTR,3
- ,NTR,22B
- 7,XTA,20B
- ,NTR,3
- 7,A-X,17B
- 7,ATX,11B
- 7,XTA,11B
- ,X-A,
- 7,A+X,16B
- ,NTR,22B
- ,U1A,ПЕРЕХОД_3
- ,UJ,ПЕР_16
- ПЕРЕХОД_3:,UJ,БЛОК_ONE2_2
- ПЕР_16:7,XTA,20B
- 7,ATX,17B
- ,NTR,3
- 7,XTA,16B
- 7,A-X,11B
- 7,ATX,16B
- ,NTR,22B
- ,UJ,ПЕР_17
- БЛОК_ONE2_2:,UTC,GAM/2
- ,XTA,
- ,NTR,3
- 7,A+X,1
- ,UTC,GAM/2
- ,ATX,
- 7,XTA,20B
- ,UTC,*BEN*   
- ,A+X,
- 7,A+X,1
- 7,ATX,17B
- 7,XTA,1
- ,ITS,
- 7,XTA,15B
- ,NTR,22B
- 15,AEX,
- ,U1A,ПЕРЕХОД_4
- ,UJ,БЛОК_ONE1
- ПЕРЕХОД_4:,UJ,ПЕР_17
- БЛОК_ONE1:7,XTA,11B
- ,NTR,3
- ,UTC,GAM/1
- ,A-X,
- 7,ATX,10B
- 7,XTA,20B
- 7,A-X,10B
- 7,ATX,17B
- 7,XTA,
- 7,ATX,15B
- ,NTR,22B
- ПЕР_17:7,XTA,21B
- ,NTR,3
- 7,A+X,1
- 7,ATX,21B
- ,NTR,22B
- БЛОК_BEN2:,UTC,GAL/5
- ,X-A,
- ,UZA,ВЫЗОВ_RSYMB
- ,UTC,GAM/2
- ,XTA,
- ,NTR,3
- 7,A+X,4
- ,UTC,GAM/2
- ,ATX,
- ,NTR,22B
- ,UJ,ПЕР_1
- БЛОК_ONE2_3:7,XTA,6
- ,UTC,GAM/2
- ,ATX,
- ,NTR,3
- ,NTR,22B
- ,UJ,ВОЗВРАТ_2
- ПЕР_1:7,XTA,1
- 7,ATX,14B
- ,NTR,3
- ,NTR,22B
- БЛОК_V4:,WTC,V4
- 1,VTM,
- 1,UTC,V9
- ,XTA,
- 1,UTC,GAN/0
- ,ATX,
- 7,XTA,14B
- ,NTR,3
- 7,A+X,1
- 7,ATX,14B
- 7,X-A,7
- ,NTR,22B
- ,UZA,БЛОК_V4
- ,UJ,ВОЗВРАТ_2
- ВОЗВРАТ:7,MTJ,8
- 14,MTJ,10
- 7,VTM,К1
- ,ITS,13
- ,ITS,1
- ,ITS,8
- ,ITS,
- ,NTR,3
- ,NTR,2
- 10,UJ,
- ВОЗВРАТ_2:,STI,
- ,STI,7
- ,STI,1
- ,STI,8
- 8,UJ,
+ ,UTC,ONE1.ONE1
+ ,XTA,.0
+ ,NTR,22B.'22'
+ M17,AEX,.0(М17)
+ ,UZA,ONE2A.ONE2A
+ ,UJ,ONE2B.ONE2B
+C
+ ONE2A:,UJ,ONE2E.ONE2E
+C
+ ONE2B:M7,XTA,2.0
+ ,UTC,ONE2.2(М7)
+ ,ATX,.ONE2
+ ,NTR,3.0
+ ,UTC,STR25.'3'
+ ,XTA,.STR25
+ M7,ATX,12B.0
+ ,UTC,STR26.10(М7)
+ ,XTA,.STR26
+ M7,ATX,13B.0
+ M7,XTA,1.11(М7)
+ M7,ATX,14B.1(М7)
+ ,NTR,22B.12(М7)
+ ONE2C:,WTC,V4.'22'
+ M1,VTM,.0
+ M1,UTC,STR32767.V4
+ ,XTA,.0(М1)
+ M1,UTC,V9.STR32767(М1)
+ ,ATX,.0
+ ,WTC,V4.V9(М1)
+ M1,VTM,.0
+ M1,UTC,INS32767.V4
+ ,XTA,.0(М1)
+ M1,UTC,STR32767.INS32767(М1)
+ ,ATX,.0
+ M7,XTA,14B.STR32767(М1)
+ ,NTR,3.0
+ M7,A+X,1.12(М7)
+ M7,ATX,14B.'3'
+ M7,X-A,7.1(М7)
+ ,NTR,22B.12(М7)
+ ,UZA,ONE2C.7(М7)
+ ,UTC,INS25.'22'
+ ,XTA,.ONE2C
+ ,UTC,STR25.INS25
+ ,ATX,.0
+ ,NTR,3.STR25
+ ,UTC,RAI1.0
+ ,ATX,.'3'
+ ,UTC,INS26.RAI1
+ ,XTA,.0
+ M7,A-X,1.INS26
+ ,UTC,STR26.0
+ ,ATX,.1(М7)
+ M7,XTA,.STR26
+ M7,ATX,15B.0
+ ,UTC,ONE1.0(М7)
+ ,XTA,.13(М7)
+ M7,A-X,3.ONE1
+ M7,ATX,16B.0
+ M7,XTA,-1.3(М7)
+ ,UTC,BEN14.14(М7)
+ ,ATX,.'4032'(М7)
+ ,UTC,STR25.BEN14
+ ,XTA,.0
+ M7,ATX,17B.STR25
+ M7,XTA,.0
+ M7,ATX,20B.15(М7)
+ ,NTR,22B.0(М7)
+ M15,VJM,TARPOZ.16(М7)
+ M7,XTA,.'22'
+ ,UTC,RAI1.TARPOZ(М15)
+ ,ATX,.0
+ ,NTR,3.0(М7)
+ M7,XTA,12B.RAI1
+ ,UTC,STR25.0
+ ,ATX,.'3'
+ M7,XTA,13B.10(М7)
+ ,UTC,STR26.STR25
+ ,ATX,.0
+ M7,XTA,1.11(М7)
+ M7,ATX,21B.STR26
+ ,NTR,22B.0
+ ,UJ,ONE1D.1(М7)
+C
+ ВЫЗОВ_RSYMB:M7,XTA,15B.17(М7)
+ ,NTR,3.'22'
+ M7,A+X,1.ONE1D
+ M7,ATX,15B.13(М7)
+ M16,VTM,BEN3.'3'
+ ,ITS,14.1(М7)
+ M16,VTM,V9.13(М7)
+ ,ITS,14.BEN3(М16)
+ M16,VTM,V8.М16
+ ,ITS,14.V9(М16)
+ M16,VTM,К6.М16
+ ,ITS,14.V8(М16)
+ ,NTR,22B.М16
+ M15,VJM,RSYMB.К6(М16)
+ ,NTR,3.М16
+ ,NTR,22B.'22'
+ M7,XTA,20B.RSYMB(М15)
+ ,NTR,3.'3'
+ M7,A-X,17B.'22'
+ M7,ATX,11B.16(М7)
+ M7,XTA,11B.'3'
+ ,X-A,.15(М7)
+ M7,A+X,16B.9(М7)
+ ,NTR,22B.9(М7)
+ ,U1A,ЦИКЛ_ПЕРЕХОД.0
+ ,UJ,ПЕР_16.14(М7)
+C
+ ЦИКЛ_ПЕРЕХОД:,UJ,ONE2D.'22'
+C
+ ПЕР_16:M7,XTA,20B.F9
+ M7,ATX,17B.F16
+ ,NTR,3.ONE2D
+ M7,XTA,16B.0
+ M7,A-X,11B.16(М7)
+ M7,ATX,16B.15(М7)
+ ,NTR,22B.'3'
+ ,UJ,ONE1C.14(М7)
+C
+ ONE2D:,UTC,ONE2.9(М7)
+ ,XTA,.14(М7)
+ ,NTR,3.'22'
+ M7,A+X,1.ONE1C
+ ,UTC,ONE2.ONE2
+ ,ATX,.0
+ M7,XTA,20B.'3'
+ ,UTC,*BEN*.1(М7)
+ ,A+X,.ONE2
+ M7,A+X,1.0
+ M7,ATX,17B.16(М7)
+ M7,XTA,1.BEN
+ ,ITS,.0
+ M7,XTA,15B.1(М7)
+ ,NTR,22B.15(М7)
+ M17,AEX,.1(М7)
+ ,U1A,ONE1A
+ ,UJ,ONE1B.13(М7)
+C
+ ONE1A:,UJ,ONE1C.'22'
+C
+ ONE1B:M7,XTA,11B.0(М17)
+ ,NTR,3.ONE1A
+ ,UTC,ONE1.ONE1B
+ ,A-X,.ONE1C
+ M7,ATX,10B.0
+ M7,XTA,20B.9(М7)
+ M7,A-X,10B.'3'
+ M7,ATX,17B.ONE1
+ M7,XTA,.0
+ M7,ATX,15B.8(М7)
+ ,NTR,22B.16(М7)
+ ONE1C:M7,XTA,21B.8(М7)
+ ,NTR,3.15(М7)
+ M7,A+X,1.0(М7)
+ M7,ATX,21B.13(М7)
+ ,NTR,22B.'22'
+ ONE1D:,UTC,BEN2.0
+ ,X-A,.17(М7)
+ ,UZA,ВЫЗОВ_RSYMB.'3'
+ ,UTC,ONE2.1(М7)
+ ,XTA,.17(М7)
+ ,NTR,3.'22'
+ M7,A+X,4.0
+ ,UTC,ONE2.BEN2
+ ,ATX,.0
+ ,NTR,22B.F13
+ ,UJ,STR327.ONE2
+C
+ ONE2E:M7,XTA,6.0
+ ,UTC,ONE2.'3'
+ ,ATX,.4(М7)
+ ,NTR,3.ONE2
+ ,NTR,22B.0
+ ,UJ,POP.'22'
+C
+ STR327:M7,XTA,1.STR327
+ M7,ATX,14B.0
+ ,NTR,3.6(М7)
+ ,NTR,22B.ONE2
+ STR32A:,WTC,V4.0
+ M1,VTM,.'3'
+ M1,UTC,V9.'22'
+ ,XTA,.POP
+ M1,UTC,STR32767.1(М7)
+ ,ATX,.12(М7)
+ M7,XTA,14B.'3'
+ ,NTR,3.'22'
+ M7,A+X,1.V4
+ M7,ATX,14B.0(М1)
+ M7,X-A,7.V9(М1)
+ ,NTR,22B.0
+ ,UZA,STR32A.STR32767(М1)
+ ,UJ,POP.0
+C
+ ВОЗВРАТ_В_ОС:M7,MTJ,8.12(М7)
+ M16,MTJ,10.'3'
+ M7,VTM,К1.1(М7)
+ ,ITS,13.12(М7)
+ ,ITS,1.7(М7)
+ ,ITS,8.'22'
+ ,ITS,.STR32A
+ ,NTR,3.POP
+ ,NTR,2.М10(М7)
+ M12,UJ,.М12(М16)
+C
+ POP:,STI,.К1(М7)
+ ,STI,7.М15
+ ,STI,1.М1
+ ,STI,8.М10
+ M10,UJ,
+C
   :,ISO, 6H       . 040 040 040 040 040 040 
  К1:,INT,0
  ,INT,1
@@ -249,4 +291,4 @@
  V4:,BSS,4
  V8:,BSS,1
  V9:,BSS,25
- ,END,
+ ,END,.'3'

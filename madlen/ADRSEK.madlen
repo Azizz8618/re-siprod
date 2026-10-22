@@ -1,138 +1,173 @@
+CADRSEK - МОДУЛЬ СИПРОДА
+CИсточник: личная библиотека (PERSO, зона 2702,
+Cтом 2248), слово 18656 образа SIPROD.BIN
+CДлина при загрузке: 68 слов, 118 команд
+CВход: ADRSEK
+CВыход: SEKGIR:F9, SEKGIR:F9A, F4 (возврат через М12),
+CF4A (возврат через М10)
+CВнешние: LYG, ADR, TAB, NRD, PAGE, NDAB, REGIM, NDABL, RSYMB, IMUI
+CСмещения в ADR: 1, 2, 3
+CСмещения в LYG: 1, 2
+CСмещения в NDAB: 1
+CСмещения в NDABL: 1
+CСмещения в NRD: 24
+CСмещения в PAGE: 1
+CСмещения в TAB: 1, 2, 3, 4
+CСмещения в кадре (М7): общие 0-1, 3-8, 10
+CРегистры: М7 (указатель кадра), М10 (блок вызывающего),
+CМ12 (магазин, кадр параметров ОС), М15 (адрес возврата),
+CМ16 (модифицированный адрес), М17 (контекст задачи)
+CМодификатор адреса: МОДА/МОД задают М16, адрес следующей команды += М16
+C
  ADRSEK  :,NAME, NEW DTRAN
+ M7:,EQU,7B
+ M10:,EQU,10B
+ M12:,EQU,12B
+ M15:,EQU,15B
+ M16:,EQU,16B
+ M17:,EQU,17B
  *LYG*   :,LC,6
- GAK/2:,EQU,*LYG*   +1
- GAK/3:,EQU,*LYG*   +2
+ LYG1:,EQU,*LYG*   +1
+ LYG2:,EQU,*LYG*   +2
  *ADR*   :,LC,4
- GAK/5:,EQU,*ADR*   +1
- GAK/6:,EQU,*ADR*   +2
- GAK/7:,EQU,*ADR*   +3
+ ADR1:,EQU,*ADR*   +1
+ ADR2:,EQU,*ADR*   +2
+ ADR3:,EQU,*ADR*   +3
  *TAB*   :,LC,5
- GAL/1:,EQU,*TAB*   +1
- GAL/2:,EQU,*TAB*   +2
- GAL/3:,EQU,*TAB*   +3
- GAL/4:,EQU,*TAB*   +4
+ TAB1:,EQU,*TAB*   +1
+ TAB2:,EQU,*TAB*   +2
+ TAB3:,EQU,*TAB*   +3
+ TAB4:,EQU,*TAB*   +4
  *NRD*   :,LC,25
- GAL/6:,EQU,*NRD*   +24
+ NRD24:,EQU,*NRD*   +24
  *PAGE*  :,LC,6
- GAM/0:,EQU,*PAGE*  +1
+ PAGE1:,EQU,*PAGE*  +1
  *NDAB*  :,LC,4
- GAM/2:,EQU,*NDAB*  +1
+ NDAB1:,EQU,*NDAB*  +1
  *REGIM* :,LC,16
  *NDABL* :,LC,2
- GAM/5:,EQU,*NDABL* +1
+ NDABL1:,EQU,*NDABL* +1
  RSYMB   :,SUBP,
- GAM/7:,EQU,GAK/3+2
+ LYG4:,EQU,LYG2+2
  I*MU*I  :,SUBP,
- 14,VTM,ВЫЗОВ_RSYMB
- ,UJ,ВОЗВРАТ
- ВЫЗОВ_RSYMB:7,XTA,
- ,UTC,GAK/6
- ,ATX,
- ,NTR,3
- 7,XTA,
- ,UTC,GAK/7
- ,ATX,
- ,UTC,*TAB*   
+ M16,VTM,ADR2A.ADR2A(М16)
+ ,UJ,ВОЗВРАТ_В_ОС.F4
+C
+ ADR2A:M7,XTA,.0(М7)
+ ,UTC,ADR2.ADR2
+ ,ATX,.0
+ ,NTR,3.'3'
+ M7,XTA,.0(М7)
+ ,UTC,ADR3.ADR3
+ ,ATX,.0
+ ,UTC,*TAB*.TAB
+ ,XTA,.0
+ M7,A+X,1.1(М7)
+ M7,ATX,6.6(М7)
+ M16,VTM,*NRD*.NRD(М16)
+ ,ITS,14.М16
+ M16,VTM,*TAB*.TAB(М16)
+ ,ITS,14.М16
+ M16,VTM,ADR2.ADR2(М16)
+ ,ITS,14.М16
+ M16,VTM,К2.К2(М16)
+ ,ITS,14.М16
+ ,NTR,22B.'22'
+ M15,VJM,RSYMB.RSYMB(М15)
+ M16,VTM,*NRD*.0
+ ,ITS,14.NRD(М16)
+ M16,VTM,V0.М16
+ ,ITS,14.V0(М16)
+ M16,VTM,ADR3.М16
+ ,ITS,14.ADR3(М16)
+ M16,VTM,К2.М16
+ ,ITS,14.К2(М16)
+ M15,VJM,RSYMB.М16
+ ,NTR,3.RSYMB(М15)
+ ,NTR,22B.0
+ ,UTC,ADR2.'3'
+ ,XTA,.'22'
+ ,NTR,3.ADR2
+ ,UTC,*PAGE*.0
+ ,A+X,.'3'
+ ,UTC,ADR2.PAGE
+ ,ATX,.0
+ ,UTC,ADR3.ADR2
+ ,XTA,.0
+ ,UTC,*PAGE*.ADR3
+ ,A+X,.0
+ ,UTC,ADR3.PAGE
+ ,ATX,.0
+ M7,XTA,1.ADR3
+ ,ITS,.0
+ ,UTC,*REGIM*.1(М7)
  ,XTA,
- 7,A+X,1
- 7,ATX,6
- 14,VTM,*NRD*   
- ,ITS,14
- 14,VTM,*TAB*   
- ,ITS,14
- 14,VTM,GAK/6
- ,ITS,14
- 14,VTM,К2
- ,ITS,14
- ,NTR,22B
- 13,VJM,RSYMB   
- 14,VTM,*NRD*   
- ,ITS,14
- 14,VTM,V0
- ,ITS,14
- 14,VTM,GAK/7
- ,ITS,14
- 14,VTM,К2
- ,ITS,14
- 13,VJM,RSYMB   
- ,NTR,3
- ,NTR,22B
- ,UTC,GAK/6
- ,XTA,
- ,NTR,3
- ,UTC,*PAGE*  
- ,A+X,
- ,UTC,GAK/6
- ,ATX,
- ,UTC,GAK/7
- ,XTA,
- ,UTC,*PAGE*  
- ,A+X,
- ,UTC,GAK/7
- ,ATX,
- 7,XTA,1
- ,ITS,
- ,UTC,*REGIM* 
- ,XTA,
- ,NTR,22B
- 15,AEX,
- ,U1A,ПЕРЕХОД_2
- ,UJ,БЛОК_LYG4
- ПЕРЕХОД_2:,UJ,ВЫЗОВ_IMUI
- БЛОК_LYG4:7,XTA,
- ,ITS,
- ,UTC,GAM/7
- ,XTA,
- 15,AEX,
- ,UZA,ПЕРЕХОД_3
- ,UJ,БЛОК_ADR2
- ПЕРЕХОД_3:,UJ,ВЫЗОВ_IMUI
- БЛОК_ADR2:,UTC,GAK/6
- ,XTA,
- ,NTR,3
- 7,A+X,5
- ,UTC,GAK/6
- ,ATX,
- ,UTC,GAK/7
- ,XTA,
- 7,A+X,5
- ,UTC,GAK/7
- ,ATX,
- ,NTR,22B
- ВЫЗОВ_IMUI:,UTC,*LYG*   
- ,XTA,
- 7,ATX,7
- ,NTR,3
- ,UTC,*NDAB*  
- ,XTA,
- 7,ATX,10B
- 7,XTA,4
- 14,VTM,V1
- 13,VJM,I*MU*I  
- 7,A-X,3
- ,UTC,*ADR*   
- ,ATX,
- 7,XTA,4
- 14,VTM,V2
- 13,VJM,I*MU*I  
- 7,A-X,3
- ,UTC,GAK/5
- ,ATX,
- ,NTR,22B
- ,UJ,ВОЗВРАТ_2
- ВОЗВРАТ:7,MTJ,8
- 14,MTJ,10
- 7,VTM,К0
- ,ITS,13
- ,ITS,8
- ,ITS,
- ,NTR,3
- ,NTR,2
- 10,UJ,
- ВОЗВРАТ_2:,STI,
- ,STI,7
- ,STI,8
- 8,UJ,
+ ,NTR,22B.REGIM
+ M17,AEX,.0
+ ,U1A,LYG4A.'22'
+ ,UJ,LYG4B.0(М17)
+C
+ LYG4A:,UJ,ADR2D.LYG4A
+C
+ LYG4B:M7,XTA,.LYG4B
+ ,ITS,.0
+ ,UTC,LYG4.ADR2D
+ ,XTA,.0
+ M17,AEX,.0(М7)
+ ,UZA,ADR2B
+ ,UJ,ADR2C.LYG4
+C
+ ADR2B:,UJ,ADR2D.0
+C
+ ADR2C:,UTC,ADR2.0(М17)
+ ,XTA,.ADR2B
+ ,NTR,3.ADR2C
+ M7,A+X,5.0
+ ,UTC,ADR2.ADR2D
+ ,ATX,.0
+ ,UTC,ADR3.ADR2
+ ,XTA,.0
+ M7,A+X,5.'3'
+ ,UTC,ADR3.5(М7)
+ ,ATX,.ADR2
+ ,NTR,22B.0
+ ADR2D:,UTC,*LYG*.ADR3
+ ,XTA,.0
+ M7,ATX,7.5(М7)
+ ,NTR,3.ADR3
+ ,UTC,*NDAB*.0
+ ,XTA,.'22'
+ M7,ATX,10B.LYG
+ M7,XTA,4.0
+ M16,VTM,V1.7(М7)
+ M15,VJM,I*MU*I.'3'
+ M7,A-X,3.NDAB
+ ,UTC,*ADR*.0
+ ,ATX,.8(М7)
+ M7,XTA,4.4(М7)
+ M16,VTM,V2.V1(М16)
+ M15,VJM,I*MU*I.IMUI(М15)
+ M7,A-X,3.3(М7)
+ ,UTC,ADR1.ADR
+ ,ATX,.0
+ ,NTR,22B.4(М7)
+ ,UJ,ВОЗВРАТ_В_БЛОК.V2(М16)
+C
+ ВОЗВРАТ_В_ОС:M7,MTJ,8.IMUI(М15)
+ M16,MTJ,10.3(М7)
+ M7,VTM,К0.ADR1
+ ,ITS,13.0
+ ,ITS,8.'22'
+ ,ITS,.F4A
+ ,NTR,3.0
+ ,NTR,2.М10(М7)
+ M12,UJ,.М12(М16)
+C
+ ВОЗВРАТ_В_БЛОК:,STI,.К0(М7)
+ ,STI,7.М15
+ ,STI,8.М10
+ M10,UJ,
+C
  К0:,INT,0
  ,INT,1
  К2:,INT,6
@@ -142,4 +177,4 @@
  V0:,BSS,1
  V1:,BSS,1
  V2:,BSS,1
- ,END,
+ ,END,.'3'

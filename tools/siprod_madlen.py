@@ -45,7 +45,13 @@ from siprod_lib import Library, text_decode                       # noqa: E402
 DTRAN = os.environ.get("SIPROD_DTRAN", "dtran")
 ASMPL = "/home/azizz/Yandex.Disk/monitor80-re/tools/asm.pl"
 MONITOR = "/home/azizz/Yandex.Disk/monitor80-re/tools"
-WORKVOL = "2348"          # том с компилятором МАДЛЕН
+# Том 2348 - "Монитор-80": на нём компилятор МАДЛЕН, которым собираются
+# модули СИПРОДа, и сама программа СИПРОД (личная библиотека в ПЕРСО,
+# зона 01267; копия в томе неполна - 95 модулей из 98, поэтому библиотека
+# записывается в ПЕРСО заново).  Том 2248 - "Дубна": там живёт исходная
+# библиотека СИПРОДа (зона 2702), из неё берётся образ siprod.bin.
+WORKVOL = "2348"          # том с компилятором МАДЛЕН и программой СИПРОД
+RUNVOL = "2348"           # том, с которого запускается СИПРОД
 WORK = "/tmp/siprod-madlen"
 SRC = [os.path.join(ROOT, "madlen")]        # откомментированные тексты
 ZONE0 = 690               # с этой зоны тома пишет компилятор МАДЛЕН
@@ -164,13 +170,13 @@ def build_library(lib, ws, built, out):
 
 
 def check(work, lib, image):
-    """Запустить СИПРОД с библиотекой и сравнить вывод с эталоном."""
+    """Запустить СИПРОД с библиотекой и сравнить вывод с эталоном.
+
+    СИПРОД запускается с тома 2348 ("Монитор-80"): библиотека пишется
+    в ПЕРСО рабочей копии тома, зона 01267 (695 десятичная) - там её
+    ищет монитор.
+    """
     cases = os.path.join(ROOT, "tests/siprod/cases")
-    vol = os.path.join(work, "2248")
-    shutil.copy("/usr/local/share/besm6/2248", vol)
-    subprocess.run(["besmtool", "write", "2248", "--from-file=" + image,
-                    "--start=02702"], cwd=work, env=env(work),
-                   capture_output=True)
     bad = 0
     total = 0
     for t in sorted(os.listdir(cases)):
@@ -179,6 +185,7 @@ def check(work, lib, image):
         total += 1
         exp = os.path.join(cases, t[:-4] + ".out")
         r = subprocess.run([os.path.join(ROOT, "tests/siprod/run.sh"),
+                            "-l", image,
                             os.path.join(cases, t)], capture_output=True,
                            text=True, env=env(work))
         if open(exp, encoding="utf-8").read().strip() != r.stdout.strip():

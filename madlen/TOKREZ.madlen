@@ -1,144 +1,181 @@
+CTOKREZ - МОДУЛЬ СИПРОДА
+CИсточник: личная библиотека (PERSO, зона 2702,
+Cтом 2248), слово 18464 образа SIPROD.BIN
+CДлина при загрузке: 87 слов, 142 команд
+CВход: TOKREZ
+CВыход: SPAUD:F1C, F6B (возврат через М12), POP (возврат через М10)
+CВнешние: SCANER, INS, KLAIDA, RSYMB, SYTINT, SCAN
+CСмещения в INS: 24, 25, 26
+CСмещения в SCANER: 1, 2
+CАбсолютные символы: N1 = -1
+CСмещения в кадре (М7): общие 0-1, 3-6, 8-10, свои 12-14,
+Cвне кадра 2060
+CРегистры: М1 (индекс: база модуля), М7 (указатель кадра),
+CМ10 (блок вызывающего), М12 (магазин, кадр параметров ОС),
+CМ15 (адрес возврата), М16 (модифицированный адрес),
+CМ17 (контекст задачи)
+CМодификатор адреса: МОДА/МОД задают М16, адрес следующей команды += М16
+C
  TOKREZ  :,NAME, NEW DTRAN
+ M1:,EQU,1B
+ M7:,EQU,7B
+ M10:,EQU,10B
+ M12:,EQU,12B
+ M15:,EQU,15B
+ M16:,EQU,16B
+ M17:,EQU,17B
  *SCANER*:,LC,3
- GAK/2:,EQU,*SCANER*+1
- GAK/3:,EQU,*SCANER*+2
+ SCANER1:,EQU,*SCANER*+1
+ SCANER2:,EQU,*SCANER*+2
  *INS*   :,LC,27
- GAK/5:,EQU,*INS*   +24
- GAK/6:,EQU,*INS*   +25
- GAK/7:,EQU,*INS*   +26
+ INS24:,EQU,*INS*   +24
+ INS25:,EQU,*INS*   +25
+ INS26:,EQU,*INS*   +26
  KLAIDA  :,SUBP,
  RSYMB   :,SUBP,
  SYTINT  :,SUBP,
  SCAN    :,SUBP,
- 14,VTM,ПЕР_1
- ,UJ,ПЕР_14
- ПЕР_1:7,XTA,1
- 7,ATX,10B
- ,NTR,3
- ,NTR,22B
- БЛОК_V1:7,XTA,-1
- ,WTC,V1
- 1,VTM,
- ,WTC,V6
- 1,ATX,-1
-  :7,XTA,10B
- ,NTR,3
- 7,A+X,1
- 7,ATX,10B
- 7,X-A,4
- ,NTR,22B
- ,UZA,БЛОК_V1
- 7,XTA,
- ,WTC,V7
- ,ATX,
- ,NTR,3
- ,NTR,22B
- ВЫЗОВ_SCAN:13,VJM,SCAN    
- ,UTC,*SCANER*
+ M16,VTM,ПЕР_1.F1(М16)
+ ,UJ,ПЕР_14.F6B
+C
+ ПЕР_1:M7,XTA,1.1(М7)
+ M7,ATX,10B.8(М7)
+ ,NTR,3.'3'
+ ,NTR,22B.'22'
+ БЛОК_V1:M7,XTA,-1.'4014'(М7)
+ ,WTC,V1.V1
+ M1,VTM,.0(М1)
+ ,WTC,V6.V6
+ M1,ATX,-1.'4014'(М1)
+  :7,XTA,10B.0
+ ,NTR,3.8(М7)
+ M7,A+X,1.'3'
+ M7,ATX,10B.1(М7)
+ M7,X-A,4.8(М7)
+ ,NTR,22B.4(М7)
+ ,UZA,БЛОК_V1.'22'
+ M7,XTA,.F1A
+ ,WTC,V7.0(М7)
+ ,ATX,.V7
+ ,NTR,3.0
+ ,NTR,22B.'3'
+ SCANA:M15,VJM,SCAN.'22'
+ ,UTC,*SCANER*.SCAN(М15)
+ ,XTA,.0
+ ,NTR,3.SCANER
+ M7,A-X,1.0
+ M7,ATX,11B.'3'
+ M7,XTA,3.1(М7)
+ ,ITS,.9(М7)
+ ,UTC,SCANER1.3(М7)
  ,XTA,
- ,NTR,3
- 7,A-X,1
- 7,ATX,11B
- 7,XTA,3
- ,ITS,
- ,UTC,GAK/2
- ,XTA,
- ,NTR,22B
- 15,AEX,
- ,UZA,БЛОК_SCANER
- ,UJ,БЛОК_SCANER1
- БЛОК_SCANER:,UTC,*SCANER*
- ,XTA,
- ,NTR,3
- ,UTC,GAK/7
- ,A-X,
- ,NTR,22B
- ,U1A,ПЕРЕХОД_2
- ,UJ,БЛОК_SCANER1
- ПЕРЕХОД_2:,UJ,ВЫЗОВ_SCAN
- БЛОК_SCANER1:7,XTA,5
- ,ITS,
- ,UTC,GAK/2
- ,XTA,
- 15,AEX,
- ,U1A,ПЕРЕХОД_3
- ,UJ,ВЫЗОВ_SYTINT
- ПЕРЕХОД_3:,UJ,ВЫЗОВ_KLAIDA
- ВЫЗОВ_SYTINT:,UTC,*SCANER*
- ,XTA,
- ,NTR,3
- 7,A-X,1
- 7,ATX,12B
- 14,VTM,*INS*   
- ,ITS,14
- 14,VTM,V3
- ,ITS,14
- 14,VTM,V4
- ,ITS,14
- ,NTR,22B
- 13,VJM,SYTINT  
- ,NTR,3
- ,NTR,22B
- 7,XTA,12B
- ,UTC,*SCANER*
- ,ATX,
- ,NTR,3
- ,WTC,V7
- ,XTA,
- 7,A+X,1
- ,WTC,V7
- ,ATX,
- 14,VTM,V4
- ,ITS,14
- 14,VTM,К3
- ,ITS,14
- ,WTC,V6
- 14,VTM,
- ,ITS,14
- ,WTC,V7
- 14,VTM,
- ,ITS,14
- ,NTR,22B
- 13,VJM,RSYMB   
- ,NTR,3
- ,NTR,22B
- ,UTC,*SCANER*
- ,XTA,
- ,NTR,3
- ,UTC,GAK/7
- ,A-X,
- ,NTR,22B
- ,U1A,ПЕРЕХОД_4
- ,UJ,ПЕРЕХОД_5
- ПЕРЕХОД_4:,UJ,ВЫЗОВ_SCAN
- ПЕРЕХОД_5:,UJ,ПЕРЕХОД_6
- ВЫЗОВ_KLAIDA:7,XTA,6
- 7,ATX,14B
- ,NTR,3
- 14,VTM,V5
- ,ITS,14
- ,NTR,22B
- 13,VJM,KLAIDA  
- ,NTR,3
- ,NTR,22B
- ПЕРЕХОД_6:,UJ,ВОЗВРАТ
- ПЕР_14:7,MTJ,8
- 14,MTJ,10
- 7,VTM,К1
- 7,STX,16B
- 7,STX,15B
- ,ITS,13
- ,ITS,1
- ,ITS,8
- ,ITS,
- ,NTR,3
- ,NTR,2
- 10,UJ,
- ВОЗВРАТ:,STI,
- ,STI,7
- ,STI,1
- ,STI,8
- 8,UJ,
+ ,NTR,22B.SCANER1
+ M17,AEX,.0
+ ,UZA,SCANEA.'22'
+ ,UJ,SCANEC.0(М17)
+C
+ SCANEA:,UTC,*SCANER*.SCANEA
+ ,XTA,.SCANEC
+ ,NTR,3.0
+ ,UTC,INS26.SCANER
+ ,A-X,.0
+ ,NTR,22B.'3'
+ ,U1A,SCANEB.INS26
+ ,UJ,SCANEC.0
+C
+ SCANEB:,UJ,SCANA.'22'
+C
+ SCANEC:M7,XTA,5.SCANEB
+ ,ITS,.SCANEC
+ ,UTC,SCANER1.SCANA
+ ,XTA,.0
+ M17,AEX,.5(М7)
+ ,U1A,SCANED
+ ,UJ,SCANEE.SCANER1
+C
+ SCANED:,UJ,ВЫЗОВ_KLAIDA.0
+C
+ SCANEE:,UTC,*SCANER*.0(М17)
+ ,XTA,.SCANED
+ ,NTR,3.SCANEE
+ M7,A-X,1.0
+ M7,ATX,12B.F6
+ M16,VTM,*INS*.0
+ ,ITS,14.SCANER
+ M16,VTM,V3.0
+ ,ITS,14.'3'
+ M16,VTM,V4.1(М7)
+ ,ITS,14.10(М7)
+ ,NTR,22B.INS(М16)
+ M15,VJM,SYTINT.М16
+ ,NTR,3.V3(М16)
+ ,NTR,22B.М16
+ M7,XTA,12B.V4(М16)
+ ,UTC,*SCANER*.М16
+ ,ATX,.'22'
+ ,NTR,3.SYTINT(М15)
+ ,WTC,V7.0
+ ,XTA,.'3'
+ M7,A+X,1.'22'
+ ,WTC,V7.10(М7)
+ ,ATX,.SCANER
+ M16,VTM,V4.0
+ ,ITS,14.'3'
+ M16,VTM,К3.V7
+ ,ITS,14.0
+ ,WTC,V6.1(М7)
+ M16,VTM,.V7
+ ,ITS,14.0
+ ,WTC,V7.V4(М16)
+ M16,VTM,.М16
+ ,ITS,14.К3(М16)
+ ,NTR,22B.М16
+ M15,VJM,RSYMB.V6
+ ,NTR,3.0(М16)
+ ,NTR,22B.М16
+ ,UTC,*SCANER*.V7
+ ,XTA,.0(М16)
+ ,NTR,3.М16
+ ,UTC,INS26.'22'
+ ,A-X,.RSYMB(М15)
+ ,NTR,22B.0
+ ,U1A,ЦИКЛ_ПЕРЕХОД.'3'
+ ,UJ,ЦИКЛ_ПЕРЕХОД_2.'22'
+C
+ ЦИКЛ_ПЕРЕХОД:,UJ,SCANA.SCANER
+C
+ ЦИКЛ_ПЕРЕХОД_2:,UJ,ЦИКЛ_ПЕРЕХОД_3.0
+C
+ ВЫЗОВ_KLAIDA:M7,XTA,6.'3'
+ M7,ATX,14B.INS26
+ ,NTR,3.0
+ M16,VTM,V5.'22'
+ ,ITS,14.F10
+ ,NTR,22B.F10A
+ M15,VJM,KLAIDA.SCANA
+ ,NTR,3.0
+ ,NTR,22B.F6A
+ ЦИКЛ_ПЕРЕХОД_3:,UJ,POP.0
+C
+ ПЕР_14:M7,MTJ,8.6(М7)
+ M16,MTJ,10.12(М7)
+ M7,VTM,К1.'3'
+ M7,STX,16B.V5(М16)
+ M7,STX,15B.М16
+ ,ITS,13.'22'
+ ,ITS,1.KLAIDA(М15)
+ ,ITS,8.0
+ ,ITS,.'3'
+ ,NTR,3.'22'
+ ,NTR,2.POP
+ M12,UJ,.0
+C
+ POP:,STI,.М10(М7)
+ ,STI,7.М12(М16)
+ ,STI,1.К1(М7)
+ ,STI,8.14(М7)
+ M10,UJ,.13(М7)
+C
   :,ISO, 6H       . 040 040 040 040 040 040 
  К1:,INT,0
  ,INT,1
@@ -154,4 +191,4 @@
  V5:,BSS,1
  V6:,BSS,1
  V7:,BSS,1
- ,END,
+ ,END,.М15

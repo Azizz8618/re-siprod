@@ -1,111 +1,145 @@
+CTAMPYK - МОДУЛЬ СИПРОДА
+CИсточник: личная библиотека (PERSO, зона 2702,
+Cтом 2248), слово 18912 образа SIPROD.BIN
+CДлина при загрузке: 53 слов, 94 команд
+CВход: TAMPYK
+CВыход: DOUBLE:NDAB1A, F0B (возврат через М12), F0C (возврат через М10)
 CРАЗБОР ТАБЛИЧНОГО РАЗДЕЛА ПУСКОВ.
+CВнешние: REGIM, SCANER, STR, INS, BEN, DDR, TAMTXT, TARPOZ, RSYMB,
+CSCAN
+CСмещения в BEN: 2, 14
+CСмещения в INS: 24, 25
+CСмещения в SCANER: 1, 2
+CСмещения в STR: 24, 25, 26
+CАбсолютные символы: N1 = -1
+CСмещения в кадре (М7): общие 0-4, 10, вне кадра 2067
+CРегистры: М7 (указатель кадра), М10 (блок вызывающего),
+CМ12 (магазин, кадр параметров ОС), М15 (адрес возврата),
+CМ16 (модифицированный адрес), М17 (контекст задачи)
+CМодификатор адреса: МОДА/МОД задают М16, адрес следующей команды += М16
 C
  TAMPYK  :,NAME, NEW DTRAN
+ M7:,EQU,7B
+ M10:,EQU,10B
+ M12:,EQU,12B
+ M15:,EQU,15B
+ M16:,EQU,16B
+ M17:,EQU,17B
  *REGIM* :,LC,16
  *SCANER*:,LC,3
- GAK/3:,EQU,*SCANER*+1
- GAK/4:,EQU,*SCANER*+2
+ SCANER1:,EQU,*SCANER*+1
+ SCANER2:,EQU,*SCANER*+2
  *STR*   :,LC,27
- GAK/6:,EQU,*STR*   +24
- GAK/7:,EQU,*STR*   +25
- GAL/0:,EQU,*STR*   +26
+ STR24:,EQU,*STR*   +24
+ STR25:,EQU,*STR*   +25
+ STR26:,EQU,*STR*   +26
  *INS*   :,LC,27
- GAL/2:,EQU,*INS*   +24
- GAL/3:,EQU,*INS*   +25
+ INS24:,EQU,*INS*   +24
+ INS25:,EQU,*INS*   +25
  *BEN*   :,LC,15
- GAL/5:,EQU,*BEN*   +14
+ BEN14:,EQU,*BEN*   +14
  *DDR*   :,LC,1
  TAMTXT  :,SUBP,
  TARPOZ  :,SUBP,
  RSYMB   :,SUBP,
  SCAN    :,SUBP,
- GAM/4:,EQU,*BEN*   +2
- 14,VTM,ВЫЗОВ_SCAN
- ,UJ,ВОЗВРАТ
- ВЫЗОВ_SCAN:7,XTA,
- ,UTC,GAL/5
- ,ATX,
- ,NTR,3
- 7,XTA,-1
- 7,ATX,3
- ,UTC,*SCANER*
- ,XTA,
- 7,ATX,4
- ,UTC,*DDR*   
- ,XTA,
- ,UTC,*SCANER*
- ,ATX,
- ,NTR,22B
- 13,VJM,SCAN    
- 7,XTA,4
- ,UTC,*SCANER*
- ,ATX,
- ,NTR,3
- 7,XTA,2
- ,ITS,
- ,UTC,GAK/3
- ,XTA,
- ,NTR,22B
- 15,AEX,
- ,UZA,БЛОК_BEN14
- ,UJ,ВЫЗОВ_RSYMB
- БЛОК_BEN14:7,XTA,-1
- ,UTC,GAL/5
- ,ATX,
- ,NTR,3
- ,NTR,22B
- ВЫЗОВ_RSYMB:14,VTM,*STR*   
- ,ITS,14
- 14,VTM,GAL/0
- ,ITS,14
- 14,VTM,V0
- ,ITS,14
- 14,VTM,К2
- ,ITS,14
- 13,VJM,RSYMB   
- ,NTR,3
- ,NTR,22B
- 7,XTA,-1
- ,ITS,
- 7,XTA,3
- 15,AEX,
- ,U1A,БЛОК_BEN14_2
- ,UJ,ВЫЗОВ_TARPOZ
- БЛОК_BEN14_2:7,XTA,-1
- ,ITS,
- ,UTC,GAL/5
- ,XTA,
- 15,AEX,
- ,UZA,ПЕРЕХОД_2
- ,UJ,ВЫЗОВ_TARPOZ
- ПЕРЕХОД_2:,UJ,ПЕРЕХОД_4
- ВЫЗОВ_TARPOZ:13,VJM,TARPOZ  
- 7,XTA,
- ,ITS,
- ,UTC,GAM/4
- ,XTA,
- 15,AEX,
- ,UZA,ПЕРЕХОД_3
- ,UJ,ВЫЗОВ_TAMTXT
- ПЕРЕХОД_3:,UJ,ПЕРЕХОД_4
- ВЫЗОВ_TAMTXT:13,VJM,TAMTXT  
- ПЕРЕХОД_4:,UJ,ВОЗВРАТ_2
- ВОЗВРАТ:7,MTJ,8
- 14,MTJ,10
- 7,VTM,К1
- ,ITS,13
- ,ITS,8
- ,ITS,
- ,NTR,3
- ,NTR,2
- 10,UJ,
- ВОЗВРАТ_2:,STI,
- ,STI,7
- ,STI,8
- 8,UJ,
+ BEN2:,EQU,*BEN*   +2
+ M16,VTM,BEN14A.BEN14A(М16)
+ ,UJ,ВОЗВРАТ_В_ОС.F0B
+C
+ BEN14A:M7,XTA,.0(М7)
+ ,UTC,BEN14.BEN14
+ ,ATX,.0
+ ,NTR,3.'3'
+ M7,XTA,-1.'4023'(М7)
+ M7,ATX,3.3(М7)
+ ,UTC,*SCANER*.SCANER
+ ,XTA,.0
+ M7,ATX,4.4(М7)
+ ,UTC,*DDR*.DDR
+ ,XTA,.0
+ ,UTC,*SCANER*.SCANER
+ ,ATX,.0
+ ,NTR,22B.'22'
+ M15,VJM,SCAN.SCAN(М15)
+ M7,XTA,4.0
+ ,UTC,*SCANER*.4(М7)
+ ,ATX,.SCANER
+ ,NTR,3.0
+ M7,XTA,2.'3'
+ ,ITS,.2(М7)
+ ,UTC,SCANER1
+ ,XTA,.SCANER1
+ ,NTR,22B.0
+ M17,AEX,.'22'
+ ,UZA,BEN14B.0(М17)
+ ,UJ,BEN14C.BEN14B
+C
+ BEN14B:M7,XTA,-1.BEN14C
+ ,UTC,BEN14.'4023'(М7)
+ ,ATX,.BEN14
+ ,NTR,3.0
+ ,NTR,22B.'3'
+ BEN14C:M16,VTM,*STR*.'22'
+ ,ITS,14.0
+ M16,VTM,STR26.STR(М16)
+ ,ITS,14.М16
+ M16,VTM,V0.STR26(М16)
+ ,ITS,14.М16
+ M16,VTM,К2.V0(М16)
+ ,ITS,14.М16
+ M15,VJM,RSYMB.К2(М16)
+ ,NTR,3.М16
+ ,NTR,22B.RSYMB(М15)
+ M7,XTA,-1.0
+ ,ITS,.'3'
+ M7,XTA,3.'22'
+ M17,AEX,.'4023'(М7)
+ ,U1A,BEN14D
+ ,UJ,TARPOA.3(М7)
+C
+ BEN14D:M7,XTA,-1.0(М17)
+ ,ITS,.BEN14D
+ ,UTC,BEN14.TARPOA
+ ,XTA,.'4023'(М7)
+ M17,AEX,
+ ,UZA,ЦИКЛ_ПЕРЕХОД.BEN14
+ ,UJ,TARPOA.0
+C
+ ЦИКЛ_ПЕРЕХОД:,UJ,ЦИКЛ_ПЕРЕХОД_3.0(М17)
+C
+ TARPOA:M15,VJM,TARPOZ.F3
+ M7,XTA,.TARPOA
+ ,ITS,.0
+ ,UTC,BEN2.F0A
+ ,XTA,.0
+ M17,AEX,.TARPOZ(М15)
+ ,UZA,ЦИКЛ_ПЕРЕХОД_2.0
+ ,UJ,TAMTXA.0(М7)
+C
+ ЦИКЛ_ПЕРЕХОД_2:,UJ,ЦИКЛ_ПЕРЕХОД_3
+C
+ TAMTXA:M15,VJM,TAMTXT.BEN2
+ ЦИКЛ_ПЕРЕХОД_3:,UJ,ВОЗВРАТ_В_БЛОК.0
+C
+ ВОЗВРАТ_В_ОС:M7,MTJ,8.0(М17)
+ M16,MTJ,10.F0
+ M7,VTM,К1.TAMTXA
+ ,ITS,13.0
+ ,ITS,8.F0A
+ ,ITS,.0
+ ,NTR,3.TAMTXT(М15)
+ ,NTR,2.0
+ M12,UJ,.F0C
+C
+ ВОЗВРАТ_В_БЛОК:,STI,.0
+ ,STI,7.М10(М7)
+ ,STI,8.М12(М16)
+ M10,UJ,.К1(М7)
+C
  ,ISO, 6H       . 040 040 040 040 040 040 
  К1:,INT,0
  К2:,INT,6
  ,INT,8
  V0:,BSS,2
- ,END,
+ ,END,.М15

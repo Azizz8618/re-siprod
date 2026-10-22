@@ -1,58 +1,99 @@
+CSEGTAB - МОДУЛЬ СИПРОДА
+CИсточник: личная библиотека (PERSO, зона 2702,
+Cтом 2248), слово 16384 образа SIPROD.BIN
+CДлина при загрузке: 401 слов, 728 команд
+CВход: SEGTAB
+CВыход: SPAUD:LNTD, F1B (возврат через М12), POP (возврат через М10)
 CСЕГМЕНТЫ ТАБЛИЦЫ (ЯЧЕЙКИ, ЛИНЕЙКИ).
+CВнешние: STR, INS, TXT, TAB, LYG, LRE, ATV, SLY, EGO, DYD, LNT, SEK,
+CINF, NRD, SCANER, NUST, RUSIS, NDAB, PAGE, REGIM, KLAIDA, RASTXT,
+CANATXT, LYGPAR, NEWMAX, SEKDYD, SEKGIR, RWINF, SYTINT, SCAN, GETSTR,
+CSEKLYG, BEGPG, ENDPG, BEGSTR, ENDSTR, RSYMB, IMUI, IDII
+CСмещения в ATV: 1
+CСмещения в DYD: 1, 2
+CСмещения в EGO: 2400, 4800, 7200
+CСмещения в INF: 1, 2
+CСмещения в INS: 24, 25, 26
+CСмещения в LYG: 1, 2
+CСмещения в NDAB: 1, 2, 3
+CСмещения в NRD: 24
+CСмещения в NUST: 8
+CСмещения в PAGE: 3, 4, 5
+CСмещения в SCANER: 1, 2
+CСмещения в SEK: 2, 3
+CСмещения в SLY: 1
+CСмещения в STR: 24, 25, 26
+CСмещения в TAB: 1, 2, 3, 4
+CСмещения в TXT: 1, 2, 3
+CАбсолютные символы: N1 = -1, N2 = -2
+CСмещения в кадре (М7): общие 0-4, 6-10, свои 11-27, 29-34,
+Cвне кадра 2121, 2131
+CРегистры: М1 (индекс: база модуля), М7 (указатель кадра),
+CМ10 (блок вызывающего), М12 (магазин, кадр параметров ОС),
+CМ15 (адрес возврата), М16 (модифицированный адрес),
+CМ17 (контекст задачи)
+CМодификатор адреса: МОДА/МОД задают М16, адрес следующей команды += М16
 C
  SEGTAB  :,NAME, NEW DTRAN
+ M1:,EQU,1B
+ M7:,EQU,7B
+ M10:,EQU,10B
+ M12:,EQU,12B
+ M15:,EQU,15B
+ M16:,EQU,16B
+ M17:,EQU,17B
  *STR*   :,LC,27
- GAK/2:,EQU,*STR*   +24
- GAK/3:,EQU,*STR*   +25
- GAK/4:,EQU,*STR*   +26
+ STR24:,EQU,*STR*   +24
+ STR25:,EQU,*STR*   +25
+ STR26:,EQU,*STR*   +26
  *INS*   :,LC,27
- GAK/6:,EQU,*INS*   +24
- GAK/7:,EQU,*INS*   +25
- GAL/0:,EQU,*INS*   +26
+ INS24:,EQU,*INS*   +24
+ INS25:,EQU,*INS*   +25
+ INS26:,EQU,*INS*   +26
  *TXT*   :,LC,4
- GAL/2:,EQU,*TXT*   +1
- GAL/3:,EQU,*TXT*   +2
- GAL/4:,EQU,*TXT*   +3
+ TXT1:,EQU,*TXT*   +1
+ TXT2:,EQU,*TXT*   +2
+ TXT3:,EQU,*TXT*   +3
  *TAB*   :,LC,5
- GAL/6:,EQU,*TAB*   +1
- GAL/7:,EQU,*TAB*   +2
- GAM/0:,EQU,*TAB*   +3
- GAM/1:,EQU,*TAB*   +4
+ TAB1:,EQU,*TAB*   +1
+ TAB2:,EQU,*TAB*   +2
+ TAB3:,EQU,*TAB*   +3
+ TAB4:,EQU,*TAB*   +4
  *LYG*   :,LC,6
- GAM/3:,EQU,*LYG*   +1
- GAM/4:,EQU,*LYG*   +2
+ LYG1:,EQU,*LYG*   +1
+ LYG2:,EQU,*LYG*   +2
  *LRE*   :,LC,20
  *ATV*   :,LC,2
- GAM/7:,EQU,*ATV*   +1
+ ATV1:,EQU,*ATV*   +1
  *SLY*   :,LC,2
- GAN/1:,EQU,*SLY*   +1
+ SLY1:,EQU,*SLY*   +1
  *EGO*   :,LC,13401
- GAN/3:,EQU,*EGO*   +2400
- GAN/4:,EQU,*EGO*   +4800
- GAN/5:,EQU,*EGO*   +7200
+ EGO2400:,EQU,*EGO*   +2400
+ EGO4800:,EQU,*EGO*   +4800
+ EGO7200:,EQU,*EGO*   +7200
  *DYD*   :,LC,3
- GAN/7:,EQU,*DYD*   +1
- GAO/0:,EQU,*DYD*   +2
+ DYD1:,EQU,*DYD*   +1
+ DYD2:,EQU,*DYD*   +2
  *LNT*   :,LC,1
  *SEK*   :,LC,4
  *INF*   :,LC,3
- GAO/4:,EQU,*INF*   +1
- GAO/5:,EQU,*INF*   +2
+ INF1:,EQU,*INF*   +1
+ INF2:,EQU,*INF*   +2
  *NRD*   :,LC,25
- GAO/7:,EQU,*NRD*   +24
+ NRD24:,EQU,*NRD*   +24
  *SCANER*:,LC,3
- GAP/1:,EQU,*SCANER*+1
- GAP/2:,EQU,*SCANER*+2
+ SCANER1:,EQU,*SCANER*+1
+ SCANER2:,EQU,*SCANER*+2
  *NUST*  :,LC,10
  *RUSIS* :,LC,1
  *NDAB*  :,LC,4
- GAP/6:,EQU,*NDAB*  +1
- GAP/7:,EQU,*NDAB*  +2
- GAQ/0:,EQU,*NDAB*  +3
+ NDAB1:,EQU,*NDAB*  +1
+ NDAB2:,EQU,*NDAB*  +2
+ NDAB3:,EQU,*NDAB*  +3
  *PAGE*  :,LC,6
- GAQ/2:,EQU,*PAGE*  +3
- GAQ/3:,EQU,*PAGE*  +4
- GAQ/4:,EQU,*PAGE*  +5
+ PAGE3:,EQU,*PAGE*  +3
+ PAGE4:,EQU,*PAGE*  +4
+ PAGE5:,EQU,*PAGE*  +5
  *REGIM* :,LC,16
  KLAIDA  :,SUBP,
  RASTXT  :,SUBP,
@@ -72,664 +113,729 @@ C
  ENDSTR  :,SUBP,
  RSYMB   :,SUBP,
  I*MU*I  :,SUBP,
- GAT/0:,EQU,*NUST*  +8
- GAT/2:,EQU,GAN/3-32767
- GAT/3:,EQU,GAN/4-32767
- GAT/4:,EQU,*LRE*   -32767
- GAT/5:,EQU,GAM/4+1
+ NUST8:,EQU,*NUST*  +8
+ EGO35167:,EQU,EGO2400-32767
+ EGO37567:,EQU,EGO4800-32767
+ LRE32767:,EQU,*LRE*   -32767
+ LYG3:,EQU,LYG2+1
  I*DI*I  :,SUBP,
- GAT/7:,EQU,GAM/4+2
- GAU/0:,EQU,GAM/4+3
- GAU/1:,EQU,*SEK*   +3
- GAU/2:,EQU,*SEK*   +2
- GAU/4:,EQU,*STR*   -32767
- 14,VTM,ВЫЗОВ_IMUI
- ,UJ,ВОЗВРАТ
- ВЫЗОВ_IMUI:7,XTA,3
+ LYG4:,EQU,LYG2+2
+ LYG5:,EQU,LYG2+3
+ SEK3:,EQU,*SEK*   +3
+ SEK2:,EQU,*SEK*   +2
+ STR32767:,EQU,*STR*   -32767
+ M16,VTM,LNTA.LNTA(М16)
+ ,UJ,ВОЗВРАТ_В_ОС.F1B
+C
+ LNTA:M7,XTA,3.3(М7)
+ ,NTR,3.'3'
+ ,UTC,*LNT*.LNT
+ ,A-X,.0
+ M7,ATX,23B.19(М7)
+ ,UTC,NRD24.NRD24
+ ,XTA,.0
+ M16,VTM,V0.V0(М16)
+ M15,VJM,I*MU*I.IMUI(М15)
+ M7,ATX,24B.0
+ ,UTC,STR26.20(М7)
+ ,XTA,.STR26
+ ,UTC,STR25.0
+ ,A-X,.STR25
+ M7,A+X,2.0
+ M7,ATX,25B.2(М7)
+ M7,XTA,24B.21(М7)
+ ,X-A,.20(М7)
+ M7,A+X,11B.0
+ ,NTR,22B.9(М7)
+ ,UZA,ЦИКЛ_ПЕРЕХОД.'22'
+ ,UJ,ПЕР_11.F20
+C
+ ЦИКЛ_ПЕРЕХОД:,UJ,ВЫЗОВ_RSYMB.F11
+C
+ ПЕР_11:M7,XTA,13B.0
+ M7,ATX,26B.F1
+ ,NTR,3.0
+ ,NTR,22B.11(М7)
+ ,UJ,ВЫЗОВ_KLAIDA.22(М7)
+C
+ ВЫЗОВ_RSYMB:M7,XTA,1.'3'
+ M7,ATX,27B.'22'
+ ,NTR,3.F6D
+ M16,VTM,*NRD*.0
+ ,ITS,14.1(М7)
+ M16,VTM,V1.23(М7)
+ ,ITS,14.'3'
+ M16,VTM,V4.NRD(М16)
+ ,ITS,14.М16
+ M16,VTM,К7.V1(М16)
+ ,ITS,14.М16
+ ,NTR,22B.V4(М16)
+ M15,VJM,RSYMB.М16
+ ,NTR,3.К7(М16)
+ ,NTR,22B.М16
+ M7,XTA,27B.'22'
+ ,NTR,3.RSYMB(М15)
+ ,X-A,.0
+ ,UTC,STR25.'3'
+ ,A-X,.'22'
+ M7,A+X,2.23(М7)
+ ,UTC,STR26.'3'
+ ,A+X,.0
+ ,NTR,22B.STR25
+ ,UZA,ЦИКЛ_ПЕРЕХОД_2.0
+ ,UJ,ПЕР_12.2(М7)
+C
+ ЦИКЛ_ПЕРЕХОД_2:,UJ,NUST8A.STR26
+C
+ ПЕР_12:M7,XTA,14B.0
+ M7,ATX,26B.'22'
+ ,NTR,3.F23
+ ,NTR,22B.F12
+ ,UJ,ВЫЗОВ_KLAIDA.0
+C
+ NUST8A:M7,XTA,1.NUST8A
+ ,UTC,NUST8.0
+ ,ATX,.12(М7)
+ M7,XTA,2.22(М7)
+ M7,ATX,30B.'3'
+ ,NTR,3.'22'
+ ,NTR,22B.F6D
+ NUST8B:M7,XTA,-2.0
+ ,WTC,V5.1(М7)
+ M1,VTM,.NUST8
+ M1,UTC,EGO35167.0
+ ,ATX,.2(М7)
+ M7,XTA,-2.24(М7)
+ ,WTC,V5.'3'
+ M1,VTM,.'22'
+ M1,UTC,EGO37567.0
+ ,ATX,.'4111'(М7)
+ M7,XTA,30B.V5
+ ,NTR,3.0(М1)
+ M7,A+X,2.EGO35167(М1)
+ M7,ATX,30B.0
+ M7,X-A,21B.'4111'(М7)
+ ,NTR,22B.V5
+ ,UZA,NUST8B.0(М1)
+ M7,XTA,2.EGO37567(М1)
+ M7,ATX,31B.0
+ ,NTR,3.24(М7)
+ ,NTR,22B.'3'
+ NUST8C:M7,XTA,1.2(М7)
+ ,WTC,V6.24(М7)
+ M1,VTM,.17(М7)
+ M1,UTC,LRE32767.'22'
+ ,ATX,.NUST8B
+  :7,XTA,31B.2(М7)
+ ,NTR,3.25(М7)
+ M7,A+X,2.'3'
+ M7,ATX,31B.'22'
+ M7,X-A,10B.0
+ ,NTR,22B.1(М7)
+ ,UZA,NUST8C.V6
+ M7,XTA,1.0(М1)
+ ,UTC,SLY1.LRE32767(М1)
+ ,ATX,.0
+ ,NTR,3.0
+ M7,XTA,1.25(М7)
+ ,UTC,*TAB*.'3'
+ ,ATX,.2(М7)
+ ,UTC,STR25.25(М7)
+ ,XTA,.8(М7)
+ ,ITS,.'22'
+ ,UTC,STR24.NUST8C
+ ,XTA,.1(М7)
+ ,NTR,22B.SLY1
+ M17,AEX,.0
+ ,UZA,ЦИКЛ_ПЕРЕХОД_3.'3'
+ ,UJ,ENDSTA.1(М7)
+C
+ ЦИКЛ_ПЕРЕХОД_3:,UJ,ВЫЗОВ_IMUI.TAB
+C
+ ENDSTA:M15,VJM,ENDSTR.0
+ M15,VJM,BEGSTR.STR25
+ ВЫЗОВ_IMUI:M7,XTA,3.0
  ,NTR,3
- ,UTC,*LNT*   
- ,A-X,
- 7,ATX,23B
- ,UTC,GAO/7
+ ,X-A,.STR24
+ M16,VTM,*LNT*.0
+ M15,VJM,I*MU*I.'22'
+ ,UTC,*NDAB*.0(М17)
+ ,A-X,.F1A
+ ,UTC,PAGE3.ENDSTA
+ ,A+X,.0
+ ,UTC,PAGE4.F3
+ ,A+X,.0
+ M7,A-X,4.ENDSTR(М15)
+ ,NTR,22B.0
+ ,UZA,ЦИКЛ_ПЕРЕХОД_4.BEGSTR(М15)
+ ,UJ,ENDPGA.0
+C
+ ЦИКЛ_ПЕРЕХОД_4:,UJ,NDABA.3(М7)
+C
+ ENDPGA:M15,VJM,ENDPG.'3'
+ M15,VJM,BEGPG.0
+ NDABA:,UTC,*NDAB*.LNT(М16)
+ ,XTA,.IMUI(М15)
+ ,UTC,LYG1.0
+ ,ATX,.NDAB
+ ,NTR,3.0
+ M7,XTA,1.PAGE3
+ ,UTC,TAB3.0
+ ,ATX,.PAGE4
+ M7,XTA,1.0
+ M7,ATX,32B.4(М7)
+ ,UTC,INS26.'22'
+ ,XTA,.F3A
+ M7,A+X,2.ENDPGA
+ ,UTC,*SCANER*.NDABA
+ ,ATX,.0
+ M7,XTA,.ENDPG(М15)
+ ,UTC,*ATV*.0
+ ,ATX,.BEGPG(М15)
+ M7,XTA,1.0
+ ,UTC,LYG2.NDAB
+ ,ATX,.0
+ M7,XTA,1.LYG1
+ ,UTC,LYG3.0
+ ,ATX,.'3'
+ M7,XTA,2.1(М7)
+ ,ITS,.TAB3
+ ,UTC,*REGIM*.0
+ ,XTA,.1(М7)
+ ,NTR,22B.26(М7)
+ M17,AEX,.INS26
+ ,U1A,NDAB1A.0
+ ,UJ,NDAB1B.2(М7)
+C
+ NDAB1A:,UJ,LYG4D.SCANER
+C
+ NDAB1B:,UTC,NDAB1.0
+ ,XTA,.0(М7)
+ M16,VTM,К5.ATV
+ M15,VJM,I*DI*I.0
+ M7,ATX,33B.1(М7)
+ ,NTR,3.LYG2
+ ,UTC,NDAB1.0
+ ,XTA,.1(М7)
+ ,ITS,.LYG3
+ M7,XTA,33B.0
+ M16,VTM,К5.2(М7)
+ M15,VJM,I*MU*I  
+ ,NTR,22B.REGIM
+ M17,AEX,.0
+ ,U1A,LYG4A.'22'
+ ,UJ,LYG4B.0(М17)
+C
+ LYG4A:,UJ,LYG4C.NDAB1A
+C
+ LYG4B:M7,XTA,2.NDAB1B
+ ,UTC,LYG4.LYG4D
+ ,ATX,.0
+ M7,XTA,2.NDAB1
+ ,UTC,LYG5.0
+ ,ATX,.К5(М16)
+ ,UJ,LYG4D.IDII(М15)
+C
+ LYG4C:M7,XTA,1.27(М7)
+ ,UTC,LYG4.'3'
+ ,ATX,.NDAB1
+ M7,XTA,1.0
+ ,UTC,LYG5
+ ,ATX,.27(М7)
+ M7,XTA,1.К5(М16)
+ ,UTC,SEK3.IMUI(М15)
+ ,ATX,.'22'
+ LYG4D:M7,XTA,6.0(М17)
+ ,UTC,*SEK*.LYG4A
+ ,ATX,.LYG4B
+ ,NTR,3.LYG4C
+ ,UTC,LYG5.0
+ ,XTA,.2(М7)
+ ,UTC,SEK2.LYG4
+ ,ATX,.0
+ ,NTR,22B.2(М7)
+ M15,VJM,SEKLYG.LYG5
+ SCANEA:,UTC,*SCANER*.0
+ ,XTA,.LYG4D
+ ,NTR,3.0
+ ,UTC,INS26.1(М7)
+ ,A-X,.LYG4
+ ,NTR,22B.0
+ ,U1A,ЦИКЛ_ПЕРЕХОД_5.1(М7)
+ ,UJ,ВЫЗОВ_GETSTR.LYG5
+C
+ ЦИКЛ_ПЕРЕХОД_5:,UJ,SCANED.0
+C
+ ВЫЗОВ_GETSTR:M16,VTM,V9.1(М7)
+ ,ITS,14.SEK3
+ M15,VJM,GETSTR.0
+ ,NTR,3.0
+ ,NTR,22B.6(М7)
+ ,UTC,INS25.SEK
+ ,XTA,.0
+ ,UTC,*SCANER*.'3'
+ ,ATX,.LYG5
+ ,NTR,3.0
+ M7,XTA,32B.SEK2
+ M7,A+X,2.0
+ M7,ATX,32B.'22'
+ ,UTC,*SCANER*.SEKLYG(М15)
+ ,XTA,.SCANER
+ M7,ATX,35B.0
+ ,NTR,22B.'3'
+ M15,VJM,SCAN.INS26
+ M7,XTA,7.0
+ ,ITS,.'22'
+ ,UTC,SCANER1.F6
+ ,XTA,.F6A
+ M17,AEX,.SCANED
+ ,UZA,ЦИКЛ_ПЕРЕХОД_6.0
+ ,UJ,ПЕР_2.V9(М16)
+C
+ ЦИКЛ_ПЕРЕХОД_6:,UJ,SCANEB.М16
+C
+ ПЕР_2:M7,XTA,2.GETSTR(М15)
+ ,ITS,.0
+ M7,XTA,32B.'3'
+ M17,AEX,.'22'
+ ,U1A,ЦИКЛ_ПЕРЕХОД_7.INS25
+ ,UJ,ПЕР_13.0
+C
+ ЦИКЛ_ПЕРЕХОД_7:,UJ,SCANEC.SCANER
+C
+ ПЕР_13:M7,XTA,15B.0
+ M7,ATX,26B.'3'
+ ,NTR,3.26(М7)
+ ,NTR,22B.2(М7)
+ ,UJ,ВЫЗОВ_KLAIDA.26(М7)
+C
+ SCANEB:,UTC,*SCANER*.SCANER
+ ,XTA,.0
+ ,NTR,3.29(М7)
+ M7,A-X,2.'22'
+ M7,ATX,36B.SCAN(М15)
+ M16,VTM,*INS*.0
+ ,ITS,14.7(М7)
+ M16,VTM,V11
+ ,ITS,14.SCANER1
+ M16,VTM,V12.0
+ ,ITS,14.0(М17)
+ ,NTR,22B.F7
+ M15,VJM,SYTINT.F2
+ ,NTR,3.0
+ ,NTR,22B.SCANEB
+ M7,XTA,36B.0
+ ,UTC,*SCANER*.2(М7)
+ ,ATX,
+ ,NTR,3.26(М7)
+ ,NTR,22B.0(М17)
+ M15,VJM,SCAN.F26
+ M7,XTA,12B.F13
+ ,ITS,.SCANEC
+ ,UTC,SCANER1.0
+ ,XTA,.13(М7)
+ M17,AEX,.22(М7)
+ ,U1A,TXTA.'3'
+ ,UJ,TXTB.'22'
+C
+ TXTA:,UJ,ПЕР_2_2.F6D
+C
+ TXTB:M7,XTA,37B.0
+ ,UTC,*TXT*.SCANER
+ ,ATX,.0
+ ,NTR,3.'3'
+ ,NTR,22B.2(М7)
+ ,UJ,ATVA.30(М7)
+C
+ ПЕР_2_2:M7,XTA,2.INS(М16)
+ ,ITS,.М16
+ M7,XTA,32B.V11(М16)
+ M17,AEX,.М16
+ ,U1A,ЦИКЛ_ПЕРЕХОД_8.V12(М16)
+ ,UJ,ПЕР_14.М16
+C
+ ЦИКЛ_ПЕРЕХОД_8:,UJ,SCANEC.'22'
+C
+ ПЕР_14:M7,XTA,16B.SYTINT(М15)
+ M7,ATX,26B.0
+ ,NTR,3.'3'
+ ,NTR,22B.'22'
+ ,UJ,ВЫЗОВ_KLAIDA.30(М7)
+C
+ ATVA:,UTC,*ATV*.SCANER
+ ,XTA,.0
+ ,UTC,*INF*.'3'
+ ,ATX,.'22'
+ ,NTR,3.SCAN(М15)
+ ,UTC,*TXT*.10(М7)
  ,XTA,
- 14,VTM,V0
- 13,VJM,I*MU*I  
- 7,ATX,24B
- ,UTC,GAK/4
- ,XTA,
- ,UTC,GAK/3
- ,A-X,
- 7,A+X,2
- 7,ATX,25B
- 7,XTA,24B
+ ,UTC,INF1.SCANER1
+ ,ATX,.0
+ ,NTR,22B.0(М17)
+ M15,VJM,RWINF.TXTA
+ ,UTC,*INF*.TXTB
+ ,XTA,.0
+ ,UTC,*ATV*.F2A
+ ,ATX,.0
+ ,NTR,3.31(М7)
+ ,UTC,INF2.TXT
+ ,XTA,.0
+ ,UTC,ATV1.'3'
+ ,ATX,.'22'
+ M7,XTA,2.ATVA
+ ,ITS,.2(М7)
+ M7,XTA,32B
+ ,NTR,22B.26(М7)
+ M17,AEX,.0(М17)
+ ,UZA,STR25A.F26A
+ ,UJ,STR25B.F14
+C
+ STR25A:,UJ,TAB3A.SCANEC
+C
+ STR25B:,UTC,STR25.0
+ ,XTA,.14(М7)
+ ,ITS,.22(М7)
+ ,UTC,STR24.'3'
+ ,XTA,.'22'
+ M17,AEX,.F6D
+ ,UZA,STR25C.0
+ ,UJ,STR25D.ATV
+C
+ STR25C:,UJ,LNTB.0
+C
+ STR25D:,UTC,STR25.INF
+ ,XTA,.0
+ M7,ATX,40B.'3'
+ ,NTR,3.TXT
+ ,NTR,22B.0
+ ,UJ,STR24C.INF1
+C
+ LOOP:M16,VTM,*STR*.0
+ ,ITS,14.'22'
+ M16,VTM,V13.RWINF(М15)
+ ,ITS,14.0
+ M16,VTM,К1.INF
+ ,ITS,14.0
+ M16,VTM,К7.ATV
+ ,ITS,14.0
+ M15,VJM,RSYMB.'3'
+ ,NTR,3.INF2
+ ,NTR,22B.0
+ M7,XTA,22B.ATV1
+ ,ITS,.0
+ M7,XTA,-1.2(М7)
+ M17,AEX,
+ ,U1A,STR24A.26(М7)
+ ,UJ,STR24B.'22'
+C
+ STR24A:,UJ,NDAB1C.0(М17)
+C
+ STR24B:M7,XTA,40B.STR25A
+ ,NTR,3.STR25B
+ M7,A+X,2.TAB3A
+ M7,ATX,40B.0
+ ,NTR,22B.STR25
+ STR24C:,UTC,STR24.0
  ,X-A,
- 7,A+X,11B
- ,NTR,22B
- ,UZA,ПЕРЕХОД_2
- ,UJ,ПЕР_11
- ПЕРЕХОД_2:,UJ,ВЫЗОВ_RSYMB
- ПЕР_11:7,XTA,13B
- 7,ATX,26B
- ,NTR,3
- ,NTR,22B
- ,UJ,ВЫЗОВ_KLAIDA
- ВЫЗОВ_RSYMB:7,XTA,1
- 7,ATX,27B
- ,NTR,3
- 14,VTM,*NRD*   
+ ,UZA,LOOP.STR24
+ ,UJ,LNTB.0
+C
+ NDAB1C:,UTC,NDAB1.0(М17)
+ ,XTA,.STR25C
+ M7,ATX,41B.STR25D
+ ,NTR,3.LNTB
+ ,NTR,22B.0
+ M15,VJM,ENDSTR.STR25
+ ,UTC,NDAB1.0
+ ,XTA,.32(М7)
+ ,ITS,.'3'
+ M7,XTA,41B.'22'
+ M17,AEX,.STR24C
+ ,UZA,BEGSTA.STR(М16)
+ ,UJ,LNTB.М16
+C
+ BEGSTA:M15,VJM,BEGSTR.V13(М16)
+ LNTB:M7,XTA,2.М16
+ ,ITS,.К1(М16)
+ ,UTC,*LNT*.М16
+ ,XTA,.К7(М16)
+ M17,AEX,.М16
+ ,UZA,SEKGIA.RSYMB(М15)
+ ,UJ,SEKDYA.0
+C
+ SEKGIA:M15,VJM,SEKGIR.'3'
+ SEKDYA:M15,VJM,SEKDYD.'22'
+ M16,VTM,К4.18(М7)
  ,ITS,14
- 14,VTM,V1
- ,ITS,14
- 14,VTM,V4
- ,ITS,14
- 14,VTM,К7
- ,ITS,14
- ,NTR,22B
- 13,VJM,RSYMB   
- ,NTR,3
- ,NTR,22B
- 7,XTA,27B
- ,NTR,3
- ,X-A,
- ,UTC,GAK/3
- ,A-X,
- 7,A+X,2
- ,UTC,GAK/4
+ M15,VJM,NEWMAX.'4123'(М7)
+ M15,VJM,LYGPAR.0(М17)
+ TAB3A:M7,XTA,1.STR24A
+ ,UTC,TAB3.STR24B
+ ,ATX,.NDAB1C
+ ,NTR,3.0
+ M7,XTA,1.32(М7)
+ ,UTC,TAB4.'3'
+ ,ATX,.2(М7)
+ M7,XTA,2.32(М7)
+ ,ITS,.'22'
+ ,UTC,ATV1.0
+ ,XTA,.STR24
+ ,NTR,22B.0
+ M17,AEX,.LOOP
+ ,U1A,TXTC.LNTB
+ ,UJ,LNTD.NDAB1
+C
+ TXTC:,UTC,*TXT*.0
+ ,XTA,.33(М7)
+ ,NTR,3.'3'
+ ,X-A,.'22'
+ ,UTC,*TAB*.ENDSTR(М15)
+ ,A+X,.NDAB1
+ ,NTR,22B.0
+ ,U1A,LNTC
+ ,UJ,LNTD.33(М7)
+C
+ LNTC:,UJ,ПЕР_2_3.0(М17)
+C
+ LNTD:M7,XTA,2.BEGSTA
+ ,ITS,.LNTB
+ ,UTC,*LNT*.0
+ ,XTA,.BEGSTR(М15)
+ M17,AEX,.0
+ ,UZA,SEKGIB.2(М7)
+ ,UJ,SEKLYA
+C
+ SEKGIB:M15,VJM,SEKGIR.LNT
+ SEKLYA:M15,VJM,SEKLYG.0
+ ,UTC,DYD1.0(М17)
+ ,XTA,.SEKGIA
+ ,UTC,NDAB1.SEKDYA
+ ,ATX,.0
+ ,NTR,3.SEKGIR(М15)
+ ,UTC,DYD2.0
+ ,XTA,.SEKDYD(М15)
+ ,UTC,NUST8.0
+ ,ATX,.К4(М16)
+ ,NTR,22B.М16
+ ,UJ,SCANED.NEWMAX(М15)
+C
+ ПЕР_2_3:M7,XTA,2.0
+ ,ITS,.LYGPAR(М15)
+ M7,XTA,32B.0
+ M17,AEX,.1(М7)
+ ,UZA,LYGA.TAB3
+ ,UJ,LYGB.0
+C
+ LYGA:,UJ,SCANED.'3'
+C
+ LYGB:,UTC,*LYG*.1(М7)
+ ,XTA,.TAB4
+ ,NTR,3.0
+ ,UTC,*LNT*.2(М7)
  ,A+X,
- ,NTR,22B
- ,UZA,ПЕРЕХОД_3
- ,UJ,ПЕР_12
- ПЕРЕХОД_3:,UJ,БЛОК_NUST8
- ПЕР_12:7,XTA,14B
- 7,ATX,26B
- ,NTR,3
- ,NTR,22B
- ,UJ,ВЫЗОВ_KLAIDA
- БЛОК_NUST8:7,XTA,1
- ,UTC,GAT/0
+ ,UTC,*NDAB*.ATV1
+ ,ATX,.0
+ ,UTC,NDAB1.'22'
+ ,XTA,.0(М17)
+ ,UTC,*DYD*.TXTC
+ ,A-X,.LNTD
+ M7,A+X,2.0
+ ,UTC,NDAB1.TXT
+ ,ATX,.0
+ ,UTC,NUST8.'3'
+ ,XTA,.0
+ ,UTC,*DYD*.TAB
+ ,A-X,.0
+ M7,A+X,2.'22'
+ ,UTC,NUST8.LNTC
+ ,ATX,.LNTD
+ ,NTR,22B.0
+ ,UJ,SCANED.F2B
+C
+ SCANEC:M7,XTA,35B.0
+ ,UTC,*SCANER*.2(М7)
  ,ATX,
- 7,XTA,2
- 7,ATX,30B
- ,NTR,3
- ,NTR,22B
- БЛОК_V5:7,XTA,-2
- ,WTC,V5
- 1,VTM,
- 1,UTC,GAT/2
- ,ATX,
- 7,XTA,-2
- ,WTC,V5
- 1,VTM,
- 1,UTC,GAT/3
- ,ATX,
- 7,XTA,30B
- ,NTR,3
- 7,A+X,2
- 7,ATX,30B
- 7,X-A,21B
- ,NTR,22B
- ,UZA,БЛОК_V5
- 7,XTA,2
- 7,ATX,31B
- ,NTR,3
- ,NTR,22B
- БЛОК_V6:7,XTA,1
- ,WTC,V6
- 1,VTM,
- 1,UTC,GAT/4
- ,ATX,
-  :7,XTA,31B
- ,NTR,3
- 7,A+X,2
- 7,ATX,31B
- 7,X-A,10B
- ,NTR,22B
- ,UZA,БЛОК_V6
- 7,XTA,1
- ,UTC,GAN/1
- ,ATX,
- ,NTR,3
- 7,XTA,1
- ,UTC,*TAB*   
- ,ATX,
- ,UTC,GAK/3
+ ,NTR,3.LNT
+ ,NTR,22B.0
+ SCANED:M7,XTA,2.0(М17)
+ ,ITS,.SEKGIB
+ ,UTC,TAB3.SEKLYA
+ ,XTA,.0
+ M17,AEX,.SEKGIR(М15)
+ ,UZA,TXTD.0
+ ,UJ,TXTE.SEKLYG(М15)
+C
+ TXTD:,UJ,LNTG.0
+C
+ TXTE:,UTC,*TXT*.DYD1
+ ,XTA,.0
+ ,UTC,*TAB*.NDAB1
+ ,ATX,.0
+ ,NTR,3.'3'
+ ,UTC,*TAB*.DYD2
+ ,XTA,.0
+ ,X-A,.NUST8
+ M7,A+X,1.0
+ ,NTR,22B.'22'
+ ,U1A,TABA.SCANED
+ ,UJ,ПЕР_16.0
+C
+ TABA:,UTC,*TAB*.2(М7)
  ,XTA,
- ,ITS,
- ,UTC,GAK/2
- ,XTA,
- ,NTR,22B
- 15,AEX,
- ,UZA,ПЕРЕХОД_4
- ,UJ,ВЫЗОВ_ENDSTR
- ПЕРЕХОД_4:,UJ,ВЫЗОВ_IMUI_2
- ВЫЗОВ_ENDSTR:13,VJM,ENDSTR  
- 13,VJM,BEGSTR  
- ВЫЗОВ_IMUI_2:7,XTA,3
- ,NTR,3
- ,X-A,
- 14,VTM,*LNT*   
- 13,VJM,I*MU*I  
- ,UTC,*NDAB*  
- ,A-X,
- ,UTC,GAQ/2
- ,A+X,
- ,UTC,GAQ/3
- ,A+X,
- 7,A-X,4
- ,NTR,22B
- ,UZA,ПЕРЕХОД_5
- ,UJ,ВЫЗОВ_ENDPG
- ПЕРЕХОД_5:,UJ,БЛОК_NDAB
- ВЫЗОВ_ENDPG:13,VJM,ENDPG   
- 13,VJM,BEGPG   
- БЛОК_NDAB:,UTC,*NDAB*  
- ,XTA,
- ,UTC,GAM/3
- ,ATX,
- ,NTR,3
- 7,XTA,1
- ,UTC,GAM/0
- ,ATX,
- 7,XTA,1
- 7,ATX,32B
- ,UTC,GAL/0
- ,XTA,
- 7,A+X,2
- ,UTC,*SCANER*
- ,ATX,
- 7,XTA,
- ,UTC,*ATV*   
- ,ATX,
- 7,XTA,1
- ,UTC,GAM/4
- ,ATX,
- 7,XTA,1
- ,UTC,GAT/5
- ,ATX,
- 7,XTA,2
- ,ITS,
- ,UTC,*REGIM* 
- ,XTA,
- ,NTR,22B
- 15,AEX,
- ,U1A,ПЕРЕХОД_6
- ,UJ,ВЫЗОВ_IDII
- ПЕРЕХОД_6:,UJ,ВЫЗОВ_SEKLYG
- ВЫЗОВ_IDII:,UTC,GAP/6
- ,XTA,
- 14,VTM,К5
- 13,VJM,I*DI*I  
- 7,ATX,33B
- ,NTR,3
- ,UTC,GAP/6
- ,XTA,
- ,ITS,
- 7,XTA,33B
- 14,VTM,К5
- 13,VJM,I*MU*I  
- ,NTR,22B
- 15,AEX,
- ,U1A,ПЕРЕХОД_7
- ,UJ,БЛОК_LYG4
- ПЕРЕХОД_7:,UJ,БЛОК_LYG4_2
- БЛОК_LYG4:7,XTA,2
- ,UTC,GAT/7
- ,ATX,
- 7,XTA,2
- ,UTC,GAU/0
- ,ATX,
- ,UJ,ВЫЗОВ_SEKLYG
- БЛОК_LYG4_2:7,XTA,1
- ,UTC,GAT/7
- ,ATX,
- 7,XTA,1
- ,UTC,GAU/0
- ,ATX,
- 7,XTA,1
- ,UTC,GAU/1
- ,ATX,
- ВЫЗОВ_SEKLYG:7,XTA,6
- ,UTC,*SEK*   
- ,ATX,
- ,NTR,3
- ,UTC,GAU/0
- ,XTA,
- ,UTC,GAU/2
- ,ATX,
- ,NTR,22B
- 13,VJM,SEKLYG  
- БЛОК_SCANER:,UTC,*SCANER*
- ,XTA,
- ,NTR,3
- ,UTC,GAL/0
- ,A-X,
- ,NTR,22B
- ,U1A,ПЕРЕХОД_8
- ,UJ,ВЫЗОВ_GETSTR
- ПЕРЕХОД_8:,UJ,БЛОК_TAB3_2
- ВЫЗОВ_GETSTR:14,VTM,V9
- ,ITS,14
- 13,VJM,GETSTR  
- ,NTR,3
- ,NTR,22B
- ,UTC,GAK/7
- ,XTA,
- ,UTC,*SCANER*
- ,ATX,
- ,NTR,3
- 7,XTA,32B
- 7,A+X,2
- 7,ATX,32B
- ,UTC,*SCANER*
- ,XTA,
- 7,ATX,35B
- ,NTR,22B
- 13,VJM,SCAN    
- 7,XTA,7
- ,ITS,
- ,UTC,GAP/1
- ,XTA,
- 15,AEX,
- ,UZA,ПЕРЕХОД_9
- ,UJ,ПЕР_2
- ПЕРЕХОД_9:,UJ,ВЫЗОВ_SYTINT
- ПЕР_2:7,XTA,2
- ,ITS,
- 7,XTA,32B
- 15,AEX,
- ,U1A,ПЕРЕХОД_10
- ,UJ,ПЕР_13
- ПЕРЕХОД_10:,UJ,БЛОК_SCANER_2
- ПЕР_13:7,XTA,15B
- 7,ATX,26B
- ,NTR,3
- ,NTR,22B
- ,UJ,ВЫЗОВ_KLAIDA
- ВЫЗОВ_SYTINT:,UTC,*SCANER*
- ,XTA,
- ,NTR,3
- 7,A-X,2
- 7,ATX,36B
- 14,VTM,*INS*   
- ,ITS,14
- 14,VTM,V11
- ,ITS,14
- 14,VTM,V12
- ,ITS,14
- ,NTR,22B
- 13,VJM,SYTINT  
- ,NTR,3
- ,NTR,22B
- 7,XTA,36B
- ,UTC,*SCANER*
- ,ATX,
- ,NTR,3
- ,NTR,22B
- 13,VJM,SCAN    
- 7,XTA,12B
- ,ITS,
- ,UTC,GAP/1
- ,XTA,
- 15,AEX,
- ,U1A,ПЕРЕХОД_11
- ,UJ,БЛОК_TXT
- ПЕРЕХОД_11:,UJ,ПЕР_2_2
- БЛОК_TXT:7,XTA,37B
- ,UTC,*TXT*   
- ,ATX,
- ,NTR,3
- ,NTR,22B
- ,UJ,ВЫЗОВ_RWINF
- ПЕР_2_2:7,XTA,2
- ,ITS,
- 7,XTA,32B
- 15,AEX,
- ,U1A,ПЕРЕХОД_12
- ,UJ,ПЕР_14
- ПЕРЕХОД_12:,UJ,БЛОК_SCANER_2
- ПЕР_14:7,XTA,16B
- 7,ATX,26B
- ,NTR,3
- ,NTR,22B
- ,UJ,ВЫЗОВ_KLAIDA
- ВЫЗОВ_RWINF:,UTC,*ATV*   
- ,XTA,
- ,UTC,*INF*   
- ,ATX,
- ,NTR,3
- ,UTC,*TXT*   
- ,XTA,
- ,UTC,GAO/4
- ,ATX,
- ,NTR,22B
- 13,VJM,RWINF   
- ,UTC,*INF*   
- ,XTA,
- ,UTC,*ATV*   
- ,ATX,
- ,NTR,3
- ,UTC,GAO/5
- ,XTA,
- ,UTC,GAM/7
- ,ATX,
- 7,XTA,2
- ,ITS,
- 7,XTA,32B
- ,NTR,22B
- 15,AEX,
- ,UZA,ПЕРЕХОД_13
- ,UJ,БЛОК_STR25
- ПЕРЕХОД_13:,UJ,БЛОК_TAB3
- БЛОК_STR25:,UTC,GAK/3
- ,XTA,
- ,ITS,
- ,UTC,GAK/2
- ,XTA,
- 15,AEX,
- ,UZA,ПЕРЕХОД_14
- ,UJ,БЛОК_STR25_2
- ПЕРЕХОД_14:,UJ,БЛОК_LNT
- БЛОК_STR25_2:,UTC,GAK/3
- ,XTA,
- 7,ATX,40B
- ,NTR,3
- ,NTR,22B
- ,UJ,БЛОК_STR24
- ВЫЗОВ_RSYMB_2:14,VTM,*STR*   
- ,ITS,14
- 14,VTM,V13
- ,ITS,14
- 14,VTM,К1
- ,ITS,14
- 14,VTM,К7
- ,ITS,14
- 13,VJM,RSYMB   
- ,NTR,3
- ,NTR,22B
- 7,XTA,22B
- ,ITS,
- 7,XTA,-1
- 15,AEX,
- ,U1A,ПЕРЕХОД_15
- ,UJ,ПЕР_32
- ПЕРЕХОД_15:,UJ,ВЫЗОВ_ENDSTR_2
- ПЕР_32:7,XTA,40B
- ,NTR,3
- 7,A+X,2
- 7,ATX,40B
- ,NTR,22B
- БЛОК_STR24:,UTC,GAK/2
- ,X-A,
- ,UZA,ВЫЗОВ_RSYMB_2
- ,UJ,БЛОК_LNT
- ВЫЗОВ_ENDSTR_2:,UTC,GAP/6
- ,XTA,
- 7,ATX,41B
- ,NTR,3
- ,NTR,22B
- 13,VJM,ENDSTR  
- ,UTC,GAP/6
- ,XTA,
- ,ITS,
- 7,XTA,41B
- 15,AEX,
- ,UZA,ВЫЗОВ_BEGSTR
- ,UJ,БЛОК_LNT
- ВЫЗОВ_BEGSTR:13,VJM,BEGSTR  
- БЛОК_LNT:7,XTA,2
- ,ITS,
- ,UTC,*LNT*   
- ,XTA,
- 15,AEX,
- ,UZA,ВЫЗОВ_SEKGIR
- ,UJ,ВЫЗОВ_SEKDYD
- ВЫЗОВ_SEKGIR:13,VJM,SEKGIR  
- ВЫЗОВ_SEKDYD:13,VJM,SEKDYD  
- 14,VTM,К4
- ,ITS,14
- 13,VJM,NEWMAX  
- 13,VJM,LYGPAR  
- БЛОК_TAB3:7,XTA,1
- ,UTC,GAM/0
- ,ATX,
- ,NTR,3
- 7,XTA,1
- ,UTC,GAM/1
- ,ATX,
- 7,XTA,2
- ,ITS,
- ,UTC,GAM/7
- ,XTA,
- ,NTR,22B
- 15,AEX,
- ,U1A,БЛОК_TXT_2
- ,UJ,БЛОК_LNT_2
- БЛОК_TXT_2:,UTC,*TXT*   
- ,XTA,
- ,NTR,3
- ,X-A,
- ,UTC,*TAB*   
- ,A+X,
- ,NTR,22B
- ,U1A,ПЕРЕХОД_16
- ,UJ,БЛОК_LNT_2
- ПЕРЕХОД_16:,UJ,ПЕР_2_3
- БЛОК_LNT_2:7,XTA,2
- ,ITS,
- ,UTC,*LNT*   
- ,XTA,
- 15,AEX,
- ,UZA,ВЫЗОВ_SEKGIR_2
- ,UJ,ВЫЗОВ_SEKLYG_2
- ВЫЗОВ_SEKGIR_2:13,VJM,SEKGIR  
- ВЫЗОВ_SEKLYG_2:13,VJM,SEKLYG  
- ,UTC,GAN/7
- ,XTA,
- ,UTC,GAP/6
- ,ATX,
- ,NTR,3
- ,UTC,GAO/0
- ,XTA,
- ,UTC,GAT/0
- ,ATX,
- ,NTR,22B
- ,UJ,БЛОК_TAB3_2
- ПЕР_2_3:7,XTA,2
- ,ITS,
- 7,XTA,32B
- 15,AEX,
- ,UZA,ПЕРЕХОД_17
- ,UJ,БЛОК_LYG
- ПЕРЕХОД_17:,UJ,БЛОК_TAB3_2
- БЛОК_LYG:,UTC,*LYG*   
- ,XTA,
- ,NTR,3
- ,UTC,*LNT*   
- ,A+X,
- ,UTC,*NDAB*  
- ,ATX,
- ,UTC,GAP/6
- ,XTA,
- ,UTC,*DYD*   
- ,A-X,
- 7,A+X,2
- ,UTC,GAP/6
- ,ATX,
- ,UTC,GAT/0
- ,XTA,
- ,UTC,*DYD*   
- ,A-X,
- 7,A+X,2
- ,UTC,GAT/0
- ,ATX,
- ,NTR,22B
- ,UJ,БЛОК_TAB3_2
- БЛОК_SCANER_2:7,XTA,35B
- ,UTC,*SCANER*
- ,ATX,
- ,NTR,3
- ,NTR,22B
- БЛОК_TAB3_2:7,XTA,2
- ,ITS,
- ,UTC,GAM/0
- ,XTA,
- 15,AEX,
- ,UZA,ПЕРЕХОД_18
- ,UJ,БЛОК_TXT_3
- ПЕРЕХОД_18:,UJ,ВЫЗОВ_ANATXT
- БЛОК_TXT_3:,UTC,*TXT*   
- ,XTA,
- ,UTC,*TAB*   
- ,ATX,
- ,NTR,3
- ,UTC,*TAB*   
- ,XTA,
- ,X-A,
- 7,A+X,1
- ,NTR,22B
- ,U1A,БЛОК_TAB
- ,UJ,ПЕР_16
- БЛОК_TAB:,UTC,*TAB*   
- ,XTA,
- ,NTR,3
- ,X-A,
- ,UTC,GAO/7
- ,A+X,
- ,UTC,*LNT*   
- ,A-X,
- ,NTR,22B
- ,UZA,ПЕРЕХОД_19
- ,UJ,ПЕР_16
- ПЕРЕХОД_19:,UJ,ВЫЗОВ_IMUI_3
- ПЕР_16:7,XTA,20B
- 7,ATX,26B
- ,NTR,3
- ,NTR,22B
- ,UJ,ВЫЗОВ_KLAIDA
- ВЫЗОВ_IMUI_3:7,XTA,3
- ,NTR,3
- ,UTC,*LNT*   
- ,A-X,
- 7,ATX,23B
- ,UTC,*TAB*   
- ,XTA,
- 14,VTM,V0
- 13,VJM,I*MU*I  
- ,UTC,*LNT*   
- ,A+X,
- ,UTC,GAL/7
- ,ATX,
- 7,A-X,2
- ,UTC,GAL/6
- ,ATX,
- 7,XTA,2
- 7,ATX,31B
- ,NTR,22B
- БЛОК_V6_2:7,XTA,1
- ,WTC,V6
- 1,VTM,
- 1,UTC,GAT/4
- ,ATX,
-  :7,XTA,31B
- ,NTR,3
- 7,A+X,2
- 7,ATX,31B
- 7,X-A,10B
- ,NTR,22B
- ,UZA,БЛОК_V6_2
- ВЫЗОВ_ANATXT:7,XTA,1
- ,UTC,GAM/0
- ,ATX,
- ,NTR,3
- ,NTR,22B
- 13,VJM,ANATXT  
- 7,XTA,1
- ,ITS,
- ,UTC,*TXT*   
- ,XTA,
- 15,AEX,
- ,U1A,ПЕРЕХОД_20
- ,UJ,БЛОК_TXT3
- ПЕРЕХОД_20:,UJ,БЛОК_TAB_2
- БЛОК_TXT3:7,XTA,2
- ,ITS,
- ,UTC,GAL/4
- ,XTA,
- 15,AEX,
- ,U1A,БЛОК_TAB3_3
- ,UJ,БЛОК_TAB_2
- БЛОК_TAB3_3:7,XTA,2
- ,UTC,GAM/0
- ,ATX,
- ,NTR,3
- ,NTR,22B
- БЛОК_TAB_2:,UTC,*TAB*   
- ,XTA,
- ,NTR,3
- ,X-A,
- ,UTC,GAO/7
- ,A+X,
- ,NTR,22B
- ,UZA,ПЕРЕХОД_21
- ,UJ,ПЕР_15
- ПЕРЕХОД_21:,UJ,ВЫЗОВ_RASTXT
- ПЕР_15:7,XTA,17B
- 7,ATX,26B
- ,NTR,3
- ,NTR,22B
- ,UJ,ВЫЗОВ_KLAIDA
- ВЫЗОВ_RASTXT:13,VJM,RASTXT  
- 7,XTA,6
- ,ITS,
- ,UTC,GAL/4
- ,XTA,
- 15,AEX,
- ,U1A,ПЕРЕХОД_22
- ,UJ,ПЕРЕХОД_23
- ПЕРЕХОД_22:,UJ,БЛОК_SCANER
- ПЕРЕХОД_23:,UJ,ПЕР_2_4
- ВЫЗОВ_KLAIDA:14,VTM,V3
- ,ITS,14
- 13,VJM,KLAIDA  
- ,NTR,3
- ,NTR,22B
- ПЕР_2_4:7,XTA,2
- 7,ATX,42B
- ,NTR,3
- ,NTR,22B
- БЛОК_V15:7,XTA,-2
- ,WTC,V15
- 1,VTM,
- 1,UTC,GAU/4
- ,ATX,
-  :7,XTA,42B
- ,NTR,3
- 7,A+X,2
- 7,ATX,42B
- 7,X-A,11B
- ,NTR,22B
- ,UZA,БЛОК_V15
- 7,XTA,1
- ,UTC,GAL/4
- ,ATX,
- ,NTR,3
- ,NTR,22B
- ,UJ,ВОЗВРАТ_2
- ВОЗВРАТ:7,MTJ,8
- 14,MTJ,10
- 7,VTM,К2
- ,ITS,13
- ,ITS,1
+ ,NTR,3.26(М7)
+ ,X-A,.0(М17)
+ ,UTC,NRD24.LYGA
+ ,A+X,.LYGB
+ ,UTC,*LNT*.SCANED
+ ,A-X,.0
+ ,NTR,22B.LYG
+ ,UZA,ЦИКЛ_ПЕРЕХОД_9.0
+ ,UJ,ПЕР_16.'3'
+C
+ ЦИКЛ_ПЕРЕХОД_9:,UJ,LNTE.LNT
+C
+ ПЕР_16:M7,XTA,20B.0
+ M7,ATX,26B.NDAB
+ ,NTR,3.0
+ ,NTR,22B.NDAB1
+ ,UJ,ВЫЗОВ_KLAIDA.0
+C
+ LNTE:M7,XTA,3.DYD
+ ,NTR,3.0
+ ,UTC,*LNT*.2(М7)
+ ,A-X,.NDAB1
+ M7,ATX,23B.0
+ ,UTC,*TAB*.NUST8
+ ,XTA,.0
+ M16,VTM,V0.DYD
+ M15,VJM,I*MU*I.0
+ ,UTC,*LNT*.2(М7)
+ ,A+X,.NUST8
+ ,UTC,TAB2.0
+ ,ATX,.'22'
+ M7,A-X,2.SCANED
+ ,UTC,TAB1.0
+ ,ATX,.29(М7)
+ M7,XTA,2.SCANER
+ M7,ATX,31B.0
+ ,NTR,22B.'3'
+ LNTF:M7,XTA,1.'22'
+ ,WTC,V6.0
+ M1,VTM,.2(М7)
+ M1,UTC,LRE32767
+ ,ATX,.TAB3
+  :7,XTA,31B.0
+ ,NTR,3.0(М17)
+ M7,A+X,2.TXTD
+ M7,ATX,31B.TXTE
+ M7,X-A,10B.0
+ ,NTR,22B.LNTG
+ ,UZA,LNTF.0
+ LNTG:M7,XTA,1.TXT
+ ,UTC,TAB3.0
+ ,ATX,.TAB
+ ,NTR,3.0
+ ,NTR,22B.'3'
+ M15,VJM,ANATXT.TAB
+ M7,XTA,1.0
+ ,ITS,.0
+ ,UTC,*TXT*.1(М7)
+ ,XTA,.'22'
+ M17,AEX,.TABA
+ ,U1A,TXT3A.F16
+ ,UJ,TXT3B.TAB
+C
+ TXT3A:,UJ,TAB3C.0
+C
+ TXT3B:M7,XTA,2.'3'
+ ,ITS,.0
+ ,UTC,TXT3.NRD24
+ ,XTA,.0
+ M17,AEX,.LNT
+ ,U1A,TAB3B.0
+ ,UJ,TAB3C.'22'
+C
+ TAB3B:M7,XTA,2.F2C
+ ,UTC,TAB3.F16
+ ,ATX,.0
+ ,NTR,3.LNTE
+ ,NTR,22B.0
+ TAB3C:,UTC,*TAB*.16(М7)
+ ,XTA,.22(М7)
+ ,NTR,3.'3'
+ ,X-A,.'22'
+ ,UTC,NRD24.F6D
+ ,A+X,.0
+ ,NTR,22B.3(М7)
+ ,UZA,ЦИКЛ_ПЕРЕХОД_10.'3'
+ ,UJ,ПЕР_15.LNT
+C
+ ЦИКЛ_ПЕРЕХОД_10:,UJ,RASTXA.0
+C
+ ПЕР_15:M7,XTA,17B.19(М7)
+ M7,ATX,26B.TAB
+ ,NTR,3.0
+ ,NTR,22B.V0(М16)
+ ,UJ,ВЫЗОВ_KLAIDA.IMUI(М15)
+C
+ RASTXA:M15,VJM,RASTXT.0
+ M7,XTA,6.LNT
+ ,ITS,.0
+ ,UTC,TXT3.TAB2
+ ,XTA,.0
+ M17,AEX,.2(М7)
+ ,U1A,ЦИКЛ_ПЕРЕХОД_11.TAB1
+ ,UJ,ЦИКЛ_ПЕРЕХОД_12.0
+C
+ ЦИКЛ_ПЕРЕХОД_11:,UJ,SCANEA.2(М7)
+C
+ ЦИКЛ_ПЕРЕХОД_12:,UJ,STR327.25(М7)
+C
+ ВЫЗОВ_KLAIDA:M16,VTM,V3.'22'
+ ,ITS,14.1(М7)
+ M15,VJM,KLAIDA.V6
+ ,NTR,3.0(М1)
+ ,NTR,22B.LRE32767(М1)
+ STR327:M7,XTA,2.0
+ M7,ATX,42B.0
+ ,NTR,3.25(М7)
+ ,NTR,22B.'3'
+ STR32A:M7,XTA,-2.2(М7)
+ ,WTC,V15.25(М7)
+ M1,VTM,.8(М7)
+ M1,UTC,STR32767.'22'
+ ,ATX,.LNTF
+  :7,XTA,42B.0
+ ,NTR,3.1(М7)
+ M7,A+X,2.TAB3
+ M7,ATX,42B.0
+ M7,X-A,11B.'3'
+ ,NTR,22B.'22'
+ ,UZA,STR32A.ANATXT(М15)
+ M7,XTA,1.1(М7)
+ ,UTC,TXT3
+ ,ATX,.TXT
+ ,NTR,3.0
+ ,NTR,22B.0(М17)
+ ,UJ,POP.TXT3A
+C
+ ВОЗВРАТ_В_ОС:M7,MTJ,8.TXT3B
+ M16,MTJ,10.0
+ M7,VTM,К2.TAB3C
+ ,ITS,13.0
+ ,ITS,1.2(М7)
  ,ITS,8
- ,ITS,
- ,NTR,3
- ,NTR,2
- 10,UJ,
- ВОЗВРАТ_2:,STI,
- ,STI,7
- ,STI,1
- ,STI,8
- 8,UJ,
+ ,ITS,.TXT3
+ ,NTR,3.0
+ ,NTR,2.0(М17)
+ M12,UJ,.TAB3B
+C
+ POP:,STI,.TAB3C
+ ,STI,7.0
+ ,STI,1.2(М7)
+ ,STI,8.TAB3
+ M10,UJ,.0
+C
   :,ISO, 6H       . 040 040 040 040 040 040 
  К1:,ISO, 6H       . 040 040 040 040 040 040 
  К2:,LOG,0
@@ -762,4 +868,4 @@ C
  V12:,BSS,1
  V13:,BSS,2
  V15:,BSS,1
- ,END,
+ ,END,.'3'

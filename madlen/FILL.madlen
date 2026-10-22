@@ -1,131 +1,163 @@
+CFILL - МОДУЛЬ СИПРОДА
+CИсточник: личная библиотека (PERSO, зона 2702,
+Cтом 2248), слово 14976 образа SIPROD.BIN
+CДлина при загрузке: 75 слов, 128 команд
+CВход: FILL
+CВыход: FILLS:F2, SPAUD:NUST4A, SPAUD:SCAN46, F3C (возврат через М12),
+CF3D (возврат через М10)
 CЗАПОЛНЕНИЕ СТРОКИ СИМВОЛОМ ПО ШИРИНЕ ПОЛЯ.
+CВнешние: STR, NDAB, BEGSTR, ENDSTR, RSYMB
+CСмещения в NDAB: 1, 2
+CСмещения в STR: 24, 25, 26
+CСмещения в кадре (М7): общие 0-1, 3-10
+CРегистры: М7 (указатель кадра), М10 (блок вызывающего),
+CМ12 (магазин, кадр параметров ОС), М15 (адрес возврата),
+CМ16 (модифицированный адрес), М17 (контекст задачи)
+CМодификатор адреса: МОДА/МОД задают М16, адрес следующей команды += М16
 C
  FILL    :,NAME, NEW DTRAN
+ M7:,EQU,7B
+ M10:,EQU,10B
+ M12:,EQU,12B
+ M15:,EQU,15B
+ M16:,EQU,16B
+ M17:,EQU,17B
  *STR*   :,LC,27
- GAK/2:,EQU,*STR*   +24
- GAK/3:,EQU,*STR*   +25
- GAK/4:,EQU,*STR*   +26
+ STR24:,EQU,*STR*   +24
+ STR25:,EQU,*STR*   +25
+ STR26:,EQU,*STR*   +26
  *NDAB*  :,LC,4
- GAK/6:,EQU,*NDAB*  +1
- GAK/7:,EQU,*NDAB*  +2
+ NDAB1:,EQU,*NDAB*  +1
+ NDAB2:,EQU,*NDAB*  +2
  BEGSTR  :,SUBP,
  ENDSTR  :,SUBP,
  RSYMB   :,SUBP,
- 14,VTM,БЛОК_V6
- ,UJ,ПЕР_10
- БЛОК_V6:,WTC,V6
- ,XTA,
- 7,ATX,3
- ,NTR,3
- ,NTR,22B
- БЛОК_STR26:,UTC,GAK/4
- ,XTA,
- ,NTR,3
- ,UTC,GAK/2
- ,A-X,
- 7,A+X,1
- 7,ATX,4
- 7,XTA,3
- 7,ATX,5
- 7,XTA,3
- ,X-A,
- 7,A+X,4
- ,NTR,22B
- ,U1A,ПЕР_4
- ,UJ,БЛОК_STR24
- ПЕР_4:7,XTA,4
- 7,ATX,5
- ,NTR,3
- ,NTR,22B
- БЛОК_STR24:,UTC,GAK/2
- ,XTA,
- ,NTR,3
- 7,A-X,1
- 7,ATX,6
- 7,XTA,1
- 7,ATX,7
- ,NTR,22B
- ,UJ,БЛОК_STR24_2
- ВЫЗОВ_RSYMB:7,XTA,6
- ,NTR,3
- 7,A+X,1
- 7,ATX,6
- ,WTC,V7
- 14,VTM,
- ,ITS,14
- 14,VTM,К2
- ,ITS,14
- 14,VTM,*STR*   
- ,ITS,14
- 14,VTM,V3
- ,ITS,14
- ,NTR,22B
- 13,VJM,RSYMB   
- ,NTR,3
- ,NTR,22B
- 7,XTA,7
- ,NTR,3
- 7,A+X,1
- 7,ATX,7
- ,NTR,22B
- БЛОК_STR24_2:7,X-A,5
- ,UZA,ВЫЗОВ_RSYMB
- ,UTC,GAK/2
- ,XTA,
- ,NTR,3
- 7,A+X,5
- ,UTC,GAK/2
- ,ATX,
- 7,XTA,3
- 7,A-X,5
- 7,ATX,3
- ,UTC,GAK/2
- ,XTA,
- ,X-A,
- ,UTC,GAK/4
- ,A+X,
- ,NTR,22B
- ,UZA,ПЕРЕХОД_2
- ,UJ,ВЫЗОВ_ENDSTR
- ПЕРЕХОД_2:,UJ,ПЕР_3
- ВЫЗОВ_ENDSTR:,UTC,GAK/6
- ,XTA,
- 7,ATX,10B
- ,NTR,3
- ,NTR,22B
- 13,VJM,ENDSTR  
- 7,XTA,10B
- ,ITS,
- ,UTC,GAK/6
- ,XTA,
- 15,AEX,
- ,UZA,ВЫЗОВ_BEGSTR
- ,UJ,ПЕР_3
- ВЫЗОВ_BEGSTR:13,VJM,BEGSTR  
- ПЕР_3:7,XTA,3
- ,NTR,3
- ,X-A,
- 7,A+X,
- ,NTR,22B
- ,U1A,ПЕРЕХОД_3
- ,UJ,ПЕРЕХОД_4
- ПЕРЕХОД_3:,UJ,БЛОК_STR26
- ПЕРЕХОД_4:,UJ,ВОЗВРАТ
- ПЕР_10:7,MTJ,8
- 14,MTJ,10
- 7,VTM,К0
- 7,STX,12B
- 7,STX,11B
- ,ITS,13
- ,ITS,8
- ,ITS,
- ,NTR,3
- ,NTR,2
- 10,UJ,
- ВОЗВРАТ:,STI,
- ,STI,7
- ,STI,8
- 8,UJ,
+ M16,VTM,STR26A.STR26A(М16)
+ ,UJ,ПЕР_10.F3C
+C
+ STR26A:,WTC,V6.V6
+ ,XTA,.0
+ M7,ATX,3.3(М7)
+ ,NTR,3.'3'
+ ,NTR,22B.'22'
+ STR26B:,UTC,STR26.0
+ ,XTA,.STR26
+ ,NTR,3.0
+ ,UTC,STR24.'3'
+ ,A-X,.STR24
+ M7,A+X,1.0
+ M7,ATX,4.1(М7)
+ M7,XTA,3.4(М7)
+ M7,ATX,5.3(М7)
+ M7,XTA,3.5(М7)
+ ,X-A,.3(М7)
+ M7,A+X,4.0
+ ,NTR,22B.4(М7)
+ ,U1A,STR24A.'22'
+ ,UJ,STR24B.STR24A
+C
+ STR24A:M7,XTA,4.STR24B
+ M7,ATX,5.0
+ ,NTR,3.4(М7)
+ ,NTR,22B.5(М7)
+ STR24B:,UTC,STR24.'3'
+ ,XTA,.'22'
+ ,NTR,3.STR24
+ M7,A-X,1.0
+ M7,ATX,6.'3'
+ M7,XTA,1.1(М7)
+ M7,ATX,7.6(М7)
+ ,NTR,22B.1(М7)
+ ,UJ,STR24C.7(М7)
+C
+ ВЫЗОВ_RSYMB:M7,XTA,6.'22'
+ ,NTR,3.STR24C
+ M7,A+X,1.0
+ M7,ATX,6.6(М7)
+ ,WTC,V7.'3'
+ M16,VTM,.1(М7)
+ ,ITS,14.6(М7)
+ M16,VTM,К2.V7
+ ,ITS,14.0(М16)
+ M16,VTM,*STR*.М16
+ ,ITS,14.К2(М16)
+ M16,VTM,V3.М16
+ ,ITS,14.STR(М16)
+ ,NTR,22B.М16
+ M15,VJM,RSYMB.V3(М16)
+ ,NTR,3.М16
+ ,NTR,22B.'22'
+ M7,XTA,7.RSYMB(М15)
+ ,NTR,3.0
+ M7,A+X,1.'3'
+ M7,ATX,7.'22'
+ ,NTR,22B.7(М7)
+ STR24C:M7,X-A,5.'3'
+ ,UZA,ВЫЗОВ_RSYMB.1(М7)
+ ,UTC,STR24.7(М7)
+ ,XTA,.'22'
+ ,NTR,3.0
+ M7,A+X,5.5(М7)
+ ,UTC,STR24.F6
+ ,ATX,.STR24
+ M7,XTA,3.0
+ M7,A-X,5.'3'
+ M7,ATX,3.5(М7)
+ ,UTC,STR24.STR24
+ ,XTA,.0
+ ,X-A,.3(М7)
+ ,UTC,STR26.5(М7)
+ ,A+X,.3(М7)
+ ,NTR,22B.STR24
+ ,UZA,NDAB1A.0
+ ,UJ,NDAB1B.0
+C
+ NDAB1A:,UJ,ПЕР_3.STR26
+C
+ NDAB1B:,UTC,NDAB1.0
+ ,XTA,.'22'
+ M7,ATX,10B.NDAB1A
+ ,NTR,3.NDAB1B
+ ,NTR,22B.0
+ M15,VJM,ENDSTR.F3
+ M7,XTA,10B.0
+ ,ITS,.NDAB1
+ ,UTC,NDAB1.0
+ ,XTA,.8(М7)
+ M17,AEX,.'3'
+ ,UZA,BEGSTA.'22'
+ ,UJ,ПЕР_3.ENDSTR(М15)
+C
+ BEGSTA:M15,VJM,BEGSTR.8(М7)
+ ПЕР_3:M7,XTA,3
+ ,NTR,3.NDAB1
+ ,X-A,.0
+ M7,A+X,.0(М17)
+ ,NTR,22B.BEGSTA
+ ,U1A,ЦИКЛ_ПЕРЕХОД.F3
+ ,UJ,ЦИКЛ_ПЕРЕХОД_2.0
+C
+ ЦИКЛ_ПЕРЕХОД:,UJ,STR26B.BEGSTR(М15)
+C
+ ЦИКЛ_ПЕРЕХОД_2:,UJ,ВОЗВРАТ_В_БЛОК.0
+C
+ ПЕР_10:M7,MTJ,8.3(М7)
+ M16,MTJ,10.'3'
+ M7,VTM,К0.0
+ M7,STX,12B.0(М7)
+ M7,STX,11B.'22'
+ ,ITS,13.F3A
+ ,ITS,8.F3B
+ ,ITS,.0
+ ,NTR,3.STR26B
+ ,NTR,2.0
+ M12,UJ,.F3D
+C
+ ВОЗВРАТ_В_БЛОК:,STI,.0
+ ,STI,7.М10(М7)
+ ,STI,8.М12(М16)
+ M10,UJ,.К0(М7)
+C
  К0:,INT,0
  ,INT,1
  К2:,INT,6
@@ -133,4 +165,4 @@ C
  V3:,BSS,3
  V6:,BSS,1
  V7:,BSS,1
- ,END,
+ ,END,.10(М7)

@@ -1,85 +1,108 @@
+CKODKOD - МОДУЛЬ СИПРОДА
+CИсточник: личная библиотека (PERSO, зона 2702,
+Cтом 2248), слово 19776 образа SIPROD.BIN
+CДлина при загрузке: 44 слов, 76 команд
+CВход: KODKOD
+CВыход: L0074 (возврат через М12), POP (возврат через М10)
+CВнешние: NEW, NEWST, SCAKOD, RSYMB
+CСмещения в кадре (М7): общие 0-5, 10
+CРегистры: М1 (индекс: база модуля), М7 (указатель кадра),
+CМ10 (блок вызывающего), М12 (магазин, кадр параметров ОС),
+CМ15 (адрес возврата), М16 (модифицированный адрес)
+CМодификатор адреса: МОДА/МОД задают М16, адрес следующей команды += М16
+C
  KODKOD  :,NAME, NEW DTRAN
+ M1:,EQU,1B
+ M7:,EQU,7B
+ M10:,EQU,10B
+ M12:,EQU,12B
+ M15:,EQU,15B
+ M16:,EQU,16B
  *NEW*   :,LC,1
  *NEWST* :,LC,24
  SCAKOD  :,SUBP,
  RSYMB   :,SUBP,
- GAK/5:,EQU,*NEWST* -32767
- 14,VTM,БЛОК_NEW
- ,UJ,ВОЗВРАТ
- БЛОК_NEW:7,XTA,
- ,UTC,*NEW*   
- ,ATX,
- ,NTR,3
- 7,XTA,1
- 7,ATX,4
- ,NTR,22B
- ПЕР_1:7,XTA,1
- 7,ATX,5
- ,NTR,3
- ,NTR,22B
- ВЫЗОВ_RSYMB:,WTC,V0
- 1,VTM,
- 1,UTC,GAK/5
- 14,VTM,
- ,ITS,14
- 14,VTM,V1
- ,ITS,14
- 14,VTM,*NEW*   
- ,ITS,14
- 14,VTM,К2
- ,ITS,14
- 13,VJM,RSYMB   
- ,NTR,3
- ,NTR,22B
- 13,VJM,SCAKOD  
- 14,VTM,*NEW*   
- ,ITS,14
- 14,VTM,К2
- ,ITS,14
- ,WTC,V0
- 1,VTM,
- 1,UTC,GAK/5
- 14,VTM,
- ,ITS,14
- 14,VTM,V1
- ,ITS,14
- 13,VJM,RSYMB   
- ,NTR,3
- ,NTR,22B
- 7,XTA,5
- ,NTR,3
- 7,A+X,1
- 7,ATX,5
- 7,X-A,2
- ,NTR,22B
- ,UZA,ВЫЗОВ_RSYMB
-  :7,XTA,4
- ,NTR,3
- 7,A+X,1
- 7,ATX,4
- 7,X-A,3
- ,NTR,22B
- ,UZA,ПЕР_1
- ,UJ,ВОЗВРАТ_2
- ВОЗВРАТ:7,MTJ,8
- 14,MTJ,10
- 7,VTM,К0
- ,ITS,13
- ,ITS,1
- ,ITS,8
- ,ITS,
- ,NTR,3
- ,NTR,2
- 10,UJ,
- ВОЗВРАТ_2:,STI,
- ,STI,7
- ,STI,1
+ NEWST32767:,EQU,*NEWST* -32767
+ M16,VTM,NEWA.NEWA(М16)
+ ,UJ,ВОЗВРАТ_В_ОС.L0074
+C
+ NEWA:M7,XTA,.0(М7)
+ ,UTC,*NEW*.NEW
+ ,ATX,.0
+ ,NTR,3.'3'
+ M7,XTA,1.1(М7)
+ M7,ATX,4.4(М7)
+ ,NTR,22B.'22'
+ NEWB:M7,XTA,1.0
+ M7,ATX,5.1(М7)
+ ,NTR,3.5(М7)
+ ,NTR,22B.'3'
+ NEWC:,WTC,V0.'22'
+ M1,VTM,.V0
+ M1,UTC,NEWST32767.0(М1)
+ M16,VTM,.NEWST32767(М1)
+ ,ITS,14.0(М16)
+ M16,VTM,V1.М16
+ ,ITS,14.V1(М16)
+ M16,VTM,*NEW*.М16
+ ,ITS,14.NEW(М16)
+ M16,VTM,К2.М16
+ ,ITS,14.К2(М16)
+ M15,VJM,RSYMB.М16
+ ,NTR,3.RSYMB(М15)
+ ,NTR,22B.'3'
+ M15,VJM,SCAKOD.'22'
+ M16,VTM,*NEW*.SCAKOD(М15)
+ ,ITS,14.0
+ M16,VTM,К2.NEW(М16)
+ ,ITS,14.М16
+ ,WTC,V0.К2(М16)
+ M1,VTM,.М16
+ M1,UTC,NEWST32767.V0
+ M16,VTM,.0(М1)
+ ,ITS,14.NEWST32767(М1)
+ M16,VTM,V1.0(М16)
+ ,ITS,14.М16
+ M15,VJM,RSYMB.V1(М16)
+ ,NTR,3.М16
+ ,NTR,22B.RSYMB(М15)
+ M7,XTA,5.'3'
+ ,NTR,3.'22'
+ M7,A+X,1.5(М7)
+ M7,ATX,5.'3'
+ M7,X-A,2.1(М7)
+ ,NTR,22B.5(М7)
+ ,UZA,NEWC.2(М7)
+  :7,XTA,4.'22'
+ ,NTR,3.NEWC
+ M7,A+X,1.0
+ M7,ATX,4.4(М7)
+ M7,X-A,3.'3'
+ ,NTR,22B.1(М7)
+ ,UZA,NEWB.4(М7)
+ ,UJ,POP.3(М7)
+C
+ ВОЗВРАТ_В_ОС:M7,MTJ,8.'22'
+ M16,MTJ,10.NEWB
+ M7,VTM,К0.POP
+ ,ITS,13.М10(М7)
+ ,ITS,1.М12(М16)
+ ,ITS,8.К0(М7)
+ ,ITS,.М15
+ ,NTR,3.М1
+ ,NTR,2.М10
+ M12,UJ,
+C
+ POP:,STI,.'3'
+ ,STI,7.'2'
+ ,STI,1.0(М12)
  ,STI,8
- 8,UJ,
+ M10,UJ,.М7
+C
  К0:,INT,0
  ,INT,1
  К2:,INT,6
  ,INT,24
  V0:,BSS,1
  V1:,BSS,1
- ,END,
+ ,END,.М1

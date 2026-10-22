@@ -1,31 +1,67 @@
+CENDPG - МОДУЛЬ СИПРОДА
+CИсточник: личная библиотека (PERSO, зона 2702,
+Cтом 2248), слово 11680 образа SIPROD.BIN
+CДлина при загрузке: 260 слов, 466 команд
+CВход: ENDPG
+CВыход: ENDSTR:TOPAGA, HEADIN:ENDSTA, HEADIN:REGIMA, HEADIN:F1A,
+CRASTXT:EGO375, SCHEMA:TXT3B, SCHEMA:EGO327, SEGTAB:NDABA, SPAUD:INS26M,
+CSPAUD:EGO327, SPAUD:ENDPGD, SPAUD:BEGPGB, SPAUD:ENDPGF, SPAUD:FINF,
+CSPAUD:F0C, STANDA:ENDPGB, STANDA:STANDD, TITLE:ENDSTA,
+CL0702 (возврат через М12), POP (возврат через М10)
 CКОНЕЦ СТРАНИЦЫ: ВЫВОД ФОРМАТИРОВАННОГО ТЕКСТА.
+CВнешние: EGO, PAGE, REGIM, NDAB, LYG, DYD, TXT, STAND, PLN, RPT, SEK,
+CNUST, FT571, FT003, FT002, NUSTA, NEWMAX, KLAIDA, TOPAGE, VIAPUZ, IDII,
+CIMUI
+CСмещения в DYD: 1, 2
+CСмещения в EGO: 2400, 4800, 7200
+CСмещения в LYG: 1, 2
+CСмещения в NDAB: 1, 2, 3
+CСмещения в NUST: 1, 5, 6, 7, 8, 9
+CСмещения в PAGE: 1, 2, 3
+CСмещения в REGIM: 9, 10
+CСмещения в SEK: 2, 3
+CСмещения в STAND: 1, 2, 4
+CСмещения в TXT: 3
+CСмещения в кадре (М7): общие 0-1, 3-5, 7-10, свои 12-21
+CРегистры: М1 (индекс: база модуля), М7 (указатель кадра),
+CМ10 (блок вызывающего), М12 (магазин, кадр параметров ОС),
+CМ15 (адрес возврата), М16 (модифицированный адрес),
+CМ17 (контекст задачи)
+CМодификатор адреса: МОДА/МОД задают М16, адрес следующей команды += М16
 C
  ENDPG   :,NAME, NEW DTRAN
+ M1:,EQU,1B
+ M7:,EQU,7B
+ M10:,EQU,10B
+ M12:,EQU,12B
+ M15:,EQU,15B
+ M16:,EQU,16B
+ M17:,EQU,17B
  *EGO*   :,LC,13401
- GAK/2:,EQU,*EGO*   +2400
- GAK/3:,EQU,*EGO*   +4800
- GAK/4:,EQU,*EGO*   +7200
+ EGO2400:,EQU,*EGO*   +2400
+ EGO4800:,EQU,*EGO*   +4800
+ EGO7200:,EQU,*EGO*   +7200
  *PAGE*  :,LC,6
- GAK/6:,EQU,*PAGE*  +1
- GAK/7:,EQU,*PAGE*  +2
- GAL/0:,EQU,*PAGE*  +3
+ PAGE1:,EQU,*PAGE*  +1
+ PAGE2:,EQU,*PAGE*  +2
+ PAGE3:,EQU,*PAGE*  +3
  *REGIM* :,LC,16
  *NDAB*  :,LC,4
- GAL/3:,EQU,*NDAB*  +1
- GAL/4:,EQU,*NDAB*  +2
- GAL/5:,EQU,*NDAB*  +3
+ NDAB1:,EQU,*NDAB*  +1
+ NDAB2:,EQU,*NDAB*  +2
+ NDAB3:,EQU,*NDAB*  +3
  *LYG*   :,LC,6
- GAL/7:,EQU,*LYG*   +1
- GAM/0:,EQU,*LYG*   +2
+ LYG1:,EQU,*LYG*   +1
+ LYG2:,EQU,*LYG*   +2
  *DYD*   :,LC,3
- GAM/2:,EQU,*DYD*   +1
- GAM/3:,EQU,*DYD*   +2
+ DYD1:,EQU,*DYD*   +1
+ DYD2:,EQU,*DYD*   +2
  *TXT*   :,LC,4
- GAM/5:,EQU,*TXT*   +3
+ TXT3:,EQU,*TXT*   +3
  *STAND* :,LC,6
- GAM/7:,EQU,*STAND* +1
- GAN/0:,EQU,*STAND* +2
- GAN/1:,EQU,*STAND* +4
+ STAND1:,EQU,*STAND* +1
+ STAND2:,EQU,*STAND* +2
+ STAND4:,EQU,*STAND* +4
  *PLN*   :,LC,1
  *RPT*   :,LC,1
  *SEK*   :,LC,4
@@ -38,436 +74,481 @@ C
  KLAIDA  :,SUBP,
  TOPAGE  :,SUBP,
  VIAPUZ  :,SUBP,
- GAO/6:,EQU,GAL/0+1
- GAO/7:,EQU,GAN/0+1
- GAP/0:,EQU,*NUST*  +1
- GAP/1:,EQU,*NUST*  +8
+ PAGE4:,EQU,PAGE3+1
+ STAND3:,EQU,STAND2+1
+ NUST1:,EQU,*NUST*  +1
+ NUST8:,EQU,*NUST*  +8
  I*DI*I  :,SUBP,
- GAP/3:,EQU,*SEK*   +2
+ SEK2:,EQU,*SEK*   +2
  I*MU*I  :,SUBP,
- GAP/5:,EQU,*REGIM* +10
- GAP/6:,EQU,*NUST*  +9
- GAP/7:,EQU,GAL/0+2
- GAQ/0:,EQU,*SEK*   +3
- GAQ/1:,EQU,*EGO*   -32767
- GAQ/2:,EQU,*REGIM* +9
- GAQ/3:,EQU,*NUST*  +7
- GAQ/4:,EQU,*NUST*  +5
- GAQ/5:,EQU,*NUST*  +6
- 14,VTM,БЛОК_PAGE3
- ,UJ,ВОЗВРАТ
- БЛОК_PAGE3:,UTC,GAL/0
- ,XTA,
- ,NTR,3
- ,UTC,GAO/6
- ,A+X,
- 7,ATX,14B
- 7,XTA,4
+ REGIM10:,EQU,*REGIM* +10
+ NUST9:,EQU,*NUST*  +9
+ PAGE5:,EQU,PAGE3+2
+ SEK3:,EQU,*SEK*   +3
+ EGO32767:,EQU,*EGO*   -32767
+ REGIM9:,EQU,*REGIM* +9
+ NUST7:,EQU,*NUST*  +7
+ NUST5:,EQU,*NUST*  +5
+ NUST6:,EQU,*NUST*  +6
+ M16,VTM,PAGE3A.PAGE3A(М16)
+ ,UJ,ВОЗВРАТ_В_ОС.L0702
+C
+ PAGE3A:,UTC,PAGE3.PAGE3
+ ,XTA,.0
+ ,NTR,3.'3'
+ ,UTC,PAGE4.PAGE4
+ ,A+X,.0
+ M7,ATX,14B.12(М7)
+ M7,XTA,4.4(М7)
  ,ITS,
- ,UTC,GAM/5
+ ,UTC,TXT3.TXT3
+ ,XTA,.0
+ ,NTR,22B.'22'
+ M17,AEX,.0(М17)
+ ,U1A,STANDA.STANDA
+ ,UJ,STANDB.STANDB
+C
+ STANDA:,UJ,NDABB.NDABB
+C
+ STANDB:M7,XTA,.0
+ ,ITS,.0(М7)
+ ,UTC,STAND2
+ ,XTA,.STAND2
+ M17,AEX,.0
+ ,U1A,VIAPUA.0(М17)
+ M7,XTA,.VIAPUA
+ ,ITS,.0(М7)
+ ,UTC,STAND3
+ ,XTA,.STAND3
+ M17,AEX,.0
+ ,U1A,VIAPUA.0(М17)
+ ,UJ,NDABA.VIAPUA
+C
+ VIAPUA:M15,VJM,VIAPUZ.NDABA
+ NDABA:,UJ,PAGED.0
+C
+ NDABB:,UTC,*NDAB*.VIAPUZ(М15)
+ ,XTA,.0
+ ,NTR,3.PAGED
+ ,X-A,.0
+ M7,A+X,14B.NDAB
+ ,NTR,22B.0
+ ,UZA,TOPAGA.'3'
+ ,UJ,STANDC.0
+C
+ TOPAGA:M15,VJM,TOPAGE.12(М7)
+ STANDC:M7,XTA,.'22'
+ ,ITS,.TOPAGA
+ ,UTC,STAND2.STANDC
+ ,XTA,.TOPAGE(М15)
+ M17,AEX,.0
+ ,U1A,VIAPUB.0(М7)
+ M7,XTA,
+ ,ITS,.STAND2
+ ,UTC,STAND3.0
+ ,XTA,.0(М17)
+ M17,AEX,.VIAPUB
+ ,U1A,VIAPUB.0(М7)
+ ,UJ,NUST1A
+C
+ VIAPUB:M15,VJM,VIAPUZ.STAND3
+ NUST1A:M7,XTA,1.0
+ ,ITS,.0(М17)
+ ,UTC,NUST1.VIAPUB
+ ,XTA,.NUST1A
+ M17,AEX,.0
+ ,UZA,NUST8A.VIAPUZ(М15)
+ ,UJ,NUST8B.0
+C
+ NUST8A:,UTC,NUST8.1(М7)
  ,XTA,
- ,NTR,22B
- 15,AEX,
- ,U1A,ПЕРЕХОД_2
- ,UJ,БЛОК_STAND2
- ПЕРЕХОД_2:,UJ,БЛОК_NDAB
- БЛОК_STAND2:7,XTA,
+ ,NTR,3.NUST1
+ M7,A+X,1.0
+ ,UTC,NUST8.0(М17)
+ ,ATX,.NUST8A
+ ,NTR,22B.NUST8B
+ NUST8B:,UTC,NUST8.0
+ ,XTA,.NUST8
+ ,NTR,3.0
+ ,X-A,.'3'
+ ,UTC,DYD2.1(М7)
+ ,A+X,.NUST8
+ ,NTR,22B.0
+ ,U1A,NUST8C.'22'
+ ,UJ,NUST8D.0
+C
+ NUST8C:,UTC,NUST8.NUST8
+ ,XTA,.0
+ ,UTC,DYD2.'3'
+ ,ATX,.0
+ ,NTR,3.DYD2
+ ,NTR,22B.0
+ NUST8D:M7,XTA,1.'22'
+ ,ITS,.NUST8C
+ ,UTC,*REGIM*.NUST8D
+ ,XTA,.0
+ M17,AEX,.NUST8
+ ,U1A,NDAB1A.0
+ ,UJ,NDAB1B.DYD2
+C
+ NDAB1A:,UJ,PAGED.0
+C
+ NDAB1B:,UTC,NDAB1.'3'
+ ,XTA,.'22'
+ M16,VTM,К7.1(М7)
+ M15,VJM,I*DI*I  
+ M7,ATX,15B.REGIM
+ ,NTR,3.0
+ M7,XTA,1.0(М17)
+ ,ITS,.NDAB1A
+ ,UTC,NUST1.NDAB1B
+ ,XTA,.0
+ ,NTR,22B.PAGED
+ M17,AEX,.0
+ ,UZA,SEK2A.NDAB1
+ ,UJ,SEK2B.0
+C
+ SEK2A:M7,XTA,1.К7(М16)
+ ,UTC,SEK2.IDII(М15)
+ ,ATX,.13(М7)
+ SEK2B:,UTC,NDAB1.'3'
+ ,XTA,.1(М7)
  ,ITS,
- ,UTC,GAN/0
- ,XTA,
- 15,AEX,
- ,U1A,ВЫЗОВ_VIAPUZ
- 7,XTA,
- ,ITS,
- ,UTC,GAO/7
- ,XTA,
- 15,AEX,
- ,U1A,ВЫЗОВ_VIAPUZ
- ,UJ,ПЕРЕХОД_3
- ВЫЗОВ_VIAPUZ:13,VJM,VIAPUZ  
- ПЕРЕХОД_3:,UJ,БЛОК_PAGE3_2
- БЛОК_NDAB:,UTC,*NDAB*  
- ,XTA,
- ,NTR,3
- ,X-A,
- 7,A+X,14B
- ,NTR,22B
- ,UZA,ВЫЗОВ_TOPAGE
- ,UJ,БЛОК_STAND2_2
- ВЫЗОВ_TOPAGE:13,VJM,TOPAGE  
- БЛОК_STAND2_2:7,XTA,
- ,ITS,
- ,UTC,GAN/0
- ,XTA,
- 15,AEX,
- ,U1A,ВЫЗОВ_VIAPUZ_2
- 7,XTA,
- ,ITS,
- ,UTC,GAO/7
- ,XTA,
- 15,AEX,
- ,U1A,ВЫЗОВ_VIAPUZ_2
- ,UJ,БЛОК_NUST1
- ВЫЗОВ_VIAPUZ_2:13,VJM,VIAPUZ  
- БЛОК_NUST1:7,XTA,1
- ,ITS,
- ,UTC,GAP/0
- ,XTA,
- 15,AEX,
- ,UZA,БЛОК_NUST8
- ,UJ,БЛОК_NUST8_2
- БЛОК_NUST8:,UTC,GAP/1
- ,XTA,
- ,NTR,3
- 7,A+X,1
- ,UTC,GAP/1
+ M7,XTA,15B.NUST1
+ M16,VTM,К7.0
+ M15,VJM,I*MU*I.'22'
+ M17,AEX,.0(М17)
+ ,U1A,NUST1B.SEK2A
+ ,UJ,NUST1C.SEK2B
+C
+ NUST1B:,UJ,REGIM1.1(М7)
+C
+ NUST1C:M7,XTA,1.SEK2
+ ,ITS,.0
+ ,UTC,NUST1.0
+ ,XTA,.NDAB1
+ M17,AEX,.0
+ ,UZA,SEK2C
+ ,UJ,SEK2D.13(М7)
+C
+ SEK2C:M7,XTA,.К7(М16)
+ ,UTC,SEK2.IMUI(М15)
+ ,ATX,.0(М17)
+ SEK2D:,UJ,PAGEC.NUST1B
+C
+ REGIM1:M7,XTA,.NUST1C
+ ,ITS,.0
+ ,UTC,REGIM10.REGIM1
+ ,XTA,.0
+ M17,AEX,.1(М7)
+ ,U1A,NUST9A
+ ,UJ,NUST9B.NUST1
+C
+ NUST9A:,UJ,PLNB.0
+C
+ NUST9B:,UTC,NUST9.0(М17)
+ ,XTA,.SEK2C
+ M16,VTM,К7.SEK2D
+ M15,VJM,I*DI*I.0
+ M7,ATX,16B.0(М7)
+ ,NTR,3.SEK2
+ ,UTC,NUST9.0
+ ,XTA,.0
+ ,ITS,.PAGEC
+ M7,XTA,16B.0
+ M16,VTM,К7.0(М7)
+ M15,VJM,I*MU*I  
+ ,NTR,22B.REGIM10
+ M17,AEX,.0
+ ,U1A,PAGEA.0(М17)
+ ,UJ,PAGEB.NUST9A
+C
+ PAGEA:,UJ,PLNB.NUST9B
+C
+ PAGEB:M7,XTA,10B.0
+ ,NTR,3.PLNB
+ ,UTC,*PAGE*.0
+ ,A+X,.NUST9
+ M7,ATX,17B.0
+ ,NTR,22B.К7(М16)
+ PAGEC:,UTC,*PAGE*.IDII(М15)
+ ,XTA,.14(М7)
+ ,NTR,3.'3'
+ M7,A+X,1.NUST9
+ M7,ATX,17B.0
+ M7,XTA,1
+ ,UTC,PAGE2.14(М7)
+ ,ATX,.К7(М16)
+ ,NTR,22B.IMUI(М15)
+ PAGED:,UTC,PAGE3.'22'
+ ,XTA,.0(М17)
+ ,NTR,3.PAGEA
+ ,UTC,PAGE4.PAGEB
+ ,A+X,.PLNB
+ ,UTC,PAGE5.0
+ ,A+X,.8(М7)
+ M7,ATX,20B.'3'
+ M7,XTA,1.PAGE
+ ,ITS,.0
+ ,UTC,NUST1.15(М7)
+ ,XTA,.'22'
+ ,NTR,22B.PAGE
+ M17,AEX,.0
+ ,U1A,SEK3A.'3'
+  :7,XTA,4.1(М7)
+ ,ITS,.15(М7)
+ ,UTC,TXT3.1(М7)
+ ,XTA,.PAGE2
+ M17,AEX,.0
+ ,UZA,SEK3A.'22'
+ ,UJ,SEK3B.0
+C
+ SEK3A:,UJ,RPTB.PAGE3
+C
+ SEK3B:,UTC,SEK3.0
+ ,XTA,.'3'
+ ,NTR,3.PAGE4
+ M7,A+X,1.0
+ ,UTC,SEK3.PAGE5
+ ,ATX,.0
+ M7,A-X,3.16(М7)
+ ,NTR,22B.1(М7)
+ ,UZA,ADDR
+ ,UJ,SEK3C.NUST1
+C
+ ADDR:M16,VTM,К13.0
+ ,ITS,14.'22'
+ M15,VJM,KLAIDA.0(М17)
+ SEK3C:,UTC,SEK3.SEK3A
+ ,XTA,.0
+ ,NTR,3.4(М7)
+ M7,A-X,1
+ ,NTR,22B.TXT3
+ ,UZA,RPTA.0
+ ,UJ,RPTB.0(М17)
+C
+ RPTA:,UJ,PLNB.SEK3A
+C
+ RPTB:M7,XTA,1.SEK3B
+ M7,ATX,21B.0
+ ,NTR,3.RPTB
+ ,UTC,*RPT*.0
+ ,A-X,.SEK3
+ ,NTR,22B.0
+ ,U1A,RPTC.'3'
+ ,UJ,RPTD.1(М7)
+C
+ RPTC:,UTC,*RPT*.SEK3
+ ,XTA,.0
+ M7,ATX,21B.3(М7)
+ ,NTR,3.'22'
+ ,NTR,22B.ADDR
+ RPTD:M16,VTM,К1.SEK3C
+ ,ITS,14.К13(М16)
+ M15,VJM,FT*571.М16
+ M15,VJM,FT*003.KLAIDA(М15)
+ M7,XTA,1.0
+ M7,ATX,22B.SEK3
+ ,NTR,3.0
+ ,NTR,22B.'3'
+ ,UJ,ПЕР_17.1(М7)
+C
+ ВЫЗОВ_IMUI:M7,XTA,22B.'22'
+ ,NTR,3.RPTA
+ M7,A-X,1.RPTB
+ M16,VTM,К11.0
+ M15,VJM,I*MU*I.PLNB
+ M7,A+X,1.0
+ M7,ATX,23B.1(М7)
+ M7,A+X,5.17(М7)
+ M7,ATX,24B.'3'
+ M16,VTM,К2.RPT
+ ,ITS,14.0
+ ,NTR,22B.'22'
+ M15,VJM,FT*571.RPTC
+ M7,XTA,23B.RPTD
+ M7,ATX,25B.RPT
+ ,NTR,3.0
+ ,NTR,22B.17(М7)
+ ,UJ,ВЫЗОВ_FT003.'3'
+C
+ EGO327:,WTC,V10.'22'
+ M1,VTM,.0
+ M1,UTC,EGO32767.К1(М16)
+ M16,VTM,.М16
+ ,ITS,14.FT571(М15)
+ M15,VJM,FT*002.0
+ M7,XTA,25B.FT003(М15)
+ ,NTR,3.0
+ M7,A+X,1.1(М7)
+ M7,ATX,25B.18(М7)
+ ,NTR,22B.'3'
+ ВЫЗОВ_FT003:M7,X-A,24B.'22'
+ ,UZA,EGO327.F18A
+ M15,VJM,FT*003.0
+ M7,XTA,22B.18(М7)
+ ,NTR,3.'3'
+ M7,A+X,1.1(М7)
+ M7,ATX,22B.К11(М16)
+ ,NTR,22B.IMUI(М15)
+ ПЕР_17:M7,X-A,20B.0
+ ,UZA,ВЫЗОВ_IMUI.1(М7)
+ M7,XTA,21B.19(М7)
+ ,NTR,3.5(М7)
+ M7,A-X,1.20(М7)
+ M7,ATX,21B.К2(М16)
+ M7,A-X,1.М16
+ ,NTR,22B.'22'
+ ,UZA,TXT3A.FT571(М15)
+ ,UJ,TXT3B.19(М7)
+C
+ TXT3A:,UJ,RPTD.21(М7)
+C
+ TXT3B:M7,XTA,4.'3'
+ ,ITS,.'22'
+ ,UTC,TXT3.F21
+ ,XTA,.0
+ M17,AEX,.V10
+ ,UZA,ЦИКЛ_ПЕРЕХОД.0(М1)
+ ,UJ,PLNA.EGO32767(М1)
+C
+ ЦИКЛ_ПЕРЕХОД:,UJ,REGIME.0(М16)
+C
+ PLNA:,UJ,STANDD.М16
+C
+ PLNB:,UTC,*PLN*.FT002(М15)
+ ,XTA,.21(М7)
+ ,NTR,3.'3'
+ M7,A+X,1.1(М7)
+ ,UTC,*PLN*.21(М7)
+ ,ATX,.'22'
+ M16,VTM,К7.0
+ ,ITS,14.20(М7)
+ ,NTR,22B.EGO327
+ M15,VJM,NEWMAX.FT003(М15)
+ STANDD:,UTC,STAND1.0
+ ,XTA,.18(М7)
+ ,NTR,3.'3'
+ M7,A-X,1.1(М7)
+ ,UTC,STAND1.18(М7)
+ ,ATX,.'22'
+ M7,XTA,.0
+ ,ITS,.16(М7)
+ ,UTC,STAND1.F18
+ ,XTA,.17(М7)
+ ,NTR,22B.'3'
+ M17,AEX,.1(М7)
+ ,UZA,REGIMA.17(М7)
+ ,UJ,REGIMB.1(М7)
+C
+ REGIMA:,UJ,STANDF.'22'
+C
+ REGIMB:M7,XTA,1.TXT3A
+ ,ITS,.TXT3B
+ ,UTC,REGIM9.RPTD
+ ,XTA,.0
+ M17,AEX,.4(М7)
+ ,UZA,NUST7A
+ ,UJ,NUST7B.TXT3
+C
+ NUST7A:,UJ,REGIME.0
+C
+ NUST7B:,UTC,NUST7.0(М17)
+ ,XTA,.F4
+ ,NTR,3.PLNA
+ M7,A-X,1.0
+ ,UTC,NUST7.REGIME
+ ,ATX,.0
+ ,NTR,22B.STANDD
+ M15,VJM,NUSTA.0
+ M7,XTA,.PLN
+ ,ITS,.0
+ ,UTC,NUST7.'3'
+ ,XTA,.1(М7)
+ M17,AEX,.PLN
+ ,U1A,STANDE.0
+ ,UJ,STANDF.К7(М16)
+C
+ STANDE:,UJ,REGIME.М16
+C
+ STANDF:M7,XTA,.'22'
+ ,ITS,.NEWMAX(М15)
+ ,UTC,*STAND*.STAND1
+ ,XTA,.0
+ M17,AEX,.'3'
+ ,U1A,REGIMC.1(М7)
+ ,UJ,REGIMD.STAND1
+C
+ REGIMC:M7,XTA,1.0
+ ,UTC,*REGIM*.0(М7)
  ,ATX,
- ,NTR,22B
- БЛОК_NUST8_2:,UTC,GAP/1
- ,XTA,
- ,NTR,3
- ,X-A,
- ,UTC,GAM/3
- ,A+X,
- ,NTR,22B
- ,U1A,БЛОК_NUST8_3
- ,UJ,БЛОК_REGIM
- БЛОК_NUST8_3:,UTC,GAP/1
- ,XTA,
- ,UTC,GAM/3
- ,ATX,
- ,NTR,3
- ,NTR,22B
- БЛОК_REGIM:7,XTA,1
- ,ITS,
- ,UTC,*REGIM* 
- ,XTA,
- 15,AEX,
- ,U1A,ПЕРЕХОД_4
- ,UJ,ВЫЗОВ_IDII
- ПЕРЕХОД_4:,UJ,БЛОК_PAGE3_2
- ВЫЗОВ_IDII:,UTC,GAL/3
- ,XTA,
- 14,VTM,К7
- 13,VJM,I*DI*I  
- 7,ATX,15B
- ,NTR,3
- 7,XTA,1
- ,ITS,
- ,UTC,GAP/0
- ,XTA,
- ,NTR,22B
- 15,AEX,
- ,UZA,БЛОК_SEK2
- ,UJ,ВЫЗОВ_IMUI
- БЛОК_SEK2:7,XTA,1
- ,UTC,GAP/3
- ,ATX,
- ВЫЗОВ_IMUI:,UTC,GAL/3
- ,XTA,
- ,ITS,
- 7,XTA,15B
- 14,VTM,К7
- 13,VJM,I*MU*I  
- 15,AEX,
- ,U1A,ПЕРЕХОД_5
- ,UJ,БЛОК_NUST1_2
- ПЕРЕХОД_5:,UJ,БЛОК_REGIM10
- БЛОК_NUST1_2:7,XTA,1
- ,ITS,
- ,UTC,GAP/0
- ,XTA,
- 15,AEX,
- ,UZA,БЛОК_SEK2_2
- ,UJ,ПЕРЕХОД_6
- БЛОК_SEK2_2:7,XTA,
- ,UTC,GAP/3
- ,ATX,
- ПЕРЕХОД_6:,UJ,БЛОК_PAGE_2
- БЛОК_REGIM10:7,XTA,
- ,ITS,
- ,UTC,GAP/5
- ,XTA,
- 15,AEX,
- ,U1A,ПЕРЕХОД_7
- ,UJ,ВЫЗОВ_IDII_2
- ПЕРЕХОД_7:,UJ,ВЫЗОВ_NEWMAX
- ВЫЗОВ_IDII_2:,UTC,GAP/6
- ,XTA,
- 14,VTM,К7
- 13,VJM,I*DI*I  
- 7,ATX,16B
- ,NTR,3
- ,UTC,GAP/6
- ,XTA,
- ,ITS,
- 7,XTA,16B
- 14,VTM,К7
- 13,VJM,I*MU*I  
- ,NTR,22B
- 15,AEX,
- ,U1A,ПЕРЕХОД_8
- ,UJ,БЛОК_PAGE
- ПЕРЕХОД_8:,UJ,ВЫЗОВ_NEWMAX
- БЛОК_PAGE:7,XTA,10B
- ,NTR,3
- ,UTC,*PAGE*  
- ,A+X,
- 7,ATX,17B
- ,NTR,22B
- БЛОК_PAGE_2:,UTC,*PAGE*  
- ,XTA,
- ,NTR,3
- 7,A+X,1
- 7,ATX,17B
- 7,XTA,1
- ,UTC,GAK/7
- ,ATX,
- ,NTR,22B
- БЛОК_PAGE3_2:,UTC,GAL/0
- ,XTA,
- ,NTR,3
- ,UTC,GAO/6
- ,A+X,
- ,UTC,GAP/7
- ,A+X,
- 7,ATX,20B
- 7,XTA,1
- ,ITS,
- ,UTC,GAP/0
- ,XTA,
- ,NTR,22B
- 15,AEX,
- ,U1A,ПЕРЕХОД_9
-  :7,XTA,4
- ,ITS,
- ,UTC,GAM/5
- ,XTA,
- 15,AEX,
- ,UZA,ПЕРЕХОД_9
- ,UJ,БЛОК_SEK3
- ПЕРЕХОД_9:,UJ,БЛОК_RPT
- БЛОК_SEK3:,UTC,GAQ/0
- ,XTA,
- ,NTR,3
- 7,A+X,1
- ,UTC,GAQ/0
- ,ATX,
- 7,A-X,3
- ,NTR,22B
- ,UZA,ВЫЗОВ_KLAIDA
- ,UJ,БЛОК_SEK3_2
- ВЫЗОВ_KLAIDA:14,VTM,К13
- ,ITS,14
- 13,VJM,KLAIDA  
- БЛОК_SEK3_2:,UTC,GAQ/0
- ,XTA,
- ,NTR,3
- 7,A-X,1
- ,NTR,22B
- ,UZA,ПЕРЕХОД_10
- ,UJ,БЛОК_RPT
- ПЕРЕХОД_10:,UJ,ВЫЗОВ_NEWMAX
- БЛОК_RPT:7,XTA,1
- 7,ATX,21B
- ,NTR,3
- ,UTC,*RPT*   
- ,A-X,
- ,NTR,22B
- ,U1A,БЛОК_RPT_2
- ,UJ,ВЫЗОВ_FT571
- БЛОК_RPT_2:,UTC,*RPT*   
- ,XTA,
- 7,ATX,21B
- ,NTR,3
- ,NTR,22B
- ВЫЗОВ_FT571:14,VTM,К1
- ,ITS,14
- 13,VJM,FT*571  
- 13,VJM,FT*003  
- 7,XTA,1
- 7,ATX,22B
- ,NTR,3
- ,NTR,22B
- ,UJ,ПЕР_17
- ВЫЗОВ_IMUI_2:7,XTA,22B
- ,NTR,3
- 7,A-X,1
- 14,VTM,К11
- 13,VJM,I*MU*I  
- 7,A+X,1
- 7,ATX,23B
- 7,A+X,5
- 7,ATX,24B
- 14,VTM,К2
- ,ITS,14
- ,NTR,22B
- 13,VJM,FT*571  
- 7,XTA,23B
- 7,ATX,25B
- ,NTR,3
- ,NTR,22B
- ,UJ,ВЫЗОВ_FT003
- ВЫЗОВ_FT002:,WTC,V10
- 1,VTM,
- 1,UTC,GAQ/1
- 14,VTM,
- ,ITS,14
- 13,VJM,FT*002  
- 7,XTA,25B
- ,NTR,3
- 7,A+X,1
- 7,ATX,25B
- ,NTR,22B
- ВЫЗОВ_FT003:7,X-A,24B
- ,UZA,ВЫЗОВ_FT002
- 13,VJM,FT*003  
- 7,XTA,22B
- ,NTR,3
- 7,A+X,1
- 7,ATX,22B
- ,NTR,22B
- ПЕР_17:7,X-A,20B
- ,UZA,ВЫЗОВ_IMUI_2
- 7,XTA,21B
- ,NTR,3
- 7,A-X,1
- 7,ATX,21B
- 7,A-X,1
- ,NTR,22B
- ,UZA,ПЕРЕХОД_11
- ,UJ,БЛОК_TXT3
- ПЕРЕХОД_11:,UJ,ВЫЗОВ_FT571
- БЛОК_TXT3:7,XTA,4
- ,ITS,
- ,UTC,GAM/5
- ,XTA,
- 15,AEX,
- ,UZA,ПЕРЕХОД_12
- ,UJ,ПЕРЕХОД_13
- ПЕРЕХОД_12:,UJ,БЛОК_REGIM10_2
- ПЕРЕХОД_13:,UJ,БЛОК_STAND1
- ВЫЗОВ_NEWMAX:,UTC,*PLN*   
- ,XTA,
- ,NTR,3
- 7,A+X,1
- ,UTC,*PLN*   
- ,ATX,
- 14,VTM,К7
- ,ITS,14
- ,NTR,22B
- 13,VJM,NEWMAX  
- БЛОК_STAND1:,UTC,GAM/7
- ,XTA,
- ,NTR,3
- 7,A-X,1
- ,UTC,GAM/7
- ,ATX,
- 7,XTA,
- ,ITS,
- ,UTC,GAM/7
- ,XTA,
- ,NTR,22B
- 15,AEX,
- ,UZA,ПЕРЕХОД_14
- ,UJ,БЛОК_REGIM9
- ПЕРЕХОД_14:,UJ,БЛОК_STAND
- БЛОК_REGIM9:7,XTA,1
- ,ITS,
- ,UTC,GAQ/2
- ,XTA,
- 15,AEX,
- ,UZA,ПЕРЕХОД_15
- ,UJ,ВЫЗОВ_NUSTA
- ПЕРЕХОД_15:,UJ,БЛОК_REGIM10_2
- ВЫЗОВ_NUSTA:,UTC,GAQ/3
- ,XTA,
- ,NTR,3
- 7,A-X,1
- ,UTC,GAQ/3
- ,ATX,
- ,NTR,22B
- 13,VJM,NUSTA   
- 7,XTA,
- ,ITS,
- ,UTC,GAQ/3
- ,XTA,
- 15,AEX,
- ,U1A,ПЕРЕХОД_16
- ,UJ,БЛОК_STAND
- ПЕРЕХОД_16:,UJ,БЛОК_REGIM10_2
- БЛОК_STAND:7,XTA,
- ,ITS,
- ,UTC,*STAND* 
- ,XTA,
- 15,AEX,
- ,U1A,БЛОК_REGIM_2
- ,UJ,БЛОК_STAND_2
- БЛОК_REGIM_2:7,XTA,1
- ,UTC,*REGIM* 
- ,ATX,
- ,NTR,3
- ,NTR,22B
- БЛОК_STAND_2:7,XTA,1
- ,UTC,*STAND* 
- ,ATX,
- ,NTR,3
- 7,XTA,4
- ,UTC,GAQ/2
- ,ATX,
- 7,XTA,7
- ,UTC,GAQ/4
- ,ATX,
- 7,XTA,4
- ,ITS,
- ,UTC,*REGIM* 
- ,XTA,
- ,NTR,22B
- 15,AEX,
- ,UZA,БЛОК_NUST5
- ,UJ,ВЫЗОВ_NUSTA_2
- БЛОК_NUST5:7,XTA,12B
- ,UTC,GAQ/4
- ,ATX,
- ВЫЗОВ_NUSTA_2:7,XTA,11B
- ,UTC,GAQ/5
- ,ATX,
- 13,VJM,NUSTA   
- 7,XTA,1
- ,UTC,GAQ/2
- ,ATX,
- БЛОК_REGIM10_2:7,XTA,
- ,ITS,
- ,UTC,GAP/5
- ,XTA,
- 15,AEX,
- ,UZA,БЛОК_NUST9
- ,UJ,БЛОК_REGIM10_3
- БЛОК_NUST9:,UTC,GAP/6
- ,XTA,
- ,UTC,GAL/3
- ,ATX,
- ,NTR,3
- ,NTR,22B
- БЛОК_REGIM10_3:7,XTA,1
- ,UTC,GAP/5
- ,ATX,
- ,UJ,ВОЗВРАТ_2
- ВОЗВРАТ:7,MTJ,8
- 14,MTJ,10
- 7,VTM,К5
- ,ITS,13
- ,ITS,1
- ,ITS,8
- ,ITS,
- ,NTR,3
- ,NTR,2
- 10,UJ,
- ВОЗВРАТ_2:,STI,
- ,STI,7
- ,STI,1
- ,STI,8
- 8,UJ,
+ ,NTR,3.STAND1
+ ,NTR,22B.0
+ REGIMD:M7,XTA,1.'22'
+ ,UTC,*STAND*.0(М17)
+ ,ATX,.REGIMA
+ ,NTR,3.REGIMB
+ M7,XTA,4.STANDF
+ ,UTC,REGIM9.0
+ ,ATX,.1(М7)
+ M7,XTA,7
+ ,UTC,NUST5.REGIM9
+ ,ATX,.0
+ M7,XTA,4.0(М17)
+ ,ITS,.NUST7A
+ ,UTC,*REGIM*.NUST7B
+ ,XTA,.0
+ ,NTR,22B.REGIME
+ M17,AEX,.0
+ ,UZA,NUST5A.NUST7
+ ,UJ,NUST5B.0
+C
+ NUST5A:M7,XTA,12B.'3'
+ ,UTC,NUST5.1(М7)
+ ,ATX,.NUST7
+ NUST5B:M7,XTA,11B.0
+ ,UTC,NUST6.'22'
+ ,ATX,.NUSTA(М15)
+ M15,VJM,NUSTA.0(М7)
+ M7,XTA,1
+ ,UTC,REGIM9.NUST7
+ ,ATX,.0
+ REGIME:M7,XTA,.0(М17)
+ ,ITS,.STANDE
+ ,UTC,REGIM10.STANDF
+ ,XTA,.0
+ M17,AEX,.REGIME
+ ,UZA,NUST9C.0
+ ,UJ,NUST9D.0(М7)
+C
+ NUST9C:,UTC,NUST9
+ ,XTA,.STAND
+ ,UTC,NDAB1.0
+ ,ATX,.0(М17)
+ ,NTR,3.REGIMC
+ ,NTR,22B.REGIMD
+ NUST9D:M7,XTA,1.0
+ ,UTC,REGIM10.1(М7)
+ ,ATX,.REGIM
+ ,UJ,POP.0
+C
+ ВОЗВРАТ_В_ОС:M7,MTJ,8.'3'
+ M16,MTJ,10.'22'
+ M7,VTM,К5.0
+ ,ITS,13.1(М7)
+ ,ITS,1.STAND
+ ,ITS,8.0
+ ,ITS,.'3'
+ ,NTR,3.4(М7)
+ ,NTR,2.REGIM9
+ M12,UJ,.0
+C
+ POP:,STI,.7(М7)
+ ,STI,7.NUST5
+ ,STI,1.0
+ ,STI,8.4(М7)
+ M10,UJ,
+C
   :,ISO, 6H       . 040 040 040 040 040 040 
  К1:,ISO, 6H(1H1)  . 050 061 110 061 051 040 
  К2:,ISO, 6H(10(21 . 050 061 060 050 062 061 
@@ -486,4 +567,4 @@ C
  ,INT,127
  ,BSS,10
  V10:,BSS,1
- ,END,
+ ,END,.REGIM

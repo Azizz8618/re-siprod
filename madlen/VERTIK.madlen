@@ -1,115 +1,141 @@
+CVERTIK - МОДУЛЬ СИПРОДА
+CИсточник: личная библиотека (PERSO, зона 2702,
+Cтом 2248), слово 6944 образа SIPROD.BIN
+CДлина при загрузке: 72 слов, 112 команд
+CВход: VERTIK
+CВыход: WRIVER:F1A, F15 (возврат через М12), POP (возврат через М10)
+CВнешние: VER, RNSYMB, IDII, IMUI
+CСмещения в VER: 4
+CСмещения в кадре (М7): общие 0-2, 4-10, свои 11-15
+CРегистры: М7 (указатель кадра), М10 (блок вызывающего),
+CМ12 (магазин, кадр параметров ОС), М15 (адрес возврата),
+CМ16 (модифицированный адрес), М17 (контекст задачи)
+CМодификатор адреса: МОДА/МОД задают М16, адрес следующей команды += М16
+C
  VERTIK  :,NAME, NEW DTRAN
+ M7:,EQU,7B
+ M10:,EQU,10B
+ M12:,EQU,12B
+ M15:,EQU,15B
+ M16:,EQU,16B
+ M17:,EQU,17B
  *VER*   :,LC,5
- GAK/2:,EQU,*VER*   +4
+ VER4:,EQU,*VER*   +4
  RNSYMB  :,SUBP,
  I*DI*I  :,SUBP,
  I*MU*I  :,SUBP,
- 14,VTM,ВЫЗОВ_IDII
- ,UJ,ПЕР_15
- ВЫЗОВ_IDII:,WTC,V10
- ,XTA,
- ,NTR,3
- ,WTC,V11
- ,A-X,
- 7,ATX,5
- ,WTC,V11
- ,XTA,
- 7,A-X,1
- 7,ATX,4
- 7,XTA,5
- 14,VTM,V0
- 13,VJM,I*DI*I  
- 7,ATX,6
- ,WTC,V11
- ,XTA,
- 7,A-X,1
- 7,ATX,4
- 7,XTA,6
- ,X-A,
- 14,VTM,V0
- 13,VJM,I*MU*I  
- 7,A+X,5
- 7,ATX,7
- ,WTC,V11
- ,XTA,
- 7,A-X,7
- 7,ATX,10B
- ,WTC,V9
- ,XTA,
- 7,ATX,11B
- 7,XTA,
- 7,ATX,12B
- 7,XTA,1
- 7,ATX,13B
- ,NTR,22B
- ,UJ,БЛОК_V11
- ВЫЗОВ_IMUI:,UTC,GAK/2
- ,XTA,
- ,NTR,3
- 7,A+X,1
- ,UTC,GAK/2
- ,ATX,
- 7,XTA,2
- 14,VTM,GAK/2
- 13,VJM,I*MU*I  
- 7,A-X,1
- 7,ATX,14B
- 14,VTM,V5
- ,ITS,14
- 14,VTM,К3
- ,ITS,14
- 14,VTM,*VER*   
- ,ITS,14
- 14,VTM,V8
- ,ITS,14
- 14,VTM,К2
- ,ITS,14
- ,NTR,22B
- 13,VJM,RNSYMB  
- ,NTR,3
- ,NTR,22B
- 7,XTA,10B
- ,ITS,
- 7,XTA,13B
- 15,AEX,
- ,UZA,ПЕР_1
+ M16,VTM,ВЫЗОВ_IDII.F5(М16)
+ ,UJ,ПЕР_15.F15
+C
+ ВЫЗОВ_IDII:,WTC,V10.V10
+ ,XTA,.0
+ ,NTR,3.'3'
+ ,WTC,V11.V11
+ ,A-X,.0
+ M7,ATX,5.5(М7)
+ ,WTC,V11.V11
+ ,XTA,.0
+ M7,A-X,1.1(М7)
+ M7,ATX,4.4(М7)
+ M7,XTA,5.5(М7)
+ M16,VTM,V0.V0(М16)
+ M15,VJM,I*DI*I.IDII(М15)
+ M7,ATX,6.0
+ ,WTC,V11.6(М7)
+ ,XTA,.V11
+ M7,A-X,1.0
+ M7,ATX,4.1(М7)
+ M7,XTA,6.4(М7)
+ ,X-A,.6(М7)
+ M16,VTM,V0.0
+ M15,VJM,I*MU*I.V0(М16)
+ M7,A+X,5.IMUI(М15)
+ M7,ATX,7.0
+ ,WTC,V11.5(М7)
+ ,XTA,.7(М7)
+ M7,A-X,7.V11
+ M7,ATX,10B.0
+ ,WTC,V9.7(М7)
+ ,XTA,.8(М7)
+ M7,ATX,11B.V9
+ M7,XTA,.0
+ M7,ATX,12B.9(М7)
+ M7,XTA,1.0(М7)
+ M7,ATX,13B.10(М7)
+ ,NTR,22B.1(М7)
+ ,UJ,БЛОК_V11.11(М7)
+C
+ VER4A:,UTC,VER4.'22'
+ ,XTA,.F1B
+ ,NTR,3.0
+ M7,A+X,1.VER4
+ ,UTC,VER4.0
+ ,ATX,.'3'
+ M7,XTA,2.1(М7)
+ M16,VTM,VER4.VER4
+ M15,VJM,I*MU*I.0
+ M7,A-X,1.2(М7)
+ M7,ATX,14B.VER4(М16)
+ M16,VTM,V5.IMUI(М15)
+ ,ITS,14.0
+ M16,VTM,К3.1(М7)
+ ,ITS,14.12(М7)
+ M16,VTM,*VER*.V5(М16)
+ ,ITS,14.М16
+ M16,VTM,V8.К3(М16)
+ ,ITS,14.М16
+ M16,VTM,К2.VER(М16)
+ ,ITS,14.М16
+ ,NTR,22B.V8(М16)
+ M15,VJM,RNSYMB.М16
+ ,NTR,3.К2(М16)
+ ,NTR,22B.М16
+ M7,XTA,10B.'22'
+ ,ITS,.RNSYMB(М15)
+ M7,XTA,13B.'3'
+ M17,AEX,.'22'
+ ,UZA,ПЕР_1.8(М7)
  ,UJ,ПЕР_9
- ПЕР_1:7,XTA,1
- 7,ATX,12B
- ,NTR,3
- ,NTR,22B
- ПЕР_9:7,XTA,11B
- ,NTR,3
- 7,A+X,6
- 7,A+X,12B
- 7,A+X,1
- 7,ATX,11B
- ,NTR,22B
-  :7,XTA,13B
- ,NTR,3
- 7,A+X,1
- 7,ATX,13B
- ,NTR,22B
- БЛОК_V11:,WTC,V11
- ,X-A,
- ,UZA,ВЫЗОВ_IMUI
- ,UJ,ВОЗВРАТ
- ПЕР_15:7,MTJ,8
- 14,MTJ,10
- 7,VTM,К0
- 7,STX,17B
- 7,STX,16B
- 7,STX,15B
- ,ITS,13
- ,ITS,8
- ,ITS,
- ,NTR,3
- ,NTR,2
- 10,UJ,
- ВОЗВРАТ:,STI,
- ,STI,7
+C
+ ПЕР_1:M7,XTA,1.11(М7)
+ M7,ATX,12B.0(М17)
+ ,NTR,3.F1
+ ,NTR,22B.F1A
+ ПЕР_9:M7,XTA,11B.1(М7)
+ ,NTR,3.10(М7)
+ M7,A+X,6.'3'
+ M7,A+X,12B.'22'
+ M7,A+X,1.9(М7)
+ M7,ATX,11B.'3'
+ ,NTR,22B.6(М7)
+  :7,XTA,13B.10(М7)
+ ,NTR,3.1(М7)
+ M7,A+X,1.9(М7)
+ M7,ATX,13B.'22'
+ ,NTR,22B.0
+ БЛОК_V11:,WTC,V11.11(М7)
+ ,X-A,.'3'
+ ,UZA,VER4A.1(М7)
+ ,UJ,POP.11(М7)
+C
+ ПЕР_15:M7,MTJ,8.'22'
+ M16,MTJ,10.0
+ M7,VTM,К0.V11
+ M7,STX,17B.0
+ M7,STX,16B.VER4A
+ M7,STX,15B.POP
+ ,ITS,13.М10(М7)
+ ,ITS,8.М12(М16)
+ ,ITS,.К0(М7)
+ ,NTR,3.15(М7)
+ ,NTR,2.14(М7)
+ M12,UJ,.13(М7)
+C
+ POP:,STI,.М15
+ ,STI,7.М10
  ,STI,8
- 8,UJ,
+ M10,UJ,.'3'
+C
  К0:,INT,0
  ,INT,1
  К2:,INT,2
@@ -120,4 +146,4 @@
  V9:,BSS,1
  V10:,BSS,1
  V11:,BSS,1
- ,END,
+ ,END,.'2'

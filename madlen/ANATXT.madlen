@@ -1,230 +1,278 @@
+CANATXT - МОДУЛЬ СИПРОДА
+CИсточник: личная библиотека (PERSO, зона 2702,
+Cтом 2248), слово 16224 образа SIPROD.BIN
+CДлина при загрузке: 124 слов, 226 команд
+CВход: ANATXT
+CВыход: SEGTAB:TXT3A, F0 (возврат через М12), F0A (возврат через М10)
+CВнешние: INS, STR, TXT, SCANER, LRE, ATV, INF, RWINF, SYTINT, SCAN
+CСмещения в ATV: 1
+CСмещения в INF: 1, 2
+CСмещения в INS: 24, 25, 26
+CСмещения в SCANER: 1, 2
+CСмещения в STR: 24, 25, 26
+CСмещения в TXT: 1, 2, 3
+CСмещения в кадре (М7): общие 0-10
+CРегистры: М7 (указатель кадра), М10 (блок вызывающего),
+CМ12 (магазин, кадр параметров ОС), М15 (адрес возврата),
+CМ16 (модифицированный адрес), М17 (контекст задачи)
+CМодификатор адреса: МОДА/МОД задают М16, адрес следующей команды += М16
+C
  ANATXT  :,NAME, NEW DTRAN
+ M7:,EQU,7B
+ M10:,EQU,10B
+ M12:,EQU,12B
+ M15:,EQU,15B
+ M16:,EQU,16B
+ M17:,EQU,17B
  *INS*   :,LC,27
- GAK/2:,EQU,*INS*   +24
- GAK/3:,EQU,*INS*   +25
- GAK/4:,EQU,*INS*   +26
+ INS24:,EQU,*INS*   +24
+ INS25:,EQU,*INS*   +25
+ INS26:,EQU,*INS*   +26
  *STR*   :,LC,27
- GAK/6:,EQU,*STR*   +24
- GAK/7:,EQU,*STR*   +25
- GAL/0:,EQU,*STR*   +26
+ STR24:,EQU,*STR*   +24
+ STR25:,EQU,*STR*   +25
+ STR26:,EQU,*STR*   +26
  *TXT*   :,LC,4
- GAL/2:,EQU,*TXT*   +1
- GAL/3:,EQU,*TXT*   +2
- GAL/4:,EQU,*TXT*   +3
+ TXT1:,EQU,*TXT*   +1
+ TXT2:,EQU,*TXT*   +2
+ TXT3:,EQU,*TXT*   +3
  *SCANER*:,LC,3
- GAL/6:,EQU,*SCANER*+1
- GAL/7:,EQU,*SCANER*+2
+ SCANER1:,EQU,*SCANER*+1
+ SCANER2:,EQU,*SCANER*+2
  *LRE*   :,LC,20
  *ATV*   :,LC,2
- GAM/2:,EQU,*ATV*   +1
+ ATV1:,EQU,*ATV*   +1
  *INF*   :,LC,3
- GAM/4:,EQU,*INF*   +1
- GAM/5:,EQU,*INF*   +2
+ INF1:,EQU,*INF*   +1
+ INF2:,EQU,*INF*   +2
  RWINF   :,SUBP,
  SYTINT  :,SUBP,
  SCAN    :,SUBP,
- 14,VTM,БЛОК_TXT1
- ,UJ,ВОЗВРАТ
- БЛОК_TXT1:7,XTA,
- ,UTC,GAL/2
- ,ATX,
- ,NTR,3
- 7,XTA,
- ,UTC,*TXT*   
- ,ATX,
- 7,XTA,
- ,UTC,GAL/4
- ,ATX,
- 7,XTA,
- 7,ATX,7
+ M16,VTM,TXT1A.TXT1A(М16)
+ ,UJ,ВОЗВРАТ_В_ОС.F0
+C
+ TXT1A:M7,XTA,.0(М7)
+ ,UTC,TXT1.TXT1
+ ,ATX,.0
+ ,NTR,3.'3'
+ M7,XTA,.0(М7)
+ ,UTC,*TXT*.TXT
+ ,ATX,.0
+ M7,XTA,.0(М7)
+ ,UTC,TXT3.TXT3
+ ,ATX,.0
+ M7,XTA,.0(М7)
+ M7,ATX,7.7(М7)
+ ,NTR,22B.'22'
+ SCANA:M15,VJM,SCAN.0
+ M7,XTA,4.SCAN(М15)
+ ,ITS,.0
+ ,UTC,SCANER1.4(М7)
+ ,XTA,
+ M17,AEX,.SCANER1
+ ,U1A,SCANEA.0
+ ,UJ,SCANEB.0(М17)
+C
+ SCANEA:,UJ,SCANEC.SCANEA
+C
+ SCANEB:,UTC,*SCANER*.SCANEB
+ ,XTA,.0
+ ,NTR,3.SCANEC
+ M7,A-X,1.0
+ M7,ATX,10B.SCANER
+ M7,ATX,11B.0
+ M16,VTM,*INS*.'3'
+ ,ITS,14.1(М7)
+ M16,VTM,V2.8(М7)
+ ,ITS,14.9(М7)
+ M16,VTM,V3.INS(М16)
+ ,ITS,14.М16
+ ,NTR,22B.V2(М16)
+ M15,VJM,SYTINT.М16
+ ,NTR,3.V3(М16)
+ ,NTR,22B.М16
+ M7,XTA,11B.'22'
+ ,UTC,*SCANER*.SYTINT(М15)
+ ,ATX,.'3'
+ ,NTR,3.'22'
+ ,NTR,22B.9(М7)
+ M15,VJM,SCAN.SCANER
+ M7,XTA,6.0
+ ,ITS,.'3'
+ ,UTC,SCANER1.'22'
+ ,XTA,.SCAN(М15)
+ M17,AEX,.6(М7)
+ ,UZA,TXT1B
+ ,UJ,TXT1C.SCANER1
+C
+ TXT1B:,UJ,TXTA.0
+C
+ TXT1C:M7,XTA,.0(М17)
+ ,ITS,.TXT1B
+ ,UTC,TXT1.TXT1C
+ ,XTA,.0
+ M17,AEX,.TXTA
+ ,UZA,TXT1D.0
+ ,UJ,TXT1E.0(М7)
+C
+ TXT1D:M7,XTA,10B
+ ,UTC,TXT1.TXT1
+ ,ATX,.0
+ ,NTR,3.0(М17)
+ ,NTR,22B.TXT1D
+ TXT1E:M7,XTA,.TXT1E
+ M7,ATX,7.0
+ ,NTR,3.8(М7)
+ ,UTC,*SCANER*.TXT1
+ ,XTA,.0
+ M7,A-X,1.'3'
+ ,UTC,*SCANER*.'22'
+ ,ATX,.0
+ ,NTR,22B.0(М7)
+ ,UJ,SCANEJ.7(М7)
+C
+ TXTA:M7,XTA,12B.'3'
+ ,UTC,*TXT*.SCANER
+ ,ATX,.0
+ ,NTR,3.1(М7)
+ M7,XTA,10B.SCANER
+ M7,A-X,7.0
+ M7,A-X,1.'22'
+ ,UTC,TXT2.SCANEJ
+ ,ATX,.10(М7)
+ ,UTC,*ATV*.TXT
+ ,XTA,.0
+ ,UTC,*INF*.'3'
+ ,ATX,.8(М7)
+ ,UTC,*TXT*.7(М7)
+ ,XTA,.1(М7)
+ ,UTC,INF1.TXT2
+ ,ATX,.0
+ ,NTR,22B.ATV
+ M15,VJM,RWINF.0
+ ,UTC,*INF*.INF
+ ,XTA,.0
+ ,UTC,*ATV*.TXT
+ ,ATX,.0
+ ,NTR,3.INF1
+ ,UTC,INF2.0
+ ,XTA,.'22'
+ ,UTC,ATV1.RWINF(М15)
+ ,ATX,.0
+ ,NTR,22B.INF
+ ,UJ,SCANEM.0
+C
+ SCANEC:M7,XTA,5.ATV
+ ,ITS,.0
+ ,UTC,SCANER1.'3'
+ ,XTA,.INF2
+ M17,AEX,.0
+ ,U1A,SCANED.ATV1
+ ,UJ,SCANEE.0
+C
+ SCANED:,UJ,SCANEF.'22'
+C
+ SCANEE:,UTC,*SCANER*.SCANEM
+ ,XTA,.0
+ ,NTR,3.5(М7)
+ M7,A-X,7
+ M7,A-X,2.SCANER1
+ ,UTC,TXT2.0
+ ,ATX,.0(М17)
+ M7,XTA,1.SCANED
+ ,UTC,TXT3.SCANEE
+ ,ATX,.0
+ ,NTR,22B.SCANEF
+ ,UJ,SCANEM.0
+C
+ SCANEF:M7,XTA,3.SCANER
+ ,ITS,.0
+ ,UTC,SCANER1.'3'
+ ,XTA,.7(М7)
+ M17,AEX,.2(М7)
+ ,UZA,TXT1F.TXT2
+ ,UJ,TXT1G.0
+C
+ TXT1F:,UJ,SCANEI.1(М7)
+C
+ TXT1G:M7,XTA,.TXT3
+ M7,ATX,7.0
+ ,NTR,3.'22'
+ M7,XTA,.SCANEM
+ ,ITS,.3(М7)
+ ,UTC,TXT1
+ ,XTA,.SCANER1
+ ,NTR,22B.0
+ M17,AEX,.0(М17)
+ ,U1A,SCANEG.TXT1F
+ ,UJ,SCANEH.TXT1G
+C
+ SCANEG:,UJ,SCANEJ.0
+C
+ SCANEH:,UTC,*SCANER*.SCANEI
+ ,XTA,.0
+ ,NTR,3.0(М7)
+ M7,A-X,1.7(М7)
+ ,UTC,TXT1.'3'
+ ,ATX,.0(М7)
  ,NTR,22B
- ВЫЗОВ_SCAN:13,VJM,SCAN    
- 7,XTA,4
- ,ITS,
- ,UTC,GAL/6
- ,XTA,
- 15,AEX,
- ,U1A,ПЕРЕХОД_2
- ,UJ,ВЫЗОВ_SYTINT
- ПЕРЕХОД_2:,UJ,БЛОК_SCANER1
- ВЫЗОВ_SYTINT:,UTC,*SCANER*
- ,XTA,
- ,NTR,3
- 7,A-X,1
- 7,ATX,10B
- 7,ATX,11B
- 14,VTM,*INS*   
- ,ITS,14
- 14,VTM,V2
- ,ITS,14
- 14,VTM,V3
- ,ITS,14
- ,NTR,22B
- 13,VJM,SYTINT  
- ,NTR,3
- ,NTR,22B
- 7,XTA,11B
- ,UTC,*SCANER*
- ,ATX,
- ,NTR,3
- ,NTR,22B
- 13,VJM,SCAN    
- 7,XTA,6
- ,ITS,
- ,UTC,GAL/6
- ,XTA,
- 15,AEX,
- ,UZA,ПЕРЕХОД_3
- ,UJ,БЛОК_TXT1_2
- ПЕРЕХОД_3:,UJ,ВЫЗОВ_RWINF
- БЛОК_TXT1_2:7,XTA,
- ,ITS,
- ,UTC,GAL/2
- ,XTA,
- 15,AEX,
- ,UZA,БЛОК_TXT1_3
- ,UJ,БЛОК_SCANER
- БЛОК_TXT1_3:7,XTA,10B
- ,UTC,GAL/2
- ,ATX,
- ,NTR,3
- ,NTR,22B
- БЛОК_SCANER:7,XTA,
- 7,ATX,7
- ,NTR,3
- ,UTC,*SCANER*
- ,XTA,
- 7,A-X,1
- ,UTC,*SCANER*
- ,ATX,
- ,NTR,22B
- ,UJ,БЛОК_SCANER_4
- ВЫЗОВ_RWINF:7,XTA,12B
- ,UTC,*TXT*   
- ,ATX,
- ,NTR,3
- 7,XTA,10B
- 7,A-X,7
- 7,A-X,1
- ,UTC,GAL/3
- ,ATX,
- ,UTC,*ATV*   
- ,XTA,
- ,UTC,*INF*   
- ,ATX,
- ,UTC,*TXT*   
- ,XTA,
- ,UTC,GAM/4
- ,ATX,
- ,NTR,22B
- 13,VJM,RWINF   
- ,UTC,*INF*   
- ,XTA,
- ,UTC,*ATV*   
- ,ATX,
- ,NTR,3
- ,UTC,GAM/5
- ,XTA,
- ,UTC,GAM/2
- ,ATX,
- ,NTR,22B
- ,UJ,БЛОК_TXT1_5
- БЛОК_SCANER1:7,XTA,5
- ,ITS,
- ,UTC,GAL/6
- ,XTA,
- 15,AEX,
- ,U1A,ПЕРЕХОД_4
- ,UJ,БЛОК_SCANER_2
- ПЕРЕХОД_4:,UJ,БЛОК_SCANER1_2
- БЛОК_SCANER_2:,UTC,*SCANER*
- ,XTA,
- ,NTR,3
- 7,A-X,7
- 7,A-X,2
- ,UTC,GAL/3
- ,ATX,
- 7,XTA,1
- ,UTC,GAL/4
- ,ATX,
- ,NTR,22B
- ,UJ,БЛОК_TXT1_5
- БЛОК_SCANER1_2:7,XTA,3
- ,ITS,
- ,UTC,GAL/6
- ,XTA,
- 15,AEX,
- ,UZA,ПЕРЕХОД_5
- ,UJ,БЛОК_TXT1_4
- ПЕРЕХОД_5:,UJ,ПЕР_7
- БЛОК_TXT1_4:7,XTA,
- 7,ATX,7
- ,NTR,3
- 7,XTA,
- ,ITS,
- ,UTC,GAL/2
- ,XTA,
- ,NTR,22B
- 15,AEX,
- ,U1A,ПЕРЕХОД_6
- ,UJ,БЛОК_SCANER_3
- ПЕРЕХОД_6:,UJ,БЛОК_SCANER_4
- БЛОК_SCANER_3:,UTC,*SCANER*
- ,XTA,
- ,NTR,3
- 7,A-X,1
- ,UTC,GAL/2
- ,ATX,
- ,NTR,22B
- ,UJ,БЛОК_SCANER_4
- ПЕР_7:7,XTA,7
- ,NTR,3
- 7,A+X,1
- 7,ATX,7
- ,NTR,22B
- БЛОК_SCANER_4:,UTC,*SCANER*
- ,XTA,
- ,NTR,3
- ,UTC,GAK/4
- ,A-X,
- ,NTR,22B
- ,UZA,ПЕРЕХОД_7
- ,UJ,ПЕРЕХОД_8
- ПЕРЕХОД_7:,UJ,БЛОК_SCANER_5
- ПЕРЕХОД_8:,UJ,ВЫЗОВ_SCAN
- БЛОК_SCANER_5:,UTC,*SCANER*
- ,XTA,
- ,NTR,3
- 7,A-X,1
- ,UTC,GAL/3
- ,ATX,
- ,NTR,22B
- БЛОК_TXT1_5:7,XTA,
- ,ITS,
- ,UTC,GAL/2
- ,XTA,
- 15,AEX,
- ,UZA,БЛОК_TXT2
- ,UJ,ПЕРЕХОД_9
- БЛОК_TXT2:7,XTA,
- ,UTC,GAL/3
- ,ATX,
- ,NTR,3
- ,NTR,22B
- ПЕРЕХОД_9:,UJ,ВОЗВРАТ_2
- ВОЗВРАТ:7,MTJ,8
- 14,MTJ,10
- 7,VTM,К0
- ,ITS,13
- ,ITS,8
- ,ITS,
- ,NTR,3
- ,NTR,2
- 10,UJ,
- ВОЗВРАТ_2:,STI,
- ,STI,7
- ,STI,8
- 8,UJ,
+ ,UJ,SCANEJ.TXT1
+C
+ SCANEI:M7,XTA,7.0
+ ,NTR,3.'22'
+ M7,A+X,1.0(М17)
+ M7,ATX,7.SCANEG
+ ,NTR,22B.SCANEH
+ SCANEJ:,UTC,*SCANER*.0
+ ,XTA,.SCANEJ
+ ,NTR,3.0
+ ,UTC,INS26.SCANER
+ ,A-X,.0
+ ,NTR,22B.'3'
+ ,UZA,ЦИКЛ_ПЕРЕХОД.1(М7)
+ ,UJ,SCANEK.TXT1
+C
+ ЦИКЛ_ПЕРЕХОД:,UJ,SCANEL.0
+C
+ SCANEK:,UJ,SCANA.'22'
+C
+ SCANEL:,UTC,*SCANER*.SCANEJ
+ ,XTA,.7(М7)
+ ,NTR,3.'3'
+ M7,A-X,1.1(М7)
+ ,UTC,TXT2.7(М7)
+ ,ATX,.'22'
+ ,NTR,22B.0
+ SCANEM:M7,XTA,.SCANER
+ ,ITS,.0
+ ,UTC,TXT1.'3'
+ ,XTA,.INS26
+ M17,AEX,.0
+ ,UZA,TXT2A.'22'
+ ,UJ,TXT2B.F7
+C
+ TXT2A:M7,XTA,.SCANEK
+ ,UTC,TXT2.SCANEL
+ ,ATX,.0
+ ,NTR,3.SCANA
+ ,NTR,22B.0
+ TXT2B:,UJ,ВОЗВРАТ_В_БЛОК.SCANER
+C
+ ВОЗВРАТ_В_ОС:M7,MTJ,8.0
+ M16,MTJ,10.'3'
+ M7,VTM,К0.1(М7)
+ ,ITS,13.TXT2
+ ,ITS,8.0
+ ,ITS,.'22'
+ ,NTR,3.0
+ ,NTR,2.0(М7)
+ M12,UJ,
+C
+ ВОЗВРАТ_В_БЛОК:,STI,.TXT1
+ ,STI,7.0
+ ,STI,8.0(М17)
+ M10,UJ,.TXT2A
+C
  К0:,INT,0
  ,INT,1
  ,INT,2
@@ -235,4 +283,4 @@
  ,BSS,2
  V2:,BSS,1
  V3:,BSS,1
- ,END,
+ ,END,.TXT2B

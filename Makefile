@@ -10,9 +10,13 @@
 #   make loadmaps   tests/siprod/loadmap-{dispak,dubna}.txt
 #   make test       regression cases, wiki corpus
 #   make test-perso SIPROD run from a re-recorded PERSO library
-#   make record     write the compiled library into the PERSO of volume 2248
+#   make record     write the compiled library into the PERSO of volume 2348
 #   make coverage   labels of static modules no regression case executes
 #   make bemsh      compile the modules with the real MAKRO-BEMSH translator
+#   make madlen     disassemble the library modules into madlen-gen/
+#   make madlen-texts  collect the commented MADLEN texts into madlen/
+#   make madlen-check   assemble the modules with the MADLEN compiler and
+#                   check the program
 #   make clean      remove build/
 #
 # Needs dubna and dispak on PATH; the corpus test needs the besm6.github.io
@@ -22,7 +26,8 @@
 WIKI ?= $(HOME)/git/besm6.github.io/wiki
 PYTHON ?= python3
 DISBESM6 ?= disbesm6
-ZONE ?= 3900
+VOL ?= 2348
+ZONE ?= 695
 PERSO_WORK ?= /tmp/siprod-bemsh
 
 # Every module has a DTRAN directive file dtr/<name>.dtr; '*' and '/' in library
@@ -34,7 +39,8 @@ DTR := $(wildcard dtr/*.dtr)
 DTRAN := $(patsubst dtr/%.dtr,build/%.dtran,$(DTR))
 
 .PHONY: all dtran dis be build check loadmaps test regress corpus test-perso \
-	coverage bemsh rvs libs madlen madlen-texts madlen-check record clean
+	coverage bemsh rvs libs madlen madlen-texts madlen-labels \
+	madlen-check record clean
 
 all: dis be build loadmaps
 
@@ -59,9 +65,10 @@ build/siprod.bin: $(wildcard text/*.be) siprod.bin tools/siprod_bemsh.py
 	@mkdir -p build
 	$(PYTHON) tools/siprod_bemsh.py --build=$@
 
-# запись собранной библиотеки в PERSO тома 2248
+# запись собранной библиотеки в PERSO тома (по умолчанию - том 2348,
+# зона 01267 - там монитор ищет библиотеку СИПРОДа)
 record: build/siprod.bin
-	$(PYTHON) tools/siprod_perso.py --vol=2248 --zone=$(ZONE) \
+	$(PYTHON) tools/siprod_perso.py --vol=$(VOL) --zone=$(ZONE) \
 		--image=build/siprod.bin --work=$(PERSO_WORK)
 
 # the disassembly must be exact: decode + encode == original words
@@ -107,7 +114,11 @@ madlen:
 
 # тексты МАДЛЕН с осмысленными именами меток и пояснениями - в madlen/
 madlen-texts:
-	$(PYTHON) tools/siprod_madlen_notes.py
+	$(PYTHON) tools/siprod_madlen_build.py
+
+# переименование меток в текстах МАДЛЕН (без пересборки текстов)
+madlen-labels:
+	$(PYTHON) tools/siprod_madlen_labels.py
 
 # сборка модулей компилятором МАДЛЕН и проверка программы
 madlen-check:

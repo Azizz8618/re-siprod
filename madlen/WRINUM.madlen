@@ -1,145 +1,176 @@
+CWRINUM - МОДУЛЬ СИПРОДА
+CИсточник: личная библиотека (PERSO, зона 2702,
+Cтом 2248), слово 6752 образа SIPROD.BIN
+CДлина при загрузке: 81 слов, 136 команд
+CВход: WRINUM
+CВыход: ONEPLA:L0320, TWOPLA:NUM3E, F0C (возврат через М12),
+CPOP (возврат через М10)
+CВнешние: NUM, KOMA, ONE, WHO, HOWSMB, RASPS, WRIKOR
+CСмещения в KOMA: 2, 7
+CСмещения в NUM: 2, 3
+CСмещения в ONE: 1, 2
+CСмещения в WHO: 1
+CСмещения в кадре (М7): общие 0-3, 6, 8-10, свои 11
+CРегистры: М7 (указатель кадра), М10 (блок вызывающего),
+CМ12 (магазин, кадр параметров ОС), М15 (адрес возврата),
+CМ16 (модифицированный адрес), М17 (контекст задачи)
+CМодификатор адреса: МОДА/МОД задают М16, адрес следующей команды += М16
+C
  WRINUM  :,NAME, NEW DTRAN
+ M7:,EQU,7B
+ M10:,EQU,10B
+ M12:,EQU,12B
+ M15:,EQU,15B
+ M16:,EQU,16B
+ M17:,EQU,17B
  *NUM*   :,LC,4
- GAK/2:,EQU,*NUM*   +2
- GAK/3:,EQU,*NUM*   +3
+ NUM2:,EQU,*NUM*   +2
+ NUM3:,EQU,*NUM*   +3
  *KOMA*  :,LC,8
- GAK/5:,EQU,*KOMA*  +2
- GAK/6:,EQU,*KOMA*  +7
+ KOMA2:,EQU,*KOMA*  +2
+ KOMA7:,EQU,*KOMA*  +7
  *ONE*   :,LC,3
- GAL/0:,EQU,*ONE*   +1
- GAL/1:,EQU,*ONE*   +2
+ ONE1:,EQU,*ONE*   +1
+ ONE2:,EQU,*ONE*   +2
  *WHO*   :,LC,2
- GAL/3:,EQU,*WHO*   +1
+ WHO1:,EQU,*WHO*   +1
  HOWSMB  :,SUBP,
  RASPS   :,SUBP,
  WRIKOR  :,SUBP,
- 14,VTM,БЛОК_NUM2
- ,UJ,ПЕР_11
- БЛОК_NUM2:,UTC,GAK/2
- ,XTA,
- 7,ATX,10B
- ,NTR,3
- 7,XTA,
+ M16,VTM,NUM2A.NUM2A(М16)
+ ,UJ,ПЕР_11.F0C
+C
+ NUM2A:,UTC,NUM2.NUM2
+ ,XTA,.0
+ M7,ATX,10B.8(М7)
+ ,NTR,3.'3'
+ M7,XTA,.0(М7)
  ,ITS,
- ,WTC,V3
- ,XTA,
- ,NTR,22B
- 15,AEX,
- ,U1A,БЛОК_NUM2_2
+ ,WTC,V3.V3
+ ,XTA,.0
+ ,NTR,22B.'22'
+ M17,AEX,.0(М17)
+ ,U1A,NUM2B.NUM2B
+ ,UJ,NUM2C.NUM2C
+C
+ NUM2B:,UTC,NUM2.NUM2
+ ,XTA,.0
+ ,NTR,3.'3'
+ M7,A+X,2.2(М7)
+ M7,ATX,10B.8(М7)
+ ,NTR,22B.'22'
+ NUM2C:,UTC,ONE1.ONE1
+ ,XTA,.0
+ ,NTR,3.'3'
+ M7,A-X,10B.8(М7)
+ M7,A-X,3.3(М7)
+ M7,ATX,11B.9(М7)
+ M16,VTM,KOMA7.KOMA7(М16)
+ ,ITS,14.М16
+ M16,VTM,К2.К2(М16)
+ ,ITS,14.М16
+ M16,VTM,К2.К2(М16)
+ ,ITS,14.М16
+ ,NTR,22B.'22'
+ M15,VJM,WRIKOR.WRIKOR(М15)
+ M16,VTM,V1.V1(М16)
+ ,ITS,14.М16
+ M16,VTM,К8.К8(М16)
+ ,ITS,14.М16
+ M16,VTM,К8.К8(М16)
+ ,ITS,14.М16
+ M16,VTM,V2.V2(М16)
+ ,ITS,14.М16
+ M16,VTM,К5.К5(М16)
+ ,ITS,14.М16
+ M16,VTM,К3.К3(М16)
+ ,ITS,14.М16
+ M15,VJM,RASPS.RASPS(М15)
+ ,NTR,3.0
+ ,NTR,22B.'3'
+ M16,VTM,V2.'22'
+ ,ITS,14.V2(М16)
+ M15,VJM,HOWSMB.М16
+ ,NTR,3.HOWSMB(М15)
+ ,NTR,22B.0
+ M16,VTM,V2.'3'
+ ,ITS,14.'22'
+ M16,VTM,*WHO*.V2(М16)
+ ,ITS,14.М16
+ M16,VTM,WHO1.WHO(М16)
+ ,ITS,14.М16
+ M15,VJM,WRIKOR.WHO1(М16)
+ ,NTR,3.М16
+ ,NTR,22B.WRIKOR(М15)
+ M16,VTM,К0.0
+ ,ITS,14.'3'
+ M16,VTM,К5.'22'
+ ,ITS,14.К0(М16)
+ M16,VTM,К2.М16
+ ,ITS,14.К5(М16)
+ M15,VJM,WRIKOR.М16
+ ,NTR,3.К2(М16)
+ ,NTR,22B.М16
+ M7,XTA,6.WRIKOR(М15)
+ ,NTR,3.0
+ ,UTC,NUM2.'3'
+ ,A-X,.'22'
+ M7,A+X,1.6(М7)
+ ,UTC,*WHO*.'3'
+ ,ATX,.NUM2
+ M16,VTM,*NUM*.0
+ ,ITS,14.1(М7)
+ M16,VTM,*WHO*.WHO
+ ,ITS,14.0
+ M16,VTM,NUM2.NUM(М16)
+ ,ITS,14.М16
+ ,NTR,22B.WHO(М16)
+ M15,VJM,WRIKOR.М16
+ M7,XTA,.NUM2(М16)
+ ,ITS,.М16
+ ,WTC,V3.'22'
+ ,XTA,.WRIKOR(М15)
+ M17,AEX,.0
+ ,UZA,ЦИКЛ_ПЕРЕХОД.0(М7)
  ,UJ,ВЫЗОВ_WRIKOR
- БЛОК_NUM2_2:,UTC,GAK/2
- ,XTA,
- ,NTR,3
- 7,A+X,2
- 7,ATX,10B
- ,NTR,22B
- ВЫЗОВ_WRIKOR:,UTC,GAL/0
- ,XTA,
- ,NTR,3
- 7,A-X,10B
- 7,A-X,3
- 7,ATX,11B
- 14,VTM,GAK/6
- ,ITS,14
- 14,VTM,К2
- ,ITS,14
- 14,VTM,К2
- ,ITS,14
- ,NTR,22B
- 13,VJM,WRIKOR  
- 14,VTM,V1
- ,ITS,14
- 14,VTM,К8
- ,ITS,14
- 14,VTM,К8
- ,ITS,14
- 14,VTM,V2
- ,ITS,14
- 14,VTM,К5
- ,ITS,14
- 14,VTM,К3
- ,ITS,14
- 13,VJM,RASPS   
- ,NTR,3
- ,NTR,22B
- 14,VTM,V2
- ,ITS,14
- 13,VJM,HOWSMB  
- ,NTR,3
- ,NTR,22B
- 14,VTM,V2
- ,ITS,14
- 14,VTM,*WHO*   
- ,ITS,14
- 14,VTM,GAL/3
- ,ITS,14
- 13,VJM,WRIKOR  
- ,NTR,3
- ,NTR,22B
- 14,VTM,К0
- ,ITS,14
- 14,VTM,К5
- ,ITS,14
- 14,VTM,К2
- ,ITS,14
- 13,VJM,WRIKOR  
- ,NTR,3
- ,NTR,22B
- 7,XTA,6
- ,NTR,3
- ,UTC,GAK/2
- ,A-X,
- 7,A+X,1
- ,UTC,*WHO*   
- ,ATX,
- 14,VTM,*NUM*   
- ,ITS,14
- 14,VTM,*WHO*   
- ,ITS,14
- 14,VTM,GAK/2
- ,ITS,14
- ,NTR,22B
- 13,VJM,WRIKOR  
- 7,XTA,
- ,ITS,
- ,WTC,V3
- ,XTA,
- 15,AEX,
- ,UZA,ПЕРЕХОД_2
- ,UJ,ВЫЗОВ_WRIKOR_2
- ПЕРЕХОД_2:,UJ,ПЕРЕХОД_3
- ВЫЗОВ_WRIKOR_2:14,VTM,К0
- ,ITS,14
- 14,VTM,К6
- ,ITS,14
- 14,VTM,К2
- ,ITS,14
- 13,VJM,WRIKOR  
- ,NTR,3
- ,NTR,22B
- 14,VTM,*KOMA*  
- ,ITS,14
- ,WTC,V3
- 14,VTM,
- ,ITS,14
- 14,VTM,К2
- ,ITS,14
- 13,VJM,WRIKOR  
- ПЕРЕХОД_3:,UJ,ВОЗВРАТ
- ПЕР_11:7,MTJ,8
- 14,MTJ,10
- 7,VTM,К1
- 7,STX,13B
- ,ITS,13
- ,ITS,8
- ,ITS,
- ,NTR,3
- ,NTR,2
- 10,UJ,
- ВОЗВРАТ:,STI,
- ,STI,7
- ,STI,8
- 8,UJ,
+C
+ ЦИКЛ_ПЕРЕХОД:,UJ,ЦИКЛ_ПЕРЕХОД_2.V3
+C
+ ВЫЗОВ_WRIKOR:M16,VTM,К0.0
+ ,ITS,14.0(М17)
+ M16,VTM,К6.F0
+ ,ITS,14.F0A
+ M16,VTM,К2.0
+ ,ITS,14.F0B
+ M15,VJM,WRIKOR.0
+ ,NTR,3.К0(М16)
+ ,NTR,22B.М16
+ M16,VTM,*KOMA*.К6(М16)
+ ,ITS,14.М16
+ ,WTC,V3.К2(М16)
+ M16,VTM,.М16
+ ,ITS,14.WRIKOR(М15)
+ M16,VTM,К2.0
+ ,ITS,14.'3'
+ M15,VJM,WRIKOR.'22'
+ ЦИКЛ_ПЕРЕХОД_2:,UJ,POP.KOMA(М16)
+C
+ ПЕР_11:M7,MTJ,8.М16
+ M16,MTJ,10.V3
+ M7,VTM,К1.0(М16)
+ M7,STX,13B.М16
+ ,ITS,13.К2(М16)
+ ,ITS,8.М16
+ ,ITS,.WRIKOR(М15)
+ ,NTR,3.POP
+ ,NTR,2.0
+ M12,UJ,.М10(М7)
+C
+ POP:,STI,.М12(М16)
+ ,STI,7.К1(М7)
+ ,STI,8.11(М7)
+ M10,UJ,.М15
+C
  К0:,ISO, 6H*2/*G. . 052 062 057 052 107 056 
  К1:,INT,0
  К2:,INT,1
@@ -153,4 +184,4 @@
  V1:,BSS,1
  V2:,BSS,1
  V3:,BSS,1
- ,END,
+ ,END,.М10

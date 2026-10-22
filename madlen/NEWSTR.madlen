@@ -1,59 +1,87 @@
+CNEWSTR - МОДУЛЬ СИПРОДА
+CИсточник: личная библиотека (PERSO, зона 2702,
+Cтом 2248), слово 14784 образа SIPROD.BIN
+CДлина при загрузке: 27 слов, 50 команд
+CВход: NEWSTR
+CВыход: SPAUD:INS26B, L0044 (возврат через М12), F1 (возврат через М10)
+CВнешние: STR, NDAB, BEGSTR, ENDSTR
+CСмещения в NDAB: 1, 2
+CСмещения в STR: 24, 25, 26
+CСмещения в кадре (М7): общие 0-1, 10
+CРегистры: М7 (указатель кадра), М10 (блок вызывающего),
+CМ12 (магазин, кадр параметров ОС), М15 (адрес возврата),
+CМ16 (модифицированный адрес), М17 (контекст задачи)
+CМодификатор адреса: МОДА/МОД задают М16, адрес следующей команды += М16
+C
  NEWSTR  :,NAME, NEW DTRAN
+ M7:,EQU,7B
+ M10:,EQU,10B
+ M12:,EQU,12B
+ M15:,EQU,15B
+ M16:,EQU,16B
+ M17:,EQU,17B
  *STR*   :,LC,27
- GAK/2:,EQU,*STR*   +24
- GAK/3:,EQU,*STR*   +25
- GAK/4:,EQU,*STR*   +26
+ STR24:,EQU,*STR*   +24
+ STR25:,EQU,*STR*   +25
+ STR26:,EQU,*STR*   +26
  *NDAB*  :,LC,4
- GAK/6:,EQU,*NDAB*  +1
- GAK/7:,EQU,*NDAB*  +2
+ NDAB1:,EQU,*NDAB*  +1
+ NDAB2:,EQU,*NDAB*  +2
  BEGSTR  :,SUBP,
  ENDSTR  :,SUBP,
- 14,VTM,БЛОК_STR25
- ,UJ,ВОЗВРАТ
- БЛОК_STR25:,UTC,GAK/3
- ,XTA,
+ M16,VTM,STR25A.STR25A(М16)
+ ,UJ,ВОЗВРАТ_В_ОС.L0044
+C
+ STR25A:,UTC,STR25.STR25
+ ,XTA,.0
  ,ITS,
- ,UTC,GAK/2
- ,XTA,
- 15,AEX,
- ,UZA,ПЕРЕХОД_2
- ,UJ,ВЫЗОВ_ENDSTR
- ПЕРЕХОД_2:,UJ,БЛОК_STR25_2
- ВЫЗОВ_ENDSTR:,UTC,GAK/6
- ,XTA,
- 7,ATX,1
- ,NTR,3
- ,NTR,22B
- 13,VJM,ENDSTR  
- 7,XTA,1
- ,ITS,
- ,UTC,GAK/6
- ,XTA,
- 15,AEX,
- ,UZA,ВЫЗОВ_BEGSTR
- ,UJ,БЛОК_STR25_2
- ВЫЗОВ_BEGSTR:13,VJM,BEGSTR  
- БЛОК_STR25_2:,UTC,GAK/3
- ,XTA,
- ,NTR,3
- 7,A+X,
- ,UTC,GAK/2
- ,ATX,
- ,NTR,22B
- ,UJ,ВОЗВРАТ_2
- ВОЗВРАТ:7,MTJ,8
- 14,MTJ,10
- 7,VTM,К0
- ,ITS,13
- ,ITS,8
- ,ITS,
- ,NTR,3
- ,NTR,2
- 10,UJ,
- ВОЗВРАТ_2:,STI,
- ,STI,7
- ,STI,8
- 8,UJ,
+ ,UTC,STR24.STR24
+ ,XTA,.0
+ M17,AEX,.0(М17)
+ ,UZA,NDAB1A.NDAB1A
+ ,UJ,NDAB1B.NDAB1B
+C
+ NDAB1A:,UJ,STR25B.STR25B
+C
+ NDAB1B:,UTC,NDAB1.0
+ ,XTA,.NDAB1
+ M7,ATX,1.0
+ ,NTR,3.1(М7)
+ ,NTR,22B.'3'
+ M15,VJM,ENDSTR.'22'
+ M7,XTA,1.ENDSTR(М15)
+ ,ITS,.1(М7)
+ ,UTC,NDAB1
+ ,XTA,.NDAB1
+ M17,AEX,.0
+ ,UZA,BEGSTA.0(М17)
+ ,UJ,STR25B.BEGSTA
+C
+ BEGSTA:M15,VJM,BEGSTR.STR25B
+ STR25B:,UTC,STR25.0
+ ,XTA,.BEGSTR(М15)
+ ,NTR,3.0
+ M7,A+X,.STR25
+ ,UTC,STR24.0
+ ,ATX,.'3'
+ ,NTR,22B.0(М7)
+ ,UJ,ВОЗВРАТ_В_БЛОК.STR24
+C
+ ВОЗВРАТ_В_ОС:M7,MTJ,8.0
+ M16,MTJ,10.'22'
+ M7,VTM,К0.F1
+ ,ITS,13.М10(М7)
+ ,ITS,8.М12(М16)
+ ,ITS,.К0(М7)
+ ,NTR,3.М15
+ ,NTR,2.М10
+ M12,UJ,
+C
+ ВОЗВРАТ_В_БЛОК:,STI,.'3'
+ ,STI,7.'2'
+ ,STI,8.0(М12)
+ M10,UJ,.0
+C
  К0:,INT,3
  ,BSS,1
  ,END,

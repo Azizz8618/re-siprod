@@ -1,112 +1,148 @@
+CWRREM - МОДУЛЬ СИПРОДА
+CИсточник: личная библиотека (PERSO, зона 2702,
+Cтом 2248), слово 18368 образа SIPROD.BIN
+CДлина при загрузке: 50 слов, 94 команд
+CВход: WRREM
+CВыход: SEKGIR:SEPF, SEKGIR:F7I, F1A (возврат через М12),
+CPOP (возврат через М10)
 CВЫВОД ЗАМЕЧАНИЙ (ПРИМЕЧАНИЙ К ТАБЛИЦЕ).
+CВнешние: SEK, LYG, SEP, EGO, PILDYK
+CСмещения в EGO: 2400, 4800, 7200
+CСмещения в LYG: 1, 2
+CСмещения в SEK: 3
+CСмещения в SEP: 1, 2, 3, 4, 5
+CСмещения в кадре (М7): общие 0-2, 10
+CРегистры: М1 (индекс: база модуля), М7 (указатель кадра),
+CМ10 (блок вызывающего), М12 (магазин, кадр параметров ОС),
+CМ15 (адрес возврата), М16 (модифицированный адрес),
+CМ17 (контекст задачи)
+CМодификатор адреса: МОДА/МОД задают М16, адрес следующей команды += М16
 C
  WRREM   :,NAME, NEW DTRAN
+ M1:,EQU,1B
+ M7:,EQU,7B
+ M10:,EQU,10B
+ M12:,EQU,12B
+ M15:,EQU,15B
+ M16:,EQU,16B
+ M17:,EQU,17B
  *SEK*   :,LC,4
  *LYG*   :,LC,6
- GAK/3:,EQU,*LYG*   +1
- GAK/4:,EQU,*LYG*   +2
+ LYG1:,EQU,*LYG*   +1
+ LYG2:,EQU,*LYG*   +2
  *SEP*   :,LC,6
- GAK/6:,EQU,*SEP*   +1
- GAK/7:,EQU,*SEP*   +2
- GAL/0:,EQU,*SEP*   +3
- GAL/1:,EQU,*SEP*   +4
- GAL/2:,EQU,*SEP*   +5
+ SEP1:,EQU,*SEP*   +1
+ SEP2:,EQU,*SEP*   +2
+ SEP3:,EQU,*SEP*   +3
+ SEP4:,EQU,*SEP*   +4
+ SEP5:,EQU,*SEP*   +5
  *EGO*   :,LC,13401
- GAL/4:,EQU,*EGO*   +2400
- GAL/5:,EQU,*EGO*   +4800
- GAL/6:,EQU,*EGO*   +7200
+ EGO2400:,EQU,*EGO*   +2400
+ EGO4800:,EQU,*EGO*   +4800
+ EGO7200:,EQU,*EGO*   +7200
  PILDYK  :,SUBP,
- GAM/0:,EQU,*SEK*   +3
- GAM/1:,EQU,*EGO*   -32767
- GAM/2:,EQU,GAL/4-32767
- GAM/3:,EQU,GAL/5-32767
- 14,VTM,БЛОК_LYG2
- ,UJ,ВОЗВРАТ
- БЛОК_LYG2:,UTC,GAK/4
- ,XTA,
- ,NTR,3
- 7,A+X,
- 7,ATX,2
- 7,XTA,1
+ SEK3:,EQU,*SEK*   +3
+ EGO32767:,EQU,*EGO*   -32767
+ EGO35167:,EQU,EGO2400-32767
+ EGO37567:,EQU,EGO4800-32767
+ M16,VTM,LYG2A.LYG2A(М16)
+ ,UJ,ВОЗВРАТ_В_ОС.F1A
+C
+ LYG2A:,UTC,LYG2.LYG2
+ ,XTA,.0
+ ,NTR,3.'3'
+ M7,A+X,.0(М7)
+ M7,ATX,2.2(М7)
+ M7,XTA,1.1(М7)
  ,ITS,
- ,UTC,*SEP*   
- ,XTA,
- ,NTR,22B
- 15,AEX,
- ,UZA,БЛОК_SEK3
- ,UJ,БЛОК_V0
- БЛОК_SEK3:,UTC,GAM/0
- ,XTA,
- ,NTR,3
- 7,A+X,
- 7,ATX,2
- ,NTR,22B
- БЛОК_V0:,WTC,V0
- ,UJ,БЛОК_V0
- ,UJ,ВЫЗОВ_PILDYK
-  :,UJ,ВЫЗОВ_PILDYK_2
-  :,UJ,ВЫЗОВ_PILDYK_3
- ВЫЗОВ_PILDYK:,WTC,GAL/1
- 1,VTM,
- 1,UTC,GAM/1
- 14,VTM,
- ,ITS,14
- 14,VTM,GAK/6
- ,ITS,14
- 14,VTM,GAK/7
- ,ITS,14
- 14,VTM,GAL/0
- ,ITS,14
- 14,VTM,GAL/2
- ,ITS,14
- 13,VJM,PILDYK  
- ,UJ,ПЕРЕХОД_2
- ВЫЗОВ_PILDYK_2:,WTC,GAL/1
- 1,VTM,
- 1,UTC,GAM/2
- 14,VTM,
- ,ITS,14
- 14,VTM,GAK/6
- ,ITS,14
- 14,VTM,GAK/7
- ,ITS,14
- 14,VTM,GAL/0
- ,ITS,14
- 14,VTM,GAL/2
- ,ITS,14
- 13,VJM,PILDYK  
- ,UJ,ПЕРЕХОД_2
- ВЫЗОВ_PILDYK_3:,WTC,GAL/1
- 1,VTM,
- 1,UTC,GAM/3
- 14,VTM,
- ,ITS,14
- 14,VTM,GAK/6
- ,ITS,14
- 14,VTM,GAK/7
- ,ITS,14
- 14,VTM,GAL/0
- ,ITS,14
- 14,VTM,GAL/2
- ,ITS,14
- 13,VJM,PILDYK  
- ПЕРЕХОД_2:,UJ,ВОЗВРАТ_2
- ВОЗВРАТ:7,MTJ,8
- 14,MTJ,10
- 7,VTM,К0
- ,ITS,13
- ,ITS,1
- ,ITS,8
- ,ITS,
- ,NTR,3
- ,NTR,2
- 10,UJ,
- ВОЗВРАТ_2:,STI,
- ,STI,7
- ,STI,1
+ ,UTC,*SEP*.SEP
+ ,XTA,.0
+ ,NTR,22B.'22'
+ M17,AEX,.0(М17)
+ ,UZA,SEK3A.SEK3A
+ ,UJ,SEK3B.SEK3B
+C
+ SEK3A:,UTC,SEK3.0
+ ,XTA,.SEK3
+ ,NTR,3.0
+ M7,A+X,.'3'
+ M7,ATX,2.0(М7)
+ ,NTR,22B.2(М7)
+ SEK3B:,WTC,V0.'22'
+ ,UJ,SEK3B.V0
+C
+ ,UJ,SEP4A.SEK3B
+C
+  :,UJ,SEP4B.SEP4A
+C
+  :,UJ,SEP4C.0
+C
+ SEP4A:,WTC,SEP4.SEP4B
+ M1,VTM,.0
+ M1,UTC,EGO32767.SEP4C
+ M16,VTM,.0
+ ,ITS,14.SEP4
+ M16,VTM,SEP1.0(М1)
+ ,ITS,14.EGO32767(М1)
+ M16,VTM,SEP2.0(М16)
+ ,ITS,14.М16
+ M16,VTM,SEP3.SEP1(М16)
+ ,ITS,14.М16
+ M16,VTM,SEP5.SEP2(М16)
+ ,ITS,14.М16
+ M15,VJM,PILDYK.SEP3(М16)
+ ,UJ,ЦИКЛ_ПЕРЕХОД.М16
+C
+ SEP4B:,WTC,SEP4.SEP5(М16)
+ M1,VTM,.М16
+ M1,UTC,EGO35167.PILDYK(М15)
+ M16,VTM,.F1
+ ,ITS,14.0
+ M16,VTM,SEP1.SEP4
+ ,ITS,14.0(М1)
+ M16,VTM,SEP2.EGO35167(М1)
+ ,ITS,14.0(М16)
+ M16,VTM,SEP3.М16
+ ,ITS,14.SEP1(М16)
+ M16,VTM,SEP5.М16
+ ,ITS,14.SEP2(М16)
+ M15,VJM,PILDYK.М16
+ ,UJ,ЦИКЛ_ПЕРЕХОД.SEP3(М16)
+C
+ SEP4C:,WTC,SEP4.М16
+ M1,VTM,.SEP5(М16)
+ M1,UTC,EGO37567.М16
+ M16,VTM,.PILDYK(М15)
+ ,ITS,14.F1
+ M16,VTM,SEP1.0
+ ,ITS,14.SEP4
+ M16,VTM,SEP2.0(М1)
+ ,ITS,14.EGO37567(М1)
+ M16,VTM,SEP3.0(М16)
+ ,ITS,14.М16
+ M16,VTM,SEP5.SEP1(М16)
+ ,ITS,14.М16
+ M15,VJM,PILDYK.SEP2(М16)
+ ЦИКЛ_ПЕРЕХОД:,UJ,POP.М16
+C
+ ВОЗВРАТ_В_ОС:M7,MTJ,8.SEP3(М16)
+ M16,MTJ,10.М16
+ M7,VTM,К0.SEP5(М16)
+ ,ITS,13.М16
+ ,ITS,1.PILDYK(М15)
+ ,ITS,8.POP
+ ,ITS,.0
+ ,NTR,3.М10(М7)
+ ,NTR,2.М12(М16)
+ M12,UJ,.К0(М7)
+C
+ POP:,STI,.М15
+ ,STI,7.М1
+ ,STI,1.М10
  ,STI,8
- 8,UJ,
+ M10,UJ,.'3'
+C
  К0:,INT,1
  ,INT,2
  V0:,BSS,1
- ,END,
+ ,END,.'2'

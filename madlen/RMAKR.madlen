@@ -1,174 +1,214 @@
+CRMAKR - МОДУЛЬ СИПРОДА
+CИсточник: личная библиотека (PERSO, зона 2702,
+Cтом 2248), слово 9600 образа SIPROD.BIN
+CДлина при загрузке: 402 слов, 168 команд
+CВход: RMAKR
+CВыход: PAPAPR:F5, PAPAPR:F5, PAPRAP:EGO86F, PAPRAP:INS25C,
+CPAPRAP:EGO86K, PAPRAP:EGO86K, PAPRAP:SCANA, F13 (возврат через М12),
+CPOP (возврат через М10)
 CЗАГОТОВКА МАКРОСОВ 18 И 19: ШАБЛОНЫ ЗАГОЛОВКОВ И
 CТАБЛИЦА ПАРАМЕТРОВ ДЛЯ РЕЖИМА *SUB.
+CВнешние: COMCON, EGO, PAGE, RSYMB, RASPS1, IMUI
+CСмещения в COMCON: 20
+CСмещения в EGO: 7200, 8600, 8601
+CСмещения в PAGE: 1
+CСмещения в кадре (М7): общие 0-5, 7-10, свои 11-15
+CРегистры: М1 (индекс: база модуля), М2 (рабочий регистр),
+CМ7 (указатель кадра), М10 (блок вызывающего),
+CМ12 (магазин, кадр параметров ОС), М15 (адрес возврата),
+CМ16 (модифицированный адрес), М17 (контекст задачи)
+CМодификатор адреса: МОДА/МОД задают М16, адрес следующей команды += М16
 C
  RMAKR   :,NAME, NEW DTRAN
+ M1:,EQU,1B
+ M2:,EQU,2B
+ M7:,EQU,7B
+ M10:,EQU,10B
+ M12:,EQU,12B
+ M15:,EQU,15B
+ M16:,EQU,16B
+ M17:,EQU,17B
+ M412:,EQU,412B
  *COMCON*:,LC,21
- GAK/2:,EQU,*COMCON*+20
+ COMCON20:,EQU,*COMCON*+20
  *EGO*   :,LC,13401
- GAK/4:,EQU,*EGO*   +7200
- GAK/5:,EQU,*EGO*   +8600
- GAK/6:,EQU,*EGO*   +8601
+ EGO7200:,EQU,*EGO*   +7200
+ EGO8600:,EQU,*EGO*   +8600
+ EGO8601:,EQU,*EGO*   +8601
  *PAGE*  :,LC,6
  RSYMB   :,SUBP,
  RASPS1  :,SUBP,
  I*MU*I  :,SUBP,
- GAL/3:,EQU,GAK/4-32767
- GAL/4:,EQU,*PAGE*  +1
- 14,VTM,ВЫЗОВ_IMUI
- ,UJ,ПЕР_15
- ВЫЗОВ_IMUI:,WTC,V9
- ,XTA,
- ,NTR,3
- 7,A-X,
- 14,VTM,GAK/2
- 13,VJM,I*MU*I  
- 7,ATX,7
- ,UTC,GAK/5
- ,XTA,
- 14,VTM,GAK/2
- 13,VJM,I*MU*I  
- 7,ATX,10B
- 7,XTA,
- 7,ATX,11B
- ,NTR,22B
- ,UJ,БЛОК_COMCON20
- БЛОК_V5:7,XTA,10B
- ,NTR,3
- 7,A+X,11B
- 7,ATX,12B
- 7,XTA,7
- 7,A+X,11B
- 7,ATX,13B
- ,WTC,V5
- 1,VTM,
- 1,UTC,V9
- ,XTA,
- ,WTC,V4
- 2,VTM,
- 2,UTC,GAL/3
- ,ATX,
- ,NTR,22B
- 7,XTA,11B
- ,NTR,3
- 7,A+X,
- 7,ATX,11B
- ,NTR,22B
- БЛОК_COMCON20:,UTC,GAK/2
- ,X-A,
- ,UZA,БЛОК_V5
- ,UTC,GAK/5
- ,XTA,
- ,NTR,3
- 7,A+X,
- ,UTC,GAK/5
- ,ATX,
- ,WTC,V9
- ,XTA,
- 7,A-X,3
- ,NTR,22B
- ,UZA,ПЕРЕХОД_2
- ,UJ,ПЕРЕХОД_3
- ПЕРЕХОД_2:,UJ,БЛОК_PAGE1
- ПЕРЕХОД_3:,UJ,ВОЗВРАТ
- БЛОК_PAGE1:7,XTA,10B
- ,NTR,3
- 7,A+X,
- 7,ATX,10B
- ,UTC,GAL/4
- ,XTA,
- 7,A-X,1
- 7,ATX,14B
- 7,XTA,5
- 7,ATX,15B
- 7,XTA,3
- ,ITS,
- ,WTC,V9
- ,XTA,
- ,NTR,22B
- 15,AEX,
- ,UZA,ПЕРЕХОД_4
+ EGO39967:,EQU,EGO7200-32767
+ PAGE1:,EQU,*PAGE*  +1
+ M16,VTM,FRAME.FRAME(М16)
+ ,UJ,ПЕР_15.F13
+C
+ FRAME:,WTC,V9.V9
+ ,XTA,.0
+ ,NTR,3.'3'
+ M7,A-X,.0(М7)
+ M16,VTM,COMCON20.COMCON20(М16)
+ M15,VJM,I*MU*I.IMUI(М15)
+ M7,ATX,7.7(М7)
+ ,UTC,EGO8600.EGO8600
+ ,XTA,.0
+ M16,VTM,COMCON20.COMCON20(М16)
+ M15,VJM,I*MU*I.IMUI(М15)
+ M7,ATX,10B.0
+ M7,XTA,.8(М7)
+ M7,ATX,11B.0(М7)
+ ,NTR,22B.9(М7)
+ ,UJ,EGO39A.'22'
+C
+ EGO399:M7,XTA,10B.EGO39A
+ ,NTR,3.0
+ M7,A+X,11B.8(М7)
+ M7,ATX,12B.'3'
+ M7,XTA,7.9(М7)
+ M7,A+X,11B.10(М7)
+ M7,ATX,13B.7(М7)
+ ,WTC,V5.9(М7)
+ M1,VTM,.11(М7)
+ M1,UTC,V9.V5
+ ,XTA,.0(М1)
+ ,WTC,V4.V9(М1)
+ M2,VTM,.0
+ M2,UTC,EGO39967.V4
+ ,ATX,.0(М2)
+ ,NTR,22B.EGO39967(М2)
+ M7,XTA,11B.0
+ ,NTR,3.'22'
+ M7,A+X,.9(М7)
+ M7,ATX,11B.'3'
+ ,NTR,22B.0(М7)
+ EGO39A:,UTC,COMCON20.9(М7)
+ ,X-A,.'22'
+ ,UZA,EGO399.0
+ ,UTC,EGO8600.COMCON20
+ ,XTA,.0
+ ,NTR,3.EGO399
+ M7,A+X,.EGO8600
+ ,UTC,EGO8600.0
+ ,ATX,.'3'
+ ,WTC,V9.0(М7)
+ ,XTA,.EGO8600
+ M7,A-X,3.0
+ ,NTR,22B.V9
+ ,UZA,ЦИКЛ_ПЕРЕХОД.0
+ ,UJ,PAGE1A.3(М7)
+C
+ ЦИКЛ_ПЕРЕХОД:,UJ,PAGE1B.'22'
+C
+ PAGE1A:,UJ,POP.F9
+C
+ PAGE1B:M7,XTA,10B.PAGE1A
+ ,NTR,3.0
+ M7,A+X,.PAGE1B
+ M7,ATX,10B.0
+ ,UTC,PAGE1.POP
+ ,XTA,.0
+ M7,A-X,1.8(М7)
+ M7,ATX,14B.'3'
+ M7,XTA,5.0(М7)
+ M7,ATX,15B.8(М7)
+ M7,XTA,3.PAGE1
+ ,ITS,.0
+ ,WTC,V9.1(М7)
+ ,XTA,.12(М7)
+ ,NTR,22B.5(М7)
+ M17,AEX,.13(М7)
+ ,UZA,ЦИКЛ_ПЕРЕХОД_2.3(М7)
  ,UJ,БЛОК_V9
- ПЕРЕХОД_4:,UJ,ВЫЗОВ_RASPS1
- БЛОК_V9:7,XTA,2
- 7,ATX,15B
- ,NTR,3
- 7,XTA,4
- ,ITS,
- ,WTC,V9
- ,XTA,
- ,NTR,22B
- 15,AEX,
- ,UZA,БЛОК_PAGE1_2
- ,UJ,ВЫЗОВ_RASPS1
- БЛОК_PAGE1_2:,UTC,GAL/4
- ,XTA,
- 7,ATX,14B
- ,NTR,3
- ,NTR,22B
- ВЫЗОВ_RASPS1:14,VTM,V6
- ,ITS,14
- 14,VTM,К0
- ,ITS,14
- 14,VTM,К0
- ,ITS,14
- ,WTC,V2
- 1,VTM,
- 1,UTC,GAL/3
- 14,VTM,
- ,ITS,14
- 14,VTM,V7
- ,ITS,14
- 14,VTM,V8
- ,ITS,14
- 13,VJM,RASPS1  
- ,NTR,3
- ,NTR,22B
- 7,XTA,3
- ,ITS,
- ,WTC,V9
- ,XTA,
- 15,AEX,
- ,UZA,ПЕРЕХОД_5
- ,UJ,ВЫЗОВ_RSYMB
- ПЕРЕХОД_5:,UJ,ВОЗВРАТ
- ВЫЗОВ_RSYMB:7,XTA,15B
- ,NTR,3
- 7,A+X,16B
- 7,ATX,15B
- 14,VTM,К1
- ,ITS,14
- 14,VTM,К2
- ,ITS,14
- ,WTC,V2
- 1,VTM,
- 1,UTC,GAL/3
- 14,VTM,
- ,ITS,14
- 14,VTM,V7
- ,ITS,14
- ,NTR,22B
- 13,VJM,RSYMB   
- ,NTR,3
- ,NTR,22B
- ,UJ,ВОЗВРАТ
- ПЕР_15:7,MTJ,8
- 14,MTJ,10
- 7,VTM,К2
- 7,STX,17B
- ,ITS,13
- ,ITS,1
- ,ITS,2
- ,ITS,8
- ,ITS,
- ,NTR,3
- ,NTR,2
- 10,UJ,
- ВОЗВРАТ:,STI,
- ,STI,7
- ,STI,2
- ,STI,1
- ,STI,8
- 8,UJ,
+C
+ ЦИКЛ_ПЕРЕХОД_2:,UJ,PAGE1D.V9
+C
+ БЛОК_V9:M7,XTA,2.0
+ M7,ATX,15B.'22'
+ ,NTR,3.0(М17)
+ M7,XTA,4.F3
+ ,ITS,.F2
+ ,WTC,V9.PAGE1D
+ ,XTA,.0
+ ,NTR,22B.2(М7)
+ M17,AEX,.13(М7)
+ ,UZA,PAGE1C.'3'
+ ,UJ,PAGE1D.4(М7)
+C
+ PAGE1C:,UTC,PAGE1
+ ,XTA,.V9
+ M7,ATX,14B.0
+ ,NTR,3.'22'
+ ,NTR,22B.0(М17)
+ PAGE1D:M16,VTM,V6.PAGE1C
+ ,ITS,14.PAGE1D
+ M16,VTM,К0.0
+ ,ITS,14.PAGE1
+ M16,VTM,К0.0
+ ,ITS,14.12(М7)
+ ,WTC,V2.'3'
+ M1,VTM,.'22'
+ M1,UTC,EGO39967.0
+ M16,VTM,.V6(М16)
+ ,ITS,14.М16
+ M16,VTM,V7.К0(М16)
+ ,ITS,14.М16
+ M16,VTM,V8.К0(М16)
+ ,ITS,14.М16
+ M15,VJM,RASPS1.V2
+ ,NTR,3.0(М1)
+ ,NTR,22B.EGO39967(М1)
+ M7,XTA,3.0(М16)
+ ,ITS,.М16
+ ,WTC,V9.V7(М16)
+ ,XTA,.М16
+ M17,AEX,.V8(М16)
+ ,UZA,EGO39B.М16
+ ,UJ,EGO39C.RASPS1(М15)
+C
+ EGO39B:,UJ,POP.'3'
+C
+ EGO39C:M7,XTA,15B.'22'
+ ,NTR,3.3(М7)
+ M7,A+X,16B
+ M7,ATX,15B.V9
+ M16,VTM,К1.0
+ ,ITS,14.0(М17)
+ M16,VTM,К2.EGO39B
+ ,ITS,14.EGO39C
+ ,WTC,V2.0
+ M1,VTM,.POP
+ M1,UTC,EGO39967.0
+ M16,VTM,.13(М7)
+ ,ITS,14.'3'
+ M16,VTM,V7.14(М7)
+ ,ITS,14.13(М7)
+ ,NTR,22B.К1(М16)
+ M15,VJM,RSYMB.М16
+ ,NTR,3.К2(М16)
+ ,NTR,22B.М16
+ ,UJ,POP.V2
+C
+ ПЕР_15:M7,MTJ,8.0(М1)
+ M16,MTJ,10.EGO39967(М1)
+ M7,VTM,К2.0(М16)
+ M7,STX,17B.М16
+ ,ITS,13.V7(М16)
+ ,ITS,1.М16
+ ,ITS,2.'22'
+ ,ITS,8.RSYMB(М15)
+ ,ITS,.0
+ ,NTR,3.'3'
+ ,NTR,2.'22'
+ M12,UJ,.POP
+C
+ POP:,STI,.0
+ ,STI,7.М10(М7)
+ ,STI,2.М12(М16)
+ ,STI,1.К2(М7)
+ ,STI,8.15(М7)
+ M10,UJ,.М15
+C
  К0:,INT,10
  К1:,ISO, 6H$      . 044 040 040 040 040 040 
  К2:,INT,1
@@ -178,7 +218,7 @@ C
  ,INT,18
  ,INT,32
  ,BSS,310
- ,DATA,
+ ,DATA,.М1
  V0:,ISO, 6H*2/*1M . 052 062 057 052 061 115 
  ,ISO, 6H*MDПOД . 052 115 104 160 117 144 
  V2:,ISO, 6HПPOГPA . 160 120 117 147 120 101 
@@ -445,6 +485,6 @@ C
  ,ISO, 6H       . 040 040 040 040 040 040 
  ,ISO, 6H       . 040 040 040 040 040 040 
  ,ISO, 6H       . 040 040 040 040 040 040 
- 266,SET,V0
- 1,   ,V10
+ M412,SET,V0.М2
+ M1,   ,V10.М10
  ,END,

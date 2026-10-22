@@ -1,90 +1,127 @@
+CCOMANN - МОДУЛЬ СИПРОДА
+CИсточник: личная библиотека (PERSO, зона 2702,
+Cтом 2248), слово 11584 образа SIPROD.BIN
+CДлина при загрузке: 46 слов, 82 команд
+CВход: COMANN
+CВыход: SPAUD:SCAN08, F0 (возврат через М12), F0A (возврат через М10)
+CВнешние: INS, SCANER, LRE
+CСмещения в INS: 24, 25, 26
+CСмещения в LRE: 2, 3, 4, 5
+CСмещения в SCANER: 1, 2
+CСмещения в кадре (М7): общие 0-4, 10
+CРегистры: М7 (указатель кадра), М10 (блок вызывающего),
+CМ12 (магазин, кадр параметров ОС), М15 (адрес возврата),
+CМ16 (модифицированный адрес), М17 (контекст задачи)
+CМодификатор адреса: МОДА/МОД задают М16, адрес следующей команды += М16
+C
  COMANN  :,NAME, NEW DTRAN
+ M7:,EQU,7B
+ M10:,EQU,10B
+ M12:,EQU,12B
+ M16:,EQU,16B
+ M17:,EQU,17B
  *INS*   :,LC,27
- GAK/2:,EQU,*INS*   +24
- GAK/3:,EQU,*INS*   +25
- GAK/4:,EQU,*INS*   +26
+ INS24:,EQU,*INS*   +24
+ INS25:,EQU,*INS*   +25
+ INS26:,EQU,*INS*   +26
  *SCANER*:,LC,3
- GAK/6:,EQU,*SCANER*+1
- GAK/7:,EQU,*SCANER*+2
+ SCANER1:,EQU,*SCANER*+1
+ SCANER2:,EQU,*SCANER*+2
  *LRE*   :,LC,20
- GAL/1:,EQU,*LRE*   +5
- GAL/2:,EQU,*LRE*   +3
- GAL/3:,EQU,*LRE*   +4
- GAL/4:,EQU,*LRE*   +2
- 14,VTM,БЛОК_SCANER1
- ,UJ,ВОЗВРАТ
- БЛОК_SCANER1:7,XTA,2
+ LRE5:,EQU,*LRE*   +5
+ LRE3:,EQU,*LRE*   +3
+ LRE4:,EQU,*LRE*   +4
+ LRE2:,EQU,*LRE*   +2
+ M16,VTM,SCANEA.SCANEA(М16)
+ ,UJ,ВОЗВРАТ_В_ОС.F0
+C
+ SCANEA:M7,XTA,2.2(М7)
  ,ITS,
- ,UTC,GAK/6
+ ,UTC,SCANER1.SCANER1
+ ,XTA,.0
+ M17,AEX,.0(М17)
+ ,U1A,LRE5A.LRE5A
+ ,UJ,LRE5B.LRE5B
+C
+ LRE5A:,UJ,SCANEB.0
+C
+ LRE5B:M7,XTA,.SCANEB
+ ,UTC,LRE5.0
+ ,ATX,.0(М7)
+ ,UJ,SCANEF.LRE5
+C
+ SCANEB:M7,XTA,1.0
+ ,ITS,.SCANEF
+ ,UTC,SCANER1.1(М7)
  ,XTA,
- 15,AEX,
- ,U1A,ПЕРЕХОД_2
- ,UJ,БЛОК_LRE5
- ПЕРЕХОД_2:,UJ,БЛОК_SCANER1_2
- БЛОК_LRE5:7,XTA,
- ,UTC,GAL/1
- ,ATX,
- ,UJ,ПЕРЕХОД_6
- БЛОК_SCANER1_2:7,XTA,1
- ,ITS,
- ,UTC,GAK/6
- ,XTA,
- 15,AEX,
- ,U1A,ПЕРЕХОД_3
- ,UJ,БЛОК_LRE3
- ПЕРЕХОД_3:,UJ,БЛОК_SCANER1_3
- БЛОК_LRE3:7,XTA,
- ,UTC,GAL/2
- ,ATX,
- ,UJ,ПЕРЕХОД_6
- БЛОК_SCANER1_3:7,XTA,3
- ,ITS,
- ,UTC,GAK/6
- ,XTA,
- 15,AEX,
- ,U1A,ПЕРЕХОД_4
- ,UJ,БЛОК_LRE4
- ПЕРЕХОД_4:,UJ,БЛОК_SCANER1_4
- БЛОК_LRE4:7,XTA,
- ,UTC,GAL/3
- ,ATX,
- ,UJ,ПЕРЕХОД_6
- БЛОК_SCANER1_4:7,XTA,4
- ,ITS,
- ,UTC,GAK/6
- ,XTA,
- 15,AEX,
- ,U1A,ПЕРЕХОД_5
- ,UJ,БЛОК_LRE2
- ПЕРЕХОД_5:,UJ,БЛОК_SCANER
- БЛОК_LRE2:7,XTA,
- ,UTC,GAL/4
- ,ATX,
- ,UJ,ПЕРЕХОД_6
- БЛОК_SCANER:,UTC,*SCANER*
- ,XTA,
- ,NTR,3
- 7,A-X,
- ,UTC,*SCANER*
- ,ATX,
- ,NTR,22B
- ПЕРЕХОД_6:,UJ,ВОЗВРАТ_2
- ВОЗВРАТ:7,MTJ,8
- 14,MTJ,10
- 7,VTM,К0
- ,ITS,13
- ,ITS,8
- ,ITS,
- ,NTR,3
- ,NTR,2
- 10,UJ,
- ВОЗВРАТ_2:,STI,
- ,STI,7
- ,STI,8
- 8,UJ,
+ M17,AEX,.SCANER1
+ ,U1A,LRE3A.0
+ ,UJ,LRE3B.0(М17)
+C
+ LRE3A:,UJ,SCANEC.LRE3A
+C
+ LRE3B:M7,XTA,.LRE3B
+ ,UTC,LRE3.0
+ ,ATX,.SCANEC
+ ,UJ,SCANEF.0
+C
+ SCANEC:M7,XTA,3.0(М7)
+ ,ITS,.LRE3
+ ,UTC,SCANER1.0
+ ,XTA,.SCANEF
+ M17,AEX,.3(М7)
+ ,U1A,LRE4A
+ ,UJ,LRE4B.SCANER1
+C
+ LRE4A:,UJ,SCANED.0
+C
+ LRE4B:M7,XTA,.0(М17)
+ ,UTC,LRE4.LRE4A
+ ,ATX,.LRE4B
+ ,UJ,SCANEF.0
+C
+ SCANED:M7,XTA,4.SCANED
+ ,ITS,.0
+ ,UTC,SCANER1.0(М7)
+ ,XTA,.LRE4
+ M17,AEX,.0
+ ,U1A,LRE2A.SCANEF
+ ,UJ,LRE2B.4(М7)
+C
+ LRE2A:,UJ,SCANEE
+C
+ LRE2B:M7,XTA,.SCANER1
+ ,UTC,LRE2.0
+ ,ATX,.0(М17)
+ ,UJ,SCANEF.LRE2A
+C
+ SCANEE:,UTC,*SCANER*.LRE2B
+ ,XTA,.0
+ ,NTR,3.SCANEE
+ M7,A-X,.0
+ ,UTC,*SCANER*.0(М7)
+ ,ATX,.LRE2
+ ,NTR,22B.0
+ SCANEF:,UJ,ВОЗВРАТ_В_БЛОК.SCANEF
+C
+ ВОЗВРАТ_В_ОС:M7,MTJ,8.SCANER
+ M16,MTJ,10.0
+ M7,VTM,К0.'3'
+ ,ITS,13.0(М7)
+ ,ITS,8.SCANER
+ ,ITS,.0
+ ,NTR,3.'22'
+ ,NTR,2.0
+ M12,UJ,.F0A
+C
+ ВОЗВРАТ_В_БЛОК:,STI,.0
+ ,STI,7.М10(М7)
+ ,STI,8.М12(М16)
+ M10,UJ,.К0(М7)
+C
  К0:,INT,1
  ,INT,11
  ,INT,16
  ,INT,21
  ,INT,23
- ,END,
+ ,END,.М15
