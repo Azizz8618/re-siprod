@@ -457,6 +457,10 @@ def be_data_names(module):
     return consts, vars_
 
 
+DATA_AREA_NOTE = ("ОБЛАСТЬ КАДРА: КОНСТАНТЫ, ЗАДАВАЕМЫЕ В ЯЧЕЙКИ КАДРА, "
+                  "И КОМАНДЫ РАЗБОРА")
+
+
 def int_runs(lines):
     """Серии подряд идущих числовых констант: индекс строки -> (начало, номер)."""
     runs = {}
@@ -545,6 +549,11 @@ def name_data(text, module=""):
     for sidx, line in enumerate(lines):
         m = DATA_LINE.match(line)
         if not m:
+            if line.strip().startswith(",DATA"):
+                # вторая область данных модуля - область кадра: константы,
+                # задаваемые в ячейки кадра, и команды разбора
+                out.append(comment(" " + DATA_AREA_NOTE))
+                src.append(-1)
             out.append(line)
             src.append(sidx)
             continue
