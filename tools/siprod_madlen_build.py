@@ -40,6 +40,7 @@ sys.path.insert(0, HERE)
 
 from siprod_bemsh import OPS, parse_be                           # noqa: E402
 from siprod_areas import AREA_SIZES                          # noqa: E402
+from siprod_data_sections import group_of, section_text         # noqa: E402
 from siprod_labels import (AREA_NOTES, DATA_AREA_NAMES, module_table,   # noqa: E402
                         sanitize, unique)
 from siprod_lib import Library                                  # noqa: E402
@@ -441,6 +442,37 @@ def be_data_names(module):
     return consts, vars_
 
 
+def int_runs(lines):
+    """Серии подряд идущих числовых констант: индекс строки -> (начало, номер)."""
+    runs = {}
+    i = 0
+    while i < len(lines):
+        m = DATA_LINE.match(lines[i])
+        if m and m.group(3) == "INT":
+            j = i
+            while j < len(lines):
+                mm = DATA_LINE.match(lines[j])
+                if not mm or mm.group(3) != "INT":
+                    break
+                j += 1
+            if j - i >= 4:
+                for k in range(i, j):
+                    runs[k] = (i, k - i)
+            i = j
+            continue
+        i += 1
+    return runs
+
+
+def int_run_purpose(module):
+    """Назначение таблицы числовых констант модуля."""
+    try:
+        from siprod_data_sections import section_text
+        return "ЧИСЛА: " + section_text(module, "ЧИСЛА")
+    except Exception:
+        return "ЧИСЛА: ТАБЛИЦА ЧИСЛОВЫХ КОДОВ МОДУЛЯ"
+
+
 def name_data(text, module=""):
     """Дать имена объявлениям данных, которым имён нет.
 
@@ -458,19 +490,28 @@ def name_data(text, module=""):
             used.add(m.group(1))
     _consts, varnames = be_data_names(module) if module else ([], [])
     out = []
+    src = []              # номер исходной строки для каждой строки out
     nvar = 0
     narea = 0
     used_keys = set()
+    seen_groups = set()
     renamed = {}                 # старое имя -> новое (для раздела SET)
-    for line in lines:
+    for sidx, line in enumerate(lines):
         m = DATA_LINE.match(line)
         if not m:
             out.append(line)
+            src.append(sidx)
             continue
         indent, name0, kind = m.group(1), m.group(2), m.group(3)
         val = (m.group(4) or "").strip()
         if name0 and not GENERIC_DATA.match(name0):
+            g = group_of(name0, kind, val)
+            if g not in seen_groups:
+                seen_groups.add(g)
+                out.append(comment(" %s: %s" % (g, section_text(module, g))))
+                src.append(-1)
             out.append(line)             # имя уже есть
+            src.append(sidx)
             continue
         # имя по номеру слова (КОНСТАНТА_656) ничего не значит -
         # называем по значению
@@ -509,17 +550,46 @@ def name_data(text, module=""):
             note = AREA_NOTES.get(key) if key else None
             if note:
                 out.append(comment(" " + note))
+                src.append(-1)
+            if "ПЕРЕМЕННЫЕ" not in seen_groups:
+                seen_groups.add("ПЕРЕМЕННЫЕ")
+                out.append(comment(" %s: %s" % ("ПЕРЕМЕННЫЕ", section_text(module, "ПЕРЕМЕННЫЕ"))))
+                src.append(-1)
             out.append("%s%s:,BSS,%d" % (indent, nm, count))
+            src.append(sidx)
             if name0:
                 renamed[name0] = nm
             nvar += count
             continue
         nm = value_name(kind, val, used)
         used.add(nm)
+        g = group_of(nm, kind, val)
+        if g not in seen_groups:
+            seen_groups.add(g)
+            out.append(comment(" %s: %s" % (g, section_text(module, g))))
+            src.append(-1)
         out.append("%s%s:,%s,%s" % (indent, nm, kind, val))
+        src.append(sidx)
         if name0:
             renamed[name0] = nm
-    # раздел SET ссылается на данные прежними именами - обновляем
+    # серии числовых констант - элементы одной таблицы: имя по номеру
+    # внутри серии, а перед серией - заголовок с её назначением
+    runs = int_runs(lines)
+    if runs:
+        out2 = []
+        for idx, line in enumerate(out):
+            run = runs.get(src[idx]) if idx < len(src) else None
+            if run:
+                start, pos = run
+                if pos == 0:
+                    out2.append(comment(" " + int_run_purpose(module)))
+                m = re.match(r"^\s*[А-ЯЁA-Z_0-9]+:,INT,", line)
+                if m:
+                    line = re.sub(r"^\s*[А-ЯЁA-Z_0-9]+:",
+                                 " %s:" % unique(sanitize("КОД_%d" % (pos + 1)), used),
+                                 line)
+            out2.append(line)
+        out = out2
     if renamed:
         final = []
         for line in out:
