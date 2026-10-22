@@ -17,6 +17,8 @@ from __future__ import annotations
 import os
 import re
 import sys
+import os
+import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
@@ -144,6 +146,7 @@ for _mod, _labels in LABEL_NAMES_EXTRA.items():
 # словом, как в Монитор-80 (`ИМЯ:,BSS,N`).  Имя отражает назначение
 # области; определяется по тому, что модуль в ней хранит.
 from siprod_areas import AREA_NOTES, DATA_AREA_NAMES  # noqa: E402
+from siprod_names import dms_id, unique as dms_unique, variant  # noqa: E402
 
 
 def role_of(instr):
@@ -259,13 +262,19 @@ def array_offsets(names):
     return out
 
 
-def unique(base, used):
-    """Свободное имя: к основе добавляется номер."""
-    if base not in used:
+def unique(base, used, used_ids=None):
+    """Свободное имя: к основе добавляется номер.
+
+    Имя должно быть свободно и целиком, и по обрезке идентификатора
+    DMS до восьми букв и цифр (см. tools/siprod_names.py).
+    """
+    if used_ids is None:
+        used_ids = {dms_id(n) for n in used}
+    if base not in used and dms_id(base) not in used_ids:
         return base
     for n in range(2, 1000):
-        cand = "%s_%d" % (base, n)
-        if cand not in used:
+        cand = variant(base, n)
+        if cand not in used and dms_id(cand) not in used_ids:
             return cand
     return base
 
@@ -331,6 +340,7 @@ def module_table(lib, name):
                       target, ret_reg if ret else "")
 
     names, used = {}, set()
+    used_ids = set()          # идентификаторы DMS (8 знаков)
     # сперва ручные имена
     for word, nm in sorted(manual.items()):
         if word * 2 in labels:
@@ -400,16 +410,32 @@ def module_table(lib, name):
                 base = role + "_" + sym
             else:
                 base = role
-        nm = unique(base, used)
+        nm = dms_unique(base, used, used_ids)
         used.add(nm)
+        used_ids.add(dms_id(nm))
         names[word] = nm
     # имена вида "ПЕРЕХОД" уточняем целью перехода (её имя уже известно)
     for word, target in targets.items():
         base = "ПЕРЕХОД_" + names.get(target, "МЕТКА")
-        nm = unique(sanitize(base), used)
+        nm = dms_unique(sanitize(base), used, used_ids)
         used.add(nm)
+        used_ids.add(dms_id(nm))
         names[word] = nm
     # элементы массивов: БАЗА_N -> БАЗА+N
-    return array_offsets(names)
+    names = array_offsets(names)
+    # в имени метки знак "+" недопустим, а обрезка до 8 знаков не
+    # должна давать одинаковые идентификаторы - разводим такие имена
+    out, ids = {}, set()
+    for word in sorted(names):
+        nm = names[word].replace("+", "_")
+        if dms_id(nm) in ids:
+            for n in range(2, 100):
+                cand = variant(nm, n)
+                if dms_id(cand) not in ids:
+                    nm = cand
+                    break
+        ids.add(dms_id(nm))
+        out[word] = nm
+    return out
 
 
