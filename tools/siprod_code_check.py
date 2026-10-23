@@ -14,6 +14,7 @@
 from __future__ import annotations
 
 import os
+import shutil
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -43,6 +44,14 @@ def commands(words):
 
 
 def main():
+    os.makedirs(sm.WORK, exist_ok=True)
+    for f in ("asm.pl", "cosy2txt", "degak.py"):
+        src = os.path.join(sm.MONITOR, f)
+        if os.path.exists(src) and not os.path.exists(os.path.join(sm.WORK, f)):
+            shutil.copy(src, sm.WORK)
+    tom_path = "/usr/local/share/besm6/" + sm.WORKVOL
+    if os.path.exists(tom_path) and not os.path.exists(os.path.join(sm.WORK, sm.WORKVOL)):
+        shutil.copy(tom_path, sm.WORK)
     lib = Library(os.path.join(ROOT, "siprod.bin"))
     names = sys.argv[1:] or sorted(lib.objects)
     ws = sm.read_volume(sm.WORK, sm.WORKVOL, sm.ZONE0 + 200)

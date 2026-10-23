@@ -915,8 +915,16 @@ def decl_note(line):
     st = line.strip()
     m = LC_DECL.match(st)
     if m:
-        return "ОБЛАСТЬ %s, %s" % (m.group(2).strip("*"),
-                                  plural(int(m.group(3)), "СЛОВО", "СЛОВА", "СЛОВ"))
+        name = m.group(2).strip("*")
+        size = plural(int(m.group(3)), "СЛОВО", "СЛОВА", "СЛОВ")
+        try:
+            from siprod_shared_areas import SHARED_AREAS
+            purpose = SHARED_AREAS.get(name)
+        except ImportError:
+            purpose = None
+        if purpose:
+            return "%s: %s (%s)" % (name, purpose, size)
+        return "ОБЛАСТЬ %s, %s" % (name, size)
     m = EQU_DECL.match(st)
     if m and not REG_DECL.match(st):
         expr = m.group(3).strip()
