@@ -1,0 +1,236 @@
+C=====================================================================
+C DRAKON - ТРАНСЛЯТОР СХЕМ ДРАКОН (МОНИТОР-80)
+C=====================================================================
+C Читает текст схемы ДРАКОН и печатает через WRIKOR -> АЦПУ
+C
+C Использует: GETSTR (чтение), WRIKOR (вывод), ENDKOR (конец карты)
+C=====================================================================
+ DRAKON :,NAME, NEW DTRAN
+C---------------------------------------------------------------------
+C РЕГИСТРЫ
+C---------------------------------------------------------------------
+ M1:,EQU,1B
+ M7:,EQU,7B
+ M10:,EQU,10B
+ M12:,EQU,12B
+ M15:,EQU,15B
+ M16:,EQU,16B
+C---------------------------------------------------------------------
+C ВНЕШНИЕ ОБЛАСТИ
+C---------------------------------------------------------------------
+ INS :,LC,27
+C---------------------------------------------------------------------
+C ВНЕШНИЕ МОДУЛИ
+C---------------------------------------------------------------------
+ GETSTR:,SUBP,
+ WRIKOR:,SUBP,
+ ENDKOR:,SUBP,
+C---------------------------------------------------------------------
+C ТОЧКА ВХОДА
+C---------------------------------------------------------------------
+ DRAKON:M7,XTA,
+ M7,ITS,
+ M16,MTJ,10
+ ,NTR,3
+ ,NTR,22B
+ M15,VJM,PRINT_RED
+LOOP:  M16,VTM,PARM17
+ ,ITS,14
+ M15,VJM,GETSTR
+ ,UTC,INS+24
+ ,NTR,3
+ ,UZA,FINISH
+ M15,VJM,DETECT
+ M15,VJM,PRINT_ICON
+ ,UJ,LOOP
+FINISH:M15,VJM,PRINT_END
+ M7,XTA,
+ M12,UJ,
+C---------------------------------------------------------------------
+C DETECT: определение вида иконы
+C---------------------------------------------------------------------
+ DETECT:,UTC,ZERO
+ ,XTA,
+ ,UTC,IKIND
+ ,ATX,
+ M16,VTM,INS
+ ,XTA,
+ ,UTC,KW_ZAG
+ ,A-X,
+ ,NTR,3
+ ,UZA,IS_ROUND
+ M16,VTM,INS
+ ,XTA,
+ ,UTC,KW_KON
+ ,A-X,
+ ,NTR,3
+ ,UZA,IS_ROUND
+ M16,VTM,INS
+ ,XTA,
+ ,UTC,KW_VET
+ ,A-X,
+ ,NTR,3
+ ,UZA,IS_TRAP
+ M16,VTM,INS
+ ,XTA,
+ ,UTC,KW_DEI
+ ,A-X,
+ ,NTR,3
+ ,UZA,IS_RECT
+ M16,VTM,INS
+ ,XTA,
+ ,UTC,KW_ESL
+ ,A-X,
+ ,NTR,3
+ ,UZA,IS_HEX
+ M16,VTM,INS
+ ,XTA,
+ ,UTC,KW_TSI
+ ,A-X,
+ ,NTR,3
+ ,UZA,IS_HEX
+ ,UJ,DET_END
+IS_RECT:,UTC,ZERO
+ ,XTA,
+ ,UTC,IKIND
+ ,ATX,
+ ,UJ,DET_END
+IS_ROUND:,UTC,ONE
+ ,XTA,
+ ,UTC,IKIND
+ ,ATX,
+ ,UJ,DET_END
+IS_TRAP:,UTC,TWO
+ ,XTA,
+ ,UTC,IKIND
+ ,ATX,
+ ,UJ,DET_END
+IS_HEX:,UTC,THREE
+ ,XTA,
+ ,UTC,IKIND
+ ,ATX,
+DET_END:M15,UJ,
+C---------------------------------------------------------------------
+C PRINT_ICON
+C---------------------------------------------------------------------
+ PRINT_ICON:,UTC,IKIND
+ ,XTA,
+ ,UTC,ZERO
+ ,A-X,
+ ,NTR,3
+ ,UZA,DO_RECT
+ ,UTC,IKIND
+ ,XTA,
+ ,UTC,ONE
+ ,A-X,
+ ,NTR,3
+ ,UZA,DO_ROUND
+ ,UTC,IKIND
+ ,XTA,
+ ,UTC,TWO
+ ,A-X,
+ ,NTR,3
+ ,UZA,DO_TRAP
+ ,UJ,DO_HEX
+DO_RECT:,M16,VTM,T_RECT
+ ,ITS,14
+ M15,VJM,WRIKOR
+ M15,VJM,PRTEXT
+ M16,VTM,T_RECT
+ ,ITS,14
+ M15,VJM,WRIKOR
+ M15,VJM,ENDKOR
+ M15,UJ,
+DO_ROUND:,M16,VTM,T_ROUND
+ ,ITS,14
+ M15,VJM,WRIKOR
+ M15,VJM,PRTEXT
+ M16,VTM,T_ROUND
+ ,ITS,14
+ M15,VJM,WRIKOR
+ M15,VJM,ENDKOR
+ M15,UJ,
+DO_TRAP:,M16,VTM,T_TRAP
+ ,ITS,14
+ M15,VJM,WRIKOR
+ M15,VJM,PRTEXT
+ M16,VTM,T_TRAP
+ ,ITS,14
+ M15,VJM,WRIKOR
+ M15,VJM,ENDKOR
+ M15,UJ,
+DO_HEX:,M16,VTM,T_HEX
+ ,ITS,14
+ M15,VJM,WRIKOR
+ M15,VJM,PRTEXT
+ M16,VTM,T_HEX
+ ,ITS,14
+ M15,VJM,WRIKOR
+ M15,VJM,ENDKOR
+ M15,UJ,
+C---------------------------------------------------------------------
+C PRTEXT
+C---------------------------------------------------------------------
+ PRTEXT:,M16,VTM,INS+1
+ ,ITS,14
+ M16,VTM,ONE
+ ,ITS,14
+ M16,VTM,ONE
+ ,ITS,14
+ M15,VJM,WRIKOR
+ M15,VJM,ENDKOR
+ M15,UJ,
+C---------------------------------------------------------------------
+C PRINT_RED
+C---------------------------------------------------------------------
+ PRINT_RED:,M16,VTM,T_RED
+ ,ITS,14
+ M15,VJM,WRIKOR
+ M16,VTM,T_RG
+ ,ITS,14
+ M15,VJM,WRIKOR
+ M15,VJM,ENDKOR
+ M15,UJ,
+C---------------------------------------------------------------------
+C PRINT_END
+C---------------------------------------------------------------------
+ PRINT_END:,M16,VTM,T_E
+ ,ITS,14
+ M15,VJM,WRIKOR
+ M16,VTM,T_END
+ ,ITS,14
+ M15,VJM,WRIKOR
+ M15,VJM,ENDKOR
+ M15,UJ,
+C=====================================================================
+C ДАННЫЕ
+C=====================================================================
+ ,DATA,
+ ZERO:,INT,0
+ ONE:,INT,1
+ TWO:,INT,2
+ THREE:,INT,3
+ PARM17:,INT,17
+C Ключевые слова
+ KW_ZAG:,ISO,6HЗАГОЛО
+ KW_VET:,ISO,6HВЕТКА
+ KW_DEI:,ISO,6HДЕЙСТВ
+ KW_ESL:,ISO,6HЕСЛИ
+ KW_TSI:,ISO,6HЦИКЛ
+ KW_KON:,ISO,6HКОНЕЦ
+C Рамки икон
+ T_RECT:,ISO,6H+-----
+ T_ROUND:,ISO,6H.----
+ T_TRAP:,ISO,6H +----
+ T_HEX:,ISO,6H  +---
+C Разметка
+ T_RED:,ISO,6H*RED
+ T_RG:,ISO,6H*RG*RU
+ T_E:,ISO,6H*E
+ T_END:,ISO,6H*END
+C=====================================================================
+C ПЕРЕМЕННЫЕ
+C=====================================================================
+ ,BSS,
+ IKIND:,BSS,1
+ ,END,
