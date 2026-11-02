@@ -42,7 +42,7 @@ def assemble(src, work, load="17000"):
     open(job, "w", encoding="utf-8").write(
         asmjob.make_job(src, load, "43", "01", "2222"))
     env = dict(os.environ,
-               BESM6_PATH="%s:%s" % (work, "/usr/local/share/besm6"))
+               BESM6_PATH="%s:%s" % (work, os.environ.get("BESM6_SHARE", "/usr/local/share/besm6")))
     out = subprocess.run(["dispak", job], capture_output=True, text=True,
                          cwd=work, env=env)
     text = out.stdout + out.stderr
@@ -56,7 +56,7 @@ def assemble(src, work, load="17000"):
     if not ok:
         raise SystemExit("ассемблирование не удалось")
     env = dict(os.environ,
-               BESM6_PATH="%s:%s" % (work, "/usr/local/share/besm6"))
+               BESM6_PATH="%s:%s" % (work, os.environ.get("BESM6_SHARE", "/usr/local/share/besm6")))
     tmp = os.path.join(work, "mod.bin")
     sh(["besmtool", "dump", "2222", "--start=%s" % load, "--length=1",
         "--to-file=%s" % tmp], env=env)

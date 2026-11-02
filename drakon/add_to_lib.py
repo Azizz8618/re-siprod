@@ -146,7 +146,7 @@ def main():
     disk = os.path.join(work, "2348")
     if not os.path.exists(disk):
         import shutil
-        shutil.copy("/usr/local/share/besm6/2348", disk)
+        shutil.copy(os.environ.get("BESM6_SHARE", "/usr/local/share/besm6") + "/2348", disk)
     
     # Компилируем
     print("Компиляция...")

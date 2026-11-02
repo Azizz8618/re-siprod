@@ -45,7 +45,7 @@ def volume(vol, work):
     os.makedirs(work, exist_ok=True)
     src = os.path.join(work, vol)
     if not os.path.exists(src):
-        shutil.copy("/usr/local/share/besm6/%s" % vol, src)
+        shutil.copy(os.environ.get("BESM6_SHARE", "/usr/local/share/besm6") + "/%s" % vol, src)
     out = os.path.join(work, "vol%s.bin" % vol)
     env = dict(os.environ, BESM6_PATH=work)
     subprocess.run(["besmtool", "dump", vol, "--to-file=" + out],
@@ -119,7 +119,7 @@ def main():
         work = WORK
         vol = os.path.join(work, VOL)
         if not os.path.exists(vol):
-            shutil.copy("/usr/local/share/besm6/%s" % VOL, vol)
+            shutil.copy(os.environ.get("BESM6_SHARE", "/usr/local/share/besm6") + "/%s" % VOL, vol)
         env = dict(os.environ, BESM6_PATH=work)
         subprocess.run(["besmtool", "write", VOL, "--from-file=" + args.out,
                         "--start=%d" % ZONE_DST],

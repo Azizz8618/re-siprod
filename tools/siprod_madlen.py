@@ -235,7 +235,7 @@ def main():
         src = os.path.join(MONITOR, f)
         if os.path.exists(src) and not os.path.exists(os.path.join(WORK, f)):
             shutil.copy(src, WORK)
-    shutil.copy("/usr/local/share/besm6/" + WORKVOL,
+    shutil.copy(os.environ.get("BESM6_SHARE", "/usr/local/share/besm6") + "/" + WORKVOL,
                 os.path.join(WORK, WORKVOL))
     bad = []
     for name in names:

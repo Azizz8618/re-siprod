@@ -1,5 +1,11 @@
 #!/bin/sh
-# Сквозной тест: разметка ДРАКОН -> печать на АЦПУ средствами СИПРОДа.
+# Полные тесты блок-схем ДРАКОН.
+#
+#   1. модульные тесты генератора разметки (tests/drakon/test_markup.py):
+#      разбор ключевых слов, геометрия икон и линий, правила разметки;
+#   2. отрицательный тест: пустая схема - ошибка генератора;
+#   3. сквозные тесты: разметка -> печать на АЦПУ средствами СИПРОДа
+#      (эмулятор dispak, диск 2348), сверка с золотыми эталонами *.out.
 #
 #   tools/drakon_markup.py  - эталонный генератор разметки (спецификация
 #                             того, что должен выдавать модуль-редактор)
@@ -9,14 +15,30 @@ ROOT=$(cd "$(dirname "$0")/../.." && pwd)
 D=$ROOT/tests/drakon
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
-
 fail=0
+
+echo "== модульные тесты генератора разметки =="
+if ! python3 "$D/test_markup.py"; then
+    fail=1
+fi
+
+echo "== отрицательный тест: пустая схема =="
+printf '* только комментарий, икон нет\n' > "$work/empty.drakon"
+if python3 "$ROOT/tools/drakon_markup.py" "$work/empty.drakon" \
+        > "$work/empty.out" 2> "$work/empty.err"; then
+    echo "FAIL пустая схема прошла без ошибки"
+    fail=1
+else
+    echo "ok   пустая схема отвергнута: $(cat "$work/empty.err")"
+fi
+
+echo "== сквозные тесты: разметка -> СИПРОД -> АЦПУ =="
 for src in "$D"/*.drakon; do
     name=$(basename "$src" .drakon)
     python3 "$ROOT/tools/drakon_markup.py" "$src" > "$work/markup.txt"
     "$ROOT/tests/siprod/run.sh" "$work/markup.txt" 2>&1 |
         sed -e 's/[[:space:]]*$//' | grep -v '^$' > "$work/out.txt"
-    if grep -q "ОШИБК" "$work/out.txt"; then
+    if grep -q "ERROR NR" "$work/out.txt"; then
         echo "ошибка печати: $name"
         fail=1
         continue
@@ -36,6 +58,10 @@ for src in "$D"/*.drakon; do
             fail=1
             continue
         fi
+    else
+        echo "нет эталона: $exp (создайте: cp $work/out.txt $exp)"
+        fail=1
+        continue
     fi
     echo "ok   $name ($(wc -l < "$work/out.txt") строк вывода)"
 done

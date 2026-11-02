@@ -147,16 +147,39 @@ class Node:
         self.icon = None
         self.col = 0        # колонка основной вертикали
         self.row = 0        # строка верха иконы
-        self.right = []     # (икона, узел) - правое плечо
+        self.branches = None    # правые плечи: (ось, первая икона, низ)
+        self.main_bottom = None # первая свободная строка под основным путём
+        self.next_node = None   # следующая икона цепочки (вертикальная линия)
+
+
+def side_branches(node):
+    """Правые плечи развилки: список списков узлов.
+
+    ИНАЧЕ даёт только потомков, ВАРИАНТ - свою икону плюс потомков.
+    """
+    branches = []
+    for child in node.children:
+        if child.kind == "ИНАЧЕ" and child.children:
+            branches.append(child.children)
+        elif child.kind == "ВАРИАНТ" and (child.text or child.children):
+            branches.append([child] + child.children)
+    return branches
 
 
 def parse(text):
-    """Текст ДРАКОН -> дерево узлов (вложенность по отступам)."""
+    """Текст ДРАКОН -> дерево узлов (вложенность по отступам).
+
+    Строки, начинающиеся с `*`, - комментарии, пропускаются.
+    """
     items = []
     for l in text.splitlines():
         if not l.strip():
             continue
+        if l.lstrip().startswith("*"):
+            continue
         items.append((len(l) - len(l.lstrip()), l.strip()))
+    if not items:
+        raise ValueError("пустая схема: нет ни одной иконы")
     pos = [0]
 
     def block(ind):
@@ -193,7 +216,7 @@ def make_icon(node):
         return Icon(ADDRESS, node.text).build()
     if k == "КОНЕЦ":
         return Icon(END, node.text or "конец").build()
-    if k == "ЕСЛИ":
+    if k == "ЕСЛИ" or k == "ЦИКЛ":
         return Icon(QUESTION, node.text).build()
     if k == "ВЫБОР":
         return Icon(CHOICE, node.text).build()
@@ -202,11 +225,14 @@ def make_icon(node):
     return Icon(ACTION, node.text).build()
 
 
-def layout(nodes, col, row, out, align="center"):
-    """Разложить узлы вертикально; вернуть (следующая строка, правый край).
+def layout(nodes, col, row, out, align="center", tail=None):
+    """Разложить узлы вертикально; вернуть (следующая строка, ось, хвост).
 
-    align="center" - иконы центрируются по колонке (основная вертикаль);
-    align="left"   - по левому краю (правые плечи).
+    Иконы цепочки центрируются по колонке col (шампур); попутно
+    заполняются связи next_node - вертикальные линии между иконами.
+    tail - узел, к которому привязывается первая икона цепочки (хвост
+    вызывающей цепочки).  Возвращаемый хвост - последний узел этой
+    цепочки (для связи с далее идущими иконами вызывающей цепочки).
     """
     y = row
     maxx = col
@@ -215,24 +241,45 @@ def layout(nodes, col, row, out, align="center"):
         node.icon = icon
         icon.x = col - icon.w // 2 if align == "center" else col
         icon.y = y
+        if tail is not None:
+            tail.next_node = node
         out.append(node)
         y += icon.h + GAP_ROW
-        main_kids, side_kids = [], []
-        for child in node.children:
-            if child.kind == "ИНАЧЕ" or child.kind == "ВАРИАНТ":
-                side_kids = child.children
-            else:
-                main_kids = child.children
+        main_kids = []
+        if node.kind == "ЦИКЛ":
+            main_kids = node.children      # тело цикла - сами потомки
+        else:
+            for child in node.children:
+                if child.kind == "ТО":
+                    main_kids = child.children
+        branches = side_branches(node)
+        subtree_tail = node
         if main_kids:
-            y2, mx = layout(main_kids, col, y, out)
+            y2, mx, tail2 = layout(main_kids, col, y, out, tail=node)
             y = max(y, y2)
             maxx = max(maxx, mx)
-        if side_kids:
+            subtree_tail = tail2
+            node.main_bottom = y2 - GAP_ROW
+        else:
+            node.main_bottom = icon.y + icon.h
+        if branches:
+            row0 = icon.y + icon.h - 2       # строка выхода вправо
             rx = col + icon.w // 2 + GAP_COL
-            ry = node.icon.y + node.icon.h // 2 + 1
-            _, mx = layout(side_kids, rx, ry, out, align="left")
-            maxx = max(maxx, mx)
-    return y, maxx
+            ry = max(node.icon.y + node.icon.h // 2 + 1, row0 + 1)
+            node.branches = []
+            for kids in branches:
+                # у плеча своя ось: иконы центрируются на колонке оси
+                wmax = max(make_icon(k).w for k in kids)
+                rail = rx + wmax // 2
+                yb, _, _t = layout(kids, rail, ry, out)
+                node.branches.append((rail, kids[0].icon, yb - GAP_ROW))
+                maxx = max(maxx, rail + wmax - wmax // 2)
+                rx = rail + (wmax - wmax // 2) + GAP_COL
+            # плечи удлиняют конструкцию: следующая икона основной
+            # колонки - ниже всех плеч
+            y = max(y, max(b[2] for b in node.branches) + GAP_ROW)
+        tail = subtree_tail
+    return y, maxx, tail
 
 
 def render(nodes):
@@ -266,29 +313,52 @@ def render(nodes):
                 put(icon.x + j, icon.y + i, ch)
 
     # соединительные линии: из низа иконы в верх следующей (та же колонка)
-    for a, b in zip(flat, flat[1:]):
-        ia, ib = a.icon, b.icon
-        if ia.x != ib.x:
+    for a in flat:
+        if not a.next_node:
             continue
+        ia, ib = a.icon, a.next_node.icon
         col = ia.x + ia.w // 2
         for r in range(ia.y + ia.h, ib.y):
             put(col, r, "|")
 
-    # горизонтальный выход из иконы вопроса в правое плечо
+    # шина выхода вправо: от иконы вопроса/выбора к осям правых плеч
     for node in flat:
         icon = node.icon
-        side = [c for c in node.children if c.kind in ("ИНАЧЕ", "ВАРИАНТ")]
-        if not side:
+        if not node.branches:
             continue
         col = icon.x + icon.w // 2
-        row = icon.y + icon.h - 2
-        for child in side:
-            if not child.children:
-                continue
-            sub = child.children[0].icon
-            for x in range(col + 1, sub.x):
-                put(x, row, "-")
-            put(sub.x, row, "+")
+        row0 = icon.y + icon.h - 2
+        last_rail = max(b[0] for b in node.branches)
+        for x in range(icon.x + icon.w, last_rail):
+            put(x, row0, "-")
+        for rail, first, _bottom in node.branches:
+            put(rail, row0, "+")
+            for r in range(row0 + 1, first.y):
+                put(rail, r, "|")
+
+    # возврат правых плеч на основную вертикаль (слияние маршрутов)
+    for node in flat:
+        icon = node.icon
+        if not node.branches:
+            continue
+        col = icon.x + icon.w // 2
+        base = max([node.main_bottom] + [b[2] for b in node.branches])
+        nxt = [n.icon.y for n in flat
+               if n is not node
+               and n.icon.x + n.icon.w // 2 == col
+               and n.icon.y >= base]
+        if nxt and min(nxt) <= base:
+            continue          # правее некуда: плечо ниже следующей иконы
+        merge_row = base
+        rails = [b[0] for b in node.branches]
+        for rail, _first, bottom in node.branches:
+            for r in range(bottom, merge_row):
+                put(rail, r, "|")
+        for x in range(col + 1, max(rails)):
+            put(x, merge_row, "-")
+        for rail in rails:
+            put(rail, merge_row, "+")
+        put(col, merge_row, "+")
 
     out = []
     for r in canvas:
@@ -303,10 +373,11 @@ def markup(nodes):
     art = render(nodes)
     out = ["*RED", "*RG*RU"]
     for l in art:
-        # карта не длиннее 80 символов: длинные строки режем
+        # карта не длиннее 80 символов: "*/*D"+76 или "*D"+78
         first = True
         while l or first:
-            chunk, l = l[:77], l[77:]
+            take = 76 if first else 78
+            chunk, l = l[:take], l[take:]
             out.append(("*/*D" if first else "*D") + chunk)
             first = False
     out.append("*E")
@@ -319,7 +390,11 @@ def main():
         print(__doc__)
         return 2
     src = open(sys.argv[1], encoding="utf-8").read()
-    nodes = parse(src)
+    try:
+        nodes = parse(src)
+    except ValueError as e:
+        print("drakon_markup: %s" % e, file=sys.stderr)
+        return 2
     sys.stdout.write(markup(nodes))
     return 0
 

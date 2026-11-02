@@ -13,7 +13,7 @@ VOL=${VOL:-2348}
 
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
-cp "/usr/local/share/besm6/$VOL" "$work/$VOL"
+cp "${BESM6_SHARE:-/usr/local/share/besm6}/$VOL" "$work/$VOL"
 SIPROD_WORK=$work
 export SIPROD_WORK
 

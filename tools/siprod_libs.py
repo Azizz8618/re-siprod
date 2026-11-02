@@ -49,7 +49,7 @@ def dump_volume(vol, work):
     os.makedirs(work, exist_ok=True)
     src = os.path.join(work, vol)
     if not os.path.exists(src):
-        shutil.copy("/usr/local/share/besm6/%s" % vol, src)
+        shutil.copy(os.environ.get("BESM6_SHARE", "/usr/local/share/besm6") + "/%s" % vol, src)
     out = os.path.join(work, "vol%s.bin" % vol)
     if not os.path.exists(out):
         env = dict(os.environ, BESM6_PATH=work)

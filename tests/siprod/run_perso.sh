@@ -36,9 +36,9 @@ else
     work=$(mktemp -d)
     trap 'rm -rf "$work"' EXIT
     # рабочая копия тома: системные образы не изменяются
-    cp "/usr/local/share/besm6/$VOL" "$work/$VOL"
+    cp "${BESM6_SHARE:-/usr/local/share/besm6}/$VOL" "$work/$VOL"
 fi
-BESM6_PATH="$work:/usr/local/share/besm6"
+BESM6_PATH="$work:${BESM6_SHARE:-/usr/local/share/besm6}"
 export BESM6_PATH
 python3 "$ROOT/tools/siprod_perso.py" --vol="$VOL" --zone="$ZONE" \
     --image="$LIB" --work="$work" >/dev/null

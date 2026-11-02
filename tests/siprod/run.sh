@@ -46,8 +46,8 @@ shift $((OPTIND - 1))
 
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
-cp "/usr/local/share/besm6/$VOL" "$work/$VOL"
-BESM6_PATH="$work:/usr/local/share/besm6"
+cp "${BESM6_SHARE:-/usr/local/share/besm6}/$VOL" "$work/$VOL"
+BESM6_PATH="$work:${BESM6_SHARE:-/usr/local/share/besm6}"
 export BESM6_PATH
 # библиотека СИПРОДа в ПЕРСО тома
 python3 "$ROOT/tools/siprod_perso.py" --vol="$VOL" --zone="$ZONE" \

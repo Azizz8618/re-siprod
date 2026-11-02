@@ -49,7 +49,7 @@ def main():
         src = os.path.join(sm.MONITOR, f)
         if os.path.exists(src) and not os.path.exists(os.path.join(sm.WORK, f)):
             shutil.copy(src, sm.WORK)
-    tom_path = "/usr/local/share/besm6/" + sm.WORKVOL
+    tom_path = os.environ.get("BESM6_SHARE", "/usr/local/share/besm6") + "/" + sm.WORKVOL
     if os.path.exists(tom_path) and not os.path.exists(os.path.join(sm.WORK, sm.WORKVOL)):
         shutil.copy(tom_path, sm.WORK)
     lib = Library(os.path.join(ROOT, "siprod.bin"))

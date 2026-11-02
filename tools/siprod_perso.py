@@ -40,7 +40,7 @@ def main():
         os.makedirs(args.work, exist_ok=True)
         src = os.path.join(args.work, args.vol)
         if not os.path.exists(src):
-            shutil.copy("/usr/local/share/besm6/%s" % args.vol, src)
+            shutil.copy(os.environ.get("BESM6_SHARE", "/usr/local/share/besm6") + "/%s" % args.vol, src)
         env["BESM6_PATH"] = args.work
     if args.path:
         env["BESM6_PATH"] = args.path

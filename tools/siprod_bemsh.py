@@ -431,7 +431,7 @@ def workdir():
     os.makedirs(WORK, exist_ok=True)
     vol = os.path.join(WORK, VOL)
     if not os.path.exists(vol):
-        shutil.copy("/usr/local/share/besm6/%s" % VOL, vol)
+        shutil.copy(os.environ.get("BESM6_SHARE", "/usr/local/share/besm6") + "/%s" % VOL, vol)
     return WORK
 
 

@@ -145,9 +145,9 @@ def main():
     print("3) запись библиотеки в рабочую копию тома 2248")
     vol = os.path.join(args.out, "2248")
     if not os.path.exists(vol):
-        shutil.copy("/usr/local/share/besm6/2248", vol)
+        shutil.copy(os.environ.get("BESM6_SHARE", "/usr/local/share/besm6") + "/2248", vol)
     env = dict(os.environ, BESM6_PATH="%s:%s" % (args.out,
-                                                 "/usr/local/share/besm6"))
+                                                 os.environ.get("BESM6_SHARE", "/usr/local/share/besm6")))
     subprocess.run(["besmtool", "write", "2248", "--from-file=%s" % path,
                     "--start=%d" % args.zone], env=env, check=True)
     print("   том %s, зона %d (0o%o)" % (vol, args.zone, args.zone))

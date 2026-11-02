@@ -51,7 +51,7 @@ def prepare(work):
             if v == VOL:
                 open(dst, "wb").close()        # пустой том ПЕРСО
             else:
-                shutil.copy("/usr/local/share/besm6/%s" % v, dst)
+                shutil.copy(os.environ.get("BESM6_SHARE", "/usr/local/share/besm6") + "/%s" % v, dst)
     return dict(os.environ, BESM6_PATH=work + ":/usr/local/share/besm6")
 
 
