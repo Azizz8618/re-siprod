@@ -9,10 +9,10 @@ CSEGTAB:BEGSTA, SPAUD:BEGSTA, SPAUD:BEGSTB, SPAUD:BEGSTC, SPAUD:BEGSTD,
 CTITLE:STR26A, TITLE:MEDIUD, TITLE:F15B, L0034 (возврат через М12),
 CPOP (возврат через М10)
 CКОНЕЦ ТЕКСТОВОЙ СТРОКИ.
-CВнешние: NDAB, PAGE, REGIM, TOPAGE, BEGPG, ENDPG
-CСмещения в NDAB: 1
-CСмещения в PAGE: 1, 2, 3, 4, 5
-CСмещения в REGIM: 1
+CВнешние: *NDAB*, *PAGE*, *REGIM*, TOPAGE, BEGPG, ENDPG
+CСмещения в *NDAB*: 1
+CСмещения в *PAGE*: 1, 2, 3, 4, 5
+CСмещения в *REGIM*: 1
 CСмещения в кадре (М7): общие 0, 10
 CРегистры: М7 (указатель кадра), М10 (блок вызывающего),
 CМ12 (магазин, кадр параметров ОС), М15 (адрес возврата),

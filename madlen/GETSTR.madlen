@@ -8,9 +8,9 @@ CONEPLA:PAGE1A, PAPRAP:INS25A, READMK:NRMA, SCHEMA:SCANA, SEGTAB:F7,
 CSPAUD:INS25A, SPAUD:F0D, TWOPLA:F3, WRIIPO:SCANEA, WRIIPO:SCANEG,
 CF0A (возврат через М12), POP (возврат через М10)
 CЧТЕНИЕ СТРОКИ ВХОДНОГО ПОТОКА.
-CВнешние: EGO, NUSTA, RUSIS, INS, FT541, FT002, FT003, RSYMB
-CСмещения в EGO: 7200, 8600, 8601
-CСмещения в INS: 24, 25, 26
+CВнешние: *EGO*, *NUSTA*, *RUSIS*, *INS*, FT*541, FT*002, FT*003, RSYMB
+CСмещения в *EGO*: 7200, 8600, 8601
+CСмещения в *INS*: 24, 25, 26
 CАбсолютные символы: N5 = -5, N6 = -6
 CСмещения в кадре (М7): общие 0-1, 3-10, свои 11-14,
 Cвне кадра 2065-2066

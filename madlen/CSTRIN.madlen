@@ -6,8 +6,8 @@ CВход: CSTRIN
 CВыход: NAMENF:F9B, NOTFOR:TYPEA, NOTFOR:F0, NOTFOR:ENDKOB,
 CTARNYB:TYPEA, TARNYB:NOTFE, TARNYB:F1A, F8 (возврат через М12),
 CPOP (возврат через М10)
-CВнешние: WHO, ENDKOR, HOWSMB, RASPS, WRIKOR
-CСмещения в WHO: 1
+CВнешние: *WHO*, ENDKOR, HOWSMB, RASPS, WRIKOR
+CСмещения в *WHO*: 1
 CСмещения в кадре (М7): общие 1, 7-8, 10
 CРегистры: М7 (указатель кадра), М10 (блок вызывающего),
 CМ12 (магазин, кадр параметров ОС), М15 (адрес возврата),

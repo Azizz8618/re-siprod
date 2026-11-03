@@ -8,8 +8,8 @@ CONEPLA:L0320, ONEPLA:L0320, PAPRAP:EGO86G, RASKOM:F1, RASKOM:F1B,
 CRMAKR:EGO39B, TARNYB:NOTFH, TARNYB:F1, TWOPLA:NUM3A, WRIHOR:L0166,
 CWRIHOR:L0166, WRILIN:F7B, WRILIN:F7B, WRINUM:F0, WRITUR:FOR1C,
 CWRIVER:F18, L20 (возврат через М7), L12A (возврат через ячейка 0)
-CВнешние: SYTOBI, KONSTA
-CСмещения в SYTOBI: 1, 2, 3, 4, 5
+CВнешние: SYTOBIN, KONSTA
+CСмещения в SYTOBIN: 1, 2, 3, 4, 5
 CАбсолютные символы: N1 = -1, N12 = -12, N7 = -7, N9 = -9
 CСмещения в кадре (М7): общие 0-1, свои 12, 16, 18
 CРегистры: М7 (указатель кадра), М10 (блок вызывающего),

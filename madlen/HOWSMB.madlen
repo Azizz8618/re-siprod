@@ -7,8 +7,8 @@ CВыход: APNOTF:ENDKOA, CSTRIN:F8, CSTRIN:F8, GOTOPO:F5, RASKOM:F1B,
 CTARNYB:NOTFH, TARNYB:F1, WRIHOR:L0166, WRIHOR:L0166, WRILIN:F7B,
 CWRILIN:F7B, WRINUM:F0, WRIVER:F18, F6 (возврат через М12),
 CPOP (возврат через М10)
-CВнешние: WHO, RSYMB
-CСмещения в WHO: 1
+CВнешние: *WHO*, RSYMB
+CСмещения в *WHO*: 1
 CАбсолютные символы: N1 = -1
 CСмещения в кадре (М7): общие 0-1, 4-6, 10, вне кадра 2052
 CРегистры: М7 (указатель кадра), М10 (блок вызывающего),

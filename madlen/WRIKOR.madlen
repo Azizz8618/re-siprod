@@ -28,8 +28,8 @@ CWRINUM:F0, WRINUM:F0, WRINUM:F0B, WRINUM:F0B, WRITEH:ONEPLB,
 CWRIVER:CENA, WRIVER:F18, WRIVER:WHO1A, WRIVER:F18A,
 CF3B (возврат через М12), POP (возврат через М10)
 CЗАПИСЬ В БУФЕР ВЫВОДА.
-CВнешние: KORT, ENDKOR, RNSYMB
-CСмещения в KORT: 14
+CВнешние: *KORT*, ENDKOR, RNSYMB
+CСмещения в *KORT*: 14
 CСмещения в кадре (М7): общие 0-10
 CРегистры: М7 (указатель кадра), М10 (блок вызывающего),
 CМ12 (магазин, кадр параметров ОС), М15 (адрес возврата),

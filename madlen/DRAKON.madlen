@@ -4,6 +4,16 @@ C=====================================================================
 C Читает текст схемы ДРАКОН и печатает через WRIKOR -> АЦПУ
 C
 C Использует: GETSTR (чтение), WRIKOR (вывод), ENDKOR (конец карты)
+CВход: DRAKON
+CВнешние: *INS*, GETSTR, WRIKOR, ENDKOR
+CСмещения в *INS*: 1, 24
+CСмещения в кадре (М7): общие 0
+CРегистры: М7 (указатель кадра), М10 (блок вызывающего),
+CМ12 (магазин), М15 (адрес возврата), М16 (модифицированный адрес)
+CМодификатор адреса: МОДА/МОД задают М16, адрес следующей команды += М16
+C
+C Имена внешних символов - как в таблицах символов библиотеки СИПРОДа:
+C общий блок *INS* (внутри модуля - INS24/*INS*+24, INS25/*INS*+25).
 C=====================================================================
  DRAKON :,NAME, NEW DTRAN
 C---------------------------------------------------------------------
@@ -18,7 +28,7 @@ C---------------------------------------------------------------------
 C---------------------------------------------------------------------
 C ВНЕШНИЕ ОБЛАСТИ
 C---------------------------------------------------------------------
- INS :,LC,27
+ *INS*  :,LC,27
 C---------------------------------------------------------------------
 C ВНЕШНИЕ МОДУЛИ
 C---------------------------------------------------------------------
@@ -34,16 +44,16 @@ C---------------------------------------------------------------------
  ,NTR,3
  ,NTR,22B
  M15,VJM,PRINT_RED
-LOOP:  M16,VTM,PARM17
+ LOOP:M16,VTM,PARM17
  ,ITS,14
  M15,VJM,GETSTR
- ,UTC,INS+24
+ ,UTC,*INS*+24
  ,NTR,3
  ,UZA,FINISH
  M15,VJM,DETECT
  M15,VJM,PRINT_ICON
  ,UJ,LOOP
-FINISH:M15,VJM,PRINT_END
+ FINISH:M15,VJM,PRINT_END
  M7,XTA,
  M12,UJ,
 C---------------------------------------------------------------------
@@ -53,63 +63,63 @@ C---------------------------------------------------------------------
  ,XTA,
  ,UTC,IKIND
  ,ATX,
- M16,VTM,INS
+ M16,VTM,*INS*
  ,XTA,
  ,UTC,KW_ZAG
  ,A-X,
  ,NTR,3
  ,UZA,IS_ROUND
- M16,VTM,INS
+ M16,VTM,*INS*
  ,XTA,
  ,UTC,KW_KON
  ,A-X,
  ,NTR,3
  ,UZA,IS_ROUND
- M16,VTM,INS
+ M16,VTM,*INS*
  ,XTA,
  ,UTC,KW_VET
  ,A-X,
  ,NTR,3
  ,UZA,IS_TRAP
- M16,VTM,INS
+ M16,VTM,*INS*
  ,XTA,
  ,UTC,KW_DEI
  ,A-X,
  ,NTR,3
  ,UZA,IS_RECT
- M16,VTM,INS
+ M16,VTM,*INS*
  ,XTA,
  ,UTC,KW_ESL
  ,A-X,
  ,NTR,3
  ,UZA,IS_HEX
- M16,VTM,INS
+ M16,VTM,*INS*
  ,XTA,
  ,UTC,KW_TSI
  ,A-X,
  ,NTR,3
  ,UZA,IS_HEX
  ,UJ,DET_END
-IS_RECT:,UTC,ZERO
+ IS_RECT:,UTC,ZERO
  ,XTA,
  ,UTC,IKIND
  ,ATX,
  ,UJ,DET_END
-IS_ROUND:,UTC,ONE
+ IS_ROUND:,UTC,ONE
  ,XTA,
  ,UTC,IKIND
  ,ATX,
  ,UJ,DET_END
-IS_TRAP:,UTC,TWO
+ IS_TRAP:,UTC,TWO
  ,XTA,
  ,UTC,IKIND
  ,ATX,
  ,UJ,DET_END
-IS_HEX:,UTC,THREE
+ IS_HEX:,UTC,THREE
  ,XTA,
  ,UTC,IKIND
  ,ATX,
-DET_END:M15,UJ,
+ DET_END:M15,UJ,
 C---------------------------------------------------------------------
 C PRINT_ICON
 C---------------------------------------------------------------------
@@ -132,7 +142,7 @@ C---------------------------------------------------------------------
  ,NTR,3
  ,UZA,DO_TRAP
  ,UJ,DO_HEX
-DO_RECT:,M16,VTM,T_RECT
+ DO_RECT:M16,VTM,T_RECT
  ,ITS,14
  M15,VJM,WRIKOR
  M15,VJM,PRTEXT
@@ -141,7 +151,7 @@ DO_RECT:,M16,VTM,T_RECT
  M15,VJM,WRIKOR
  M15,VJM,ENDKOR
  M15,UJ,
-DO_ROUND:,M16,VTM,T_ROUND
+ DO_ROUND:M16,VTM,T_ROUND
  ,ITS,14
  M15,VJM,WRIKOR
  M15,VJM,PRTEXT
@@ -150,7 +160,7 @@ DO_ROUND:,M16,VTM,T_ROUND
  M15,VJM,WRIKOR
  M15,VJM,ENDKOR
  M15,UJ,
-DO_TRAP:,M16,VTM,T_TRAP
+ DO_TRAP:M16,VTM,T_TRAP
  ,ITS,14
  M15,VJM,WRIKOR
  M15,VJM,PRTEXT
@@ -159,7 +169,7 @@ DO_TRAP:,M16,VTM,T_TRAP
  M15,VJM,WRIKOR
  M15,VJM,ENDKOR
  M15,UJ,
-DO_HEX:,M16,VTM,T_HEX
+ DO_HEX:M16,VTM,T_HEX
  ,ITS,14
  M15,VJM,WRIKOR
  M15,VJM,PRTEXT
@@ -171,7 +181,7 @@ DO_HEX:,M16,VTM,T_HEX
 C---------------------------------------------------------------------
 C PRTEXT
 C---------------------------------------------------------------------
- PRTEXT:,M16,VTM,INS+1
+ PRTEXT:M16,VTM,*INS*+1
  ,ITS,14
  M16,VTM,ONE
  ,ITS,14
@@ -183,7 +193,7 @@ C---------------------------------------------------------------------
 C---------------------------------------------------------------------
 C PRINT_RED
 C---------------------------------------------------------------------
- PRINT_RED:,M16,VTM,T_RED
+ PRINT_RED:M16,VTM,T_RED
  ,ITS,14
  M15,VJM,WRIKOR
  M16,VTM,T_RG
@@ -194,7 +204,7 @@ C---------------------------------------------------------------------
 C---------------------------------------------------------------------
 C PRINT_END
 C---------------------------------------------------------------------
- PRINT_END:,M16,VTM,T_E
+ PRINT_END:M16,VTM,T_E
  ,ITS,14
  M15,VJM,WRIKOR
  M16,VTM,T_END

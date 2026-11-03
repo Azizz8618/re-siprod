@@ -11,9 +11,9 @@ CTWOPLA:F0, TWOPLA:F13A, TWOPLA:F3, TWOPLA:NUM3F, TWOPLA:F13C,
 CWRIIPO:IPONUA, WRIIPO:SCANEG, WRIIPO:F11A, WRIKOR:F3A, WRILIN:F7B,
 CWRIVER:CENA, F0A (возврат через М12), F0B (возврат через М10)
 CЗАКРЫТИЕ БУФЕРА ВЫВОДА.
-CВнешние: EGO, KORT, KLAIDA, IMUI
-CСмещения в EGO: 7200, 8600, 8601
-CСмещения в KORT: 14
+CВнешние: *EGO*, *KORT*, KLAIDA, I*MU*I
+CСмещения в *EGO*: 7200, 8600, 8601
+CСмещения в *KORT*: 14
 CАбсолютные символы: N1 = -1
 CСмещения в кадре (М7): общие 0-2, 5-7, 10, вне кадра 2059
 CРегистры: М1 (индекс: база модуля), М2 (рабочий регистр),

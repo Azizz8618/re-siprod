@@ -7,10 +7,10 @@ CВыход: APNOTF:GOTA, NOTFOR:SALA, TARNYB:NOTFB, TARNYB:F1,
 CF0B (возврат через М12), POP (возврат через М10)
 CОПОЗНАНИЕ КЛЮЧЕВОГО СЛОВА ПСЕВДОКОДА (DO, WHILE, IF,
 CCASE, PERFORM, BEGIN, THEN, ELSE, END).
-CВнешние: INS, SCANER, TYPE, SAL, RSYMB, RNSYMB, SCAN
-CСмещения в INS: 24, 25, 26
-CСмещения в SCANER: 1, 2
-CСмещения в TYPE: 1, 11, 12, 13
+CВнешние: *INS*, *SCANER*, *TYPE*, *SAL*, RSYMB, RNSYMB, SCAN
+CСмещения в *INS*: 24, 25, 26
+CСмещения в *SCANER*: 1, 2
+CСмещения в *TYPE*: 1, 11, 12, 13
 CАбсолютные символы: N1 = -1, N2 = -2
 CСмещения в кадре (М7): общие 0-10, свои 11-19, 38-39,
 Cвне кадра 2065, 2067
@@ -287,7 +287,7 @@ C
 C
  TYPE2A:M7,XTA,47B                      .СМ := слот кадра 39
  ,ITS,                                  .в магазин; СМ := ИР
- ,UTC,TYPE1+1                           .мод.адрес := TYPE2
+ ,UTC,*TYPE*+2                          .мод.адрес := TYPE2
  ,XTA,                                  .СМ := слово по адресу TYPE2
  M17,AEX,                               .СМ ^= поле контекста 0
  ,UZA,ЦИКЛ4_ПЕРЕХОД                     .если СМ=0 → F39
