@@ -43,8 +43,27 @@ sys.path.insert(0, HERE)
 from siprod_lib import Library, text_decode                       # noqa: E402
 
 DTRAN = os.environ.get("SIPROD_DTRAN", "dtran")
-ASMPL = "/home/azizz/Yandex.Disk/monitor80-re/tools/asm.pl"
-MONITOR = "/home/azizz/Yandex.Disk/monitor80-re/tools"
+
+
+def _monitor_tools():
+    """Каталог инструментов Монитор-80 (asm.pl, cosy2txt, degak.py).
+
+    Порядок: переменная окружения, домашний каталог автора, checkout
+    monitor80-re рядом с проектом или в repos/.
+    """
+    cand = os.environ.get("SIPROD_MONITOR")
+    for p in ([cand] if cand else []) + [
+            "/home/azizz/Yandex.Disk/monitor80-re/tools",
+            os.path.join(os.path.dirname(ROOT), "monitor80-re", "tools"),
+            os.path.join(ROOT, "..", "monitor80-re", "tools")]:
+        if p and os.path.exists(os.path.join(p, "asm.pl")):
+            return p
+    return MONITOR_FALLBACK
+
+
+MONITOR_FALLBACK = "/home/azizz/Yandex.Disk/monitor80-re/tools"
+MONITOR = _monitor_tools()
+ASMPL = os.path.join(MONITOR, "asm.pl")
 # Том 2348 - "Монитор-80": на нём компилятор МАДЛЕН, которым собираются
 # модули СИПРОДа, и сама программа СИПРОД (личная библиотека в ПЕРСО,
 # зона 01267; копия в томе неполна - 95 модулей из 98, поэтому библиотека

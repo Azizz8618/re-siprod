@@ -204,6 +204,8 @@ def parse_text(path):
     syms = {}
     labels = {}
     instrs = []
+    nconst = 0                     # слов КОНД до текущего места
+    ndata = 0                      # слов ПАМ до текущего места
     in_syms = False
     in_locals = False
     for raw in open(path):
@@ -237,7 +239,19 @@ def parse_text(path):
         first = parts[0]
         rest = parts[1].strip() if len(parts) > 1 else ""
         if len(parts) > 1 and parts[1].split(None, 1)[0].upper() in ("КОНД", "ПАМ"):
-            continue                # объявление константы или переменной
+            # объявление константы или переменной; метку запоминаем,
+            # если её нет в разделе локальных символов: смещение =
+            # конец команд + пройденные слова const, затем data
+            if first not in labels:
+                if len(instrs) % 2:
+                    raise ValueError("данные %s: перед ними нечётное число "
+                                     "команд" % first)
+                labels[first] = (len(instrs) // 2 + nconst + ndata)
+            if parts[1].split(None, 1)[0].upper() == "КОНД":
+                nconst += 1
+            else:
+                ndata += int(parts[1].split(None, 1)[1])
+            continue
         if first.upper() == "ФИНИШ":
             continue
         if first.upper() == "СТАРТ":

@@ -14,6 +14,7 @@
 """
 import argparse
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -30,17 +31,67 @@ CAT_ZONES = 2            # каталог библиотеки - две зоны
 M12, M15 = 0o7777, 0o77777
 
 
-def object_words(lib, donor, name, cmd, head_len=1, debug_len=0):
-    """Образ объектного модуля: разделы по образцу donor."""
+def parse_data(text):
+    """КОНД/ПАМ из текста БЕМШ -> (константы, данные).
+
+    Строки вида
+        ИМЯ      КОНД   В'7777...7777'   (16 восьмеричных цифр, 48 бит)
+        ИМЯ      ПАМ    N                (N слов переменных, нули)
+    собираются в разделы const и data; метки у них уже проставлены
+    assemble_text - смещения от начала модуля (cmd, затем const, data),
+    поэтому КОНД должны идти раньше ПАМ, без чередования.
+    """
+    const, data = [], []
+    seen_const = seen_data = False
+    any_decl = False
+    for raw in open(text, encoding="utf-8"):
+        line = raw.rstrip("\n")
+        if line.startswith("*"):
+            continue
+        m = re.match(r"^(\S+)\s+КОНД\s+В'(\S+)'\s*(?:,.*)?$", line)
+        if m:
+            if seen_data:
+                raise ValueError("%s: КОНД после ПАМ (чередование недопустимо)"
+                                 % text)
+            val = m.group(2)
+            if not re.match(r"^[0-7]{16}$", val):
+                raise ValueError("КОНД %s: не 16 восьмеричных цифр: %s"
+                                 % (m.group(1), val))
+            const.append(int(val, 8))
+            seen_const = any_decl = True
+            continue
+        m = re.match(r"^(\S+)\s+ПАМ\s+(\d+)\s*(?:,.*)?$", line)
+        if m:
+            data.extend([0] * int(m.group(2)))
+            seen_data = any_decl = True
+            continue
+    if not any_decl:
+        return None, None          # своих данных нет - разделы из образца
+    return const, data
+
+
+def object_words(lib, donor, name, cmd, head_len=1, debug_len=0,
+                 const=None, data=None):
+    """Образ объектного модуля: разделы по образцу donor.
+
+    const/data - свои разделы из текста (parse_data); если не заданы,
+    берутся из образца donor, как раньше.  При своих данных bss = 0:
+    переменные уже включены в раздел data.
+    """
     s, h = lib.objects[donor]
+    bss = 0 if const is not None else h["bss"]
     sec, p = {}, s + 3
     for nm, ln in (("cmd", h["cmd"]), ("const", h["const"]), ("data", h["data"]),
                    ("set", h["set_"]), ("head", h["head"]), ("sym", h["sym"]),
                    ("long", h["long"]), ("debug", h["debug"])):
         sec[nm] = p
         p += ln
-    const = lib.words[sec["const"]:sec["const"] + h["const"]]
-    data = lib.words[sec["data"]:sec["data"] + h["data"]]
+    if const is None:
+        const = lib.words[sec["const"]:sec["const"] + h["const"]]
+    const = list(const)
+    if data is None:
+        data = lib.words[sec["data"]:sec["data"] + h["data"]]
+    data = list(data)
     set_ = lib.words[sec["set"]:sec["set"] + h["set_"]]
     sym = lib.words[sec["sym"]:sec["sym"] + h["sym"]]
     long_ = lib.words[sec["long"]:sec["long"] + h["long"]]
@@ -53,11 +104,11 @@ def object_words(lib, donor, name, cmd, head_len=1, debug_len=0):
     out.append(text_encode(name))
     out += list(sym) + list(long_)
     # длина загрузки в словах: команды + константы + данные + переменные
-    load_len = len(cmd) + len(const) + len(data) + h["bss"]
+    load_len = len(cmd) + len(const) + len(data) + bss
     return out, load_len
 
 
-def build_library(lib, name, cmd):
+def build_library(lib, name, cmd, const=None, data=None):
     """Новая библиотека: каталог (+ запись) + модули + новый модуль."""
     words = list(lib.words)
     cat_words = CAT_ZONES * ZONE // 6
@@ -68,7 +119,8 @@ def build_library(lib, name, cmd):
             break
         n += 1
     print("   записей в каталоге: %d" % (n - 1))
-    obj, load_len = object_words(lib, DONOR, name, cmd)
+    obj, load_len = object_words(lib, DONOR, name, cmd,
+                                 const=const, data=data)
     # новая запись вставляется на место завершателя каталога,
     # завершатель сдвигается за ней
     print("   завершатель каталога: слова %d,%d" % (2 * n, 2 * n + 1))
@@ -132,11 +184,15 @@ def main():
 
     print("1) сборка модуля", args.src)
     cmd, labels, syms = assemble_text(args.src)
-    print("   команд: %d, символов: %d" % (len(cmd), len(syms)))
+    const, data = parse_data(args.src)
+    print("   команд: %d, символов: %d, констант: %s, слов данных: %s"
+          % (len(cmd), len(syms),
+             "нет" if const is None else len(const),
+             "нет" if data is None else len(data)))
 
     print("2) сборка библиотеки")
     lib = Library(args.image)
-    img = build_library(lib, args.name, cmd)
+    img = build_library(lib, args.name, cmd, const=const, data=data)
     path = os.path.join(args.out, "lib.bin")
     open(path, "wb").write(img)
     zones = (len(img) // 6 + ZONE // 6 - 1) // (ZONE // 6)
