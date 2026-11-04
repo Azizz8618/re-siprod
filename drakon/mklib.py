@@ -5,9 +5,15 @@
 (две зоны) и объектных модулей, идущих следом.  Модуль редактора
 добавляется в конец: запись в каталоге + образ объекта.
 
-Объект нового модуля собирается по образцу RINT: те же внешние символы
-(SYTOBI, KONSTA, SYTOBI1..5) и тот же раздел констант, свой код и
-своё имя.
+Объект нового модуля: свой код, свои константы (КОНД) и переменные
+(ПАМ - раздел bss, не data!), и своя таблица символов (проверенные
+записи DRAKON_SYM; по образцу донора - если sym не задан).
+
+Запись каталога: дата - биты 47..26 (младшие 2 бита поля - верх
+длины), длина загрузки×8 - биты 25..12, оверлей - биты 11..0.
+У больших модулей (длина×8 > 4095) верх длины заходит в поле даты -
+см. SCHEMA/SPAUD в исходной библиотеке; загрузчик считает длину по
+младшим 12 битам, у них и у реальных записей совпадает.
 
 Использование:
     python3 drakon/mklib.py [--src drakon/drakon.be] [--out drakon/out]
@@ -29,6 +35,17 @@ DONOR = "SCHEMA"      # образец объекта (таблица симво
 ZONE = 1024 * 8          # зона тома: 1024 слов по 8 байт
 CAT_ZONES = 2            # каталог библиотеки - две зоны
 M12, M15 = 0o7777, 0o77777
+
+# Таблица символов модуля DRAKON (сверена с записями реальных модулей
+# ONEPLA/STAATP и с картой загрузки; формат элемента:
+# (0o4000+X)<<24 | C<<12 | D, где C=0 - база-символ своего модуля X + D,
+# C=0o6700 - вход №X личной библиотеки + D слов, C=0o6300 - вход №X
+# постоянной библиотеки монитора):
+DRAKON_SYM = [
+    0o0000401467000033,  # INS    : вход 12 личной б-ки (KLAIDA) + 27 слов
+    0o0000400100000030,  # INS24  : символ 1 (INS) + 24 слова
+    0o0000404567000003,  # GETSTR : вход 37 личной б-ки + 3 слова
+]
 
 
 def parse_data(text):
@@ -71,44 +88,51 @@ def parse_data(text):
 
 
 def object_words(lib, donor, name, cmd, head_len=1, debug_len=0,
-                 const=None, data=None):
-    """Образ объектного модуля: разделы по образцу donor.
+                 const=None, data=None, sym=None):
+    """Образ объектного модуля: разделы по образцу donor или свои.
 
     const/data - свои разделы из текста (parse_data); если не заданы,
-    берутся из образца donor, как раньше.  При своих данных bss = 0:
-    переменные уже включены в раздел data.
+    берутся из образца donor, как раньше.  ПАМ (data из parse_data) -
+    это bss: неинициализированные слова, в раздел data не пишутся.
+    sym - своя таблица символов; если не задана, берётся из donor.
     """
     s, h = lib.objects[donor]
-    bss = 0 if const is not None else h["bss"]
     sec, p = {}, s + 3
     for nm, ln in (("cmd", h["cmd"]), ("const", h["const"]), ("data", h["data"]),
                    ("set", h["set_"]), ("head", h["head"]), ("sym", h["sym"]),
                    ("long", h["long"]), ("debug", h["debug"])):
         sec[nm] = p
         p += ln
+    own = sym is not None or const is not None
     if const is None:
         const = lib.words[sec["const"]:sec["const"] + h["const"]]
     const = list(const)
-    if data is None:
-        data = lib.words[sec["data"]:sec["data"] + h["data"]]
-    data = list(data)
+    if own:
+        # свои данные: ПАМ уходит в bss, раздел data пустой
+        bss = len(data) if data is not None else 0
+        data = []
+    else:
+        bss = 0
+        data = list(lib.words[sec["data"]:sec["data"] + h["data"]])
     set_ = lib.words[sec["set"]:sec["set"] + h["set_"]]
-    sym = lib.words[sec["sym"]:sec["sym"] + h["sym"]]
-    long_ = lib.words[sec["long"]:sec["long"] + h["long"]]
+    if sym is None:
+        sym = lib.words[sec["sym"]:sec["sym"] + h["sym"]]
+    sym = list(sym)
+    long_ = [] if own else lib.words[sec["long"]:sec["long"] + h["long"]]
     # заголовок: длины разделов
     w0 = (head_len & M12) | ((len(sym) & M12) << 12) | ((debug_len & M15) << 36)
     w1 = ((len(set_)) & M15) | ((len(data) & M15) << 15) | \
          ((len(long_)) & M15) << 30
-    w2 = ((len(cmd)) & M15) | (0 << 15) | ((len(const)) & M15) << 30
+    w2 = ((len(cmd)) & M15) | ((bss & M15) << 15) | ((len(const)) & M15) << 30
     out = [w0, w1, w2] + list(cmd) + list(const) + list(data) + list(set_)
     out.append(text_encode(name))
-    out += list(sym) + list(long_)
-    # длина загрузки в словах: команды + константы + данные + переменные
-    load_len = len(cmd) + len(const) + len(data) + bss
+    out += sym + list(long_)
+    # длина загрузки в словах: команды + константы + переменные (bss)
+    load_len = len(cmd) + len(const) + bss
     return out, load_len
 
 
-def build_library(lib, name, cmd, const=None, data=None):
+def build_library(lib, name, cmd, const=None, data=None, sym=None):
     """Новая библиотека: каталог (+ запись) + модули + новый модуль."""
     words = list(lib.words)
     cat_words = CAT_ZONES * ZONE // 6
@@ -120,7 +144,7 @@ def build_library(lib, name, cmd, const=None, data=None):
         n += 1
     print("   записей в каталоге: %d" % (n - 1))
     obj, load_len = object_words(lib, DONOR, name, cmd,
-                                 const=const, data=data)
+                                 const=const, data=data, sym=sym)
     # новая запись вставляется на место завершателя каталога,
     # завершатель сдвигается за ней
     print("   завершатель каталога: слова %d,%d" % (2 * n, 2 * n + 1))

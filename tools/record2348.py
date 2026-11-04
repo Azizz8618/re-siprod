@@ -112,15 +112,21 @@ def extract_from_zip(archive, out_path, volume):
 
 
 def build_lib_with_drakon(out_path):
-    """siprod.bin + объектный модуль DRAKON -> образ библиотеки."""
-    from drakon.mklib import build_library          # noqa: E402
+    """siprod.bin + объектный модуль DRAKON -> образ библиотеки.
+
+    Объект собирается полностью: свой код, свои константы (КОНД),
+    ПАМ - в bss, и проверенная таблица символов DRAKON_SYM.
+    """
+    from drakon.mklib import build_library, parse_data, DRAKON_SYM  # noqa: E402
     from siprod_asm import assemble_text            # noqa: E402
     from siprod_lib import Library                  # noqa: E402
 
     src = os.path.join(ROOT, "drakon", "drakon.be")
     cmd, _labels, _syms = assemble_text(src)
+    const, data = parse_data(src)
     lib = Library(os.path.join(ROOT, "siprod.bin"))
-    img = build_library(lib, "DRAKON", cmd)
+    img = build_library(lib, "DRAKON", cmd, const=const, data=data,
+                        sym=DRAKON_SYM)
     with open(out_path, "wb") as f:
         f.write(img)
     return img
