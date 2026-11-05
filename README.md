@@ -60,7 +60,7 @@
 БЕМШ `disbesm6`.
 
 ```
-make            # листинги dis/*.asm, тексты bemsh/*.be, сборка build/siprod.bin
+make            # листинги dis/*.be, тексты bemsh/*.be, сборка build/siprod.bin
 make check      # проверка: разбор команд и обратная сборка совпадают
 make bemsh      # компиляция всех модулей транслятором МАКРО-БЕМШ с проверкой
 make madlen     # дизассемблирование в автокод МАДЛЕН (madlen-gen/*.madlen)

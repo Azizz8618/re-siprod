@@ -2,7 +2,7 @@
 #
 #   make            DTRAN listings of all library modules + loader maps
 #   make dtran      build/<module>.dtran for every dtr/<module>.dtr (dubna, siprod.bin)
-#   make dis        dis/<module>.asm - BESM-6 autocode of every module (disbesm6)
+#   make dis        dis/<module>.be - BESM-6 autocode of every module (disbesm6)
 #   make be         bemsh/<module>.be - the same in BESM-6 source form with
 #                   comments (rules of re-dispak)
 #   make build      build/siprod.bin - the library compiled by MAKRO-BEMSH

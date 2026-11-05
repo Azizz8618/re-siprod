@@ -290,7 +290,7 @@ def disassemble(lib, name, outdir, disbesm6="disbesm6"):
     listing = re.sub(r"^.*File: .*$", "; " + name + ": код модуля", listing,
                      flags=re.M)
     os.makedirs(outdir, exist_ok=True)
-    path = os.path.join(outdir, name.replace("*", "#") + ".asm")
+    path = os.path.join(outdir, name.replace("*", "#") + ".be")
     with open(path, "w") as f:
         f.write("; %s - модуль СИПРОДа, автокод БЕМШ\n" % name)
         f.write("; разобрано disbesm6, объект в siprod.bin, слово %d\n" % s)
