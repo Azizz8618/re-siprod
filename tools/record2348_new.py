@@ -333,9 +333,9 @@ def main():
              "*/*D ЗОНА 2100(8)", "*E", "*END"]
     out = run_job(vol_dir, args.volume, "schema", probe)
     body = printer_only(out)
-    clean = "СПОРЧЕНА" not in out
+    clean = "СПОРЧЕН" not in out
     printed = "НОВАЯ ВЕРСИЯ СИПРОДА" in body
-    print("   *main schema: %s, «ИСПОРЧЕНА ПОДПРОГРАММА»: %s"
+    print("   *main schema: %s, «ИСПОРЧЕНА/ИСПОРЧЕНЫ…»: %s"
           % ("СИПРОД печатает" if printed else "ОШИБКА: выдачи нет",
              "нет" if clean else "ЕСТЬ"))
     if not printed or not clean:
@@ -345,9 +345,9 @@ def main():
     out = run_job(vol_dir, args.volume, "drakon",
                   ["ЗАГОЛОВОК ПРОВЕРКА", "ВЕТКА ПЕРВАЯ",
                    "ДЕЙСТВИЕ ЧТО-ТО СДЕЛАТЬ", ""])
-    clean = "СПОРЧЕНА" not in out
+    clean = "СПОРЧЕН" not in out
     print("   *main drakon: модуль загружен и получил управление, "
-          "«ИСПОРЧЕНА ПОДПРОГРАММА»: %s"
+          "«ИСПОРЧЕНА/ИСПОРЧЕНЫ…»: %s"
           % ("нет" if clean else "ЕСТЬ"))
     if not clean:
         print(out[-1500:])

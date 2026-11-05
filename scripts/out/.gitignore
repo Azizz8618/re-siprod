@@ -1,0 +1,4 @@
+*
+!.gitignore
+!drakon_obj_words.txt
+!compile_run.log
