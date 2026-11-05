@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Сборка модулей СИПРОДа настоящим транслятором МАКРО-БЕМШ.
 
-Тексты `text/<модуль>.be` - это результат дизассемблирования, а не исходники:
+Тексты `bemsh/<модуль>.be` - это результат дизассемблирования, а не исходники:
 их нельзя подать транслятору как есть.  Здесь они переводятся в исходный
 синтаксис МАКРО-БЕМШ (как в проекте re-dispak) и компилируются штатным
 транслятором ИПМ МАКРО-БЕМШ ВЕР.06/78, который работает в эмуляторе диспака.
@@ -755,7 +755,7 @@ def main():
     ap.add_argument("--image", default=os.path.join(ROOT, "siprod.bin"))
     ap.add_argument("--build", default=None,
                     help="собрать библиотеку в этот файл")
-    ap.add_argument("--text", default=os.path.join(ROOT, "text"))
+    ap.add_argument("--text", default=os.path.join(ROOT, "bemsh"))
     ap.add_argument("--version", action="store_true",
                     help="показать версию библиотеки")
     args = ap.parse_args()
@@ -780,7 +780,7 @@ def main():
         if name not in lib.objects:
             print("нет модуля: %s" % name, file=sys.stderr)
             continue
-        path = os.path.join(ROOT, "text", name.replace("*", "#") + ".be")
+        path = os.path.join(ROOT, "bemsh", name.replace("*", "#") + ".be")
         res = check_module(lib, name, path, args.verbose)
         if res["errors"]:
             bad += 1

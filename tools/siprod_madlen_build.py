@@ -49,7 +49,7 @@ from siprod_notes import LABEL_NOTES, MODULE_NOTES              # noqa: E402
 
 GEN = os.path.join(ROOT, "madlen-gen")
 DST = os.path.join(ROOT, "madlen")
-TXT = os.path.join(ROOT, "text")
+TXT = os.path.join(ROOT, "bemsh")
 IMAGE = os.path.join(ROOT, "siprod.bin")
 
 LABEL_RE = re.compile(r"\*([0-7]+)B")

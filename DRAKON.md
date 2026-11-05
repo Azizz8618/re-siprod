@@ -142,4 +142,4 @@ python3 tools/drakon_markup.py файл.drakon | tests/siprod/run.sh -
   `GETSTR` и корректно возвращается в монитор;
 * в модуле не реализованы: разбор ключевых слов, построение дерева иконок,
   компоновка и вывод разметки.  Протокол вывода — через буфер вывода
-  монитора (`WRIKOR`/`SYTINT` образца `text/WRIKOR.be`, `text/SYTINT.be`).
+  монитора (`WRIKOR`/`SYTINT` образца `bemsh/WRIKOR.be`, `bemsh/SYTINT.be`).

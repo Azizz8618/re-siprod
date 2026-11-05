@@ -134,7 +134,7 @@ def local_symbols(module):
 
     Смещение записано восьмерично и совпадает с номером слова модуля.
     """
-    path = os.path.join(ROOT, "text", module.replace("*", "#") + ".be")
+    path = os.path.join(ROOT, "bemsh", module.replace("*", "#") + ".be")
     out = {}
     if not os.path.exists(path):
         return out

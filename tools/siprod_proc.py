@@ -26,7 +26,7 @@ from siprod_bemsh import OPS, parse_be                   # noqa: E402
 from siprod_labels import module_table                     # noqa: E402
 from siprod_lib import Library                             # noqa: E402
 
-TXT = os.path.join(ROOT, "text")
+TXT = os.path.join(ROOT, "bemsh")
 IMAGE = os.path.join(ROOT, "siprod.bin")
 
 

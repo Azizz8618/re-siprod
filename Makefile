@@ -3,7 +3,7 @@
 #   make            DTRAN listings of all library modules + loader maps
 #   make dtran      build/<module>.dtran for every dtr/<module>.dtr (dubna, siprod.bin)
 #   make dis        dis/<module>.asm - BESM-6 autocode of every module (disbesm6)
-#   make be         text/<module>.be - the same in BESM-6 source form with
+#   make be         bemsh/<module>.be - the same in BESM-6 source form with
 #                   comments (rules of re-dispak)
 #   make build      build/siprod.bin - the library compiled by MAKRO-BEMSH
 #   make check      round-trip check: disassemble + assemble == original words
@@ -61,7 +61,7 @@ be:
 # the library assembled from the commented texts
 build: build/siprod.bin
 
-build/siprod.bin: $(wildcard text/*.be) siprod.bin tools/siprod_bemsh.py
+build/siprod.bin: $(wildcard bemsh/*.be) siprod.bin tools/siprod_bemsh.py
 	@mkdir -p build
 	$(PYTHON) tools/siprod_bemsh.py --build=$@
 

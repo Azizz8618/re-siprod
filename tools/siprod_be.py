@@ -974,7 +974,7 @@ def main():
     path = "siprod.bin"
     if args and os.path.exists(args[0]):
         path = args.pop(0)
-    outdir = "text"
+    outdir = "bemsh"
     for o in opts:
         if o.startswith("--out="):
             outdir = o[6:]

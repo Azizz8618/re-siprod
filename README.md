@@ -13,7 +13,7 @@
 
 Программа СИПРОДа разобрана в автокод БЕМШ: листинги всех модулей лежат в
 [dis/](dis) (генерируются `make dis`), откомментированные тексты модулей -
-в [text/](text) (`make be`, правила оформления - как в проекте re-dispak).
+в [bemsh/](bemsh) (`make be`, правила оформления - как в проекте re-dispak).
 Сборка идёт **настоящим транслятором МАКРО-БЕМШ** (ИПМ МАКРО-БЕМШ
 ВЕР.06/78, работает в эмуляторе диспака): `make build` переводит тексты в
 исходный синтаксис МАКРО-БЕМШ, компилирует все 98 модулей и собирает из
@@ -60,7 +60,7 @@
 БЕМШ `disbesm6`.
 
 ```
-make            # листинги dis/*.asm, тексты text/*.be, сборка build/siprod.bin
+make            # листинги dis/*.asm, тексты bemsh/*.be, сборка build/siprod.bin
 make check      # проверка: разбор команд и обратная сборка совпадают
 make bemsh      # компиляция всех модулей транслятором МАКРО-БЕМШ с проверкой
 make madlen     # дизассемблирование в автокод МАДЛЕН (madlen-gen/*.madlen)
@@ -84,7 +84,7 @@ tests/siprod/frag.sh 'строка' ...     # быстрый опыт с нес�
 ```
 tools/siprod_lib.py --dump SCAN       # что внутри модуля
 tools/siprod_dis.py SCAN              # -> dis/SCAN.asm
-tools/siprod_be.py SCAN               # -> text/SCAN.be
+tools/siprod_be.py SCAN               # -> bemsh/SCAN.be
 tools/siprod_asm.py SCAN              # проверка обратной сборки
 tools/siprod_asm.py --emit=lib.bin    # пересборка библиотеки заново
 ```

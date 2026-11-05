@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Регистры и малые смещения в текстах модулей СИПРОДа (папка text).
+"""Регистры и малые смещения в текстах модулей СИПРОДа (папка bemsh).
 
-Разбирает тексты `text/*.be` (реконструированный автокод БЕМШ) и собирает:
+Разбирает тексты `bemsh/*.be` (реконструированный автокод БЕМШ) и собирает:
 
 * по каждому регистру М1..М17 - где и в каких командах он используется,
 * по каждому регистру - множество малых смещений вида `N(Мк)`,
@@ -156,7 +156,7 @@ def check_common(mods, libpath="siprod.bin"):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--textdir", default="text")
+    ap.add_argument("--textdir", default="bemsh")
     ap.add_argument("--module", help="подробно по модулю")
     ap.add_argument("--json", action="store_true")
     args = ap.parse_args()

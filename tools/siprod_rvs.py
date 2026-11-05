@@ -201,7 +201,7 @@ def main():
     ap.add_argument("modules", nargs="*", help="модули (по умолчанию - все)")
     ap.add_argument("--work", default="/tmp/siprod-rvs",
                     help="рабочий каталог с копиями томов")
-    ap.add_argument("--text", default=os.path.join(ROOT, "text"))
+    ap.add_argument("--text", default=os.path.join(ROOT, "bemsh"))
     ap.add_argument("--image", default=os.path.join(ROOT, "siprod.bin"))
     ap.add_argument("--first-zone", default="0100",
                     help="первая зона ПЕРСО для объектных модулей")
