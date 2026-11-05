@@ -3,10 +3,13 @@
 # the dispak emulator and print only SIPROD's printer output.
 #
 # SIPROD is run from disk 2348 ("Monitor-80") by default: the library is
-# written into the PERSO area of the working copy of the volume, at zone
-# 01267 (octal), which is where the monitor looks for it.  The copy of the
-# library that ships with volume 2348 is incomplete (95 of 98 modules, no
-# STANDA/STAATP/VIAPUZ), so the full library is written every run.
+# written into the PERSO area of the temporary volume copy, at zone
+# 1088 (2100 octal) - the working area of the project (SIPROD+DRAKON,
+# card *perso:672100).  Zone 695 (01267 octal) holds the ORIGINAL SIPROD
+# restored from disk 2048 (05.11.2026); it is only used with explicit
+# -z 695.  The copy of the library that ships with volume 2348 is
+# incomplete (95 of 98 modules, no STANDA/STAATP/VIAPUZ), so the full
+# library is written every run.
 #
 # Usage: tests/siprod/run.sh [-r] [-m] [-t] [-C COVFILE] [-x DISPAKOPT]
 #                            [-v VOL] [-z ZONE] [-l LIBRARY] INPUT
@@ -18,14 +21,15 @@
 #   -C F    write dispak PC coverage map to F (see tools/siprod_cov.py)
 #   -x O    pass option O to dispak (repeatable), e.g. -x --trace-e64
 #   -v VOL  volume to run from (default 2348)
-#   -z ZONE PERSO zone of the library (default 695 = 01267 octal)
+#   -z ZONE PERSO zone of the library (default 1088 = 2100 octal;
+#           695 = 01267 octal is the restored ORIGINAL, only explicitly)
 #   -l LIB  library image to write into the PERSO (default siprod.bin)
 set -eu
 ROOT=$(cd "$(dirname "$0")/../.." && pwd)
 usage() { sed -n '2,20s/^# \{0,1\}//p' "$0" >&2; exit 2; }
 raw=0 nolo='*no lo' opts=
 VOL=${SIPROD_VOL:-2348}
-ZONE=${SIPROD_ZONE:-695}
+ZONE=${SIPROD_ZONE:-1088}
 LIB=${SIPROD_LIB:-$ROOT/siprod.bin}
 while getopts rmtC:x:vz:l: o; do
     case $o in
