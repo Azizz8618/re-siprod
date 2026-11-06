@@ -40,6 +40,7 @@ set -eu
 
 DISPAK=${DISPAK:-dispak}
 BESMTOOL=${BESMTOOL:-besmtool}
+U=${HOME:-/home/azizz}
 export BESM6_PATH="${BESM6_PATH:-$HOME/.besm6:/usr/local/share/besm6}"
 HERE=$(cd "$(dirname "$0")" && pwd)
 
@@ -67,7 +68,8 @@ gost() {
         | tr '[:lower:]' '[:upper:]'
 }
 
-volpath=$(printf '%s' "$BESM6_PATH" | tr ':' '\n' | while IFS= read -r d; do
+volpath=$(printf '%s\n' "$BESM6_PATH" | tr ':' '\n' | while IFS= read -r d; do
+    [ -n "$d" ] || continue
     [ -f "$d/$VOL" ] && { printf '%s\n' "$d/$VOL"; break; }
 done)
 [ -n "${volpath:-}" ] || { echo "СТОП: том $VOL не найден в BESM6_PATH" >&2; exit 1; }
@@ -82,8 +84,16 @@ done
 before=$(md5f "$volpath")
 echo "том до: md5 $before"
 
-# 1) Резерв (идемпотентно).
+# 1) Резерв (идемпотентно).  Каталог боевого тома принадлежит root:
+#    нового файла резерва там не создать (sudo недоступен), поэтому для
+#    неподдающегося каталогу резерв снимается в ~/.besm6, как требует
+#    README re-siprod (2348.bak-<цель>-<ГГГГММДД>; прецедент
+#    tools/catchup2348_monitor.sh - bak-prod-).  Для каталога
+#    пользователя резерв остаётся рядом с томом.
 BAK="$volpath.bak-pascal-$(date +%Y%m%d)"
+if [ ! -w "$(dirname "$volpath")" ]; then
+    BAK="$U/.besm6/2348.bak-pascal-prod-$(date +%Y%m%d)"
+fi
 if [ ! -f "$BAK" ]; then
     cp -p "$volpath" "$BAK"
     echo "резерв: $BAK md5=$(md5f "$BAK")"
