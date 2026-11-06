@@ -4,11 +4,20 @@
    разметки (re-siprod, tools/drakon_markup.py): разбор текста схемы
    по отступам, перенос длинных подписей на строки, компоновка икон
    по колонкам (основной шампур и правые плечи развилок), рисование
-   икон шести видов с соединительными линиями, возвратами плеч и
-   слиянием маршрутов, выдача разметки СИПРОДа *RED для печати
-   схемы на АЦПУ средствами редактора.
+   ПОЛНОГО КОМПЛЕКТА ИКОН ЯЗЫКА ПО РИС. 4 КНИГИ В. Д. ПАРОНДЖАНОВА
+   «ДРАКОН-СХЕМЫ» (И1-И25: полуовалы заголовка и конца, щит имени
+   ветки, шестиугольник вопроса с валентной точкой, параллелограмм
+   выбора, клин варианта, домик адреса, двойные стенки вставки,
+   полка, формальные параметры, цикл ДЛЯ, вывод/ввод с полыми
+   стрелками, пауза, период, пуск таймера, синхронизатор,
+   параллельный процесс, комментарий в двойной рамке, боковые
+   комментарии-скобки, петля цикла и гребёнка силуэта), возвраты
+   плеч, слияние маршрутов и автоматическая петля цикла ДЛЯ;
+   выдача разметки СИПРОДа *RED для печати схемы на АЦПУ средствами
+   редактора.
    Ключевые слова: ЗАГОЛОВОК ВЕТКА ДЕЙСТВИЕ КОММЕНТАРИЙ ЕСЛИ ЦИКЛ
-   ВЫБОР ВАРИАНТ АДРЕС КОНЕЦ ТО ИНАЧЕ.
+   ВЫБОР ВАРИАНТ АДРЕС КОНЕЦ ТО ИНАЧЕ ПОЛКА ПАРАМ ДЛЯ КДЛ ВЫВОД ВВОД
+   ПАУЗА ПЕРИОД ПУСК СИНХРО ПАРАЛ ПКОМ ЛКОМ ПЕТЛЯ ГРЕБЕНКА ВСТАВКА.
    Вход: карты после *EXECUTE.  Выход: разметка *RED.
    Особенности компилятора 15.1, учтённые в тексте:
    - идентификатор результата функции нельзя читать в выражениях
@@ -20,7 +29,7 @@ program drakon(input, output);
 
 const
   NN = 120;       (* узлов схемы *)
-  TKW = 12;       (* число ключевых слов *)
+  TKW = 28;       (* число ключевых слов *)
   CWD = 72;       (* значимых позиций карты *)
   RMAX = 240;     (* строк рисунка *)
   CMAX = 128;     (* колонок рисунка: широкий формат АЦПУ-128 *)
@@ -32,17 +41,20 @@ const
 
 type
   carty = array [1..80] of char;
+  (* упакованные массивы литер: экономят память (статика
+     ограничена - 49К слов на компилятор 15.1) *)
+  pcy = packed array [1..80] of char;
   prow = packed array [1..CMAX] of char;
 
 var
   card: carty;
   eofin: boolean;
 
-  kw: array [1..TKW] of carty;
+  kw: array [1..TKW] of pcy;
   kwl: array [1..TKW] of integer;
 
   nkind: array [1..NN] of integer;
-  ntext: array [1..NN] of carty;
+  ntext: array [1..NN] of pcy;
   ntl: array [1..NN] of integer;
   nkid: array [1..NN] of integer;
   nbro: array [1..NN] of integer;
@@ -74,8 +86,8 @@ var
   wsp: array [1..MXW] of integer;
   wwp: array [1..MXW] of integer;
   nwd: integer;
-  gtxt: carty;
-  wtx: array [1..MXL] of carty;
+  gtxt: pcy;
+  wtx: array [1..MXL] of pcy;
   wln: array [1..MXL] of integer;
   nwl: integer;
   wwd: integer;
@@ -143,7 +155,56 @@ begin
   kw[11][1] := 'Т'; kw[11][2] := 'О';
   kwl[12] := 5;
   kw[12][1] := 'И'; kw[12][2] := 'Н'; kw[12][3] := 'А';
-  kw[12][4] := 'Ч'; kw[12][5] := 'Е'
+  kw[12][4] := 'Ч'; kw[12][5] := 'Е';
+  (* полный комплект икон рис. 4: ключевые слова 13-28 *)
+  kwl[13] := 5;
+  kw[13][1] := 'П'; kw[13][2] := 'О'; kw[13][3] := 'Л';
+  kw[13][4] := 'К'; kw[13][5] := 'А';
+  kwl[14] := 5;
+  kw[14][1] := 'П'; kw[14][2] := 'А'; kw[14][3] := 'Р';
+  kw[14][4] := 'А'; kw[14][5] := 'М';
+  kwl[15] := 3;
+  kw[15][1] := 'Д'; kw[15][2] := 'Л'; kw[15][3] := 'Я';
+  kwl[16] := 3;
+  kw[16][1] := 'К'; kw[16][2] := 'Д'; kw[16][3] := 'Л';
+  kwl[17] := 5;
+  kw[17][1] := 'В'; kw[17][2] := 'Ы'; kw[17][3] := 'В';
+  kw[17][4] := 'О'; kw[17][5] := 'Д';
+  kwl[18] := 4;
+  kw[18][1] := 'В'; kw[18][2] := 'В'; kw[18][3] := 'О';
+  kw[18][4] := 'Д';
+  kwl[19] := 5;
+  kw[19][1] := 'П'; kw[19][2] := 'А'; kw[19][3] := 'У';
+  kw[19][4] := 'З'; kw[19][5] := 'А';
+  kwl[20] := 6;
+  kw[20][1] := 'П'; kw[20][2] := 'Е'; kw[20][3] := 'Р';
+  kw[20][4] := 'И'; kw[20][5] := 'О'; kw[20][6] := 'Д';
+  kwl[21] := 4;
+  kw[21][1] := 'П'; kw[21][2] := 'У'; kw[21][3] := 'С';
+  kw[21][4] := 'К';
+  kwl[22] := 6;
+  kw[22][1] := 'С'; kw[22][2] := 'И'; kw[22][3] := 'Н';
+  kw[22][4] := 'Х'; kw[22][5] := 'Р'; kw[22][6] := 'О';
+  kwl[23] := 5;
+  kw[23][1] := 'П'; kw[23][2] := 'А'; kw[23][3] := 'Р';
+  kw[23][4] := 'А'; kw[23][5] := 'Л';
+  kwl[24] := 4;
+  kw[24][1] := 'П'; kw[24][2] := 'К'; kw[24][3] := 'О';
+  kw[24][4] := 'М';
+  kwl[25] := 4;
+  kw[25][1] := 'Л'; kw[25][2] := 'К'; kw[25][3] := 'О';
+  kw[25][4] := 'М';
+  kwl[26] := 5;
+  kw[26][1] := 'П'; kw[26][2] := 'Е'; kw[26][3] := 'Т';
+  kw[26][4] := 'Л'; kw[26][5] := 'Я';
+  kwl[27] := 8;
+  kw[27][1] := 'Г'; kw[27][2] := 'Р'; kw[27][3] := 'Е';
+  kw[27][4] := 'Б'; kw[27][5] := 'Е'; kw[27][6] := 'Н';
+  kw[27][7] := 'К'; kw[27][8] := 'А';
+  kwl[28] := 7;
+  kw[28][1] := 'В'; kw[28][2] := 'С'; kw[28][3] := 'Т';
+  kw[28][4] := 'А'; kw[28][5] := 'В'; kw[28][6] := 'К';
+  kw[28][7] := 'А'
 end;
 
 (* распознавание ключевого слова: индекс или 0 *)
@@ -207,9 +268,9 @@ begin
       nbro[stl[stn]] := ncnt;
     stl[stn] := ncnt
   end;
-  (* контейнеры: ЕСЛИ ЦИКЛ ВЫБОР ВАРИАНТ ТО ИНАЧЕ *)
+  (* контейнеры: ЕСЛИ ЦИКЛ ВЫБОР ВАРИАНТ ТО ИНАЧЕ ДЛЯ *)
   if (k = 5) or (k = 6) or (k = 7) or (k = 8) or
-     (k = 11) or (k = 12) then begin
+     (k = 11) or (k = 12) or (k = 15) then begin
     stn := stn + 1;
     st[stn] := ncnt;
     sti[stn] := ind
@@ -296,8 +357,16 @@ end;
 
 (* ---------------- иконы ---------------- *)
 
-(* вид иконы: 0 прямоугольник, 1 заголовок, 2 трапеция ветки,
-   3 вопрос, 4 конец, 5 адрес, 6 выбор *)
+(* вид иконы по рис. 4 книги Паронджанова:
+   0 действие (прямоугольник), 1 заголовок (полуовал), 2 имя ветки
+   (щит), 3 вопрос (шестиугольник), 4 конец (полуовал), 5 адрес
+   (домик), 6 выбор (параллелограмм), 7 вариант (прямоугольник
+   с клином), 8 комментарий (двойная рамка с полуовалом), 9 полка,
+   10 формальные параметры, 11 начало цикла ДЛЯ, 12 конец цикла ДЛЯ,
+   13 вывод, 14 ввод, 15 пауза, 16 период, 17 пуск таймера,
+   18 синхронизатор, 19 параллельный процесс, 20 правый
+   комментарий, 21 левый комментарий, 22 петля цикла, 23 петля
+   силуэта (гребёнка), 24 вставка *)
 function kindof(n: integer): integer;
 var
   k, res: integer;
@@ -308,16 +377,50 @@ begin
     res := 1
   else if k = 2 then
     res := 2
-  else if k = 5 then
+  else if (k = 5) or (k = 6) then
     res := 3
-  else if k = 6 then
-    res := 3
-  else if k = 7 then
-    res := 6
+  else if k = 10 then
+    res := 4
   else if k = 9 then
     res := 5
-  else if k = 10 then
-    res := 4;
+  else if k = 7 then
+    res := 6
+  else if k = 8 then
+    res := 7
+  else if k = 4 then
+    res := 8
+  else if k = 13 then
+    res := 9
+  else if k = 14 then
+    res := 10
+  else if k = 15 then
+    res := 11
+  else if k = 16 then
+    res := 12
+  else if k = 17 then
+    res := 13
+  else if k = 18 then
+    res := 14
+  else if k = 19 then
+    res := 15
+  else if k = 20 then
+    res := 16
+  else if k = 21 then
+    res := 17
+  else if k = 22 then
+    res := 18
+  else if k = 23 then
+    res := 19
+  else if k = 24 then
+    res := 20
+  else if k = 25 then
+    res := 21
+  else if k = 26 then
+    res := 22
+  else if k = 27 then
+    res := 23
+  else if k = 28 then
+    res := 24;
   kindof := res
 end;
 
@@ -330,7 +433,7 @@ end;
 (* текст в поле ширины fw с позиции x, строка r; центрирование
    как в эталоне: лишний пробел при нечётных поле и остатке
    ставится слева *)
-procedure ctext(x, fw, r: integer; var t: carty; tl: integer);
+procedure ctext(x, fw, r: integer; var t: pcy; tl: integer);
 var
   i, left: integer;
 begin
@@ -347,6 +450,14 @@ var
 begin
   for i := 1 to ln do
     put(x + i - 1, y, c)
+end;
+
+(* горизонтальная грань: угол, тире, угол *)
+procedure hrun(x, y, ln: integer; lc, rc: char);
+begin
+  put(x, y, lc);
+  dash(x + 1, y, ln - 2, '-');
+  put(x + ln - 1, y, rc)
 end;
 
 (* разложить подпись gtxt длиной tl на строки wtx/wln;
@@ -409,7 +520,9 @@ begin
 end;
 
 (* подпись узла в gtxt, разбор на слова, ширина поля wwd:
-   не меньше 20 и самого длинного слова *)
+   не меньше 20, самого длинного слова и нечётная - у каждой
+   иконы одна средняя колонка, вершины клиньев и острия
+   прилегают к оси шампура ровно *)
 procedure settext(n: integer);
 var
   i, tl: integer;
@@ -417,7 +530,9 @@ begin
   tl := ntl[n];
   for i := 1 to tl do gtxt[i] := ntext[n][i];
   wwd := MINW;
-  splitw(tl)
+  splitw(tl);
+  if (wwd mod 2) = 0 then
+    wwd := wwd + 1
 end;
 
 (* полная ширина иконы узла n *)
@@ -428,28 +543,441 @@ begin
   k := kindof(n);
   tl := ntl[n];
   if k = 4 then begin
-    wd := 10;
-    if tl + 6 > wd then
-      wd := tl + 6;
+    (* конец: маленький полуовал *)
+    wd := tl + 2;
+    if wd < 7 then
+      wd := 7;
+    if (wd mod 2) = 0 then
+      wd := wd + 1;
     iconw := wd
-  end else begin
+  end else if k = 22 then
+    iconw := 18
+  else if k = 23 then
+    iconw := 30
+  else begin
     settext(n);
     if k = 3 then
-      wd := wwd + 6
-    else if k = 6 then
-      wd := wwd + 6
-    else if (k = 2) or (k = 5) then
       wd := wwd + 4
+    else if k = 6 then begin
+      (* параллелограмм: сдвиг верха равен числу строк + 1 *)
+      wraptl(tl);
+      wd := wwd + 3 + nwl
+    end else if (k = 8) or (k = 17) or (k = 21) or (k = 24) then
+      wd := wwd + 4
+    else if (k = 10) or (k = 16) or (k = 18) then
+      wd := wwd + 6
+    else if (k = 13) or (k = 14) then
+      wd := wwd + 10
+    else if k = 19 then
+      wd := wwd + 12
+    else if k = 20 then
+      wd := wwd + 3
     else
       wd := wwd + 2;
     iconw := wd
   end
 end;
 
-(* рисование иконы узла n с центром на колонке col, верх row *)
+(* формы икон: ДЕЙСТВИЕ, ЗАГОЛОВОК, ВОПРОС, КОНЕЦ *)
+procedure picon1(k, n, x, y, w: integer);
+var
+  i, r, f, s, m: integer;
+begin
+  if k = 0 then begin
+    (* ДЕЙСТВИЕ: прямоугольник *)
+    ih[n] := nwl + 2;
+    hrun(x, y, w, '+', '+');
+    for i := 1 to nwl do begin
+      r := y + i;
+      put(x, r, '|');
+      ctext(x + 1, wwd, r, wtx[i], wln[i]);
+      put(x + w - 1, r, '|')
+    end;
+    hrun(x, y + nwl + 1, w, '+', '+')
+  end else if k = 1 then begin
+    (* ЗАГОЛОВОК: полуовал И1 *)
+    ih[n] := nwl + 2;
+    hrun(x, y, w, '.', '.');
+    for i := 1 to nwl do begin
+      r := y + i;
+      put(x, r, '(');
+      ctext(x + 1, wwd, r, wtx[i], wln[i]);
+      put(x + w - 1, r, ')')
+    end;
+    hrun(x, y + nwl + 1, w, '''', '''')
+  end else if k = 3 then begin
+    (* ВОПРОС: шестиугольник И4, валентная точка справа -
+       линия плеча примыкает к стене на середине высоты *)
+    ih[n] := nwl + 4;
+    hrun(x + 2, y, wwd, '+', '+');
+    put(x + 1, y + 1, '/');
+    put(x + w - 2, y + 1, '(');
+    for i := 1 to nwl do begin
+      r := y + 1 + i;
+      put(x, r, '|');
+      ctext(x + 1, wwd + 2, r, wtx[i], wln[i]);
+      put(x + w - 1, r, '|')
+    end;
+    put(x + 1, y + nwl + 2, '(');
+    put(x + w - 2, y + nwl + 2, ')');
+    hrun(x + 2, y + nwl + 3, wwd, '+', '+')
+  end else if k = 4 then begin
+    (* КОНЕЦ: малый полуовал И2 *)
+    ih[n] := 3;
+    hrun(x, y, w, '.', '.');
+    put(x, y + 1, '(');
+    ctext(x + 1, w - 2, y + 1, wtx[1], wln[1]);
+    put(x + w - 1, y + 1, ')');
+    hrun(x, y + 2, w, '''', '''')
+  end
+end;
+
+(* формы икон: ВЕТКА, ВЫБОР, ВАРИАНТ *)
+procedure picon2(k, n, x, y, w: integer);
+var
+  i, r, f, s, m: integer;
+begin
+  if k = 2 then begin
+    (* ИМЯ ВЕТКИ: щит И7 - стены сходятся к нижней вершине *)
+    ih[n] := nwl + 3;
+    hrun(x, y, w, '+', '+');
+    for i := 1 to nwl do begin
+      r := y + i;
+      put(x, r, '|');
+      ctext(x + 1, wwd, r, wtx[i], wln[i]);
+      put(x + w - 1, r, '|')
+    end;
+    put(x + 1, y + nwl + 1, '(');
+    put(x + w - 2, y + nwl + 1, ')');
+    put(x + 2, y + nwl + 2, '(');
+    put(x + w - 3, y + nwl + 2, ')');
+    dash(x + 3, y + nwl + 2, w - 6, '_')
+  end else if k = 6 then begin
+    (* ВЫБОР: параллелограмм И5, верх сдвинут вправо *)
+    s := nwl + 1;
+    ih[n] := nwl + 2;
+    hrun(x + s, y, wwd + 2, '+', '+');
+    for i := 1 to nwl do begin
+      r := y + i;
+      f := s - i;
+      put(x + f, r, '/');
+      ctext(x + f + 1, wwd, r, wtx[i], wln[i]);
+      put(x + f + wwd + 1, r, '/')
+    end;
+    hrun(x, y + nwl + 1, wwd + 2, '+', '+')
+  end else if k = 7 then begin
+    (* ВАРИАНТ: прямоугольник с клином И6 *)
+    ih[n] := nwl + 4;
+    hrun(x, y, w, '+', '+');
+    for i := 1 to nwl do begin
+      r := y + i;
+      put(x, r, '|');
+      ctext(x + 1, wwd, r, wtx[i], wln[i]);
+      put(x + w - 1, r, '|')
+    end;
+    hrun(x, y + nwl + 1, w, '+', '+');
+    put(x + 1, y + nwl + 2, '(');
+    put(x + w - 2, y + nwl + 2, ')');
+    put(x + 2, y + nwl + 3, '(');
+    put(x + w - 3, y + nwl + 3, ')');
+    dash(x + 3, y + nwl + 3, w - 6, '_')
+  end
+end;
+
+(* формы икон: АДРЕС, КОММЕНТАРИЙ, ПОЛКА *)
+procedure picon3(k, n, x, y, w: integer);
+var
+  i, r, f, s, m: integer;
+begin
+  if k = 5 then begin
+    (* АДРЕС: домик И8 с треугольной крышей *)
+    m := w div 2;
+    ih[n] := nwl + 4;
+    put(x + m - 1, y, '/');
+    put(x + m, y, '(');
+    put(x + m - 2, y + 1, '/');
+    put(x + m + 1, y + 1, '(');
+    hrun(x, y + 2, w, '+', '+');
+    for i := 1 to nwl do begin
+      r := y + 2 + i;
+      put(x, r, '|');
+      ctext(x + 1, wwd, r, wtx[i], wln[i]);
+      put(x + w - 1, r, '|')
+    end;
+    hrun(x, y + nwl + 3, w, '+', '+')
+  end else if k = 8 then begin
+    (* КОММЕНТАРИЙ И21: двойная рамка, внутри полуовал *)
+    ih[n] := nwl + 4;
+    hrun(x, y, w, '+', '+');
+    put(x, y + 1, '|');
+    put(x + 1, y + 1, '.');
+    dash(x + 2, y + 1, wwd, '-');
+    put(x + wwd + 2, y + 1, '.');
+    put(x + w - 1, y + 1, '|');
+    for i := 1 to nwl do begin
+      r := y + 1 + i;
+      put(x, r, '|');
+      put(x + 1, r, '(');
+      ctext(x + 2, wwd, r, wtx[i], wln[i]);
+      put(x + wwd + 2, r, ')');
+      put(x + w - 1, r, '|')
+    end;
+    put(x, y + nwl + 2, '|');
+    put(x + 1, y + nwl + 2, '''');
+    dash(x + 2, y + nwl + 2, wwd, '-');
+    put(x + wwd + 2, y + nwl + 2, '''');
+    put(x + w - 1, y + nwl + 2, '|');
+    hrun(x, y + nwl + 3, w, '+', '+')
+  end else if k = 10 then begin
+    (* ФОРМАЛЬНЫЕ ПАРАМЕТРЫ И11: прямоугольник, точка слева *)
+    ih[n] := nwl + 2;
+    hrun(x + 2, y, wwd + 2, '+', '+');
+    for i := 1 to nwl do begin
+      r := y + i;
+      put(x + 2, r, '|');
+      ctext(x + 3, wwd, r, wtx[i], wln[i]);
+      put(x + wwd + 3, r, '|')
+    end;
+    hrun(x + 2, y + nwl + 1, wwd + 2, '+', '+');
+    r := y + (nwl + 2) div 2;
+    put(x, r, '-');
+    put(x + 1, r, '-')
+  end else if k = 9 then begin
+    (* ПОЛКА И10: прямоугольник с горизонтальной серединой *)
+    ih[n] := nwl + 4;
+    hrun(x, y, w, '+', '+');
+    for i := 1 to nwl do begin
+      r := y + i;
+      put(x, r, '|');
+      ctext(x + 1, wwd, r, wtx[i], wln[i]);
+      put(x + w - 1, r, '|')
+    end;
+    hrun(x, y + nwl + 1, w, '+', '+');
+    put(x, y + nwl + 2, '|');
+    put(x + w - 1, y + nwl + 2, '|');
+    hrun(x, y + nwl + 3, w, '+', '+')
+  end
+end;
+
+(* формы икон: ЦИКЛ ДЛЯ, КДЛ, ВЫВОД, ВВОД *)
+procedure picon4(k, n, x, y, w: integer);
+var
+  i, r, f, s, m: integer;
+begin
+  if k = 11 then begin
+    (* НАЧАЛО ЦИКЛА ДЛЯ И12: срезаны верхние угла *)
+    ih[n] := nwl + 2;
+    hrun(x + 1, y, wwd, '+', '+');
+    for i := 1 to nwl do begin
+      r := y + i;
+      if i = 1 then begin
+        put(x, r, '/');
+        put(x + w - 1, r, '(')
+      end else begin
+        put(x, r, '|');
+        put(x + w - 1, r, '|')
+      end;
+      ctext(x + 1, wwd, r, wtx[i], wln[i])
+    end;
+    hrun(x, y + nwl + 1, w, '+', '+')
+  end else if k = 12 then begin
+    (* КОНЕЦ ЦИКЛА ДЛЯ И13: срезаны нижние угла *)
+    ih[n] := nwl + 2;
+    hrun(x, y, w, '+', '+');
+    for i := 1 to nwl do begin
+      r := y + i;
+      if i = nwl then begin
+        put(x, r, '(');
+        put(x + w - 1, r, ')')
+      end else begin
+        put(x, r, '|');
+        put(x + w - 1, r, '|')
+      end;
+      ctext(x + 1, wwd, r, wtx[i], wln[i])
+    end;
+    hrun(x + 1, y + nwl + 1, wwd, '+', '+')
+  end else if k = 13 then begin
+    (* ВЫВОД И14: прямоугольник, справа полая стрелка наружу *)
+    ih[n] := nwl + 2;
+    hrun(x + 4, y, wwd + 2, '+', '+');
+    for i := 1 to nwl do begin
+      r := y + i;
+      put(x + 4, r, '|');
+      ctext(x + 5, wwd, r, wtx[i], wln[i]);
+      put(x + wwd + 5, r, '|')
+    end;
+    hrun(x + 4, y + nwl + 1, wwd + 2, '+', '+');
+    r := y + (nwl + 2) div 2;
+    dash(x + wwd + 6, r, 3, '=');
+    put(x + wwd + 9, r, '>')
+  end else if k = 14 then begin
+    (* ВВОД И15: прямоугольник, справа стрелка внутрь *)
+    ih[n] := nwl + 2;
+    hrun(x + 4, y, wwd + 2, '+', '+');
+    for i := 1 to nwl do begin
+      r := y + i;
+      put(x + 4, r, '|');
+      ctext(x + 5, wwd, r, wtx[i], wln[i]);
+      put(x + wwd + 5, r, '|')
+    end;
+    hrun(x + 4, y + nwl + 1, wwd + 2, '+', '+');
+    r := y + (nwl + 2) div 2;
+    put(x + wwd + 6, r, '<');
+    dash(x + wwd + 7, r, 3, '=')
+  end
+end;
+
+(* формы икон: ПАУЗА, ПЕРИОД, ПУСК, СИНХРОНИЗАТОР *)
+procedure picon5(k, n, x, y, w: integer);
+var
+  i, r, f, s, m: integer;
+begin
+  if k = 15 then begin
+    (* ПАУЗА И16: трапеция, сужающаяся вниз *)
+    ih[n] := nwl + 3;
+    hrun(x, y, w, '+', '+');
+    for i := 1 to nwl do begin
+      r := y + i;
+      put(x, r, '|');
+      ctext(x + 1, wwd, r, wtx[i], wln[i]);
+      put(x + w - 1, r, '|')
+    end;
+    put(x + 1, y + nwl + 1, '(');
+    put(x + w - 2, y + nwl + 1, ')');
+    hrun(x + 2, y + nwl + 2, wwd - 2, '+', '+')
+  end else if k = 16 then begin
+    (* ПЕРИОД И17: трапеция вниз, валентные точки по бокам *)
+    ih[n] := nwl + 3;
+    hrun(x + 2, y, wwd + 2, '+', '+');
+    for i := 1 to nwl do begin
+      r := y + i;
+      put(x + 2, r, '|');
+      ctext(x + 3, wwd, r, wtx[i], wln[i]);
+      put(x + wwd + 3, r, '|')
+    end;
+    put(x + 3, y + nwl + 1, '(');
+    put(x + wwd + 2, y + nwl + 1, ')');
+    hrun(x + 4, y + nwl + 2, wwd - 2, '+', '+');
+    r := y + (nwl + 3) div 2;
+    put(x, r, '-');
+    put(x + 1, r, '-');
+    put(x + wwd + 4, r, '-');
+    put(x + wwd + 5, r, '-')
+  end else if k = 17 then begin
+    (* ПУСК ТАЙМЕРА И18: трапеция вниз с двойными стенками *)
+    ih[n] := nwl + 3;
+    hrun(x, y, w, '+', '+');
+    for i := 1 to nwl do begin
+      r := y + i;
+      put(x, r, '|');
+      put(x + 1, r, '|');
+      ctext(x + 2, wwd, r, wtx[i], wln[i]);
+      put(x + wwd + 2, r, '|');
+      put(x + wwd + 3, r, '|')
+    end;
+    put(x + 1, y + nwl + 1, '(');
+    put(x + 2, y + nwl + 1, '(');
+    put(x + wwd + 1, y + nwl + 1, ')');
+    put(x + wwd + 2, y + nwl + 1, ')');
+    hrun(x + 3, y + nwl + 2, wwd - 2, '+', '+')
+  end else if k = 18 then begin
+    (* СИНХРОНИЗАТОР И19: трапеция вниз, точка справа *)
+    ih[n] := nwl + 3;
+    hrun(x + 2, y, wwd + 2, '+', '+');
+    for i := 1 to nwl do begin
+      r := y + i;
+      put(x + 2, r, '|');
+      ctext(x + 3, wwd, r, wtx[i], wln[i]);
+      put(x + wwd + 3, r, '|')
+    end;
+    put(x + 3, y + nwl + 1, '(');
+    put(x + wwd + 2, y + nwl + 1, ')');
+    hrun(x + 4, y + nwl + 2, wwd - 2, '+', '+');
+    r := y + (nwl + 3) div 2;
+    put(x + wwd + 4, r, '-');
+    put(x + wwd + 5, r, '-')
+  end
+end;
+
+(* формы икон: ПАРАЛПРОЦЕСС, БОКОВЫЕ КОММЕНТАРИИ, ПЕТЛИ, ВСТАВКА *)
+procedure picon6(k, n, x, y, w: integer);
+var
+  i, r, f, s, m: integer;
+begin
+  if k = 19 then begin
+    (* ПАРАЛЛЕЛЬНЫЙ ПРОЦЕСС И20: прямоугольник со сдвинутым
+       вверх-вправо вторым *)
+    ih[n] := nwl + 3;
+    hrun(x + wwd + 8, y, 4, '+', '+');
+    hrun(x + 5, y + 1, wwd + 2, '+', '+');
+    put(x + w - 1, y + 1, '|');
+    for i := 1 to nwl do begin
+      r := y + 1 + i;
+      put(x + 5, r, '|');
+      ctext(x + 6, wwd, r, wtx[i], wln[i]);
+      put(x + wwd + 6, r, '|')
+    end;
+    put(x + w - 1, y + 2, '+');
+    dash(x + wwd + 7, y + 2, 4, '-');
+    hrun(x + 5, y + nwl + 2, wwd + 2, '+', '+')
+  end else if k = 20 then begin
+    (* ПРАВЫЙ КОММЕНТАРИЙ И22: скобка слева от текста *)
+    ih[n] := nwl;
+    for i := 1 to nwl do begin
+      r := y + i - 1;
+      put(x, r, '(');
+      ctext(x + 2, wwd, r, wtx[i], wln[i])
+    end
+  end else if k = 21 then begin
+    (* ЛЕВЫЙ КОММЕНТАРИЙ И23: текст, скобка справа *)
+    ih[n] := nwl;
+    for i := 1 to nwl do begin
+      r := y + i - 1;
+      ctext(x + 2, wwd, r, wtx[i], wln[i]);
+      put(x + wwd + 2, r, ')')
+    end
+  end else if k = 22 then begin
+    (* ПЕТЛЯ ЦИКЛА И24: остриё упирается в вертикаль *)
+    ih[n] := 2;
+    put(x + 9, y, '|');
+    put(x + 10, y, '<');
+    dash(x + 11, y, 7, '-');
+    put(x + w - 1, y, '+');
+    put(x + 9, y + 1, '|');
+    put(x + w - 1, y + 1, '|')
+  end else if k = 23 then begin
+    (* ПЕТЛЯ СИЛУЭТА И25: остриё в вертикаль, зубцы гребёнки *)
+    ih[n] := 2;
+    put(x + 15, y, '|');
+    put(x + 16, y, '<');
+    dash(x + 17, y, 13, '-');
+    put(x + 15, y + 1, '|');
+    put(x + 19, y + 1, '|');
+    put(x + 23, y + 1, '|');
+    put(x + 27, y + 1, '|');
+    put(x + 29, y + 1, '|')
+  end else if k = 24 then begin
+    (* ВСТАВКА И9: прямоугольник с двойными стенками *)
+    ih[n] := nwl + 2;
+    hrun(x, y, w, '+', '+');
+    for i := 1 to nwl do begin
+      r := y + i;
+      put(x, r, '|');
+      put(x + 1, r, '|');
+      ctext(x + 2, wwd, r, wtx[i], wln[i]);
+      put(x + wwd + 2, r, '|');
+      put(x + wwd + 3, r, '|')
+    end;
+    hrun(x, y + nwl + 1, w, '+', '+')
+  end
+end;
+
+(* рисование иконы узла n с центром на колонке col, верх row;
+   формы разбиты на picon1..picon6: у компилятора 15.1 предел
+   числа команд в блоке *)
 procedure makeicon(n, col, row: integer);
 var
-  k, w, tl, i, x, y, r, f: integer;
+  k, w, tl, i, x, y: integer;
 begin
   k := kindof(n);
   tl := ntl[n];
@@ -459,21 +987,8 @@ begin
     gtxt[1] := 'к'; gtxt[2] := 'о'; gtxt[3] := 'н';
     gtxt[4] := 'е'; gtxt[5] := 'ц'
   end;
-  (* ширина иконы *)
-  if k = 4 then begin
-    w := 10;
-    if tl + 6 > w then
-      w := tl + 6
-  end else begin
-    settext(n);
-    if (k = 3) or (k = 6) then
-      w := wwd + 6
-    else if (k = 2) or (k = 5) then
-      w := wwd + 4
-    else
-      w := wwd + 2
-  end;
-  (* строки подписи (для конца - одна строка) *)
+  w := iconw(n);
+  (* строки подписи (у конца - одна строка) *)
   if k = 4 then begin
     nwl := 1;
     wln[1] := tl;
@@ -485,102 +1000,18 @@ begin
   iw[n] := w;
   iy[n] := row;
   y := row;
-  if k = 1 then begin
-    (* ЗАГОЛОВОК: .-(т)-. в скобках, низ +---+ *)
-    ih[n] := nwl + 2;
-    put(x, y, '.');
-    dash(x + 1, y, w - 2, '-');
-    put(x + w - 1, y, '.');
-    for i := 1 to nwl do begin
-      r := y + i;
-      put(x, r, '(');
-      ctext(x + 1, wwd, r, wtx[i], wln[i]);
-      put(x + w - 1, r, ')')
-    end;
-    put(x, y + nwl + 1, '+');
-    dash(x + 1, y + nwl + 1, w - 2, '-');
-    put(x + w - 1, y + nwl + 1, '+')
-  end else if k = 4 then begin
-    (* КОНЕЦ: .-(конец)-+ *)
-    ih[n] := 3;
-    put(x, y, '.');
-    dash(x + 1, y, w - 2, '-');
-    put(x + w - 1, y, '.');
-    put(x, y + 1, '(');
-    ctext(x + 1, w - 2, y + 1, wtx[1], wln[1]);
-    put(x + w - 1, y + 1, ')');
-    put(x, y + 2, '+');
-    dash(x + 1, y + 2, w - 2, '-');
-    put(x + w - 1, y + 2, '+')
-  end else if (k = 2) or (k = 6) then begin
-    (* ВЕТКА и ВЫБОР: трапеция, верх короче низа *)
-    ih[n] := nwl + 2;
-    put(x + 2, y, '+');
-    dash(x + 3, y, w - 4, '-');
-    put(x + w - 1, y, '+');
-    for i := 1 to nwl do begin
-      r := y + i;
-      put(x + 1, r, '/');
-      ctext(x + 2, w - 3, r, wtx[i], wln[i]);
-      put(x + w - 1, r, '/')
-    end;
-    put(x, y + nwl + 1, '+');
-    dash(x + 1, y + nwl + 1, w - 2, '-');
-    put(x + w - 1, y + nwl + 1, '+')
-  end else if k = 5 then begin
-    (* АДРЕС: трапеция, верх уже низа, правый край вертикальный *)
-    ih[n] := nwl + 2;
-    put(x + 3, y, '+');
-    dash(x + 4, y, w - 6, '-');
-    put(x + w - 2, y, '+');
-    for i := 1 to nwl do begin
-      r := y + i;
-      put(x + 2, r, '/');
-      ctext(x + 3, w - 3, r, wtx[i], wln[i]);
-      put(x + w, r, '/')
-    end;
-    put(x + 1, y + nwl + 1, '+');
-    dash(x + 2, y + nwl + 1, w - 4, '-');
-    put(x + w - 2, y + nwl + 1, '+')
-  end else if k = 3 then begin
-    (* ЕСЛИ, ЦИКЛ: шестиугольник <т> с косыми боками *)
-    ih[n] := nwl + 3;
-    put(x + 2, y, '+');
-    dash(x + 3, y, w - 4, '-');
-    put(x + w - 1, y, '+');
-    for i := 1 to nwl do begin
-      r := y + i;
-      if i = 1 then begin
-        put(x, r, '<');
-        ctext(x + 1, w - 2, r, wtx[i], wln[i]);
-        put(x + w - 1, r, '>')
-      end else begin
-        put(x, r, '|');
-        ctext(x + 1, w - 2, r, wtx[i], wln[i]);
-        put(x + w - 1, r, '|')
-      end
-    end;
-    put(x + 1, y + nwl + 1, '/');
-    put(x + w - 1, y + nwl + 1, '/');
-    put(x + 2, y + nwl + 2, '+');
-    dash(x + 3, y + nwl + 2, w - 4, '-');
-    put(x + w - 1, y + nwl + 2, '+')
-  end else begin
-    (* ДЕЙСТВИЕ, ВАРИАНТ, КОММЕНТАРИЙ: прямоугольник *)
-    ih[n] := nwl + 2;
-    put(x, y, '+');
-    dash(x + 1, y, w - 2, '-');
-    put(x + w - 1, y, '+');
-    for i := 1 to nwl do begin
-      r := y + i;
-      put(x, r, '|');
-      ctext(x + 1, wwd, r, wtx[i], wln[i]);
-      put(x + w - 1, r, '|')
-    end;
-    put(x, y + nwl + 1, '+');
-    dash(x + 1, y + nwl + 1, w - 2, '-');
-    put(x + w - 1, y + nwl + 1, '+')
-  end
+  if (k = 2) or (k = 6) or (k = 7) then
+    picon2(k, n, x, y, w)
+  else if (k = 5) or (k = 8) or (k = 9) or (k = 10) then
+    picon3(k, n, x, y, w)
+  else if (k = 11) or (k = 12) or (k = 13) or (k = 14) then
+    picon4(k, n, x, y, w)
+  else if (k = 15) or (k = 16) or (k = 17) or (k = 18) then
+    picon5(k, n, x, y, w)
+  else if k >= 19 then
+    picon6(k, n, x, y, w)
+  else
+    picon1(k, n, x, y, w)
 end;
 
 (* ---------------- компоновка ---------------- *)
@@ -594,7 +1025,7 @@ var
 begin
   res := 0;
   ch := 0;
-  if nkind[n] = 6 then
+  if (nkind[n] = 6) or (nkind[n] = 15) then
     res := nkid[n]
   else
     ch := nkid[n];
@@ -607,6 +1038,18 @@ begin
       ch := nbro[ch]
   end;
   mainkids := res
+end;
+
+(* строка бокового выхода иконы: у вопроса - валентная точка
+   на середине высоты (правая стена), у остальных - нижняя грань *)
+function exrow(n: integer): integer;
+var
+  r: integer;
+begin
+  r := iy[n] + ih[n] - 1;
+  if (nkind[n] = 5) or (nkind[n] = 6) then
+    r := iy[n] + ih[n] div 2;
+  exrow := r
 end;
 
 (* собрать правые плечи: ИНАЧЕ (минус - начало с потомков),
@@ -680,11 +1123,9 @@ begin
     end;
     sidebranches(node);
     if nbr[node] > 0 then begin
-      row0 := iy[node] + ih[node] - 2;
+      row0 := exrow(node);
       rx := col + iw[node] div 2 + GAPS;
-      ry := iy[node] + ih[node] div 2 + 1;
-      if row0 + 1 > ry then
-        ry := row0 + 1;
+      ry := row0 + 1;
       for b := 1 to nbr[node] do begin
         if brx[node, b] < 0 then begin
           f0 := -brx[node, b];
@@ -741,21 +1182,27 @@ begin
   end
 end;
 
-(* шина выхода вправо к осям плеч *)
+(* шина выхода вправо к осям плеч; линия начинается от самой
+   правой литеры иконы в строке выхода (у параллелограмма низ
+   уже верха, у вопроса стена на середине высоты) *)
 procedure busout;
 var
-  i, a, b, r, cl, x, row0, lastr: integer;
+  i, a, b, r, cl, x, row0, lastr, wx: integer;
 begin
   for i := 1 to nfl do begin
     a := flat[i];
     if nbr[a] > 0 then begin
       cl := ix[a] + iw[a] div 2;
-      row0 := iy[a] + ih[a] - 2;
+      row0 := exrow(a);
       lastr := brx[a, 1];
       for b := 2 to nbr[a] do
         if brx[a, b] > lastr then
           lastr := brx[a, b];
-      for x := ix[a] + iw[a] to lastr - 1 do
+      wx := ix[a];
+      for x := ix[a] to ix[a] + iw[a] - 1 do
+        if pic[row0][x] <> ' ' then
+          wx := x;
+      for x := wx + 1 to lastr - 1 do
         put(x, row0, '-');
       for b := 1 to nbr[a] do begin
         put(brx[a, b], row0, '+');
@@ -804,6 +1251,54 @@ begin
       end
     end
   end
+end;
+
+(* петля цикла ДЛЯ: возврат от КДЛ к вертикали под ДЛЯ (икона
+   И24): от правой стены КДЛ на середине высоты - вправо, вверх
+   и остриём в вертикаль между ДЛЯ и телом цикла *)
+procedure forloop;
+var
+  i, nd, kd, ch, cl, ax, r1, r2, wx, xx, rr: integer;
+begin
+  for i := 1 to nfl do
+    if nkind[flat[i]] = 15 then begin
+      nd := flat[i];
+      (* последний ребёнок-КДЛ *)
+      kd := 0;
+      ch := nkid[nd];
+      while ch <> 0 do begin
+        if nkind[ch] = 16 then
+          kd := ch;
+        ch := nbro[ch]
+      end;
+      if kd <> 0 then begin
+        cl := ix[nd] + iw[nd] div 2;
+        (* ось правее всех икон тела (от первого ребёнка до КДЛ) *)
+        ax := cl;
+        ch := nkid[nd];
+        while ch <> 0 do begin
+          if ix[ch] + iw[ch] > ax then
+            ax := ix[ch] + iw[ch];
+          ch := nbro[ch]
+        end;
+        ax := ax + 2;
+        r1 := iy[nd] + ih[nd] + 1;
+        r2 := iy[kd] + ih[kd] div 2;
+        wx := ix[kd];
+        for xx := ix[kd] to ix[kd] + iw[kd] - 1 do
+          if pic[r2][xx] <> ' ' then
+            wx := xx;
+        put(cl + 1, r1, '<');
+        for xx := cl + 2 to ax - 1 do
+          put(xx, r1, '-');
+        put(ax, r1, '+');
+        for rr := r1 + 1 to r2 - 1 do
+          put(ax, rr, '|');
+        put(ax, r2, '+');
+        for xx := wx + 1 to ax - 1 do
+          put(xx, r2, '-')
+      end
+    end
 end;
 
 (* ---------------- выдача разметки СИПРОД ---------------- *)
@@ -896,7 +1391,12 @@ begin
   if mm < 1 then begin
     qq := 1 - mm;
     for ii := 1 to nfl do
-      ix[flat[ii]] := ix[flat[ii]] + qq
+      ix[flat[ii]] := ix[flat[ii]] + qq;
+    (* оси плеч - те же абсолютные колонки рисунка *)
+    for ii := 1 to ncnt do
+      for jj := 1 to 8 do
+        if brx[ii, jj] <> 0 then
+          brx[ii, jj] := brx[ii, jj] + qq
   end;
   (* число строк рисунка: самая низкая занятая строка *)
   rws := 0;
@@ -924,6 +1424,7 @@ begin
   connectors;
   busout;
   mergeback;
+  forloop;
   emit;
   stop
 end.
