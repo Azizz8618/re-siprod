@@ -73,6 +73,7 @@ var
   wl: array [1..MRW] of integer;
   wrc: array [1..MRW] of integer;
   nw: integer;
+  natq: integer;          (* естественная ширина очереди слов *)
   word: pwty;             (* накопитель слова *)
   wleng: integer;
   wrcl: integer;          (* разрядка слова при наборе *)
@@ -273,16 +274,12 @@ end;
 (* печать собранного листа; final - окончание текста (*E) *)
 procedure sheetprint(final: boolean);
 var
-  rows, top, bot, i, s, np, k2, st2: integer;
+  rows, top, bot, i, s, np, k2, st2, lim: integer;
   sideon: array [0..1] of boolean;
 begin
-  for i := 1 to 72 do clrrow(sheet[i]);
-  (* при окончании текста лист печатается до последней занятой строки *)
-  if final then begin
-    rows := hrows[0];
-    if hrows[1] > rows then rows := hrows[1];
-    if rows > 0 then rows := rowbase + rows
-  end;
+  (* при окончании текста лист печатается до последней занятой строки
+     (эталон red-fill); с рамкой и в широком формате лист печатается
+     целиком - эталоны red-frame/red-header/red-wide *)
   if fmt = 0 then begin
     top := 2; rows := 67
   end else if fmt = 1 then begin
@@ -290,12 +287,23 @@ begin
   end else begin
     top := 3; rows := 72
   end;
+  (* чистые строки листа: верх листа и незанятый низ; занятые строки
+     обеих страниц переписываются копированием целиком *)
+  lim := rowbase + hrows[0];
+  if (fmt = 0) and (hrows[1] < hrows[0]) then lim := rowbase + hrows[1];
+  if lim > rows then lim := rows;
+  for i := 1 to rowbase do clrrow(sheet[i]);
+  for i := lim + 1 to rows do clrrow(sheet[i]);
+  (* строки страниц - только занятые *)
   for i := 1 to tmax do
     if fmt = 0 then begin
-      for k2 := 1 to 64 do sheet[rowbase + i][k2] := htxt[0][i][k2];
-      for k2 := 65 to 128 do sheet[rowbase + i][k2] := htxt[1][i][k2]
+      if i <= hrows[0] then
+        for k2 := 1 to 64 do sheet[rowbase + i][k2] := htxt[0][i][k2];
+      if i <= hrows[1] then
+        for k2 := 65 to 128 do sheet[rowbase + i][k2] := htxt[1][i][k2]
     end else
-      for k2 := 1 to 128 do sheet[rowbase + i][k2] := htxt[0][i][k2];
+      if i <= hrows[0] then
+        for k2 := 1 to 128 do sheet[rowbase + i][k2] := htxt[0][i][k2];
   (* рамка *)
   bot := rows;
   if rgon then begin
@@ -401,9 +409,13 @@ procedure newsheet;
 var
   i, s, k2: integer;
 begin
+  (* чистота листа: строки, не занятые на прошлом листе, не писались
+     с своей последней очистки; достаточно стереть занятые *)
+  k2 := hrows[0];
+  if hrows[1] > k2 then k2 := hrows[1];
   for s := 0 to 1 do
-    for i := 1 to 66 do
-      for k2 := 1 to 128 do htxt[s][i][k2] := ' ';
+    for i := 1 to k2 do
+      for jj := 1 to 128 do htxt[s][i][jj] := ' ';
   hused[0] := false; hused[1] := false;
   hpno[0] := 0; hpno[1] := 0;
   hrows[0] := 0; hrows[1] := 0;
@@ -425,7 +437,9 @@ begin
   st := defl + (defw - stpl) div 2;
   for i := 1 to stpl do r[st + i - 1] := stp[i];
   for i := 1 to 128 do htxt[side][1][i] := r[i];
-  rowno := 1
+  rowno := 1;
+  (* строка 1 листа занята штампом - учесть в высоте страницы *)
+  if hrows[side] = 0 then hrows[side] := 1
 end;
 
 (* начало новой страницы: номер, сторона, штамп *)
@@ -474,7 +488,6 @@ end;
 procedure commitrow(var r: rowty; withrl: boolean);
 var
   i, k2: integer;
-  tmp: rowty;
 begin
   if incell then begin
     tcln := tcln + 1;
@@ -485,12 +498,15 @@ begin
   if withrl and (rowno > 0) then
     for i := 1 to rln do begin
       if rowno >= tmax then pageend;
-      clrrow(tmp);
-      for k2 := 1 to 128 do htxt[side][rowno + 1][k2] := tmp[k2];
+      (* строка интервала пуста; чистую строку листа писать не нужно *)
       rowno := rowno + 1
     end;
   if rowno >= tmax then pageend;
-  for k2 := 1 to 128 do htxt[side][rowno + 1][k2] := r[k2];
+  (* строка листа чиста от очистки листа и пишется один раз, поэтому
+     достаточно записать непробельные литеры - доступ к упакованной
+     строке htxt дорог, а пробел там уже стоит *)
+  for k2 := 1 to 128 do
+    if r[k2] <> ' ' then htxt[side][rowno + 1][k2] := r[k2];
   rowno := rowno + 1;
   freshpg := false;
   if rowno > hrows[side] then hrows[side] := rowno
@@ -525,14 +541,9 @@ begin
   if nw = 0 then exit;
   effw := fldw;
   if indon then effw := effw - 3;
-  nat := 0;
-  for i := 1 to nw do begin
-    if i > 1 then begin
-      gap[i] := 1 + 2 * wrc[i - 1] + 2 * wrc[i];
-      nat := nat + gap[i]
-    end;
-    nat := nat + wl[i]
-  end;
+  nat := natq;
+  for i := 2 to nw do
+    gap[i] := 1 + 2 * wrc[i - 1] + 2 * wrc[i];
   if (nat > effw) and (wl[1] > effw) then begin
     (* слово длиннее строки: разорвать, хвост остаётся в очереди *)
     for i := 1 to effw do cur[curflda + i - 1] := wt[1][i];
@@ -541,6 +552,7 @@ begin
     for i := sh + 1 to wl[1] do wt[1][i - sh] := wt[1][i];
     wl[1] := wl[1] - sh;
     wrc[1] := 0;
+    natq := wl[1];
     exit
   end;
   p := curflda;
@@ -558,6 +570,7 @@ begin
   end;
   curpos := p + 1;
   nw := 0;
+  natq := 0;
   indon := false
 end;
 
@@ -584,15 +597,11 @@ end;
    строка закрывается с выравниванием *)
 procedure addword;
 var
-  n2, i: integer;
+  n2: integer;
 begin
   if wleng = 0 then exit;
-  n2 := 0;
-  for i := 1 to nw do begin
-    if i > 1 then
-      n2 := n2 + 1 + 2 * wrc[i - 1] + 2 * wrc[i];
-    n2 := n2 + wl[i]
-  end;
+  (* естественная ширина: накопленная очередь и новое слово *)
+  n2 := natq;
   if nw > 0 then
     n2 := n2 + 1 + 2 * wrc[nw] + 2 * wrcl + wleng
   else
@@ -606,6 +615,9 @@ begin
   wt[nw] := word;
   wl[nw] := wleng;
   wrc[nw] := wrcl;
+  if nw > 1 then
+    natq := natq + 1 + 2 * wrc[nw - 1] + 2 * wrc[nw];
+  natq := natq + wleng;
   wleng := 0;
   wrcl := rcn;
   if nw >= MRW then begin
@@ -1466,6 +1478,11 @@ end;
 
 begin
   setfmt(0);
+  (* статическая память чистых упакованных строк листа содержит нули,
+     а не пробелы: первый newsheet заливает пробелами весь htxt, дальше
+     достаточно чистить занятые строки (пишутся только непробельные) *)
+  hrows[0] := 66;
+  hrows[1] := 66;
   newsheet;
   pageno := 0;
   pnext := 0;
