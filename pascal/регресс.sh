@@ -70,5 +70,28 @@ for s in "$SCHEMES"/*.drakon; do
     rm -f "$out" "$out.dat" "$out.log"
 done
 
+echo "=== ДРАКОН встроенным режимом *DRK: печать = разметке ==="
+# эталонные схемы внешнего репозитория + локальный силуэт demo6
+for s in "$SCHEMES"/*.drakon "$HERE/demo"/demo6-силуэт.drakon; do
+    base=$(basename "$s" .drakon)
+    out=$(mktemp)
+    sed 's/[ёЁ]/Е/g' "$s" > "$out.dat"
+    # маршрут 1: разметка drakon.pas -> печать редактором
+    "$HERE/прогнать.sh" "$HERE/drakon.pas" "$out.dat" > "$out.mk" 2>/dev/null
+    "$HERE/прогнать.sh" "$HERE/redakt.pas" "$out.mk" > "$out.red" 2>/dev/null
+    # маршрут 2: исходник напрямую блоком *DRK того же редактора
+    { echo '*DRK'; cat "$out.dat"; echo '*E'; } > "$out.drk"
+    "$HERE/прогнать.sh" "$HERE/redakt.pas" "$out.drk" > "$out.drko" 2>/dev/null
+    if diff -q "$out.red" "$out.drko" >/dev/null; then
+        echo "OK   $base  (*DRK = разметка, $(wc -l < "$out.drko") строк)"
+        ok=$((ok+1))
+    else
+        echo "DIFF $base (*DRK != разметка)"
+        diff "$out.red" "$out.drko" | head -6
+        diff_=$((diff_+1))
+    fi
+    rm -f "$out" "$out.dat" "$out.mk" "$out.red" "$out.drk" "$out.drko"
+done
+
 echo "=== итог: OK $ok, DIFF $diff_ ==="
 [ "$diff_" -eq 0 ]
