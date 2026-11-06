@@ -67,7 +67,8 @@ gost() {
         | tr '[:lower:]' '[:upper:]'
 }
 
-volpath=$(printf '%s' "$BESM6_PATH" | tr ':' '\n' | while IFS= read -r d; do
+volpath=$(printf '%s\n' "$BESM6_PATH" | tr ':' '\n' | while IFS= read -r d; do
+    [ -n "$d" ] || continue
     [ -f "$d/$VOL" ] && { printf '%s\n' "$d/$VOL"; break; }
 done)
 [ -n "${volpath:-}" ] || { echo "СТОП: том $VOL не найден в BESM6_PATH" >&2; exit 1; }

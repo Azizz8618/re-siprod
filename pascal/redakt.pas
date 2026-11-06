@@ -488,6 +488,12 @@ end;
 procedure commitrow(var r: rowty; withrl: boolean);
 var
   i, k2: integer;
+  sv: rowty;   (* копия строки на время pageend: newsheet внутри
+                  pageend стирает cur, а r - тот же участок памяти;
+                  без копии строка, зафиксированная точно на границе
+                  страниц, попадает на новый лист пустой и рамки
+                  фигур ДРАКОН обрываются *)
+  svd: boolean;
 begin
   if incell then begin
     tcln := tcln + 1;
@@ -495,13 +501,26 @@ begin
       for k2 := 1 to 128 do tline[tcol][tcln][k2] := r[k2];
     exit
   end;
+  svd := false;
   if withrl and (rowno > 0) then
     for i := 1 to rln do begin
-      if rowno >= tmax then pageend;
+      if rowno >= tmax then begin
+        if not svd then begin
+          for k2 := 1 to 128 do sv[k2] := r[k2];
+          svd := true
+        end;
+        pageend;
+        for k2 := 1 to 128 do r[k2] := sv[k2]
+      end;
       (* строка интервала пуста; чистую строку листа писать не нужно *)
       rowno := rowno + 1
     end;
-  if rowno >= tmax then pageend;
+  if rowno >= tmax then begin
+    if not svd then
+      for k2 := 1 to 128 do sv[k2] := r[k2];
+    pageend;
+    for k2 := 1 to 128 do r[k2] := sv[k2]
+  end;
   (* строка листа чиста от очистки листа и пишется один раз, поэтому
      достаточно записать непробельные литеры - доступ к упакованной
      строке htxt дорог, а пробел там уже стоит *)

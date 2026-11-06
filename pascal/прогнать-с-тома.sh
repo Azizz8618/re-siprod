@@ -43,7 +43,7 @@ timeout 600 "$DISPAK" job.b6 > out.txt 2>&1
 RC=$?
 # выдача задачи: после эха карты *call (первая карта после *perso) и до
 # КОНЕЦ ЗАДАЧИ или эха карты *end file (*ЕND)
-awk '/402150/{p=1;next} p && /^[ \t]*\*/{f=1;p=0;next} f && (/КОНЕЦ ЗАДАЧИ/ || /^[ \t]*\*ЕND/){f=0} f' out.txt > prog.out
+awk 'f==0 && /402150/{p=1;next} p && /^[ \t]*\*/{f=1;p=0;next} f && (/КОНЕЦ ЗАДАЧИ/ || /^[ \t]*\*ЕND/){f=0} f' out.txt > prog.out
 if [ -s prog.out ]; then
     cat prog.out
 else
