@@ -18,7 +18,7 @@ re-siprod (см. `SIPROD.md`, `bemsh/*.be`, `madlen/*.madlen`): вызов
 ## Файлы
 
 * `<имя>.drakon` — исходник схемы на языке ДРАКОН (правила — `DRAKON.md`);
-* `<имя>.txt` — рисунок схемы (эталонный генератор `tools/drakon_markup.py`);
+* `<имя>.txt` — рисунок схемы (эталон - прогон `pascal/drakon.pas`, см. ниже);
 * `pechat-katalog.txt` — все шесть схем, напечатанные на АЦПУ средствами
   самого СИПРОДа из личной библиотеки на диске 2348 (эмулятор dispak);
 * `_katalog-markup.txt` — разметка `*RED` каталога (вход для `run.sh`).
@@ -31,6 +31,15 @@ tests/siprod/run.sh drakon/schemes/_katalog-markup.txt
 
 ## Как построить рисунок одной схемы
 
+Эталонные рисунки (.txt) генерируются прогоном паскального
+транслятора `pascal/drakon.pas` на БЭСМ-6 (эмулятор dispak, модуль
+с тома 2348):
+
 ```
-python3 tools/drakon_markup.py drakon/schemes/01-vyzov-potok.drakon
+cd pascal
+sh перегенерировать-эталоны.sh 01-vyzov-potok
 ```
+
+Исторический генератор `python3 tools/drakon_markup.py` строит
+упрощённые рисунки (7 видов икон, вертикальный силуэт) и оставлен
+для сверки алгоритма разметки.

@@ -42,9 +42,12 @@ const
   DCMAX = 128;    (* колонок рисунка: широкий формат АЦПУ-128 *)
   GAPR = 2;       (* зазор по вертикали *)
   GAPS = 4;       (* зазор между шампуром и плечом *)
-  MINW = 20;      (* минимальная ширина поля текста *)
+  GAPB = 3;       (* пустых колонок между ветками силуэта *)
+  MINW = 5;       (* минимальная ширина поля текста *)
+  WMAXLINE = 30;  (* поле, до которого подпись держится в одну строку *)
   MXL = 12;       (* строк текста в иконе *)
   MXW = 40;       (* слов в подписи *)
+  SM = 12;        (* веток силуэта не более *)
 
 type
   rowty = array [1..128] of char;    (* строка печати, по слову на
@@ -202,6 +205,19 @@ var
   wln: array [1..MXL] of integer;
   nwl: integer;
   wwd: integer;
+
+  (* силуэт: колонки веток рядом (рис. 9 книги) *)
+  silnb: integer;                  (* число веток *)
+  silb: array [1..SM] of integer;  (* узел-щит ветки *)
+  silf0: array [1..SM] of integer; (* первый узел ветки в flat *)
+  silf1: array [1..SM] of integer; (* последний узел ветки в flat *)
+  silax: array [1..SM] of integer; (* ось колонки ветки *)
+  siltail: array [1..SM] of integer; (* последний узел цепочки ветки *)
+  silbot: array [1..SM] of integer;  (* нижняя строка ветки *)
+  silhb: integer;                  (* строка верхней шины *)
+  silbb: integer;                  (* строка нижней шины (петли) *)
+  sillc: integer;                  (* колонка вертикали петли слева *)
+  silmd: boolean;                  (* схема - силуэт *)
 
 procedure pasout(var a, b: char); fortran;
 
@@ -1721,19 +1737,47 @@ begin
 end;
 
 (* подпись узла в gtxt, разбор на слова, ширина поля wwd:
-   не меньше 20 и самого длинного слова *)
+   АДАПТИВНО к количеству текста - короткая подпись даёт узкую
+   икону (поле от 5 знаков), подпись до WMAXLINE держится в одну
+   строку, длинная делится на равные доли; поле всегда нечётное:
+   у каждой иконы одна средняя колонка, вершины клиньев и острия
+   прилегают к оси шампура ровно *)
 procedure settext(n: integer);
 var
-  i, tl: integer;
+  i, tl, L, tg: integer;
 begin
   tl := ntl[n];
   for i := 1 to tl do gtxt[i] := ntext[n][i];
   wwd := MINW;
   splitw(tl);
-  (* нечётная ширина поля: у каждой иконы одна средняя колонка,
-     вершины клиньев и острия прилегают к оси шампура ровно *)
+  if tl > WMAXLINE then begin
+    (* длинная подпись: строки равных долей *)
+    L := (tl + WMAXLINE - 1) div WMAXLINE;
+    tg := (tl + L - 1) div L;
+    if tg > wwd then
+      wwd := tg
+  end else if tl > wwd then
+    wwd := tl;
   if (wwd mod 2) = 0 then
     wwd := wwd + 1
+end;
+
+(* подогнать поле под подпись: слова могут не упаковаться в
+   намеченные строки - расширять поле, пока перенос не уложится *)
+procedure fittext(n: integer);
+var
+  tl, L: integer;
+begin
+  settext(n);
+  tl := ntl[n];
+  L := 1;
+  if tl > WMAXLINE then
+    L := (tl + WMAXLINE - 1) div WMAXLINE;
+  wraptl(tl);
+  while (nwl > L) and (wwd < WMAXLINE + 12) do begin
+    wwd := wwd + 2;
+    wraptl(tl)
+  end
 end;
 
 (* полная ширина иконы узла n *)
@@ -1756,14 +1800,13 @@ begin
   else if k = 23 then
     iconw := 30
   else begin
-    settext(n);
+    fittext(n);
     if k = 3 then
       wd := wwd + 4
-    else if k = 6 then begin
+    else if k = 6 then
       (* параллелограмм: сдвиг верха равен числу строк + 1 *)
-      wraptl(tl);
       wd := wwd + 3 + nwl
-    end else if (k = 8) or (k = 17) or (k = 21) or (k = 24) then
+    else if (k = 8) or (k = 17) or (k = 21) or (k = 24) then
       wd := wwd + 4
     else if (k = 10) or (k = 16) or (k = 18) then
       wd := wwd + 6
@@ -2182,20 +2225,22 @@ var
 begin
   k := kindof(n);
   tl := ntl[n];
-  for i := 1 to tl do gtxt[i] := ntext[n][i];
   if (k = 4) and (tl = 0) then begin
-    tl := 5;
+    (* конец без подписи печатает слово КОНЕЦ *)
     gtxt[1] := 'к'; gtxt[2] := 'о'; gtxt[3] := 'н';
     gtxt[4] := 'е'; gtxt[5] := 'ц'
   end;
   w := iconw(n);
-  (* строки подписи (у конца - одна строка) *)
+  (* строки подписи: поле и перенос подогнаны в iconw/fittext;
+     у конца - одна строка *)
   if k = 4 then begin
+    tl := ntl[n];
+    if tl = 0 then
+      tl := 5;
     nwl := 1;
     wln[1] := tl;
     for i := 1 to tl do wtx[1][i] := gtxt[i]
-  end else
-    wraptl(tl);
+  end;
   x := col - w div 2;
   ix[n] := x;
   iw[n] := w;
@@ -2501,6 +2546,144 @@ begin
     end
 end;
 
+(* ---------------- силуэт (как в drakon.pas) ---------------- *)
+
+(* раскладка силуэта по рис. 9 книги: заголовок, под ним ветки
+   РЯДОМИ в колонки; верхняя шина от заголовка к щитам, снизу
+   петля с возвратом в заголовок; ветка с КОНЦОМ - выход вниз.
+   Если колонки не умещаются в ширину АЦПУ - общий шампур *)
+procedure silout;
+var
+  h, b, p, sav, f0, j, nn1, kk, mn, mx, bot, prevr, d,
+  minall, gsh: integer;
+begin
+  silnb := 0;
+  h := nroot;
+  layout(h, 1, 1, 0, 1);
+  silhb := iy[h] + ih[h] + 1;
+  b := nbro[h];
+  while b <> 0 do begin
+    p := b;
+    while (nbro[p] <> 0) and (nkind[nbro[p]] <> 2) do
+      p := nbro[p];
+    sav := nbro[p];
+    nbro[p] := 0;
+    silnb := silnb + 1;
+    silb[silnb] := b;
+    f0 := nfl + 1;
+    silf0[silnb] := f0;
+    layout(b, 1, silhb + 2, 0, 0);
+    silf1[silnb] := nfl;
+    siltail[silnb] := gtail;
+    nbro[p] := sav;
+    mn := ix[b];
+    mx := ix[b] + iw[b] - 1;
+    bot := iy[b] + ih[b] - 1;
+    for j := f0 to nfl do begin
+      nn1 := flat[j];
+      if ix[nn1] < mn then
+        mn := ix[nn1];
+      if ix[nn1] + iw[nn1] - 1 > mx then
+        mx := ix[nn1] + iw[nn1] - 1;
+      if iy[nn1] + ih[nn1] - 1 > bot then
+        bot := iy[nn1] + ih[nn1] - 1
+    end;
+    if silnb > 1 then begin
+      d := prevr + GAPB + 1 - mn;
+      for j := silf0[silnb] to nfl do begin
+        nn1 := flat[j];
+        ix[nn1] := ix[nn1] + d;
+        for kk := 1 to nbr[nn1] do
+          brx[nn1, kk] := brx[nn1, kk] + d
+      end;
+      mx := mx + d
+    end;
+    prevr := mx;
+    silbot[silnb] := bot;
+    b := sav
+  end;
+  for j := 1 to silnb do
+    silax[j] := ix[silb[j]] + iw[silb[j]] div 2;
+  ix[h] := silax[1] - iw[h] div 2;
+  minall := ix[h];
+  for j := 1 to nfl do
+    if ix[flat[j]] < minall then
+      minall := ix[flat[j]];
+  sillc := minall - 2;
+  gsh := 0;
+  if sillc < 1 then
+    gsh := 1 - sillc;
+  if prevr + gsh > DCMAX - 1 then begin
+    silmd := false;
+    for j := 1 to nfl do
+      nxt[flat[j]] := 0;
+    nfl := 0
+  end else if gsh > 0 then begin
+    for j := 1 to nfl do begin
+      nn1 := flat[j];
+      ix[nn1] := ix[nn1] + gsh;
+      for kk := 1 to nbr[nn1] do
+        brx[nn1, kk] := brx[nn1, kk] + gsh
+    end;
+    for j := 1 to silnb do
+      silax[j] := silax[j] + gsh;
+    sillc := 1
+  end;
+  if not silmd then
+    exit;
+  bot := 0;
+  for j := 1 to silnb do
+    if silbot[j] > bot then
+      bot := silbot[j];
+  silbb := bot + 2
+end;
+
+(* линии силуэта, верхняя часть: вертикаль заголовка, верхняя
+   шина с остриём петли и спуски к щитам (разбивка на две
+   процедуры - у компилятора 15.1 предел числа команд в блоке) *)
+procedure silconnect;
+var
+  i, r, x, lasta: integer;
+begin
+  for r := iy[nroot] + ih[nroot] to silhb - 1 do
+    put(silax[1], r, '|');
+  lasta := silax[silnb];
+  put(sillc, silhb, '+');
+  for x := sillc + 1 to lasta - 1 do
+    put(x, silhb, '-');
+  for i := 1 to silnb do
+    put(silax[i], silhb, '+');
+  if silax[1] - 1 > sillc then
+    put(silax[1] - 1, silhb, '>');
+  for i := 1 to silnb do
+    put(silax[i], silhb + 1, '|')
+end;
+
+(* линии силуэта, нижняя часть: вертикаль петли слева и нижняя
+   шина (гребёнка): спуски веток, не кончающихся КОНЦОМ *)
+procedure silloop;
+var
+  i, r, x, lasta: integer;
+begin
+  for r := silhb + 1 to silbb - 1 do
+    put(sillc, r, '|');
+  put(sillc, silbb, '+');
+  lasta := sillc;
+  for i := 1 to silnb do
+    if nkind[siltail[i]] <> 10 then begin
+      if silax[i] > lasta then
+        lasta := silax[i]
+    end;
+  for x := sillc + 1 to lasta - 1 do
+    put(x, silbb, '-');
+  for i := 1 to silnb do
+    if nkind[siltail[i]] <> 10 then begin
+      for r := iy[siltail[i]] + ih[siltail[i]] to silbb - 1 do
+        put(silax[i], r, '|');
+      put(silax[i], silbb, '+')
+    end
+end;
+
 procedure drkstart;
 var
   i, j: integer;
@@ -2532,7 +2715,26 @@ var
 begin
   if ncnt = 0 then
     exit;
-  layout(nroot, 1, 1, 0, 0);
+  (* силуэт: корневая цепочка - заголовок, за ним ветки-щиты;
+     веток больше SM - общий шампур *)
+  silmd := (nkind[nroot] = 1) and (nbro[nroot] <> 0) and
+           (nkind[nbro[nroot]] = 2);
+  if silmd then begin
+    qq := 0;
+    nn1 := nbro[nroot];
+    while nn1 <> 0 do begin
+      if nkind[nn1] = 2 then
+        qq := qq + 1;
+      nn1 := nbro[nn1]
+    end;
+    if qq > SM then
+      silmd := false
+  end;
+  if silmd then
+    silout;
+  (* silout может отменить силуэт: колонки не уместились *)
+  if not silmd then
+    layout(nroot, 1, 1, 0, 0);
   (* сдвиг рисунка: левый край икон к колонке 1; оси плеч
      не сдвигаются - они уже отсчитаны от шампура *)
   m2 := 1;
@@ -2568,6 +2770,14 @@ begin
     else
       rws := rws - 1
   end;
+  (* у силуэта ниже икон ещё нижняя шина петли; выше DRMAX
+     строки не рисовались (put обрезает) *)
+  if silmd then begin
+    if silbb > rws then
+      rws := silbb;
+    if rws > DRMAX then
+      rws := DRMAX
+  end;
   (* перерисовка со сдвигом *)
   for i := 1 to DRMAX do
     for j := 1 to DCMAX do
@@ -2579,6 +2789,10 @@ begin
   busout;
   mergeback;
   forloop;
+  if silmd then begin
+    silconnect;
+    silloop
+  end;
   (* строки рисунка - в текущую строку как есть и на лист; за
      128-й позицией литеры теряются, как на АЦПУ и в разметке *)
   posmode := false;
