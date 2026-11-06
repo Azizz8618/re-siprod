@@ -71,10 +71,10 @@ for s in "$SCHEMES"/*.drakon; do
 done
 
 echo "=== ДРАКОН встроенным режимом *DRK: печать = разметке ==="
-# эталонные схемы внешнего репозитория + локальный силуэт demo6
-for s in "$SCHEMES"/*.drakon "$HERE/demo"/demo6-силуэт.drakon; do
+for s in "$SCHEMES"/*.drakon "$HERE/схемы"/*.drakon; do
     base=$(basename "$s" .drakon)
     out=$(mktemp)
+    # в наборе ГОСТ-10859 нет Ё: заменяем Е, иначе слово распадается
     sed 's/[ёЁ]/Е/g' "$s" > "$out.dat"
     # маршрут 1: разметка drakon.pas -> печать редактором
     "$HERE/прогнать.sh" "$HERE/drakon.pas" "$out.dat" > "$out.mk" 2>/dev/null
