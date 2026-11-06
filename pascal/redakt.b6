@@ -1,0 +1,1568 @@
+user 419999 зс5^
+лен 40(2348)^
+eeв1а3
+*name
+*no lo
+*call yesmemory
+*perso:402570
+*stand
+*call *pascal
+(*=U-*,P-*)
+(* РЕДАКТОР СИПРОД-П: реализация режима *RED системы СИПРОД (БЭСМ-6)
+   на языке Паскаль-Монитор (МС "Дубна").
+   Реализовано: заполнение и выравнивание строк; команды
+   *NS *N/ *NP *E *D *NH *NG *NCC *KNC *NFC *NRFC *N(...), *NW...),
+   *T *MD *NRL *NRC *OLR *RT *RU *ORU *NMCS *NMCP *NN *NN *RG,
+   *NSTA *NSTO *NSTP *NSTG *STN, таблицы *ST *SL (*NL *NR *NU *ND),
+   макроопределения *NM=...$ и вставки *NM, листинг *MF и ///,
+   печать на АЦПУ-128 (две страницы по 64 поз., формат А 84,
+   широкий формат), рамки, номера страниц, штамп ЕСПД,
+   ошибки 10 20 30 40 61 62 64 66 80 91 100.
+   Вход: карты после *EXECUTE (*RED ... *E, *END).  Выход: АЦПУ.
+   Отличие от оригинала: прогон страницы (код 0201) недоступен через
+   стандартный вывод Паскаля, листы разделяются пустой строкой. *)
+PROGRAM REDAKT(INPUT, OUTPUT);
+
+LABEL 1, 9;
+
+CONST
+  CW = 72;        (* значимых позиций карты *)
+  TRN = 60;       (* строк текста: обычный и широкий формат *)
+  TRA = 65;       (* строк текста: формат А *)
+  MRW = 44;       (* макс. слов в строке *)
+  MKMAX = 20;     (* макроопределений *)
+  MKLEN = 400;    (* длина тела макро *)
+  TCDEEP = 6;     (* глубина вложения макро *)
+  TCMAX = 30;      (* строк в ячейке таблицы *)
+
+TYPE
+  ROWTY = ARRAY [1..128] OF CHAR;    (* строка печати, по слову на
+  * литеру *)
+  CARTY = ARRAY [1..80] OF CHAR;
+  PROW = PACKED ARRAY [1..128] OF CHAR; (* строка в хранении, 6
+  * литер/слово *)
+  PWTY = PACKED ARRAY [1..100] OF CHAR; (* слово в хранении *)
+  MKTY = PACKED ARRAY [1..MKLEN] OF CHAR; (* тело макроопределения *)
+
+VAR
+  CARD: CARTY;            (* текущая карта *)
+  CPOS: INTEGER;          (* позиция на карте *)
+  EOFIN: BOOLEAN;
+
+  (* формат страницы *)
+  FMT: INTEGER;           (* 0 обычный, 1 широкий, 2 формат А *)
+  SHROWS: INTEGER;        (* строк в листе *)
+  ROWBASE: INTEGER;       (* листовая строка первой текстовой минус 1 *)
+  TMAX: INTEGER;          (* текстовых строк на странице *)
+  DEFL, DEFW: INTEGER;    (* поле по умолчанию: центровка и номера *)
+  FLDA, FLDW: INTEGER;    (* текущее поле левой страницы *)
+  MCSA, MCSW: INTEGER;    (* параметры *MCS *)
+
+  (* лист и страницы *)
+  SHEET: ARRAY [1..72] OF ROWTY;
+  HTXT: ARRAY [0..1] OF ARRAY [1..66] OF PROW;
+  HUSED: ARRAY [0..1] OF BOOLEAN;
+  HPNO: ARRAY [0..1] OF INTEGER;
+  HROWS: ARRAY [0..1] OF INTEGER;   (* занятых текстовых строк *)
+  PAGENO, PNEXT: INTEGER; (* счЕтчик страниц и номер от *N *)
+  NUMON, RGON: BOOLEAN;
+
+  (* текущая строка *)
+  CUR: ROWTY;
+  CURPOS: INTEGER;        (* следующая свободная позиция *)
+  ROWNO: INTEGER;         (* занято текстовых строк на странице *)
+  SIDE: INTEGER;          (* 0 левая страница, 1 правая *)
+  POSMODE: BOOLEAN;       (* позиционный набор после G/C/K/F/RF/D *)
+  INDON: BOOLEAN;         (* абзацный отступ *)
+  RLN, RCN: INTEGER;      (* интервал и разрядка *)
+  FILLON: BOOLEAN;        (* перенос по словам *)
+
+  (* очередь слов строки *)
+  WT: ARRAY [1..MRW] OF PWTY;
+  WL: ARRAY [1..MRW] OF INTEGER;
+  WRC: ARRAY [1..MRW] OF INTEGER;
+  NW: INTEGER;
+  WORD: PWTY;             (* накопитель слова *)
+  WLENG: INTEGER;
+  WRCL: INTEGER;          (* разрядка слова при наборе *)
+
+  (* режимы *)
+  LISTING: BOOLEAN;       (* *MF *)
+  ENDTXT: BOOLEAN;        (* *E *)
+  STPON, STGON: BOOLEAN;
+  STPEND: BOOLEAN;        (* штамп задан на свежей странице - поставить *)
+  PGFIRST: BOOLEAN;       (* ещЕ не напечатан первый лист (для *1STP/*1STG) *)
+  FRESHPG: BOOLEAN;       (* страница начата, но текста на ней нет *)
+  FMPENDING: INTEGER;     (* сменA формата, ждущая следующей страницы *)
+  FIR: BOOLEAN;           (* первая карта блока *RED - разбор FIRCAR *)
+  STPONLY, STGONLY: BOOLEAN;
+  STP, STG: CARTY;
+  STPL, STGL: INTEGER;
+
+  (* таблицы *)
+  TABON: BOOLEAN;         (* режим таблицы *)
+  TABLINE: BOOLEAN;       (* с линейками (SL) *)
+  TBDA: ARRAY [1..8] OF INTEGER;   (* старт колонки, абсолютно *)
+  TBDW: ARRAY [1..8] OF INTEGER;   (* ширина колонки *)
+  TBN: INTEGER;           (* число колонок *)
+  TSLPOS: ARRAY [1..8] OF INTEGER; (* позиции линеек SL, абсолютно *)
+  TCOL: INTEGER;          (* номер текущей колонки *)
+  TBN2: INTEGER;          (* число колонок таблицы *)
+  SVFLDA, SVFLDW: INTEGER; (* сохранЕнное поле на время ячейки *)
+  PREVND: ARRAY [1..8] OF BOOLEAN; (* нижние линии предыдущей строки *)
+  TLINE: ARRAY [1..8] OF ARRAY [1..TCMAX] OF PROW; (* строки ячеек *)
+  TCNT: ARRAY [1..8] OF INTEGER;
+  TCLN: INTEGER;          (* строк в текущей ячейке *)
+  INCELL: BOOLEAN;        (* накопление ячейки *)
+  CNOL, CNR, CNU, CND: BOOLEAN;    (* убранные линии ячейки *)
+  ROWNOL, ROWNR: ARRAY [1..8] OF BOOLEAN;
+  ROWNU, ROWND: ARRAY [1..8] OF BOOLEAN;
+  TROWS: INTEGER;         (* колонок в текущей строке таблицы *)
+
+  (* макроопределения *)
+  MKTX: ARRAY [1..MKMAX] OF MKTY;
+  MKLN: ARRAY [1..MKMAX] OF INTEGER;
+  MKCNT: INTEGER;
+  MKBUF: MKTY;
+  MKBL: INTEGER;
+  MKSAV: ARRAY [1..TCDEEP] OF CARTY;
+  MKSL, MKSQ: ARRAY [1..TCDEEP] OF INTEGER;
+  MKNUM: ARRAY [1..TCDEEP] OF INTEGER;   (* номер макро на уровне *)
+  MKPP: ARRAY [1..TCDEEP] OF INTEGER;    (* позиция в теле макро *)
+  MKRES: ARRAY [1..TCDEEP] OF BOOLEAN;   (* тело исчерпано, идЕт
+                                            продолжение карты *)
+  MKSP: INTEGER;
+
+  CWV: INTEGER;           (* конец текущей карты или тела макро *)
+  II, JJ, KK, NN1, MM, PP, QQ: INTEGER;
+  C2, C3: CHAR;
+
+PROCEDURE PASOUT(VAR A, B: CHAR); FORTRAN;
+
+(* ---------------- ввод ---------------- *)
+
+(* чтение следующей карты *)
+PROCEDURE GETCARD;
+VAR
+  I: INTEGER;
+BEGIN
+  IF EOF(INPUT) THEN BEGIN
+    EOFIN := TRUE;
+    EXIT
+  END;
+  FOR I := 1 TO 80 DO CARD[I] := ' ';
+  READLN(CARD);
+  CPOS := 1;
+  (* карты значимы до 80-й позиции: разметка *D несЕт текст
+     и за 72-й (SIPROD.MD, 2.1; каталог разметки ДРАКОНа) *)
+  CWV := 80;
+  EOFIN := FALSE
+END;
+
+(* ---------------- утилиты печати ---------------- *)
+
+(* печать строки листа: 128 позиций, хвостовые пробелы срезает Э64 *)
+PROCEDURE OUTLINE(VAR R: ROWTY);
+BEGIN
+  PASOUT(R[1], R[128])
+END;
+
+(* пустая строка печати *)
+PROCEDURE BLANKL;
+VAR
+  R: ROWTY;
+  I: INTEGER;
+BEGIN
+  FOR I := 1 TO 128 DO R[I] := ' ';
+  OUTLINE(R)
+END;
+
+(* очистка строки *)
+PROCEDURE CLRROW(VAR R: ROWTY);
+VAR
+  I: INTEGER;
+BEGIN
+  FOR I := 1 TO 128 DO R[I] := ' '
+END;
+
+(* число вправо в поле шириной W с позиции POS строки R *)
+PROCEDURE PUTNUM(VAR R: ROWTY; POS, VAL, W: INTEGER);
+VAR
+  D: ARRAY [1..8] OF CHAR;
+  ND, I, V: INTEGER;
+BEGIN
+  V := VAL;
+  ND := 0;
+  REPEAT
+    ND := ND + 1;
+    D[ND] := CHR(60B + V MOD 10);
+    V := V DIV 10
+  UNTIL V = 0;
+  FOR I := 1 TO W DO R[POS + I - 1] := ' ';
+  I := 0;
+  WHILE (I < ND) AND (I < W) DO BEGIN
+    R[POS + W - 1 - I] := D[I + 1];
+    I := I + 1
+  END
+END;
+
+(* ---------------- ошибки ---------------- *)
+
+(* печать ошибки и останов задачи, как KLAIDA оригинала *)
+PROCEDURE KLAIDA(NUM: INTEGER);
+VAR
+  R: ROWTY;
+  I: INTEGER;
+BEGIN
+  BLANKL; BLANKL;
+  CLRROW(R);
+  R[20] := 'Е'; R[21] := ' '; R[22] := 'R'; R[23] := ' ';
+  R[24] := 'R'; R[25] := ' '; R[26] := 'О'; R[27] := ' ';
+  R[28] := 'R';
+  R[33] := 'N'; R[34] := 'R'; R[35] := '.';
+  PUTNUM(R, 36, NUM, 7);
+  OUTLINE(R);
+  BLANKL;
+  CLRROW(R);
+  R[20] := 'О'; R[21] := ' '; R[22] := 'Б'; R[23] := ' ';
+  R[24] := 'Р'; R[25] := ' '; R[26] := 'А'; R[27] := ' ';
+  R[28] := 'З'; R[31] := 'П'; R[32] := ' '; R[33] := 'Е';
+  R[34] := ' '; R[35] := 'Р'; R[36] := ' '; R[37] := 'Ф';
+  R[38] := ' '; R[39] := 'О'; R[40] := ' '; R[41] := 'К';
+  R[42] := ' '; R[43] := 'А'; R[44] := ' '; R[45] := 'Р';
+  R[46] := ' '; R[47] := 'Т'; R[48] := ' '; R[49] := 'Ы';
+  R[51] := ':';
+  OUTLINE(R);
+  BLANKL;
+  CLRROW(R);
+  FOR I := 1 TO CW DO
+    IF CARD[I] <> ' ' THEN R[I + 2] := CARD[I];
+  OUTLINE(R);
+  BLANKL;
+  STOP
+END;
+
+(* ---------------- формат страницы ---------------- *)
+
+(* установить параметры формата; F: 0 обычный, 1 широкий, 2 А *)
+PROCEDURE SETFMT(F: INTEGER);
+BEGIN
+  FMT := F;
+  IF F = 0 THEN BEGIN
+    SHROWS := 67; ROWBASE := 4; TMAX := TRN;
+    DEFL := 6; DEFW := 56
+  END ELSE IF F = 1 THEN BEGIN
+    SHROWS := 68; ROWBASE := 5; TMAX := TRN;
+    DEFL := 6; DEFW := 120
+  END ELSE BEGIN
+    SHROWS := 72; ROWBASE := 5; TMAX := TRA;
+    DEFL := 12; DEFW := 67
+  END;
+  MCSA := 1; MCSW := DEFW;
+  FLDA := DEFL; FLDW := DEFW
+END;
+
+(* применить *MCS A W; ошибка 30 - поле или ширина за страницей *)
+PROCEDURE SETMCS(A, W: INTEGER);
+BEGIN
+  IF (W <= 0) OR (A <= 0) THEN KLAIDA(30);
+  IF DEFL + A - 1 + W - 1 > DEFL + DEFW - 1 THEN KLAIDA(30);
+  MCSA := A; MCSW := W;
+  FLDA := DEFL + A - 1; FLDW := W
+END;
+(* поле текущей страницы: правая сдвинута на 64 позиции *)
+FUNCTION CURFLDA: INTEGER;
+BEGIN
+  IF FMT = 0 THEN CURFLDA := FLDA + 64 * SIDE
+  ELSE CURFLDA := FLDA
+END;
+
+(* ---------------- лист ---------------- *)
+
+(* печать собранного листа; FINAL - окончание текста (*E) *)
+PROCEDURE SHEETPRINT(FINAL: BOOLEAN);
+VAR
+  ROWS, TOP, BOT, I, S, NP, K2, ST2: INTEGER;
+  SIDEON: ARRAY [0..1] OF BOOLEAN;
+BEGIN
+  FOR I := 1 TO 72 DO CLRROW(SHEET[I]);
+  (* при окончании текста лист печатается до последней занятой строки *)
+  IF FINAL THEN BEGIN
+    ROWS := HROWS[0];
+    IF HROWS[1] > ROWS THEN ROWS := HROWS[1];
+    IF ROWS > 0 THEN ROWS := ROWBASE + ROWS
+  END;
+  IF FMT = 0 THEN BEGIN
+    TOP := 2; ROWS := 67
+  END ELSE IF FMT = 1 THEN BEGIN
+    TOP := 3; ROWS := 68
+  END ELSE BEGIN
+    TOP := 3; ROWS := 72
+  END;
+  FOR I := 1 TO TMAX DO
+    IF FMT = 0 THEN BEGIN
+      FOR K2 := 1 TO 64 DO SHEET[ROWBASE + I][K2] := HTXT[0][I][K2];
+      FOR K2 := 65 TO 128 DO SHEET[ROWBASE + I][K2] := HTXT[1][I][K2]
+    END ELSE
+      FOR K2 := 1 TO 128 DO SHEET[ROWBASE + I][K2] := HTXT[0][I][K2];
+  (* рамка *)
+  BOT := ROWS;
+  IF RGON THEN BEGIN
+    FOR I := TOP + 1 TO BOT - 1 DO BEGIN
+      IF FMT = 2 THEN BEGIN
+        SHEET[I][1] := 'I'; SHEET[I][84] := 'I'
+      END ELSE IF FMT = 1 THEN BEGIN
+        SHEET[I][2] := 'I'; SHEET[I][128] := 'I'
+      END ELSE BEGIN
+        SHEET[I][2] := 'I'; SHEET[I][64] := 'I';
+        SHEET[I][66] := 'I'; SHEET[I][128] := 'I'
+      END
+    END;
+    IF FMT = 2 THEN BEGIN
+      SHEET[TOP][1] := '.'; SHEET[TOP][84] := '.';
+      SHEET[BOT][1] := '.'; SHEET[BOT][84] := '.';
+      FOR I := 2 TO 83 DO BEGIN
+        SHEET[TOP][I] := '-'; SHEET[BOT][I] := '-'
+      END
+    END ELSE IF FMT = 1 THEN BEGIN
+      SHEET[TOP][2] := '.'; SHEET[TOP][128] := '.';
+      SHEET[BOT][2] := '.'; SHEET[BOT][128] := '.';
+      FOR I := 3 TO 127 DO BEGIN
+        SHEET[TOP][I] := '-'; SHEET[BOT][I] := '-'
+      END
+    END ELSE BEGIN
+      SHEET[TOP][2] := '.'; SHEET[TOP][64] := '.';
+      SHEET[TOP][66] := '.'; SHEET[TOP][128] := '.';
+      SHEET[BOT][2] := '.'; SHEET[BOT][64] := '.';
+      SHEET[BOT][66] := '.'; SHEET[BOT][128] := '.';
+      FOR I := 3 TO 63 DO SHEET[TOP][I] := '-';
+      FOR I := 67 TO 127 DO SHEET[TOP][I] := '-';
+      FOR I := 3 TO 63 DO SHEET[BOT][I] := '-';
+      FOR I := 67 TO 127 DO SHEET[BOT][I] := '-'
+    END
+  END;
+  (* строка номеров страниц *)
+  SIDEON[0] := HUSED[0];
+  SIDEON[1] := HUSED[1];
+  NP := HPNO[1];
+  IF FINAL AND (NOT HUSED[1]) AND HUSED[0] THEN BEGIN
+    SIDEON[1] := TRUE;
+    NP := HPNO[0] + 1
+  END;
+  IF NUMON THEN BEGIN
+    IF FMT = 0 THEN BEGIN
+      IF SIDEON[0] THEN BEGIN
+        SHEET[3][31] := '-';
+        SHEET[3][35] := ' ';
+        SHEET[3][36] := '-';
+        PUTNUM(SHEET[3], 32, HPNO[0], 3)
+      END;
+      IF SIDEON[1] THEN BEGIN
+        SHEET[3][95] := '-';
+        SHEET[3][99] := ' ';
+        SHEET[3][100] := '-';
+        PUTNUM(SHEET[3], 96, NP, 3)
+      END
+    END ELSE IF FMT = 1 THEN BEGIN
+      IF HUSED[0] OR FINAL THEN BEGIN
+        SHEET[4][63] := '-';
+        SHEET[4][67] := ' ';
+        SHEET[4][68] := '-';
+        PUTNUM(SHEET[4], 64, HPNO[0], 3)
+      END
+    END ELSE BEGIN
+      IF HUSED[0] OR FINAL THEN BEGIN
+        SHEET[4][42] := '-';
+        SHEET[4][46] := ' ';
+        SHEET[4][47] := '-';
+        PUTNUM(SHEET[4], 43, HPNO[0], 3)
+      END
+    END
+  END;
+  (* подвал STG: строка внизу страницы, над нижним полем *)
+  IF STGON AND (STGL > 0) AND ((NOT STGONLY) OR PGFIRST) THEN BEGIN
+    IF FMT = 0 THEN BEGIN
+      IF SIDEON[0] THEN BEGIN
+        ST2 := (64 - STGL) DIV 2 + 1;
+        FOR I := 1 TO STGL DO SHEET[BOT - 2][ST2 + I - 1] := STG[I]
+      END;
+      IF SIDEON[1] THEN BEGIN
+        ST2 := 64 + (64 - STGL) DIV 2 + 1;
+        FOR I := 1 TO STGL DO SHEET[BOT - 2][ST2 + I - 1] := STG[I]
+      END
+    END ELSE BEGIN
+      IF FMT = 1 THEN
+        ST2 := (128 - STGL) DIV 2 + 1
+      ELSE
+        ST2 := (84 - STGL) DIV 2 + 1;
+      FOR I := 1 TO STGL DO SHEET[BOT - 2][ST2 + I - 1] := STG[I]
+    END
+  END;
+  (* выдача листа; строки прогона заменены пустыми *)
+  FOR I := 1 TO ROWS DO
+    IF (I > 1) AND ((FMT = 0) OR (I > 2)) THEN
+      OUTLINE(SHEET[I]);
+  PGFIRST := FALSE
+END;
+
+(* очистка листа *)
+PROCEDURE NEWSHEET;
+VAR
+  I, S, K2: INTEGER;
+BEGIN
+  FOR S := 0 TO 1 DO
+    FOR I := 1 TO 66 DO
+      FOR K2 := 1 TO 128 DO HTXT[S][I][K2] := ' ';
+  HUSED[0] := FALSE; HUSED[1] := FALSE;
+  HPNO[0] := 0; HPNO[1] := 0;
+  HROWS[0] := 0; HROWS[1] := 0;
+  ROWNO := 0;
+  CLRROW(CUR);
+  CURPOS := 1
+END;
+
+(* штамп STP в первую текстовую строку страницы *)
+PROCEDURE PUTSTP;
+VAR
+  R: ROWTY;
+  ST: INTEGER;
+  I: INTEGER;
+BEGIN
+  IF (NOT STPON) OR (STPL = 0) THEN EXIT;
+  IF STPONLY AND (PAGENO <> 1) THEN EXIT;
+  CLRROW(R);
+  ST := DEFL + (DEFW - STPL) DIV 2;
+  FOR I := 1 TO STPL DO R[ST + I - 1] := STP[I];
+  FOR I := 1 TO 128 DO HTXT[SIDE][1][I] := R[I];
+  ROWNO := 1
+END;
+
+(* начало новой страницы: номер, сторона, штамп *)
+PROCEDURE PAGESTART;
+BEGIN
+  (* отложенная смена формата применяется к новой странице *)
+  IF FMPENDING >= 0 THEN BEGIN
+    SETFMT(FMPENDING);
+    FMPENDING := -1
+  END;
+  IF PNEXT <> 0 THEN PAGENO := PNEXT
+  ELSE PAGENO := PAGENO + 1;
+  PNEXT := 0;
+  IF FMT = 1 THEN BEGIN
+    (* широкий формат: лист - одна страница во всю ширину,
+       очередная страница печатает предыдущий лист целиком *)
+    IF HUSED[0] THEN BEGIN
+      SHEETPRINT(FALSE);
+      NEWSHEET
+    END;
+    SIDE := 0
+  END ELSE BEGIN
+    SIDE := (PAGENO - 1) MOD 2;
+    IF (SIDE = 0) AND HUSED[0] THEN BEGIN
+      (* нечЕтная страница всегда начинает новый лист *)
+      SHEETPRINT(FALSE);
+      NEWSHEET
+    END
+  END;
+  HPNO[SIDE] := PAGENO;
+  ROWNO := 0;
+  FRESHPG := TRUE;
+  PUTSTP
+END;
+
+(* конец текущей страницы, начало следующей *)
+PROCEDURE PAGEEND;
+BEGIN
+  IF ROWNO > 0 THEN HUSED[SIDE] := TRUE;
+  PAGESTART
+END;
+
+(* ---------------- текущая строка ---------------- *)
+
+(* сдвиг строки R на лист (или в ячейку таблицы) *)
+PROCEDURE COMMITROW(VAR R: ROWTY; WITHRL: BOOLEAN);
+VAR
+  I, K2: INTEGER;
+  TMP: ROWTY;
+BEGIN
+  IF INCELL THEN BEGIN
+    TCLN := TCLN + 1;
+    IF TCLN <= TCMAX THEN
+      FOR K2 := 1 TO 128 DO TLINE[TCOL][TCLN][K2] := R[K2];
+    EXIT
+  END;
+  IF WITHRL AND (ROWNO > 0) THEN
+    FOR I := 1 TO RLN DO BEGIN
+      IF ROWNO >= TMAX THEN PAGEEND;
+      CLRROW(TMP);
+      FOR K2 := 1 TO 128 DO HTXT[SIDE][ROWNO + 1][K2] := TMP[K2];
+      ROWNO := ROWNO + 1
+    END;
+  IF ROWNO >= TMAX THEN PAGEEND;
+  FOR K2 := 1 TO 128 DO HTXT[SIDE][ROWNO + 1][K2] := R[K2];
+  ROWNO := ROWNO + 1;
+  FRESHPG := FALSE;
+  IF ROWNO > HROWS[SIDE] THEN HROWS[SIDE] := ROWNO
+END;
+
+(* сдвиг текущей строки на лист *)
+PROCEDURE COMMIT(WITHRL: BOOLEAN);
+BEGIN
+  COMMITROW(CUR, WITHRL);
+  CLRROW(CUR);
+  CURPOS := CURFLDA;
+  INDON := FALSE
+END;
+
+(* положить слово W длиной LN в строку R с позиции P *)
+PROCEDURE PUTWORD(VAR R: ROWTY; VAR PP: INTEGER; VAR W: PWTY;
+                  LN: INTEGER);
+VAR
+  I: INTEGER;
+BEGIN
+  FOR I := 1 TO LN DO R[PP + I - 1] := W[I];
+  PP := PP + LN
+END;
+
+(* выровненная постановка очереди; JUST - выравнивать по ширине;
+   непомещающиеся слова переносятся, длинное слово рвЕтся *)
+PROCEDURE FLUSHQ(JUST: BOOLEAN);
+VAR
+  P, NAT, EXTRA, EFFW, I, G, SH: INTEGER;
+  GAP: ARRAY [1..MRW] OF INTEGER;
+BEGIN
+  IF NW = 0 THEN EXIT;
+  EFFW := FLDW;
+  IF INDON THEN EFFW := EFFW - 3;
+  NAT := 0;
+  FOR I := 1 TO NW DO BEGIN
+    IF I > 1 THEN BEGIN
+      GAP[I] := 1 + 2 * WRC[I - 1] + 2 * WRC[I];
+      NAT := NAT + GAP[I]
+    END;
+    NAT := NAT + WL[I]
+  END;
+  IF (NAT > EFFW) AND (WL[1] > EFFW) THEN BEGIN
+    (* слово длиннее строки: разорвать, хвост остаЕтся в очереди *)
+    FOR I := 1 TO EFFW DO CUR[CURFLDA + I - 1] := WT[1][I];
+    COMMIT(TRUE);
+    SH := EFFW;
+    FOR I := SH + 1 TO WL[1] DO WT[1][I - SH] := WT[1][I];
+    WL[1] := WL[1] - SH;
+    WRC[1] := 0;
+    EXIT
+  END;
+  P := CURFLDA;
+  IF INDON THEN P := P + 3;
+  EXTRA := 0;
+  IF JUST AND FILLON AND (NW > 1) THEN EXTRA := EFFW - NAT;
+  FOR I := 1 TO NW DO BEGIN
+    PUTWORD(CUR, P, WT[I], WL[I]);
+    IF I < NW THEN BEGIN
+      G := GAP[I + 1];
+      IF (EXTRA > 0) AND (I > NW - 1 - EXTRA) THEN
+        G := G + 1;
+      P := P + G
+    END
+  END;
+  CURPOS := P + 1;
+  NW := 0;
+  INDON := FALSE
+END;
+
+(* конец строки: очередь без выравнивания и сдвиг *)
+PROCEDURE ENDLINE;
+BEGIN
+  FLUSHQ(FALSE);
+  COMMIT(TRUE)
+END;
+
+(* N пустых строк текста *)
+PROCEDURE EMPTIES(CNT: INTEGER);
+VAR
+  I: INTEGER;
+BEGIN
+  FOR I := 1 TO CNT DO BEGIN
+    CLRROW(CUR);
+    CURPOS := CURFLDA;
+    COMMIT(FALSE)
+  END
+END;
+
+(* очередное слово в очередь; если слово не входит в строку,
+   строка закрывается с выравниванием *)
+PROCEDURE ADDWORD;
+VAR
+  N2, I: INTEGER;
+BEGIN
+  IF WLENG = 0 THEN EXIT;
+  N2 := 0;
+  FOR I := 1 TO NW DO BEGIN
+    IF I > 1 THEN
+      N2 := N2 + 1 + 2 * WRC[I - 1] + 2 * WRC[I];
+    N2 := N2 + WL[I]
+  END;
+  IF NW > 0 THEN
+    N2 := N2 + 1 + 2 * WRC[NW] + 2 * WRCL + WLENG
+  ELSE
+    N2 := N2 + WLENG;
+  IF INDON THEN N2 := N2 + 3;
+  IF (N2 > FLDW) AND (NW > 0) THEN BEGIN
+    FLUSHQ(TRUE);
+    COMMIT(TRUE)
+  END;
+  NW := NW + 1;
+  WT[NW] := WORD;
+  WL[NW] := WLENG;
+  WRC[NW] := WRCL;
+  WLENG := 0;
+  WRCL := RCN;
+  IF NW >= MRW THEN BEGIN
+    FLUSHQ(TRUE);
+    COMMIT(TRUE)
+  END
+END;
+
+(* литера текста; без переноса по словам - прямо в строку *)
+PROCEDURE ADDCH(C: CHAR);
+VAR
+  I: INTEGER;
+BEGIN
+  IF POSMODE OR NOT FILLON THEN BEGIN
+    IF CURPOS <= 128 THEN BEGIN
+      CUR[CURPOS] := C;
+      CURPOS := CURPOS + 1
+    END;
+    EXIT
+  END;
+  IF C = ' ' THEN BEGIN
+    ADDWORD;
+    EXIT
+  END;
+  IF WLENG = 0 THEN WRCL := RCN;
+  IF WLENG >= 99 THEN ADDWORD;
+  WLENG := WLENG + 1;
+  WORD[WLENG] := C;
+  (* разрядка: N пробелов после каждой литеры слова *)
+  IF RCN > 0 THEN
+    FOR I := 1 TO RCN DO BEGIN
+      IF WLENG >= 99 THEN ADDWORD;
+      WLENG := WLENG + 1;
+      WORD[WLENG] := ' '
+    END
+END;
+
+PROCEDURE SCANCARD; FORWARD;
+
+
+(* ---------------- команды позиционирования ---------------- *)
+
+(* числовой префикс или параметр с карты *)
+FUNCTION READNUM(VAR VAL: INTEGER): BOOLEAN;
+VAR
+  V: INTEGER;
+  ANY: BOOLEAN;
+BEGIN
+  V := 0;
+  ANY := FALSE;
+  WHILE (CPOS <= CWV) AND (CARD[CPOS] = ' ') DO CPOS := CPOS + 1;
+  WHILE (CPOS <= CWV) AND (CARD[CPOS] >= '0') AND (CARD[CPOS] <= '9')
+     DO BEGIN
+    V := V * 10 + (ORD(CARD[CPOS]) - 48);
+    CPOS := CPOS + 1;
+    ANY := TRUE
+  END;
+  VAL := V;
+  READNUM := ANY
+END;
+
+(* *NFC: литера заполняет остаток строки и ещЕ N-1 строк *)
+PROCEDURE FILLREST(C: CHAR; N: INTEGER);
+VAR
+  FE, I, J: INTEGER;
+  R: ROWTY;
+BEGIN
+  FLUSHQ(FALSE);
+  FE := CURFLDA + FLDW - 1;
+  FOR I := CURPOS TO FE DO CUR[I] := C;
+  COMMIT(TRUE);
+  FOR J := 2 TO N DO BEGIN
+    CLRROW(R);
+    FOR I := CURFLDA TO FE DO R[I] := C;
+    COMMITROW(R, TRUE)
+  END
+END;
+
+(* *NRFC: литера заполняет строку до позиции N поля *)
+PROCEDURE FILLTO(NP: INTEGER; C: CHAR);
+VAR
+  FE, I: INTEGER;
+BEGIN
+  FLUSHQ(FALSE);
+  FE := CURFLDA + NP - 1;
+  IF FE > CURFLDA + FLDW - 1 THEN KLAIDA(80);
+  IF FE >= CURPOS THEN
+    FOR I := CURPOS TO FE DO CUR[I] := C;
+  CURPOS := FE + 1
+END;
+
+(* *NCC / *KNC: повторить литеру N раз с текущей позиции *)
+PROCEDURE PUTREP(C: CHAR; N: INTEGER);
+VAR
+  FE, I: INTEGER;
+BEGIN
+  FLUSHQ(FALSE);
+  FE := CURFLDA + FLDW - 1;
+  FOR I := 1 TO N DO BEGIN
+    IF CURPOS > FE THEN EXIT;
+    CUR[CURPOS] := C;
+    CURPOS := CURPOS + 1
+  END
+END;
+
+(* *N(текст) и *NWтекст): повторение текста до скобки;
+   ONE=TRUE - весь текст одним словом *)
+PROCEDURE GROUP(REP: INTEGER; ONE: BOOLEAN);
+VAR
+  BUF: CARTY;
+  BN, I, K2: INTEGER;
+  C: CHAR;
+BEGIN
+  BN := 0;
+  WHILE CPOS <= CWV DO BEGIN
+    C := CARD[CPOS];
+    CPOS := CPOS + 1;
+    IF C = ')' THEN BEGIN
+      IF ONE THEN BEGIN
+        FOR K2 := 1 TO REP DO
+          FOR I := 1 TO BN DO BEGIN
+            IF WLENG >= 99 THEN ADDWORD;
+            WLENG := WLENG + 1;
+            WORD[WLENG] := BUF[I]
+          END;
+        WRCL := 0;
+        ADDWORD
+      END ELSE BEGIN
+        FOR K2 := 1 TO REP DO BEGIN
+          FOR I := 1 TO BN DO ADDCH(BUF[I]);
+          IF K2 < REP THEN ADDCH(' ')
+        END;
+        ADDWORD
+      END;
+      EXIT
+    END;
+    IF BN < 72 THEN BEGIN
+      BN := BN + 1;
+      BUF[BN] := C
+    END
+  END
+END;
+
+(* *NH: следующие N литер как есть дописываются к слову *)
+PROCEDURE HWORD(CNT: INTEGER);
+VAR
+  I: INTEGER;
+BEGIN
+  FOR I := 1 TO CNT DO BEGIN
+    IF CPOS > CWV THEN EXIT;
+    IF WLENG >= 99 THEN ADDWORD;
+    WLENG := WLENG + 1;
+    WORD[WLENG] := CARD[CPOS];
+    CPOS := CPOS + 1
+  END
+END;
+
+(* *D: остаток карты выводится как есть *)
+PROCEDURE VERBATIM;
+VAR
+  I: INTEGER;
+BEGIN
+  FLUSHQ(FALSE);
+  FOR I := CPOS TO CWV DO BEGIN
+    IF CURPOS > 128 THEN EXIT;
+    CUR[CURPOS] := CARD[I];
+    CURPOS := CURPOS + 1
+  END
+END;
+
+(* центрирование остатка карты (с позиции FROM) в поле *)
+PROCEDURE CENTERREST(FROM: INTEGER);
+VAR
+  R: ROWTY;
+  LN, ST, I: INTEGER;
+BEGIN
+  LN := 0;
+  FOR I := FROM TO CWV DO
+    IF CARD[I] <> ' ' THEN LN := I - FROM + 1;
+  IF LN > 0 THEN BEGIN
+    CLRROW(R);
+    ST := CURFLDA + (FLDW - LN) DIV 2;
+    FOR I := 1 TO LN DO R[ST + I - 1] := CARD[FROM + I - 1];
+    COMMITROW(R, TRUE)
+  END
+END;
+
+(* дописать текущий лист и начать новый в формате F *)
+PROCEDURE NEWFMT(F: INTEGER; DOP: BOOLEAN);
+BEGIN
+  (* *RU без единичного префикса не допечатывает текущий лист:
+     пустой лист просто заменяется (SIPROD.MD, таблица команд);
+     *1RU - сначала допечатать (DOP=TRUE) *)
+  FLUSHQ(FALSE);
+  IF (ROWNO > 0) OR (CURPOS > CURFLDA) OR DOP THEN BEGIN
+    COMMIT(TRUE);
+    HUSED[SIDE] := TRUE;
+    SHEETPRINT(FALSE)
+  END ELSE
+    (* лист не печатался - номер страницы не тратим *)
+    PNEXT := PAGENO;
+  NEWSHEET;
+  IF FIR THEN BEGIN
+    (* первая карта блока разбирается FIRCAR до начала страницы:
+       формат действует немедленно *)
+    SETFMT(F);
+    PAGESTART
+  END ELSE BEGIN
+    (* смена формата в середине текста - с новой страницы:
+       формат применит очередной PAGESTART *)
+    FMPENDING := F;
+    FRESHPG := TRUE
+  END
+END;
+
+(* ---------------- таблицы ---------------- *)
+
+(* разбор карты *ST (колонки) или *SL (линейки) *)
+PROCEDURE TABLEDEF(WITHLINE: BOOLEAN);
+VAR
+  NUMS: ARRAY [1..16] OF INTEGER;
+  NNUMS, I, V, A, B: INTEGER;
+  LOOP: BOOLEAN;
+BEGIN
+  FLUSHQ(FALSE);
+  COMMIT(TRUE);
+  IF NOT WITHLINE THEN
+    CPOS := CPOS + 1;   (* литера T в ST *)
+  NNUMS := 0;
+  LOOP := TRUE;
+  WHILE LOOP DO BEGIN
+    WHILE (CPOS <= CWV) AND (CARD[CPOS] = ' ') DO CPOS := CPOS + 1;
+    IF CPOS > CWV THEN LOOP := FALSE
+    ELSE IF (CARD[CPOS] < '0') OR (CARD[CPOS] > '9') THEN
+      KLAIDA(61)
+    ELSE BEGIN
+      V := 0;
+      WHILE (CPOS <= CWV) AND (CARD[CPOS] >= '0') AND (CARD[CPOS] <=
+         '9') DO BEGIN
+        V := V * 10 + (ORD(CARD[CPOS]) - 48);
+        CPOS := CPOS + 1
+      END;
+      NNUMS := NNUMS + 1;
+      IF NNUMS <= 16 THEN NUMS[NNUMS] := V
+    END
+  END;
+  IF WITHLINE THEN BEGIN
+    (* SL: линейки в позициях, колонки между ними *)
+    IF NNUMS < 2 THEN KLAIDA(62);
+    TBN := NNUMS;
+    TBN2 := NNUMS - 1;
+    FOR I := 1 TO NNUMS DO BEGIN
+      IF NUMS[I] > FLDW THEN KLAIDA(64);
+      TSLPOS[I] := CURFLDA + NUMS[I] - 1
+    END;
+    FOR I := 1 TO NNUMS - 1 DO BEGIN
+      TBDA[I] := TSLPOS[I] + 1;
+      TBDW[I] := TSLPOS[I + 1] - TSLPOS[I] - 1;
+      IF TBDW[I] <= 0 THEN KLAIDA(64)
+    END
+  END ELSE BEGIN
+    (* ST: пары начало-конец *)
+    IF NNUMS MOD 2 <> 0 THEN KLAIDA(62);
+    TBN2 := NNUMS DIV 2;
+    TBN := 0;
+    FOR I := 1 TO NNUMS DIV 2 DO BEGIN
+      A := NUMS[2 * I - 1];
+      B := NUMS[2 * I];
+      IF B > FLDW THEN KLAIDA(64);
+      TBDA[I] := CURFLDA + A - 1;
+      TBDW[I] := B - A + 1;
+      IF TBDW[I] <= 0 THEN KLAIDA(64)
+    END
+  END;
+  TABON := TRUE;
+  TABLINE := WITHLINE;
+  TCOL := 0;
+  TROWS := 0;
+  TCLN := 0;
+  INCELL := FALSE;
+  FOR I := 1 TO 8 DO BEGIN
+    TCNT[I] := 0;
+    PREVND[I] := FALSE
+  END
+END;
+
+(* выдача строки таблицы: линейка сверху, затем ячейки рядом *)
+PROCEDURE TABLEROW;
+VAR
+  R: ROWTY;
+  H, I, K2, J: INTEGER;
+  VIS: BOOLEAN;
+BEGIN
+  H := 0;
+  FOR K2 := 1 TO TROWS DO
+    IF TCNT[K2] > H THEN H := TCNT[K2];
+  IF TABLINE AND (H > 0) THEN BEGIN
+    CLRROW(R);
+    FOR J := TSLPOS[1] TO TSLPOS[TBN] DO R[J] := '-';
+    FOR J := 1 TO TBN DO R[TSLPOS[J]] := 'I';
+    FOR K2 := 1 TO TROWS DO
+      IF ROWNU[K2] OR PREVND[K2] THEN
+        FOR J := TSLPOS[K2] + 1 TO TSLPOS[K2 + 1] - 1 DO
+          R[J] := ' ';
+    COMMITROW(R, TRUE)
+  END;
+  FOR I := 1 TO H DO BEGIN
+    CLRROW(R);
+    FOR K2 := 1 TO TROWS DO
+      IF I <= TCNT[K2] THEN
+        FOR J := 1 TO TBDW[K2] DO
+          R[TBDA[K2] + J - 1] := TLINE[K2][I][TBDA[K2] + J - 1];
+    IF TABLINE THEN
+      FOR J := 1 TO TROWS + 1 DO BEGIN
+        VIS := TRUE;
+        IF (J <= TROWS) AND ROWNOL[J] THEN VIS := FALSE;
+        IF (J > 1) AND ROWNR[J - 1] THEN VIS := FALSE;
+        IF (J <= TBN) AND VIS THEN R[TSLPOS[J]] := 'I'
+      END;
+    COMMITROW(R, TRUE)
+  END;
+  FOR K2 := 1 TO TROWS DO PREVND[K2] := ROWND[K2];
+  FOR K2 := 1 TO 8 DO TCNT[K2] := 0
+END;
+
+(* закрытие текущей ячейки *)
+PROCEDURE CELLEND;
+BEGIN
+  FLUSHQ(FALSE);
+  COMMIT(TRUE);
+  INCELL := FALSE;
+  ROWNOL[TCOL] := CNOL;
+  ROWNR[TCOL] := CNR;
+  ROWNU[TCOL] := CNU;
+  ROWND[TCOL] := CND;
+  TCNT[TCOL] := TCLN;
+  FLDA := SVFLDA;
+  FLDW := SVFLDW
+END;
+
+(* открытие ячейки K *)
+PROCEDURE CELLSTART(K2: INTEGER);
+BEGIN
+  IF INCELL THEN CELLEND;
+  IF (K2 <= TCOL) AND (TCOL > 0) THEN BEGIN
+    (* возврат к меньшему номеру колонки - новая строка таблицы *)
+    TABLEROW;
+    TROWS := 0;
+    TCOL := 0
+  END;
+  IF K2 > TROWS THEN TROWS := K2;
+  IF K2 > TBN2 THEN KLAIDA(66);
+  TCOL := K2;
+  TCLN := 0;
+  INCELL := TRUE;
+  CNOL := FALSE; CNR := FALSE; CNU := FALSE; CND := FALSE;
+  SVFLDA := FLDA;
+  SVFLDW := FLDW;
+  FLDA := TBDA[K2];
+  FLDW := TBDW[K2];
+  INDON := FALSE;
+  CLRROW(CUR);
+  CURPOS := CURFLDA
+END;
+
+(* конец таблицы по карте с долларом *)
+PROCEDURE TABLEDONE;
+VAR
+  R: ROWTY;
+  I, J, K2: INTEGER;
+BEGIN
+  IF INCELL THEN CELLEND;
+  IF TROWS > 0 THEN TABLEROW;
+  IF TABLINE AND (TBN >= 2) AND (TROWS > 0) THEN BEGIN
+    CLRROW(R);
+    FOR J := TSLPOS[1] TO TSLPOS[TBN] DO R[J] := '-';
+    FOR J := 1 TO TBN DO R[TSLPOS[J]] := 'I';
+    FOR K2 := 1 TO TROWS DO
+      IF ROWND[K2] THEN
+        FOR J := TSLPOS[K2] + 1 TO TSLPOS[K2 + 1] - 1 DO
+          R[J] := ' ';
+    COMMITROW(R, TRUE)
+  END;
+  TABON := FALSE;
+  INCELL := FALSE;
+  TROWS := 0;
+  TCOL := 0
+END;
+
+(* карта в режиме таблицы: ячейка K), продолжение или доллар *)
+PROCEDURE TABLECARD;
+VAR
+  K2, V: INTEGER;
+  ISCELL: BOOLEAN;
+  PP: INTEGER;
+BEGIN
+  IF CARD[1] = '$' THEN BEGIN
+    TABLEDONE;
+    CPOS := CWV + 1;
+    EXIT
+  END;
+  PP := 1;
+  WHILE (PP <= CW) AND (CARD[PP] = ' ') DO PP := PP + 1;
+  ISCELL := FALSE;
+  K2 := 0;
+  IF (PP <= CW) AND (CARD[PP] >= '0') AND (CARD[PP] <= '9') THEN BEGIN
+    V := 0;
+    WHILE (PP <= CW) AND (CARD[PP] >= '0') AND (CARD[PP] <= '9') DO
+       BEGIN
+      V := V * 10 + (ORD(CARD[PP]) - 48);
+      PP := PP + 1
+    END;
+    IF (PP <= CW) AND (CARD[PP] = ')') THEN BEGIN
+      ISCELL := TRUE;
+      K2 := V
+    END
+  END;
+  IF ISCELL THEN BEGIN
+    CPOS := PP + 1;
+    CELLSTART(K2);
+    SCANCARD
+  END ELSE IF INCELL THEN BEGIN
+    (* продолжение ячейки *)
+    CPOS := 1;
+    SCANCARD
+  END ELSE
+    KLAIDA(66)
+END;
+
+(* ---------------- макроопределения ---------------- *)
+
+(* *NM=: тело до знака доллара, может занимать несколько карт *)
+PROCEDURE MACDEF;
+VAR
+  C: CHAR;
+  DONE: BOOLEAN;
+  I: INTEGER;
+BEGIN
+  IF NN1 <> MKCNT + 1 THEN KLAIDA(91);
+  MKCNT := MKCNT + 1;
+  MKBL := 0;
+  DONE := FALSE;
+  WHILE NOT DONE DO BEGIN
+    WHILE (CPOS <= CWV) AND (NOT DONE) DO BEGIN
+      C := CARD[CPOS];
+      CPOS := CPOS + 1;
+      IF C = '$' THEN
+        DONE := TRUE
+      ELSE IF MKBL < MKLEN THEN BEGIN
+        MKBL := MKBL + 1;
+        MKBUF[MKBL] := C
+      END
+    END;
+    IF NOT DONE THEN BEGIN
+      GETCARD;
+      IF EOFIN THEN KLAIDA(91)
+    END
+  END;
+  FOR I := 1 TO MKLEN DO MKTX[MKCNT][I] := ' ';
+  FOR I := 1 TO MKBL DO MKTX[MKCNT][I] := MKBUF[I];
+  MKLN[MKCNT] := MKBL
+END;
+
+(* *NM: вставка макро N.  Раскрытие БЕЗ рекурсии: SCANCARD -> COMMAND
+   -> MACINS -> SCANCARD переполняла стек времени исполнения 15.1
+   (OVERANGE).  MACINS лишь запоминает прерванную карту (MKSAV/MKSL/
+   MKSQ) и кладЕт в CARD первый кусок тела; сканирование продолжается
+   в текущем вызове SCANCARD.  Окончание куска, продолжение
+   прерванной карты и снятие уровня делает MACSTEP из главного цикла.
+   Состояние уровней: MKNUM/MKPP/MKRES, глубина MKSP <= TCDEEP. *)
+PROCEDURE MACINS;
+VAR
+  LN, I: INTEGER;
+BEGIN
+  IF (NN1 < 1) OR (NN1 > MKCNT) THEN BEGIN
+    KLAIDA(91);
+    EXIT
+  END;
+  IF MKSP >= TCDEEP THEN BEGIN
+    KLAIDA(91);
+    EXIT
+  END;
+  IF TABON OR LISTING THEN BEGIN
+    (* в таблицах и листингах макросы не раскрываются *)
+    KLAIDA(91);
+    EXIT
+  END;
+  MKSP := MKSP + 1;
+  MKSAV[MKSP] := CARD;
+  MKSL[MKSP] := CWV;
+  MKSQ[MKSP] := CPOS;
+  MKNUM[MKSP] := NN1;
+  MKPP[MKSP] := 1;
+  MKRES[MKSP] := FALSE;
+  (* первый кусок тела - в CARD, сканирует текущий вызов SCANCARD *)
+  LN := MKLN[NN1];
+  IF LN > CW THEN LN := CW;
+  FOR I := 1 TO 80 DO CARD[I] := ' ';
+  FOR I := 1 TO LN DO CARD[I] := MKTX[NN1][I];
+  CWV := LN;
+  CPOS := 1;
+  MKPP[MKSP] := LN + 1
+END;
+
+(* шаг раскрытия макро из главного цикла: очередной кусок тела,
+   продолжение прерванной карты или снятие уровня *)
+PROCEDURE MACSTEP;
+VAR
+  LN, I: INTEGER;
+BEGIN
+  IF MKPP[MKSP] <= MKLN[MKNUM[MKSP]] THEN BEGIN
+    (* следующий кусок тела макро *)
+    LN := MKLN[MKNUM[MKSP]] - MKPP[MKSP] + 1;
+    IF LN > CW THEN LN := CW;
+    FOR I := 1 TO 80 DO CARD[I] := ' ';
+    FOR I := 1 TO LN DO
+      CARD[I] := MKTX[MKNUM[MKSP]][MKPP[MKSP] + I - 1];
+    CWV := LN;
+    CPOS := 1;
+    MKPP[MKSP] := MKPP[MKSP] + LN;
+    SCANCARD
+  END ELSE IF NOT MKRES[MKSP] THEN BEGIN
+    (* тело исчерпано: продолжить прерванную карту *)
+    MKRES[MKSP] := TRUE;
+    CARD := MKSAV[MKSP];
+    CWV := MKSL[MKSP];
+    CPOS := MKSQ[MKSP];
+    SCANCARD
+  END ELSE
+    MKSP := MKSP - 1
+END;
+
+(* ---------------- листинг программ ---------------- *)
+
+(* карта режима *MF: печать как есть с позиции C+3 *)
+PROCEDURE LISTCARD;
+VAR
+  R: ROWTY;
+  I: INTEGER;
+  ISEND: BOOLEAN;
+BEGIN
+  IF (CARD[1] = '/') AND (CARD[2] = '/') AND (CARD[3] = '/') THEN BEGIN
+    LISTING := FALSE;
+    EXIT
+  END;
+  CLRROW(R);
+  FOR I := 1 TO CW DO
+    IF CARD[I] <> ' ' THEN R[I + 3] := CARD[I];
+  COMMITROW(R, FALSE);
+  ISEND := FALSE;
+  I := 1;
+  WHILE (I <= CW - 2) AND (CARD[I] = ' ') DO I := I + 1;
+  IF (CARD[I] = 'E') AND (CARD[I + 1] = 'N') AND (CARD[I + 2] = 'D') AND
+     ((I + 2 = CW) OR (CARD[I + 3] = ' ') OR (CARD[I + 3] = '.')) THEN
+    ISEND := TRUE;
+  IF ISEND THEN BEGIN
+    CLRROW(R);
+    COMMITROW(R, FALSE);
+    COMMITROW(R, FALSE)
+  END
+END;
+
+(* ---------------- сканер команд ---------------- *)
+
+(* обработка команды после звездочки *)
+PROCEDURE COMMAND;
+VAR
+  C, C2, C3: CHAR;
+  HASNUM: BOOLEAN;
+  A, B, I: INTEGER;
+BEGIN
+  NN1 := 1;
+  HASNUM := FALSE;
+  IF (CPOS <= CWV) AND (CARD[CPOS] >= '0') AND (CARD[CPOS] <= '9')
+     THEN BEGIN
+    NN1 := 0;
+    WHILE (CPOS <= CWV) AND (CARD[CPOS] >= '0') AND (CARD[CPOS] <=
+       '9') DO BEGIN
+      NN1 := NN1 * 10 + (ORD(CARD[CPOS]) - 48);
+      CPOS := CPOS + 1
+    END;
+    HASNUM := TRUE
+  END;
+  IF CPOS > CWV THEN EXIT;
+  C := CARD[CPOS];
+  CPOS := CPOS + 1;
+  IF C = 'F' THEN BEGIN
+    IF CPOS <= CWV THEN BEGIN
+      C2 := CARD[CPOS];
+      CPOS := CPOS + 1;
+      IF NN1 > 0 THEN FILLREST(C2, NN1);
+      POSMODE := TRUE
+    END
+  END ELSE IF C = 'T' THEN BEGIN
+    FLUSHQ(FALSE);
+    COMMIT(TRUE);
+    POSMODE := FALSE;
+    CENTERREST(CPOS);
+    CPOS := CWV + 1;
+    EMPTIES(2)
+  END ELSE IF C = 'M' THEN BEGIN
+    IF (CPOS <= CWV) AND (CARD[CPOS] = 'F') THEN BEGIN
+      CPOS := CPOS + 1;
+      LISTING := TRUE;
+      CPOS := CWV + 1
+    END ELSE IF (CPOS <= CWV) AND (CARD[CPOS] = 'C') THEN BEGIN
+      CPOS := CPOS + 1;
+      IF (CPOS <= CWV) AND (CARD[CPOS] = 'S') THEN BEGIN
+        CPOS := CPOS + 1;
+        IF NOT READNUM(A) THEN KLAIDA(20);
+        IF NOT READNUM(B) THEN KLAIDA(20);
+        FLUSHQ(FALSE);
+        COMMIT(TRUE);
+        SETMCS(A, B)
+      END ELSE IF (CPOS <= CWV) AND (CARD[CPOS] = 'P') THEN BEGIN
+        CPOS := CPOS + 1;
+        IF NOT READNUM(A) THEN KLAIDA(20);
+        IF NOT READNUM(B) THEN KLAIDA(20);
+        IF (A > 127) OR (B > 127) THEN KLAIDA(40)
+      END ELSE
+        KLAIDA(10)
+    END ELSE IF (CPOS <= CWV) AND (CARD[CPOS] = 'D') THEN BEGIN
+      CPOS := CPOS + 1;
+      FLUSHQ(FALSE);
+      COMMIT(TRUE);
+      POSMODE := FALSE;
+      CENTERREST(CPOS);
+      CPOS := CWV + 1
+    END ELSE IF (CPOS <= CWV) AND (CARD[CPOS] = '=') THEN BEGIN
+      CPOS := CPOS + 1;
+      MACDEF
+    END ELSE
+      MACINS
+  END ELSE IF C = 'S' THEN BEGIN
+    IF (CPOS <= CWV) AND (CARD[CPOS] = 'T') THEN BEGIN
+      IF (CPOS + 1 <= CWV) AND (CARD[CPOS + 1] >= '0') AND
+         (CARD[CPOS + 1] <= '9') THEN
+        TABLEDEF(FALSE)
+      ELSE BEGIN
+        CPOS := CPOS + 1;
+        IF CPOS > CWV THEN KLAIDA(10);
+        C2 := CARD[CPOS];
+        CPOS := CPOS + 1;
+        IF C2 = 'A' THEN
+          NEWFMT(2, HASNUM AND (NN1 = 1))
+        ELSE IF C2 = 'O' THEN
+          NEWFMT(0, HASNUM AND (NN1 = 1))
+        ELSE IF C2 = 'P' THEN BEGIN
+          STPON := TRUE;
+          STPONLY := (NN1 = 1);
+          STPL := 0;
+          FOR I := CPOS TO CWV DO
+            IF CARD[I] <> ' ' THEN STPL := I - CPOS + 1;
+          FOR I := 1 TO STPL DO STP[I] := CARD[CPOS + I - 1];
+          CPOS := CWV + 1;
+          (* страница ещЕ пуста - штамп ставится сразу, иначе он
+             появился бы только со следующей *)
+          STPEND := TRUE
+        END ELSE IF C2 = 'G' THEN BEGIN
+          STGON := TRUE;
+          STGONLY := (NN1 = 1);
+          STGL := 0;
+          FOR I := CPOS TO CWV DO
+            IF CARD[I] <> ' ' THEN STGL := I - CPOS + 1;
+          FOR I := 1 TO STGL DO STG[I] := CARD[CPOS + I - 1];
+          CPOS := CWV + 1
+        END ELSE IF C2 = 'N' THEN BEGIN
+          (* сдвиг штампа - принимается без действия *)
+        END ELSE
+          KLAIDA(10)
+      END
+    END ELSE IF (CPOS <= CWV) AND (CARD[CPOS] = 'L') THEN BEGIN
+      CPOS := CPOS + 1;
+      TABLEDEF(TRUE)
+    END ELSE BEGIN
+      FLUSHQ(FALSE);
+      COMMIT(TRUE);
+      IF NN1 > 1 THEN EMPTIES(NN1 - 1);
+      INDON := TRUE
+    END
+  END ELSE IF C = 'L' THEN BEGIN
+    (* SL - таблица с линейками *)
+    TABLEDEF(TRUE)
+  END ELSE IF C = '/' THEN BEGIN
+    FLUSHQ(FALSE);
+    (* пустая текущая строка не сдвигается на лист: первая карта
+       */ *D рисунка не должна давать пустую текстовую строку *)
+    IF CURPOS > CURFLDA THEN
+      COMMIT(TRUE)
+    ELSE
+      CURPOS := CURFLDA;
+    POSMODE := FALSE;
+    IF NN1 > 1 THEN EMPTIES(NN1 - 1)
+  END ELSE IF C = 'P' THEN BEGIN
+    FLUSHQ(FALSE);
+    (* на свежей странице без текста *P не пишет пустую строку
+       и не тратит номер страницы *)
+    IF (NOT FRESHPG) OR (CURPOS > CURFLDA) THEN
+      COMMIT(TRUE);
+    POSMODE := FALSE;
+    FOR I := 1 TO NN1 DO PAGEEND
+  END ELSE IF C = 'E' THEN BEGIN
+    ENDTXT := TRUE;
+    POSMODE := FALSE;
+    CPOS := CWV + 1
+  END ELSE IF C = 'G' THEN BEGIN
+    FLUSHQ(FALSE);
+    POSMODE := TRUE;
+    PP := CURFLDA + NN1 - 1;
+    IF PP > CURPOS THEN CURPOS := PP
+  END ELSE IF C = 'C' THEN BEGIN
+    IF CPOS <= CWV THEN BEGIN
+      C2 := CARD[CPOS];
+      CPOS := CPOS + 1;
+      PUTREP(C2, NN1);
+      POSMODE := TRUE
+    END
+  END ELSE IF C = 'H' THEN BEGIN
+    HWORD(NN1)
+  END ELSE IF C = 'D' THEN BEGIN
+    VERBATIM;
+    POSMODE := TRUE;
+    CPOS := CWV + 1
+  END ELSE IF C = 'N' THEN BEGIN
+    (* *NN: номер следующей страницы; перед знаком команды пробел
+       не обязателен - *254N*1RL задаЕт номер так же, как *254N_.
+       На свежей странице (ничего не напечатано) номер действует
+       на неЕ сразу, иначе - на следующую (PNEXT) *)
+    IF CPOS <= CWV THEN BEGIN
+      C2 := CARD[CPOS];
+      IF C2 = ' ' THEN BEGIN
+        IF ROWNO = 0 THEN BEGIN
+          PAGENO := NN1;
+          HPNO[SIDE] := NN1
+        END ELSE
+          PNEXT := NN1;
+        CPOS := CPOS + 1
+      END ELSE BEGIN
+        (* номер регистрируется в первой карте блока (FIRCAR) или
+           перед пробелом; *7N*P номер не задаЕт *)
+        IF HASNUM AND FIR THEN BEGIN
+          IF ROWNO = 0 THEN BEGIN
+            PAGENO := NN1;
+            HPNO[SIDE] := NN1
+          END ELSE
+            PNEXT := NN1
+        END;
+        IF C2 = 'N' THEN BEGIN
+          NUMON := FALSE;
+          CPOS := CPOS + 1
+        END ELSE IF (C2 = 'L') OR (C2 = 'R') OR (C2 = 'U') OR (C2 =
+           'D') THEN BEGIN
+          CPOS := CPOS + 1;
+          IF TABON THEN BEGIN
+            IF C2 = 'L' THEN CNOL := TRUE;
+            IF C2 = 'R' THEN CNR := TRUE;
+            IF C2 = 'U' THEN CNU := TRUE;
+            IF C2 = 'D' THEN CND := TRUE
+          END ELSE
+            ADDCH(C2)
+        END ELSE IF (C2 >= 'A') AND (C2 <= 'Z') THEN BEGIN
+          (* N поглощается, буква остаЕтся текстом *)
+          ADDCH(C2);
+          CPOS := CPOS + 1
+        END
+        (* перед не-буквой N просто опускается *)
+      END
+    END ELSE IF HASNUM AND FIR THEN BEGIN
+      IF ROWNO = 0 THEN BEGIN
+        PAGENO := NN1;
+        HPNO[SIDE] := NN1
+      END ELSE
+        PNEXT := NN1
+    END
+  END ELSE IF C = 'O' THEN BEGIN
+    IF CPOS <= CWV THEN BEGIN
+      C2 := CARD[CPOS];
+      CPOS := CPOS + 1;
+      IF C2 = 'L' THEN BEGIN
+        IF (CPOS <= CWV) AND (CARD[CPOS] = 'R') THEN CPOS := CPOS + 1;
+        FLUSHQ(FALSE);
+        FILLON := FALSE
+      END ELSE IF C2 = 'R' THEN BEGIN
+        IF (CPOS <= CWV) AND (CARD[CPOS] = 'U') THEN CPOS := CPOS + 1;
+        NEWFMT(0, HASNUM AND (NN1 = 1))
+      END ELSE
+        KLAIDA(10)
+    END
+  END ELSE IF C = 'W' THEN BEGIN
+    GROUP(NN1, TRUE)
+  END ELSE IF C = '(' THEN BEGIN
+    GROUP(NN1, FALSE)
+  END ELSE IF C = 'R' THEN BEGIN
+    IF CPOS <= CWV THEN BEGIN
+      C2 := CARD[CPOS];
+      CPOS := CPOS + 1;
+      IF C2 = 'T' THEN BEGIN
+        FLUSHQ(FALSE);
+        FILLON := TRUE
+      END ELSE IF C2 = 'L' THEN BEGIN
+        RLN := NN1
+      END ELSE IF C2 = 'C' THEN BEGIN
+        RCN := NN1
+      END ELSE IF C2 = 'G' THEN BEGIN
+        RGON := TRUE
+      END ELSE IF C2 = 'U' THEN BEGIN
+        NEWFMT(1, HASNUM AND (NN1 = 1))
+      END ELSE IF C2 = 'F' THEN BEGIN
+        IF CPOS <= CWV THEN BEGIN
+          C2 := CARD[CPOS];
+          CPOS := CPOS + 1;
+          FILLTO(NN1, C2);
+          POSMODE := TRUE
+        END
+      END ELSE
+        KLAIDA(10)
+    END
+  END ELSE IF C = 'K' THEN BEGIN
+    IF NOT READNUM(A) THEN KLAIDA(10);
+    IF CPOS <= CWV THEN BEGIN
+      C2 := CARD[CPOS];
+      CPOS := CPOS + 1;
+      PUTREP(C2, A);
+      POSMODE := TRUE
+    END
+  END ELSE IF HASNUM THEN BEGIN
+    (* число без команды - режим листинга *)
+    LISTING := TRUE;
+    CPOS := CWV + 1
+  END ELSE
+    KLAIDA(10)
+END;
+
+(* просмотр карты: команды и текст *)
+PROCEDURE SCANCARD;
+VAR
+  C: CHAR;
+BEGIN
+  WHILE CPOS <= CWV DO BEGIN
+    C := CARD[CPOS];
+    CPOS := CPOS + 1;
+    IF C = '*' THEN BEGIN
+      IF (CPOS <= CWV) AND (CARD[CPOS] <> ' ') THEN
+        COMMAND
+    END ELSE
+      ADDCH(C)
+  END;
+  (* граница карты: слово продолжается, если 72-я позиция занята *)
+  IF WLENG > 0 THEN BEGIN
+    IF (MKSP > 0) OR (CWV < CW) THEN
+      ADDWORD
+    ELSE IF CARD[CW] = ' ' THEN
+      ADDWORD
+  END
+END;
+
+(* ---------------- главная программа ---------------- *)
+
+BEGIN
+  SETFMT(0);
+  NEWSHEET;
+  PAGENO := 0;
+  PNEXT := 0;
+  NUMON := TRUE;
+  PGFIRST := TRUE;
+  STPEND := FALSE;
+  RGON := FALSE;
+  RLN := 0;
+  RCN := 0;
+  FILLON := TRUE;
+  INDON := FALSE;
+  LISTING := FALSE;
+  ENDTXT := FALSE;
+  STPON := FALSE;
+  STGON := FALSE;
+  STPONLY := FALSE;
+  STGONLY := FALSE;
+  STPL := 0;
+  STGL := 0;
+  TABON := FALSE;
+  INCELL := FALSE;
+  TROWS := 0;
+  TCOL := 0;
+  MKCNT := 0;
+  MKSP := 0;
+  FMPENDING := -1;
+  FIR := FALSE;
+  NW := 0;
+  WLENG := 0;
+  WRCL := 0;
+  CWV := 72;
+  PAGESTART;
+
+1: (* ключевое слово блока *)
+  GETCARD;
+  IF EOFIN THEN GOTO 9;
+  IF (CARD[1] = '*') AND (CARD[2] = 'R') AND (CARD[3] = 'E') AND
+     (CARD[4] = 'D') THEN BEGIN
+    ENDTXT := FALSE;
+    FIR := TRUE;
+    WHILE NOT ENDTXT DO BEGIN
+      GETCARD;
+      IF EOFIN THEN
+        ENDTXT := TRUE
+      ELSE IF LISTING THEN
+        LISTCARD
+      ELSE IF TABON THEN
+        TABLECARD
+      ELSE BEGIN
+        (* раскрытие макро без рекурсии: MACSTEP докручивает куски
+           тел, продолжения карт и снятие уровней *)
+        SCANCARD;
+        WHILE MKSP > 0 DO
+          MACSTEP;
+        IF STPEND THEN BEGIN
+          STPEND := FALSE;
+          IF ROWNO = 0 THEN
+            PUTSTP
+        END;
+        (* FIRCAR действует только на первую карту блока *)
+        FIR := FALSE
+      END
+    END;
+    FLUSHQ(FALSE);
+    COMMIT(TRUE);
+    IF ROWNO > 0 THEN HUSED[SIDE] := TRUE;
+    SHEETPRINT(TRUE);
+    NEWSHEET;
+    GOTO 1
+  END;
+  IF (CARD[1] = '*') AND (CARD[2] = 'E') AND (CARD[3] = 'N') AND
+     (CARD[4] = 'D') THEN
+    GOTO 9;
+  KLAIDA(100);
+9: STOP
+END.
+*execute
+*RED
+ТЕКСТ БЕЗ КОМАНД
+ОДИН ДВА ТРИ ЧЕТЫРЕ ПЯТЬ ШЕСТЬ СЕМЬ ВОСЕМЬ ДЕВЯТЬ ДЕСЯТЬ
+ОДИН ДВА ТРИ ЧЕТЫРЕ ПЯТЬ ШЕСТЬ СЕМЬ ВОСЕМЬ ДЕВЯТЬ ДЕСЯТЬ
+*SАБЗАЦ С ОТСТУПОМ
+ОДИН ДВА ТРИ ЧЕТЫРЕ ПЯТЬ ШЕСТЬ СЕМЬ ВОСЕМЬ ДЕВЯТЬ ДЕСЯТЬ
+*3SАБЗАЦ ПОСЛЕ ДВУХ ПУСТЫХ СТРОК
+*/ПЕРЕВОД СТРОКИ
+*3/ПОСЛЕ ДВУХ ПУСТЫХ
+*E
+*END
+*end file
+``````
+ЕКОНЕЦ
