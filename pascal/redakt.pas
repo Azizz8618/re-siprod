@@ -9,7 +9,11 @@
    печать на АЦПУ-128 (две страницы по 64 поз., формат А 84,
    широкий формат), рамки, номера страниц, штамп ЕСПД,
    ошибки 10 20 30 40 61 62 64 66 80 91 100.
-   Вход: карты после *EXECUTE (*RED ... *E, *END).  Выход: АЦПУ.
+   Блок *DRK - свой режим схем ДРАКОН на верхнем уровне (наравне с
+   *RED в таблице диспетчера): исходник схемы до *E транслируется и
+   печатается средствами самого редактора, без карт разметки * /*D.
+   Вход: карты после *EXECUTE (*RED ... *E, *DRK ... *E, *END).
+   Выход: АЦПУ.
    Отличие от оригинала: прогон страницы (код 0201) недоступен через
    стандартный вывод Паскаля, листы разделяются пустой строкой. *)
 program redakt(input, output);
@@ -26,6 +30,21 @@ const
   TCDEEP = 6;     (* глубина вложения макро *)
   TCMAX = 30;      (* строк в ячейке таблицы *)
 
+  (* схема ДРАКОН, блок *DRK - алгоритм как в drakon.pas; ёмкости
+     меньше (задача ~32К слов, редактор+транслятор в одном образе):
+     72 узла, 208 строк рисунка, 6 плеч - эталонным схемам (до 44
+     узлов и ~200 строк) хватает с запасом *)
+  NDMAX = 72;     (* узлов схемы *)
+  DTKW = 12;      (* число ключевых слов *)
+  DRMAX = 208;    (* строк рисунка *)
+  NBMAX = 6;      (* плеч у узла (ВАРИАНТ + ИНАЧЕ) *)
+  DCMAX = 128;    (* колонок рисунка: широкий формат АЦПУ-128 *)
+  GAPR = 2;       (* зазор по вертикали *)
+  GAPS = 4;       (* зазор между шампуром и плечом *)
+  MINW = 20;      (* минимальная ширина поля текста *)
+  MXL = 12;       (* строк текста в иконе *)
+  MXW = 40;       (* слов в подписи *)
+
 type
   rowty = array [1..128] of char;    (* строка печати, по слову на
   * литеру *)
@@ -34,6 +53,8 @@ type
   * литер/слово *)
   pwty = packed array [1..100] of char; (* слово в хранении *)
   mkty = packed array [1..MKLEN] of char; (* тело макроопределения *)
+  p80 = packed array [1..80] of char;  (* строка в хранении,
+  * 6 литер/слово *)
 
 var
   card: carty;            (* текущая карта *)
@@ -50,7 +71,10 @@ var
   mcsa, mcsw: integer;    (* параметры *MCS *)
 
   (* лист и страницы *)
-  sheet: array [1..72] of rowty;
+  (* строки листа в хранении - упакованы (6 литер/слово):
+     1152 слова вместо 9216, чтобы поместились вместе со схемой
+     ДРАКОН; на печать выдаются через распакованную копию *)
+  sheet: array [1..72] of prow;
   htxt: array [0..1] of array [1..66] of prow;
   hused: array [0..1] of boolean;
   hpno: array [0..1] of integer;
@@ -102,7 +126,15 @@ var
   tbn2: integer;          (* число колонок таблицы *)
   svflda, svfldw: integer; (* сохранённое поле на время ячейки *)
   prevnd: array [1..8] of boolean; (* нижние линии предыдущей строки *)
-  tline: array [1..8] of array [1..TCMAX] of prow; (* строки ячеек *)
+  (* оверлей: ячейки таблиц и рисунок ДРАКОН (блок *DRK) никогда
+     не живут одновременно (режим таблиц прерывается картой $ до
+     любого блока, внутри *DRK команды не разбираются) - общая
+     память экономит ~4.6К слов *)
+  dmem: record
+          case integer of
+            0: (tline: array [1..8] of array [1..TCMAX] of prow);
+            1: (pic: array [1..DRMAX] of prow)
+        end;   (* строки ячеек таблиц / строки рисунка схемы *)
   tcnt: array [1..8] of integer;
   tcln: integer;          (* строк в текущей ячейке *)
   incell: boolean;        (* накопление ячейки *)
@@ -128,6 +160,47 @@ var
   cwv: integer;           (* конец текущей карты или тела макро *)
   ii, jj, kk, nn1, mm, pp, qq: integer;
   c2, c3: char;
+
+  (* ---- схема ДРАКОН, блок *DRK (имена как в drakon.pas) ---- *)
+  kw: array [1..DTKW] of p80;
+  kwl: array [1..DTKW] of integer;
+
+  nkind: array [1..NDMAX] of integer;
+  ntext: array [1..NDMAX] of p80;
+  ntl: array [1..NDMAX] of integer;
+  nkid: array [1..NDMAX] of integer;
+  nbro: array [1..NDMAX] of integer;
+  ncnt: integer;
+  nroot: integer;
+
+  ix, iy, iw, ih: array [1..NDMAX] of integer;
+  nxt: array [1..NDMAX] of integer;
+  mainb: array [1..NDMAX] of integer;
+  brx: array [1..NDMAX, 1..NBMAX] of integer;
+  bry: array [1..NDMAX, 1..NBMAX] of integer;
+  brb: array [1..NDMAX, 1..NBMAX] of integer;
+  nbr: array [1..NDMAX] of integer;
+
+  flat: array [1..NDMAX] of integer;
+  nfl: integer;
+  rws: integer;           (* занятых строк рисунка *)
+
+  gtail, gy: integer;
+  (* стек разбора вложенности; stl - последний узел уровня *)
+  st: array [1..40] of integer;
+  sti: array [1..40] of integer;
+  stl: array [1..40] of integer;
+  stn, last0: integer;
+
+  (* перенос подписи: слова, строки, ширина поля *)
+  wsp: array [1..MXW] of integer;
+  wwp: array [1..MXW] of integer;
+  nwd: integer;
+  gtxt: carty;
+  wtx: array [1..MXL] of p80;
+  wln: array [1..MXL] of integer;
+  nwl: integer;
+  wwd: integer;
 
 procedure pasout(var a, b: char); fortran;
 
@@ -271,10 +344,37 @@ end;
 
 (* ---------------- лист ---------------- *)
 
+(* очистка упакованной строки листа *)
+procedure clrsh(i: integer);
+var
+  j: integer;
+begin
+  for j := 1 to 128 do sheet[i][j] := ' '
+end;
+
+(* строка листа -> распакованная копия и обратно:
+   putnum и outline работают с неупакованными строками *)
+procedure sheetrow(i: integer; var r: rowty);
+var
+  j: integer;
+begin
+  for j := 1 to 128 do r[j] := sheet[i][j]
+end;
+
+procedure setsheetrow(i: integer; var r: rowty);
+var
+  j: integer;
+begin
+  for j := 1 to 128 do sheet[i][j] := r[j]
+end;
+
+(* ---------------- печать листа ---------------- *)
+
 (* печать собранного листа; final - окончание текста (*E) *)
 procedure sheetprint(final: boolean);
 var
   rows, top, bot, i, s, np, k2, st2, lim: integer;
+  rw: rowty;
   sideon: array [0..1] of boolean;
 begin
   (* при окончании текста лист печатается до последней занятой строки
@@ -292,8 +392,8 @@ begin
   lim := rowbase + hrows[0];
   if (fmt = 0) and (hrows[1] < hrows[0]) then lim := rowbase + hrows[1];
   if lim > rows then lim := rows;
-  for i := 1 to rowbase do clrrow(sheet[i]);
-  for i := lim + 1 to rows do clrrow(sheet[i]);
+  for i := 1 to rowbase do clrsh(i);
+  for i := lim + 1 to rows do clrsh(i);
   (* строки страниц - только занятые *)
   for i := 1 to tmax do
     if fmt = 0 then begin
@@ -354,27 +454,35 @@ begin
         sheet[3][31] := '-';
         sheet[3][35] := ' ';
         sheet[3][36] := '-';
-        putnum(sheet[3], 32, hpno[0], 3)
+        sheetrow(3, rw);
+        putnum(rw, 32, hpno[0], 3);
+        setsheetrow(3, rw)
       end;
       if sideon[1] then begin
         sheet[3][95] := '-';
         sheet[3][99] := ' ';
         sheet[3][100] := '-';
-        putnum(sheet[3], 96, np, 3)
+        sheetrow(3, rw);
+        putnum(rw, 96, np, 3);
+        setsheetrow(3, rw)
       end
     end else if fmt = 1 then begin
       if hused[0] or final then begin
         sheet[4][63] := '-';
         sheet[4][67] := ' ';
         sheet[4][68] := '-';
-        putnum(sheet[4], 64, hpno[0], 3)
+        sheetrow(4, rw);
+        putnum(rw, 64, hpno[0], 3);
+        setsheetrow(4, rw)
       end
     end else begin
       if hused[0] or final then begin
         sheet[4][42] := '-';
         sheet[4][46] := ' ';
         sheet[4][47] := '-';
-        putnum(sheet[4], 43, hpno[0], 3)
+        sheetrow(4, rw);
+        putnum(rw, 43, hpno[0], 3);
+        setsheetrow(4, rw)
       end
     end
   end;
@@ -399,8 +507,10 @@ begin
   end;
   (* выдача листа; строки прогона заменены пустыми *)
   for i := 1 to rows do
-    if (i > 1) and ((fmt = 0) or (i > 2)) then
-      outline(sheet[i]);
+    if (i > 1) and ((fmt = 0) or (i > 2)) then begin
+      sheetrow(i, rw);
+      outline(rw)
+    end;
   pgfirst := false
 end;
 
@@ -498,7 +608,7 @@ begin
   if incell then begin
     tcln := tcln + 1;
     if tcln <= TCMAX then
-      for k2 := 1 to 128 do tline[tcol][tcln][k2] := r[k2];
+      for k2 := 1 to 128 do dmem.tline[tcol][tcln][k2] := r[k2];
     exit
   end;
   svd := false;
@@ -948,7 +1058,7 @@ begin
     for k2 := 1 to trows do
       if i <= tcnt[k2] then
         for j := 1 to tbdw[k2] do
-          r[tbda[k2] + j - 1] := tline[k2][i][tbda[k2] + j - 1];
+          r[tbda[k2] + j - 1] := dmem.tline[k2][i][tbda[k2] + j - 1];
     if tabline then
       for j := 1 to trows + 1 do begin
         vis := true;
@@ -1196,6 +1306,810 @@ begin
     clrrow(r);
     commitrow(r, false);
     commitrow(r, false)
+  end
+end;
+
+(* ================= схема ДРАКОН, блок *DRK ================= *)
+
+(* Трансляция схем ДРАКОН встроена в редактор как режим верхнего
+   уровня: ключ блока *DRK стоит наравне с *RED в диспетчере (в
+   оригинальном СИПРОДе - таблица SCHEMA /0747B).  Алгоритм тот же,
+   что в standalone-трансляторе drakon.pas и эталонном генераторе
+   tools/drakon_markup.py: разбор текста по отступам, перенос
+   подписей, компоновка икон по колонкам, рисование шести видов
+   икон с соединениями.  Отличие - выдача: не карты разметки
+   * /*D, а строки рисунка прямо через механизм листа редактора
+   (commitrow), поэтому рамки на границах страниц, номера и штампы
+   ведёт сам редактор.  Блок *DRK сам включает рамку *RG и широкий
+   формат *RU - как разметка генератора.  Конец исходника - карта
+   *E (как в *RED); КОНЕЦ внутри схемы - обычная икона. *)
+
+procedure initkw;
+begin
+  kwl[1] := 9;
+  kw[1][1] := 'З'; kw[1][2] := 'А'; kw[1][3] := 'Г';
+  kw[1][4] := 'О'; kw[1][5] := 'Л'; kw[1][6] := 'О';
+  kw[1][7] := 'В'; kw[1][8] := 'О'; kw[1][9] := 'К';
+  kwl[2] := 5;
+  kw[2][1] := 'В'; kw[2][2] := 'Е'; kw[2][3] := 'Т';
+  kw[2][4] := 'К'; kw[2][5] := 'А';
+  kwl[3] := 8;
+  kw[3][1] := 'Д'; kw[3][2] := 'Е'; kw[3][3] := 'Й';
+  kw[3][4] := 'С'; kw[3][5] := 'Т'; kw[3][6] := 'В';
+  kw[3][7] := 'И'; kw[3][8] := 'Е';
+  kwl[4] := 11;
+  kw[4][1] := 'К'; kw[4][2] := 'О'; kw[4][3] := 'М';
+  kw[4][4] := 'М'; kw[4][5] := 'Е'; kw[4][6] := 'Н';
+  kw[4][7] := 'Т'; kw[4][8] := 'А'; kw[4][9] := 'Р';
+  kw[4][10] := 'И'; kw[4][11] := 'Й';
+  kwl[5] := 4;
+  kw[5][1] := 'Е'; kw[5][2] := 'С'; kw[5][3] := 'Л'; kw[5][4] := 'И';
+  kwl[6] := 4;
+  kw[6][1] := 'Ц'; kw[6][2] := 'И'; kw[6][3] := 'К'; kw[6][4] := 'Л';
+  kwl[7] := 5;
+  kw[7][1] := 'В'; kw[7][2] := 'Ы'; kw[7][3] := 'Б';
+  kw[7][4] := 'О'; kw[7][5] := 'Р';
+  kwl[8] := 7;
+  kw[8][1] := 'В'; kw[8][2] := 'А'; kw[8][3] := 'Р';
+  kw[8][4] := 'И'; kw[8][5] := 'А'; kw[8][6] := 'Н'; kw[8][7] := 'Т';
+  kwl[9] := 5;
+  kw[9][1] := 'А'; kw[9][2] := 'Д'; kw[9][3] := 'Р';
+  kw[9][4] := 'Е'; kw[9][5] := 'С';
+  kwl[10] := 5;
+  kw[10][1] := 'К'; kw[10][2] := 'О'; kw[10][3] := 'Н';
+  kw[10][4] := 'Е'; kw[10][5] := 'Ц';
+  kwl[11] := 2;
+  kw[11][1] := 'Т'; kw[11][2] := 'О';
+  kwl[12] := 5;
+  kw[12][1] := 'И'; kw[12][2] := 'Н'; kw[12][3] := 'А';
+  kw[12][4] := 'Ч'; kw[12][5] := 'Е'
+end;
+
+(* распознавание ключевого слова: индекс или 0 *)
+function detect(var s: carty; ln: integer): integer;
+var
+  i, j, res: integer;
+  ok: boolean;
+begin
+  res := 0;
+  i := 1;
+  while (i <= DTKW) and (res = 0) do begin
+    if (ln > 0) and (ln >= kwl[i]) then begin
+      ok := true;
+      j := 1;
+      while (j <= kwl[i]) and ok do begin
+        if s[j] <> kw[i][j] then
+          ok := false;
+        j := j + 1
+      end;
+      if ok then
+        res := i
+    end;
+    i := i + 1
+  end;
+  detect := res
+end;
+
+(* новый узел схемы с привязкой к дереву по отступам *)
+procedure newnode(k: integer; var s: carty; sl, ind, ln: integer);
+var
+  i: integer;
+  done: boolean;
+begin
+  if ncnt >= NDMAX then
+    ncnt := NDMAX;
+  ncnt := ncnt + 1;
+  nkind[ncnt] := k;
+  ntl[ncnt] := ln;
+  for i := 1 to ln do ntext[ncnt][i] := s[sl + i - 1];
+  nkid[ncnt] := 0;
+  nbro[ncnt] := 0;
+  nbr[ncnt] := 0;
+  nxt[ncnt] := 0;
+  done := false;
+  while (stn > 0) and (not done) do begin
+    if sti[stn] >= ind then
+      stn := stn - 1
+    else
+      done := true
+  end;
+  if stn = 0 then begin
+    if nroot = 0 then
+      nroot := ncnt
+    else
+      nbro[last0] := ncnt;
+    last0 := ncnt
+  end else begin
+    if nkid[st[stn]] = 0 then
+      nkid[st[stn]] := ncnt
+    else
+      nbro[stl[stn]] := ncnt;
+    stl[stn] := ncnt
+  end;
+  (* контейнеры: ЕСЛИ ЦИКЛ ВЫБОР ВАРИАНТ ТО ИНАЧЕ *)
+  if (k = 5) or (k = 6) or (k = 7) or (k = 8) or
+     (k = 11) or (k = 12) then begin
+    stn := stn + 1;
+    st[stn] := ncnt;
+    sti[stn] := ind
+  end
+end;
+
+(* длина значимой части карты *)
+function linelen: integer;
+var
+  i: integer;
+begin
+  linelen := 0;
+  for i := 1 to CW do
+    if card[i] <> ' ' then
+      linelen := i
+end;
+
+(* число ведущих пробелов карты.
+   Результат функции нельзя читать в выражениях (ошибка
+   компилятора 15.1 - порча стека), счёт в локальной j *)
+function indent: integer;
+var
+  j: integer;
+begin
+  j := 0;
+  while (j < CW) and (card[j + 1] = ' ') do
+    j := j + 1;
+  indent := j
+end;
+
+(* пропуск пробелов и двоеточия после ключевого слова *)
+procedure skiphead(var p: integer; ln: integer; var s: carty);
+begin
+  while (p <= ln) and (s[p] = ' ') do
+    p := p + 1;
+  if (p <= ln) and (s[p] = ':') then begin
+    p := p + 1;
+    while (p <= ln) and (s[p] = ' ') do
+      p := p + 1
+  end
+end;
+
+(* разбор текущей карты исходника (как parse в drakon.pas, но
+   одна карта: карты подаёт главный цикл блока *DRK) *)
+procedure drkcard;
+var
+  i, ind, k, p, ln, tl: integer;
+  txt: carty;
+begin
+  ind := indent;
+  ln := linelen;
+  if (ln > 0) and (card[ind + 1] <> '*') then begin
+    for i := 1 to ln do txt[i] := card[ind + i];
+    k := detect(txt, ln);
+    if k > 0 then begin
+      p := kwl[k] + 1;
+      skiphead(p, ln, txt);
+      tl := 0;
+      for i := p to ln do
+        if txt[i] <> ' ' then
+          tl := i - p + 1;
+      newnode(k, txt, p, ind, tl)
+    end else begin
+      (* неизвестное слово: текст после первого слова *)
+      p := 1;
+      while (p <= ln) and (txt[p] <> ' ') and
+            (txt[p] <> ':') do
+        p := p + 1;
+      skiphead(p, ln, txt);
+      tl := 0;
+      for i := p to ln do
+        if txt[i] <> ' ' then
+          tl := i - p + 1;
+      newnode(0, txt, p, ind, tl)
+    end
+  end
+end;
+
+(* ---------------- иконы ---------------- *)
+
+(* вид иконы: 0 прямоугольник, 1 заголовок, 2 трапеция ветки,
+   3 вопрос, 4 конец, 5 адрес, 6 выбор *)
+function kindof(n: integer): integer;
+var
+  k, res: integer;
+begin
+  k := nkind[n];
+  res := 0;
+  if k = 1 then
+    res := 1
+  else if k = 2 then
+    res := 2
+  else if k = 5 then
+    res := 3
+  else if k = 6 then
+    res := 3
+  else if k = 7 then
+    res := 6
+  else if k = 9 then
+    res := 5
+  else if k = 10 then
+    res := 4;
+  kindof := res
+end;
+
+procedure put(x, y: integer; c: char);
+begin
+  if (y >= 1) and (y <= DRMAX) and (x >= 1) and (x <= DCMAX) then
+    dmem.pic[y][x] := c
+end;
+
+(* текст в поле ширины fw с позиции x, строка r; центрирование
+   как в эталоне: лишний пробел при нечётных поле и остатке
+   ставится слева *)
+procedure ctext(x, fw, r: integer; var t: p80; tl: integer);
+var
+  i, left: integer;
+begin
+  left := (fw - tl) div 2;
+  if (odd(fw - tl)) and (odd(fw)) then
+    left := left + 1;
+  for i := 1 to tl do
+    put(x + left + i - 1, r, t[i])
+end;
+
+procedure dash(x, y, ln: integer; c: char);
+var
+  i: integer;
+begin
+  for i := 1 to ln do
+    put(x + i - 1, y, c)
+end;
+
+(* разложить подпись gtxt длиной tl на строки wtx/wln;
+   ширина поля - wwd *)
+procedure wraptl(tl: integer);
+var
+  i, j, cur: integer;
+  nl: boolean;
+begin
+  nwl := 0;
+  cur := 0;
+  for i := 1 to nwd do begin
+    (* НЕ писать «(cur = 0) or (wln[cur] + ... > wwd)»: компилятор 15.1
+       не гарантирует короткое замыкание, при cur = 0 читается и
+       пишется wln[0]/wtx[0] вне массива - портятся соседние
+       переменные, слова подписи теряются *)
+    nl := true;
+    if cur > 0 then
+      if wln[cur] + 1 + wwp[i] <= wwd then
+        nl := false;
+    if nl then begin
+      cur := cur + 1;
+      wln[cur] := 0
+    end else begin
+      wln[cur] := wln[cur] + 1;
+      wtx[cur][wln[cur]] := ' '
+    end;
+    for j := 1 to wwp[i] do begin
+      wtx[cur][wln[cur] + j] := gtxt[wsp[i] + j - 1];
+    end;
+    wln[cur] := wln[cur] + wwp[i]
+  end;
+  nwl := cur;
+  if nwl = 0 then begin
+    nwl := 1;
+    wln[1] := 0
+  end
+end;
+
+(* слова подписи: wsp/wwp, самое длинное слово -> wwd *)
+procedure splitw(tl: integer);
+var
+  i: integer;
+begin
+  nwd := 0;
+  i := 1;
+  while i <= tl do begin
+    while (i <= tl) and (gtxt[i] = ' ') do
+      i := i + 1;
+    if i <= tl then begin
+      nwd := nwd + 1;
+      wsp[nwd] := i;
+      while (i <= tl) and (gtxt[i] <> ' ') do
+        i := i + 1;
+      wwp[nwd] := i - wsp[nwd];
+      if wwp[nwd] > wwd then
+        wwd := wwp[nwd]
+    end
+  end
+end;
+
+(* подпись узла в gtxt, разбор на слова, ширина поля wwd:
+   не меньше 20 и самого длинного слова *)
+procedure settext(n: integer);
+var
+  i, tl: integer;
+begin
+  tl := ntl[n];
+  for i := 1 to tl do gtxt[i] := ntext[n][i];
+  wwd := MINW;
+  splitw(tl)
+end;
+
+(* полная ширина иконы узла n *)
+function iconw(n: integer): integer;
+var
+  k, tl, wd: integer;
+begin
+  k := kindof(n);
+  tl := ntl[n];
+  if k = 4 then begin
+    wd := 10;
+    if tl + 6 > wd then
+      wd := tl + 6;
+    iconw := wd
+  end else begin
+    settext(n);
+    if k = 3 then
+      wd := wwd + 6
+    else if k = 6 then
+      wd := wwd + 6
+    else if (k = 2) or (k = 5) then
+      wd := wwd + 4
+    else
+      wd := wwd + 2;
+    iconw := wd
+  end
+end;
+
+(* рисование иконы узла n с центром на колонке col, верх row *)
+procedure makeicon(n, col, row: integer);
+var
+  k, w, tl, i, x, y, r, f: integer;
+begin
+  k := kindof(n);
+  tl := ntl[n];
+  for i := 1 to tl do gtxt[i] := ntext[n][i];
+  if (k = 4) and (tl = 0) then begin
+    tl := 5;
+    gtxt[1] := 'к'; gtxt[2] := 'о'; gtxt[3] := 'н';
+    gtxt[4] := 'е'; gtxt[5] := 'ц'
+  end;
+  (* ширина иконы *)
+  if k = 4 then begin
+    w := 10;
+    if tl + 6 > w then
+      w := tl + 6
+  end else begin
+    settext(n);
+    if (k = 3) or (k = 6) then
+      w := wwd + 6
+    else if (k = 2) or (k = 5) then
+      w := wwd + 4
+    else
+      w := wwd + 2
+  end;
+  (* строки подписи (для конца - одна строка) *)
+  if k = 4 then begin
+    nwl := 1;
+    wln[1] := tl;
+    for i := 1 to tl do wtx[1][i] := gtxt[i]
+  end else
+    wraptl(tl);
+  x := col - w div 2;
+  ix[n] := x;
+  iw[n] := w;
+  iy[n] := row;
+  y := row;
+  if k = 1 then begin
+    (* ЗАГОЛОВОК: .-(т)-. в скобках, низ +---+ *)
+    ih[n] := nwl + 2;
+    put(x, y, '.');
+    dash(x + 1, y, w - 2, '-');
+    put(x + w - 1, y, '.');
+    for i := 1 to nwl do begin
+      r := y + i;
+      put(x, r, '(');
+      ctext(x + 1, wwd, r, wtx[i], wln[i]);
+      put(x + w - 1, r, ')')
+    end;
+    put(x, y + nwl + 1, '+');
+    dash(x + 1, y + nwl + 1, w - 2, '-');
+    put(x + w - 1, y + nwl + 1, '+')
+  end else if k = 4 then begin
+    (* КОНЕЦ: .-(конец)-+ *)
+    ih[n] := 3;
+    put(x, y, '.');
+    dash(x + 1, y, w - 2, '-');
+    put(x + w - 1, y, '.');
+    put(x, y + 1, '(');
+    ctext(x + 1, w - 2, y + 1, wtx[1], wln[1]);
+    put(x + w - 1, y + 1, ')');
+    put(x, y + 2, '+');
+    dash(x + 1, y + 2, w - 2, '-');
+    put(x + w - 1, y + 2, '+')
+  end else if (k = 2) or (k = 6) then begin
+    (* ВЕТКА и ВЫБОР: трапеция, верх короче низа *)
+    ih[n] := nwl + 2;
+    put(x + 2, y, '+');
+    dash(x + 3, y, w - 4, '-');
+    put(x + w - 1, y, '+');
+    for i := 1 to nwl do begin
+      r := y + i;
+      put(x + 1, r, '/');
+      ctext(x + 2, w - 3, r, wtx[i], wln[i]);
+      put(x + w - 1, r, '/')
+    end;
+    put(x, y + nwl + 1, '+');
+    dash(x + 1, y + nwl + 1, w - 2, '-');
+    put(x + w - 1, y + nwl + 1, '+')
+  end else if k = 5 then begin
+    (* АДРЕС: трапеция, верх уже низа, правый край вертикальный *)
+    ih[n] := nwl + 2;
+    put(x + 3, y, '+');
+    dash(x + 4, y, w - 6, '-');
+    put(x + w - 2, y, '+');
+    for i := 1 to nwl do begin
+      r := y + i;
+      put(x + 2, r, '/');
+      ctext(x + 3, w - 3, r, wtx[i], wln[i]);
+      put(x + w, r, '/')
+    end;
+    put(x + 1, y + nwl + 1, '+');
+    dash(x + 2, y + nwl + 1, w - 4, '-');
+    put(x + w - 2, y + nwl + 1, '+')
+  end else if k = 3 then begin
+    (* ЕСЛИ, ЦИКЛ: шестиугольник <т> с косыми боками *)
+    ih[n] := nwl + 3;
+    put(x + 2, y, '+');
+    dash(x + 3, y, w - 4, '-');
+    put(x + w - 1, y, '+');
+    for i := 1 to nwl do begin
+      r := y + i;
+      if i = 1 then begin
+        put(x, r, '<');
+        ctext(x + 1, w - 2, r, wtx[i], wln[i]);
+        put(x + w - 1, r, '>')
+      end else begin
+        put(x, r, '|');
+        ctext(x + 1, w - 2, r, wtx[i], wln[i]);
+        put(x + w - 1, r, '|')
+      end
+    end;
+    put(x + 1, y + nwl + 1, '/');
+    put(x + w - 1, y + nwl + 1, '/');
+    put(x + 2, y + nwl + 2, '+');
+    dash(x + 3, y + nwl + 2, w - 4, '-');
+    put(x + w - 1, y + nwl + 2, '+')
+  end else begin
+    (* ДЕЙСТВИЕ, ВАРИАНТ, КОММЕНТАРИЙ: прямоугольник *)
+    ih[n] := nwl + 2;
+    put(x, y, '+');
+    dash(x + 1, y, w - 2, '-');
+    put(x + w - 1, y, '+');
+    for i := 1 to nwl do begin
+      r := y + i;
+      put(x, r, '|');
+      ctext(x + 1, wwd, r, wtx[i], wln[i]);
+      put(x + w - 1, r, '|')
+    end;
+    put(x, y + nwl + 1, '+');
+    dash(x + 1, y + nwl + 1, w - 2, '-');
+    put(x + w - 1, y + nwl + 1, '+')
+  end
+end;
+
+(* ---------------- компоновка ---------------- *)
+
+(* первый потомок основного пути: у ЦИКЛа сами потомки,
+   у прочих - потомки ветки ТО *)
+function mainkids(n: integer): integer;
+var
+  ch, res: integer;
+  done: boolean;
+begin
+  res := 0;
+  ch := 0;
+  if nkind[n] = 6 then
+    res := nkid[n]
+  else
+    ch := nkid[n];
+  done := false;
+  while (ch <> 0) and (not done) do begin
+    if nkind[ch] = 11 then begin
+      res := nkid[ch];
+      done := true
+    end else
+      ch := nbro[ch]
+  end;
+  mainkids := res
+end;
+
+(* собрать правые плечи: ИНАЧЕ (минус - начало с потомков),
+   ВАРИАНТ (плюс - икона и потомки) *)
+procedure sidebranches(n: integer);
+var
+  ch: integer;
+begin
+  nbr[n] := 0;
+  ch := nkid[n];
+  while ch <> 0 do begin
+    if nkind[ch] = 12 then begin
+      if nkid[ch] <> 0 then begin
+        nbr[n] := nbr[n] + 1;
+        brx[n, nbr[n]] := -nkid[ch]
+      end
+    end else if nkind[ch] = 8 then begin
+      if (ntl[ch] > 0) or (nkid[ch] <> 0) then begin
+        nbr[n] := nbr[n] + 1;
+        brx[n, nbr[n]] := ch
+      end
+    end;
+    ch := nbro[ch]
+  end
+end;
+
+(* ширина самой широкой иконы цепочки *)
+function chainw(first: integer): integer;
+var
+  ch, w, mw: integer;
+begin
+  mw := 0;
+  ch := first;
+  while ch <> 0 do begin
+    w := iconw(ch);
+    if w > mw then
+      mw := w;
+    ch := nbro[ch]
+  end;
+  chainw := mw
+end;
+
+(* разложить цепочку по шампуру col от строки row;
+   gy - нижняя свободная строка, gtail - последний узел цепочки;
+   one <> 0 - разложить только первый узел, без братьев
+   (икона ВАРИАНТа раскладывается отдельно от своих потомков) *)
+procedure layout(first, col, row, tail, one: integer);
+var
+  node, y, rx, rail, wmax, ry, row0, mk, b, k, yb: integer;
+  f0: integer;
+begin
+  y := row;
+  node := first;
+  while node <> 0 do begin
+    if tail <> 0 then
+      nxt[tail] := node;
+    nfl := nfl + 1;
+    flat[nfl] := node;
+    makeicon(node, col, y);
+    y := y + ih[node] + GAPR;
+    mk := mainkids(node);
+    if mk <> 0 then begin
+      layout(mk, col, y, node, 0);
+      if gy > y then
+        y := gy;
+      mainb[node] := gy - GAPR;
+      tail := gtail
+    end else begin
+      mainb[node] := iy[node] + ih[node];
+      tail := node
+    end;
+    sidebranches(node);
+    if nbr[node] > 0 then begin
+      row0 := iy[node] + ih[node] - 2;
+      rx := col + iw[node] div 2 + GAPS;
+      ry := iy[node] + ih[node] div 2 + 1;
+      if row0 + 1 > ry then
+        ry := row0 + 1;
+      for b := 1 to nbr[node] do begin
+        if brx[node, b] < 0 then begin
+          f0 := -brx[node, b];
+          wmax := chainw(f0)
+        end else begin
+          f0 := brx[node, b];
+          wmax := iconw(f0);
+          if nkid[f0] <> 0 then begin
+            k := chainw(nkid[f0]);
+            if k > wmax then
+              wmax := k
+          end
+        end;
+        rail := rx + wmax div 2;
+        if brx[node, b] < 0 then
+          layout(f0, rail, ry, 0, 0)
+        else begin
+          layout(f0, rail, ry, 0, 1);
+          if nkid[f0] <> 0 then
+            layout(nkid[f0], rail, gy, f0, 0)
+        end;
+        brx[node, b] := rail;
+        bry[node, b] := ry;
+        yb := gy - GAPR;
+        brb[node, b] := yb;
+        if yb + GAPR > y then
+          y := yb + GAPR;
+        rx := rail + (wmax + 1) div 2 + GAPS
+      end
+    end;
+    node := nbro[node];
+    if one <> 0 then
+      node := 0
+  end;
+  gtail := tail;
+  gy := y
+end;
+
+(* ---------------- рисунок ---------------- *)
+
+(* вертикальные линии между иконами одной цепочки *)
+procedure connectors;
+var
+  i, a, b, cl, r: integer;
+begin
+  for i := 1 to nfl do begin
+    a := flat[i];
+    if nxt[a] <> 0 then begin
+      b := nxt[a];
+      cl := ix[a] + iw[a] div 2;
+      for r := iy[a] + ih[a] to iy[b] - 1 do
+        put(cl, r, '|')
+    end
+  end
+end;
+
+(* шина выхода вправо к осям плеч *)
+procedure busout;
+var
+  i, a, b, r, cl, x, row0, lastr: integer;
+begin
+  for i := 1 to nfl do begin
+    a := flat[i];
+    if nbr[a] > 0 then begin
+      cl := ix[a] + iw[a] div 2;
+      row0 := iy[a] + ih[a] - 2;
+      lastr := brx[a, 1];
+      for b := 2 to nbr[a] do
+        if brx[a, b] > lastr then
+          lastr := brx[a, b];
+      for x := ix[a] + iw[a] to lastr - 1 do
+        put(x, row0, '-');
+      for b := 1 to nbr[a] do begin
+        put(brx[a, b], row0, '+');
+        for r := row0 + 1 to bry[a, b] - 1 do
+          put(brx[a, b], r, '|')
+      end
+    end
+  end
+end;
+
+(* возврат правых плеч на основную вертикаль *)
+procedure mergeback;
+var
+  i, a, b, r, x, cl, base, mr: integer;
+  stop: boolean;
+begin
+  for i := 1 to nfl do begin
+    a := flat[i];
+    if nbr[a] > 0 then begin
+      cl := ix[a] + iw[a] div 2;
+      base := mainb[a];
+      for b := 1 to nbr[a] do
+        if brb[a, b] > base then
+          base := brb[a, b];
+      (* слияние не рисуется, если икона основной цепочки
+         начинается ровно на строке base *)
+      stop := false;
+      for r := 1 to nfl do
+        if flat[r] <> a then
+          if (ix[flat[r]] + iw[flat[r]] div 2 = cl) and
+             (iy[flat[r]] = base) then
+            stop := true;
+      if not stop then begin
+        for b := 1 to nbr[a] do
+          for r := brb[a, b] to base - 1 do
+            put(brx[a, b], r, '|');
+        mr := brx[a, 1];
+        for b := 2 to nbr[a] do
+          if brx[a, b] > mr then
+            mr := brx[a, b];
+        for x := cl + 1 to mr - 1 do
+          put(x, base, '-');
+        for b := 1 to nbr[a] do
+          put(brx[a, b], base, '+');
+        put(cl, base, '+')
+      end
+    end
+  end
+end;
+
+(* ---------------- выдача средствами редактора ---------------- *)
+
+(* начать блок *DRK: чистое состояние схемы; рамка и широкий
+   формат немедленно - как *RG*RU первой картой блока *RED *)
+procedure drkstart;
+var
+  i, j: integer;
+begin
+  initkw;
+  ncnt := 0;
+  nroot := 0;
+  nfl := 0;
+  gtail := 0;
+  stn := 0;
+  last0 := 0;
+  for i := 1 to DRMAX do
+    for j := 1 to DCMAX do
+      dmem.pic[i][j] := ' ';
+  fir := true;
+  rgon := true;
+  newfmt(1, false);
+  fir := false;
+  posmode := false
+end;
+
+(* перевести собранную схему в строки листа редактора:
+   каждая строка рисунка проходит тот же путь, что карта
+   разметки * /*D (очередь пуста, литеры как есть), и сдвигается
+   на лист commit'ом - рамки и границы страниц ведёт редактор *)
+procedure drkemit;
+var
+  i, j, ln, m2, q2: integer;
+begin
+  if ncnt = 0 then
+    exit;
+  layout(nroot, 1, 1, 0, 0);
+  (* сдвиг рисунка: левый край икон к колонке 1; оси плеч
+     не сдвигаются - они уже отсчитаны от шампура *)
+  m2 := 1;
+  for i := 1 to nfl do
+    if ix[flat[i]] < m2 then
+      m2 := ix[flat[i]];
+  if m2 < 1 then begin
+    q2 := 1 - m2;
+    for i := 1 to nfl do
+      ix[flat[i]] := ix[flat[i]] + q2
+  end;
+  (* число строк рисунка: самая низкая занятая строка; выше DRMAX
+     строки не рисовались (put обрезает) - не читать и их *)
+  rws := 0;
+  for i := 1 to nfl do
+    if iy[flat[i]] + ih[flat[i]] - 1 > rws then
+      rws := iy[flat[i]] + ih[flat[i]] - 1;
+  if rws > DRMAX then
+    rws := DRMAX;
+  j := 0;
+  while (rws > 0) and (j = 0) do begin
+    ln := 0;
+    for i := 1 to DCMAX do
+      if dmem.pic[rws][i] <> ' ' then
+        ln := i;
+    if ln > 0 then
+      j := 1
+    else
+      rws := rws - 1
+  end;
+  (* перерисовка со сдвигом *)
+  for i := 1 to DRMAX do
+    for j := 1 to DCMAX do
+      dmem.pic[i][j] := ' ';
+  for i := 1 to nfl do
+    makeicon(flat[i], ix[flat[i]] + iw[flat[i]] div 2,
+             iy[flat[i]]);
+  connectors;
+  busout;
+  mergeback;
+  (* строки рисунка - в текущую строку как есть и на лист; за
+     128-й позицией литеры теряются, как на АЦПУ и в разметке *)
+  posmode := false;
+  for i := 1 to rws do begin
+    flushq(false);
+    clrrow(cur);
+    curpos := curflda;
+    ln := 0;
+    for j := 1 to DCMAX do
+      if dmem.pic[i][j] <> ' ' then
+        ln := j;
+    for j := 1 to ln do
+      if curflda + j - 1 <= 128 then
+        cur[curflda + j - 1] := dmem.pic[i][j];
+    commit(true)
   end
 end;
 
@@ -1567,6 +2481,32 @@ begin
     end;
     flushq(false);
     commit(true);
+    if rowno > 0 then hused[side] := true;
+    sheetprint(true);
+    newsheet;
+    goto 1
+  end;
+  if (card[1] = '*') and (card[2] = 'D') and (card[3] = 'R') and
+     (card[4] = 'K') then begin
+    (* блок *DRK: исходник схемы ДРАКОН до карты *E, затем
+       трансляция и печать листа средствами редактора; рамка и
+       широкий формат включаются самим блоком (drkstart) *)
+    drkstart;
+    endtxt := false;
+    while not endtxt do begin
+      getcard;
+      if eofin then
+        endtxt := true
+      else if (card[1] = '*') and (card[2] = 'E') then
+        endtxt := true
+      else
+        drkcard
+    end;
+    drkemit;
+    (* последняя строка рисунка уже сдвинута drkemit'ом; сдвигать
+       пустую текущую строку не нужно *)
+    if curpos > curflda then
+      commit(true);
     if rowno > 0 then hused[side] := true;
     sheetprint(true);
     newsheet;
