@@ -354,11 +354,20 @@ end;
 procedure wraptl(tl: integer);
 var
   i, j, cur: integer;
+  nl: boolean;
 begin
   nwl := 0;
   cur := 0;
   for i := 1 to nwd do begin
-    if (cur = 0) or (wln[cur] + 1 + wwp[i] > wwd) then begin
+    (* НЕ писать «(cur = 0) or (wln[cur] + ... > wwd)»: компилятор 15.1
+       не гарантирует короткое замыкание, при cur = 0 читается и
+       пишется wln[0]/wtx[0] вне массива - портятся соседние
+       переменные, слова подписи теряются *)
+    nl := true;
+    if cur > 0 then
+      if wln[cur] + 1 + wwp[i] <= wwd then
+        nl := false;
+    if nl then begin
       cur := cur + 1;
       wln[cur] := 0
     end else begin
