@@ -1009,7 +1009,7 @@ begin
   if fmt = 0 then begin
     top := 2; bot := 67
   end else if fmt = 1 then begin
-    top := 3; bot := 68
+    top := 3; bot := 69
   end else begin
     top := 3; bot := 72
   end;
