@@ -1406,6 +1406,14 @@ var
   i: integer;
 begin
   if posmode or not fillon then begin
+    if (not posmode) and (curpos > curflda + fldw - 1) then begin
+      (* режим *OLR: перенос по словам выключен, строка переходит
+         при заполнении *)
+      commit(true);
+      curpos := curflda
+    end;
+    if (not posmode) and (curpos = curflda) and indon then
+      curpos := curflda + 3;
     if curpos <= 128 then begin
       cur[curpos] := c;
       curpos := curpos + 1
