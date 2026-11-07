@@ -15,7 +15,7 @@ trap 'rm -rf "$work"' EXIT
 [ -n "$out" ] && mkdir -p "$out" || out=$work
 fail=0
 for f in "$W"/*.txt; do
-    head -1 "$f" | sed '1s/^\xef\xbb\xbf//' | grep -q '^\*RED' || continue
+    head -1 "$f" | sed '1s/^\xef\xbb\xbf//' | grep -qE '^\*RED|^\.--' || continue
     b=$(basename "$f" .txt)
     # strip BOM, CR and trailing blanks; *END FILE is added by run.sh
     sed -e '1s/^\xef\xbb\xbf//' -e 's/\r$//' -e 's/ *$//' "$f" |
