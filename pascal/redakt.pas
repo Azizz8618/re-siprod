@@ -1013,7 +1013,9 @@ begin
   sideon[0] := hused[0];
   sideon[1] := hused[1];
   np := hpno[1];
-  if final and (not hused[1]) and hused[0] then begin
+  if (not hused[1]) and hused[0] then begin
+    (* номер правой страницы листа печатается, если на листе есть
+       левая страница: он на единицу больше *)
     sideon[1] := true;
     np := hpno[0] + 1
   end;
