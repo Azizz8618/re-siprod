@@ -27,6 +27,9 @@ i = txt.rfind('*ЕХЕСUТЕ')
 seg = (txt[i:].split('\n')[1:] if i >= 0 else txt.split('\n'))
 out = []
 for l in seg:
+    if chr(12) in l:
+        continue    # прогон страницы (0201): сверяется отдельно,
+                    # в эталонах оригинала его 1-2 на лист
     s = l.rstrip()
     if 'КОНЕЦ ЗАДАЧИ' in s or s.startswith(' 00'):
         break

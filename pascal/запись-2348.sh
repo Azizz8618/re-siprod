@@ -228,7 +228,8 @@ if call is None:
     raise SystemExit(1)
 out = []
 for l in log[call+1:]:
-    s = l.rstrip()
+    # строка прогона \f значима: не полоскать её в пробел
+    s = l if l == chr(12) else l.rstrip()
     if 'КОНЕЦ ЗАДАЧИ' in s:
         break
     out.append(s)
@@ -237,7 +238,7 @@ while out and not out[0]:
 while out and not out[-1]:
     out.pop()
 ref = open(sys.argv[2], encoding='utf-8').read().split('\n')
-ref = [l.rstrip() for l in ref if not l.startswith('\x0c')]
+ref = [l if l == chr(12) else l.rstrip() for l in ref]
 while ref and not ref[0]:
     ref.pop(0)
 while ref and not ref[-1]:
