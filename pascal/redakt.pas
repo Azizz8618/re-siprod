@@ -86,6 +86,9 @@ var
   tmax: integer;          (* текстовых строк на странице *)
   defl, defw: integer;    (* поле по умолчанию: центровка и номера *)
   flda, fldw: integer;    (* текущее поле левой страницы *)
+  mcflda, mcfldw: integer; (* поле, заданное *MCS: действует со
+                              следующей строки *)
+  mcsset: boolean;        (* поле изменено, ждёт следующей строки *)
   mcsa, mcsw: integer;    (* параметры *MCS *)
 
   (* лист и страницы *)
@@ -95,6 +98,8 @@ var
      напрямую, без сборки листа *)
   htxt: array [0..1] of array [1..66] of prow;
   hused: array [0..1] of boolean;
+  hfr: array [0..1] of boolean;   (* на странице рисуется рамка *)
+  hnum: array [0..1] of boolean;  (* на странице печатается номер *)
   hpno: array [0..1] of integer;
   hrows: array [0..1] of integer;   (* занятых текстовых строк *)
   пстрок: rowty;          (* печатная строка листа *)
@@ -117,8 +122,10 @@ var
   wt: array [1..MRW] of pwty;
   wl: array [1..MRW] of integer;
   wrc: array [1..MRW] of integer;
+  qsp: array [1..MRW] of integer;   (* пробелов перед словом *)
   nw: integer;
   natq: integer;          (* естественная ширина очереди слов *)
+  spcnt: integer;         (* накопленных пробелов перед словом *)
   word: pwty;             (* накопитель слова *)
   wleng: integer;
   wrcl: integer;          (* разрядка слова при наборе *)
@@ -162,6 +169,12 @@ var
   cnol, cnr, cnu, cnd: boolean;    (* убранные линии ячейки *)
   rownol, rownr: array [1..8] of boolean;
   rownu, rownd: array [1..8] of boolean;
+  (* флаги предыдущей строки таблицы: для линеек - вертикаль рисуется
+     на стыке, если она есть в завершённой строке или в предыдущей
+     (у ячейки *NR убирает правую линию, *NL - левую); сверено с
+     оригиналом по red-table *)
+  предолж, предорн: array [1..8] of boolean;
+  prevrows: integer;         (* ячеек в предыдущей строке (0 - нет) *)
   trows: integer;         (* колонок в текущей строке таблицы *)
 
   (* макроопределения *)
@@ -172,6 +185,7 @@ var
   mkbl: integer;
   mksav: array [1..TCDEEP] of carty;
   mksl, mksq: array [1..TCDEEP] of integer;
+  mknest: array [1..TCDEEP] of boolean;  (* вложенный макрос на уровне *)
   mknum: array [1..TCDEEP] of integer;   (* номер макро на уровне *)
   mkpp: array [1..TCDEEP] of integer;    (* позиция в теле макро *)
   mkres: array [1..TCDEEP] of boolean;   (* тело исчерпано, идёт
@@ -393,7 +407,10 @@ begin
   if (w <= 0) or (a <= 0) then klaida(30);
   if defl + a - 1 + w - 1 > defl + defw - 1 then klaida(30);
   mcsa := a; mcsw := w;
-  flda := defl + a - 1; fldw := w
+  (* новое поле действует со следующей строки: строка, на которой
+     команда встретилась, набирается по старому полю *)
+  mcflda := defl + a - 1; mcfldw := w;
+  mcsset := true
 end;
 (* поле текущей страницы: правая сдвинута на 64 позиции *)
 function curflda: integer;
@@ -1031,38 +1048,52 @@ begin
           пстрок[2] := '.'; пстрок[128] := '.';
           for k2 := 3 to 127 do пстрок[k2] := '-'
         end else begin
-          пстрок[2] := '.'; пстрок[64] := '.';
-          пстрок[66] := '.'; пстрок[128] := '.';
-          for k2 := 3 to 63 do пстрок[k2] := '-';
-          for k2 := 67 to 127 do пстрок[k2] := '-'
+          (* рамка рисуется на той половине, для которой она включена
+             при начале страницы: *RG в середине текста действует со
+             следующей страницы *)
+          if hfr[0] then begin
+            пстрок[2] := '.'; пстрок[64] := '.';
+            for k2 := 3 to 63 do пстрок[k2] := '-'
+          end;
+          if hfr[1] then begin
+            пстрок[66] := '.'; пстрок[128] := '.';
+            for k2 := 67 to 127 do пстрок[k2] := '-'
+          end
         end
       end else if fmt = 2 then begin
         пстрок[1] := 'I'; пстрок[84] := 'I'
       end else if fmt = 1 then begin
         пстрок[2] := 'I'; пстрок[128] := 'I'
       end else begin
-        пстрок[2] := 'I'; пстрок[64] := 'I';
-        пстрок[66] := 'I'; пстрок[128] := 'I'
+        if hfr[0] then begin
+          пстрок[2] := 'I'; пстрок[64] := 'I'
+        end;
+        if hfr[1] then begin
+          пстрок[66] := 'I'; пстрок[128] := 'I'
+        end
       end
     end;
-    (* строка номеров страниц *)
-    if numon then begin
+    (* строка номеров страниц: номер печатается, если он не выключен
+       был при начале страницы (номер задаётся *nN, снимается *NN) *)
+    if hnum[0] or hnum[1] then begin
       if fmt = 0 then begin
-        if (i = 3) and sideon[0] then begin
+        if (i = 3) and sideon[0] and hnum[0] then begin
           пстрок[31] := '-';
           putnum(пстрок, 32, hpno[0], 3);
           пстрок[35] := ' '; пстрок[36] := '-'
         end;
-        if (i = 3) and sideon[1] then begin
+        if (i = 3) and sideon[1] and hnum[1] then begin
           пстрок[95] := '-';
           putnum(пстрок, 96, np, 3);
           пстрок[99] := ' '; пстрок[100] := '-'
         end
-      end else if (fmt = 1) and (i = 4) and (hused[0] or final) then begin
+      end else if (fmt = 1) and (i = 4) and hnum[0] and
+              (hused[0] or final) then begin
         пстрок[63] := '-';
         putnum(пстрок, 64, hpno[0], 3);
         пстрок[67] := ' '; пстрок[68] := '-'
-      end else if (fmt = 2) and (i = 4) and (hused[0] or final) then begin
+      end else if (fmt = 2) and (i = 4) and false then begin
+        (* в формате А номер страницы не печатается *)
         пстрок[42] := '-';
         putnum(пстрок, 43, hpno[0], 3);
         пстрок[46] := ' '; пстрок[47] := '-'
@@ -1158,6 +1189,11 @@ begin
     end
   end;
   hpno[side] := pageno;
+  (* рамка *RG в середине текста действует со следующей страницы *)
+  hfr[side] := rgon;
+  (* номер страницы печатается, если он не был выключен (*NN) к
+     началу страницы *)
+  hnum[side] := numon;
   rowno := 0;
   freshpg := true;
   putstp
@@ -1225,7 +1261,13 @@ begin
   commitrow(cur, withrl);
   clrrow(cur);
   curpos := curflda;
-  indon := false
+  indon := false;
+  (* новое поле *MCS действует со следующей строки *)
+  if mcsset then begin
+    flda := mcflda;
+    fldw := mcfldw;
+    mcsset := false
+  end
 end;
 
 (* положить слово w длиной ln в строку r с позиции p *)
@@ -1242,7 +1284,7 @@ end;
    непомещающиеся слова переносятся, длинное слово рвётся *)
 procedure flushq(just: boolean);
 var
-  p, nat, extra, effw, i, g, sh: integer;
+  p, nat, extra, effw, i, g, sh, k2: integer;
   gap: array [1..MRW] of integer;
 begin
   if nw = 0 then exit;
@@ -1250,7 +1292,7 @@ begin
   if indon then effw := effw - 3;
   nat := natq;
   for i := 2 to nw do
-    gap[i] := 1 + 2 * wrc[i - 1] + 2 * wrc[i];
+    gap[i] := qsp[i];
   if (nat > effw) and (wl[1] > effw) then begin
     (* слово длиннее строки: разорвать, хвост остаётся в очереди *)
     for i := 1 to effw do cur[curflda + i - 1] := wt[1][i];
@@ -1270,8 +1312,19 @@ begin
     putword(cur, p, wt[i], wl[i]);
     if i < nw then begin
       g := gap[i + 1];
-      if (extra > 0) and (i > nw - 1 - extra) then
-        g := g + 1;
+      (* лишние пробелы выравнивания: поровну во все промежутки и
+         остаток - в последние; единственный лишний пробел оригинал
+         ставит во второй с конца промежуток *)
+      if extra > 0 then begin
+        if (extra = 1) and (nw > 2) then begin
+          if i = nw - 2 then g := g + 1
+        end else begin
+          k2 := extra div (nw - 1);
+          if k2 > 0 then g := g + k2;
+          k2 := extra mod (nw - 1);
+          if (k2 > 0) and (i > nw - 1 - k2) then g := g + 1
+        end
+      end;
       p := p + g
     end
   end;
@@ -1310,7 +1363,7 @@ begin
   (* естественная ширина: накопленная очередь и новое слово *)
   n2 := natq;
   if nw > 0 then
-    n2 := n2 + 1 + 2 * wrc[nw] + 2 * wrcl + wleng
+    n2 := n2 + spcnt + wleng
   else
     n2 := n2 + wleng;
   if indon then n2 := n2 + 3;
@@ -1322,8 +1375,13 @@ begin
   wt[nw] := word;
   wl[nw] := wleng;
   wrc[nw] := wrcl;
-  if nw > 1 then
-    natq := natq + 1 + 2 * wrc[nw - 1] + 2 * wrc[nw];
+  if nw > 1 then begin
+    (* число пробелов перед словом (в оригинале несколько пробелов
+       сохраняются) *)
+    qsp[nw] := spcnt;
+    natq := natq + qsp[nw]
+  end;
+  spcnt := 0;
   natq := natq + wleng;
   wleng := 0;
   wrcl := rcn;
@@ -1347,6 +1405,9 @@ begin
   end;
   if c = ' ' then begin
     addword;
+    (* разрядка добавляет пробелы после каждой литеры, в том числе
+       после пробела *)
+    spcnt := spcnt + 1 + rcn;
     exit
   end;
   if wleng = 0 then wrcl := rcn;
@@ -1453,10 +1514,9 @@ begin
         wrcl := 0;
         addword
       end else begin
-        for k2 := 1 to rep do begin
+        (* повтор текста без разделителя *)
+        for k2 := 1 to rep do
           for i := 1 to bn do addch(buf[i]);
-          if k2 < rep then addch(' ')
-        end;
         addword
       end;
       exit
@@ -1607,7 +1667,35 @@ begin
   incell := false;
   for i := 1 to 8 do begin
     tcnt[i] := 0;
-    prevnd[i] := false
+    prevnd[i] := false;
+    предолж[i] := false;
+    предорн[i] := false
+  end;
+  prevrows := 0
+end;
+
+(* вертикаль на стыке j в строке из n ячеек с флагами rownol/rownr:
+   на левом краю - левая линия первой ячейки, внутри - общая линия
+   соседних ячеек (её убирают *NR слева и *NL справа), на правом краю -
+   правая линия последней ячейки *)
+function вертcur(j, n: integer): boolean;
+begin
+  вертcur := false;
+  if (n >= 1) and (j >= 1) and (j <= n + 1) then begin
+    if j = 1 then вертcur := not rownol[1]
+    else if j = n + 1 then вертcur := not rownr[n]
+    else вертcur := (not rownr[j - 1]) and (not rownol[j])
+  end
+end;
+
+(* то же для предыдущей строки (флаги предолж/предорн) *)
+function вертпред(j, n: integer): boolean;
+begin
+  вертпред := false;
+  if (n >= 1) and (j >= 1) and (j <= n + 1) then begin
+    if j = 1 then вертпред := not предолж[1]
+    else if j = n + 1 then вертпред := not предорн[n]
+    else вертпред := (not предорн[j - 1]) and (not предолж[j])
   end
 end;
 
@@ -1624,7 +1712,18 @@ begin
   if tabline and (h > 0) then begin
     clrrow(r);
     for j := tslpos[1] to tslpos[tbn] do r[j] := '-';
-    for j := 1 to tbn do r[tslpos[j]] := 'I';
+    (* вертикаль на стыке: линейка над завершённой строкой - стык
+       рисуется, если он есть в этой строке или в предыдущей (в первой
+       линейке - только в завершённой); где вертикали нет, горизонт
+       прерывается *)
+    for j := 1 to tbn do begin
+      vis := вертcur(j, trows);
+      if prevrows > 0 then vis := vis or вертпред(j, prevrows);
+      if vis then r[tslpos[j]] := 'I'
+      else r[tslpos[j]] := ' '
+    end;
+    (* отрезки: *NU ячейки убирает её верхнюю линию (над строкой),
+       *ND предыдущей строки - нижнюю *)
     for k2 := 1 to trows do
       if rownu[k2] or prevnd[k2] then
         for j := tslpos[k2] + 1 to tslpos[k2 + 1] - 1 do
@@ -1646,7 +1745,13 @@ begin
       end;
     commitrow(r, true)
   end;
-  for k2 := 1 to trows do prevnd[k2] := rownd[k2];
+  (* флаги завершённой строки станут «верхними» для следующей линейки *)
+  for k2 := 1 to trows do begin
+    предолж[k2] := rownol[k2];
+    предорн[k2] := rownr[k2];
+    prevnd[k2] := rownd[k2]
+  end;
+  prevrows := trows;
   for k2 := 1 to 8 do tcnt[k2] := 0
 end;
 
@@ -1683,8 +1788,15 @@ begin
   cnol := false; cnr := false; cnu := false; cnd := false;
   svflda := flda;
   svfldw := fldw;
-  flda := tbda[k2];
-  fldw := tbdw[k2];
+  (* в таблице с линейками текст ячейки отступается от вертикали,
+     в таблице без линеек - начинается с начала колонки *)
+  if tabline then begin
+    flda := tbda[k2] + 1;
+    fldw := tbdw[k2] - 1
+  end else begin
+    flda := tbda[k2];
+    fldw := tbdw[k2]
+  end;
   indon := false;
   clrrow(cur);
   curpos := curflda
@@ -1701,12 +1813,20 @@ begin
   if tabline and (tbn >= 2) and (trows > 0) then begin
     clrrow(r);
     for j := tslpos[1] to tslpos[tbn] do r[j] := '-';
-    for j := 1 to tbn do r[tslpos[j]] := 'I';
+    (* нижняя линейка: вертикали последней строки (снизу строки нет) *)
+    for j := 1 to tbn do begin
+      if вертcur(j, trows) then r[tslpos[j]] := 'I'
+      else r[tslpos[j]] := ' '
+    end;
     for k2 := 1 to trows do
       if rownd[k2] then
         for j := tslpos[k2] + 1 to tslpos[k2 + 1] - 1 do
           r[j] := ' ';
     commitrow(r, true)
+  end else if (not tabline) and (trows > 0) then begin
+    (* таблица без линеек заканчивается пустой строкой *)
+    clrrow(r);
+    commitrow(r, false)
   end;
   tabon := false;
   incell := false;
@@ -1813,6 +1933,10 @@ begin
     exit
   end;
   mksp := mksp + 1;
+  (* вложенный макрос: продолжение внешней карты после раскрытия
+     теряется - как в оригинале *)
+  if mksp > 1 then mknest[mksp - 1] := true;
+  mknest[mksp] := false;
   mksav[mksp] := card;
   mksl[mksp] := cwv;
   mksq[mksp] := cpos;
@@ -1852,9 +1976,16 @@ begin
     card := mksav[mksp];
     cwv := mksl[mksp];
     cpos := mksq[mksp];
+    (* хвостовые пробелы тела макроса отбрасываются *)
+    spcnt := 0;
+    if mknest[mksp] then
+      (* после вложенного макроса продолжение карты теряется *)
+      cwv := cpos - 1;
     scancard
-  end else
+  end else begin
+    mknest[mksp] := false;
     mksp := mksp - 1
+  end
 end;
 
 (* ---------------- листинг программ ---------------- *)
@@ -1868,6 +1999,9 @@ var
 begin
   if (card[1] = '/') and (card[2] = '/') and (card[3] = '/') then begin
     listing := false;
+    (* конец листинга - пустая строка *)
+    clrrow(r);
+    commitrow(r, false);
     exit
   end;
   clrrow(r);
@@ -3413,6 +3547,11 @@ begin
   end else if c = 'M' then begin
     if (cpos <= cwv) and (card[cpos] = 'F') then begin
       cpos := cpos + 1;
+      (* текст перед *MF выводится своей строкой *)
+      if (nw > 0) or (curpos > curflda) then begin
+        flushq(false);
+        commit(true)
+      end;
       listing := true;
       cpos := cwv + 1
     end else if (cpos <= cwv) and (card[cpos] = 'C') then begin
@@ -3421,8 +3560,6 @@ begin
         cpos := cpos + 1;
         if not readnum(a) then klaida(20);
         if not readnum(b) then klaida(20);
-        flushq(false);
-        commit(true);
         setmcs(a, b)
       end else if (cpos <= cwv) and (card[cpos] = 'P') then begin
         cpos := cpos + 1;
@@ -3485,8 +3622,12 @@ begin
       cpos := cpos + 1;
       tabledef(true)
     end else begin
-      flushq(false);
-      commit(true);
+      (* новый абзац: перевод строки (пустая строка не выводится),
+         n-1 пустых строк, отступ 3 *)
+      if (nw > 0) or (curpos > curflda) then begin
+        flushq(false);
+        commit(true)
+      end;
       if nn1 > 1 then empties(nn1 - 1);
       indon := true
     end
@@ -3610,6 +3751,11 @@ begin
         flushq(false);
         fillon := true
       end else if c2 = 'L' then begin
+        (* новый интервал действует со следующей строки *)
+        if (nw > 0) or (curpos > curflda) then begin
+          flushq(false);
+          commit(true)
+        end;
         rln := nn1
       end else if c2 = 'C' then begin
         rcn := nn1
@@ -3637,6 +3783,10 @@ begin
     end
   end else if hasnum then begin
     (* число без команды - режим листинга *)
+    if (nw > 0) or (curpos > curflda) then begin
+      flushq(false);
+      commit(true)
+    end;
     listing := true;
     cpos := cwv + 1
   end else
@@ -3647,13 +3797,21 @@ end;
 procedure scancard;
 var
   c: char;
+  lpos: integer;      (* последняя значимая позиция карты *)
 begin
-  while cpos <= cwv do begin
+  (* хвостовые пробелы карты не значимы: в позиционном режиме они
+     сдвигали бы позицию набора *)
+  lpos := cwv;
+  while (lpos > 0) and (card[lpos] = ' ') do lpos := lpos - 1;
+  while cpos <= lpos do begin
     c := card[cpos];
     cpos := cpos + 1;
     if c = '*' then begin
       if (cpos <= cwv) and (card[cpos] <> ' ') then
         command
+      else
+        (* '*' перед пробелом или в конце карты опускается *)
+        spcnt := spcnt
     end else
       addch(c)
   end;
@@ -3663,7 +3821,9 @@ begin
       addword
     else if card[CW] = ' ' then
       addword
-  end
+  end;
+  (* хвостовые пробелы карты отбрасываются, граница карты - один пробел *)
+  spcnt := 1
 end;
 
 (* ---------------- главная программа ---------------- *)
@@ -3683,6 +3843,9 @@ begin
   pageno := 0;
   pnext := 0;
   numon := true;
+  hnum[0] := true;
+  hnum[1] := true;
+  mcsset := false;
   pgfirst := true;
   stpend := false;
   rgon := false;
@@ -3704,9 +3867,12 @@ begin
   tcol := 0;
   mkcnt := 0;
   mksp := 0;
+  for ii := 1 to TCDEEP do mknest[ii] := false;
   fmpending := -1;
   fir := false;
   nw := 0;
+  natq := 0;
+  spcnt := 0;
   wleng := 0;
   wrcl := 0;
   cwv := 72;
