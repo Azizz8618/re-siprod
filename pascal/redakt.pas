@@ -98,6 +98,7 @@ var
      напрямую, без сборки листа *)
   htxt: array [0..1] of array [1..66] of prow;
   hused: array [0..1] of boolean;
+  tabused: boolean;        (* на странице строки таблицы *)
   hfr: array [0..1] of boolean;   (* на странице рисуется рамка *)
   hnum: array [0..1] of boolean;  (* на странице печатается номер *)
   hpno: array [0..1] of integer;
@@ -116,6 +117,7 @@ var
   posmode: boolean;       (* позиционный набор после G/C/K/F/RF/D *)
   indon: boolean;         (* абзацный отступ *)
   rln, rcn: integer;      (* интервал и разрядка *)
+  stpshift: boolean;       (* штамп занял строку текста *)
   rlnnew: integer;        (* новый интервал строк: действует со
                               следующей строки *)
   rlnpend: boolean;
@@ -398,7 +400,7 @@ begin
     rowbase := 6; tmax := TRN;
     defl := 6; defw := 120
   end else begin
-    rowbase := 5; tmax := TRA;
+    rowbase := 8; tmax := TRA;
     defl := 12; defw := 67
   end;
   mcsa := 1; mcsw := defw;
@@ -1029,6 +1031,7 @@ begin
     (* текст строки: распаковка строки страницы прямо в печатную
        строку; левая (или единственная) страница - из htxt[0] *)
     s := i - rowbase;
+    if stpshift then s := s - 1;
     if (s >= 1) and (s <= hrows[0]) then begin
       (* левая/полная страница: копия строки распаковывается
          машинной развёрткой (константные пары - вне циклов) *)
@@ -1098,8 +1101,7 @@ begin
         пстрок[63] := '-';
         putnum(пстрок, 64, hpno[0], 3);
         пстрок[67] := ' '; пстрок[68] := '-'
-      end else if (fmt = 2) and (i = 4) and false then begin
-        (* в формате А номер страницы не печатается *)
+      end else if (fmt = 2) and (i = 4) and hnum[0] and hused[0] then begin
         пстрок[42] := '-';
         putnum(пстрок, 43, hpno[0], 3);
         пстрок[46] := ' '; пстрок[47] := '-'
@@ -1156,15 +1158,19 @@ var
   st: integer;
   i: integer;
 begin
+  stpshift := false;
   if (not stpon) or (stpl = 0) then exit;
   if stponly and (pageno <> 1) then exit;
   clrrow(r);
   st := defl + (defw - stpl) div 2;
   for i := 1 to stpl do r[st + i - 1] := stp[i];
-  for i := 1 to 128 do htxt[side][1][i] := r[i];
-  rowno := 1;
-  (* строка 1 листа занята штампом - учесть в высоте страницы *)
-  if hrows[side] = 0 then hrows[side] := 1
+  (* штамп занимает первую строку текста, текст сдвигается на строку *)
+  st := rowbase;
+  if st < 1 then st := 1;
+  for i := 1 to 128 do htxt[side][st][i] := r[i];
+  rowno := st;
+  if hrows[side] < st then hrows[side] := st;
+  stpshift := true
 end;
 
 (* начало новой страницы: номер, сторона, штамп *)
@@ -1194,6 +1200,7 @@ begin
       newsheet
     end
   end;
+  tabused := false;
   hpno[side] := pageno;
   (* рамка *RG в середине текста действует со следующей страницы *)
   hfr[side] := rgon;
@@ -1208,7 +1215,7 @@ end;
 (* конец текущей страницы, начало следующей *)
 procedure pageend;
 begin
-  if rowno > 0 then hused[side] := true;
+  if (rowno > 0) and (not tabused) then hused[side] := true;
   pagestart
 end;
 
@@ -1756,6 +1763,7 @@ begin
       if rownu[k2] or prevnd[k2] then
         for j := tslpos[k2] + 1 to tslpos[k2 + 1] - 1 do
           r[j] := ' ';
+    tabused := true;
     commitrow(r, true)
   end;
   for i := 1 to h do begin
@@ -3945,7 +3953,7 @@ begin
     end;
     flushq(false);
     commit(true);
-    if rowno > 0 then hused[side] := true;
+    if (rowno > 0) and (not tabused) then hused[side] := true;
     sheetprint(true);
     newsheet;
     goto 1
