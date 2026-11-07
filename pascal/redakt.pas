@@ -116,6 +116,9 @@ var
   posmode: boolean;       (* позиционный набор после G/C/K/F/RF/D *)
   indon: boolean;         (* абзацный отступ *)
   rln, rcn: integer;      (* интервал и разрядка *)
+  rlnnew: integer;        (* новый интервал строк: действует со
+                              следующей строки *)
+  rlnpend: boolean;
   fillon: boolean;        (* перенос по словам *)
 
   (* очередь слов строки *)
@@ -1270,6 +1273,11 @@ begin
   clrrow(cur);
   curpos := curflda;
   indon := false;
+  (* новый интервал строк вступает в силу со следующей строки *)
+  if rlnpend then begin
+    rln := rlnnew;
+    rlnpend := false
+  end;
   (* новое поле *MCS действует со следующей строки *)
   if mcsset then begin
     flda := mcflda;
@@ -3772,11 +3780,8 @@ begin
         fillon := true
       end else if c2 = 'L' then begin
         (* новый интервал действует со следующей строки *)
-        if (nw > 0) or (curpos > curflda) then begin
-          flushq(false);
-          commit(true)
-        end;
-        rln := nn1
+        rlnnew := nn1;
+        rlnpend := true
       end else if c2 = 'C' then begin
         rcn := nn1
       end else if c2 = 'G' then begin
@@ -3821,6 +3826,11 @@ var
 begin
   (* хвостовые пробелы карты не значимы: в позиционном режиме они
      сдвигали бы позицию набора *)
+  (* в режиме без переноса по словам граница карты - пробел в строке *)
+  if (not fillon) and (spcnt > 0) then begin
+    for jj := 1 to spcnt do addch(' ');
+    spcnt := 0
+  end;
   lpos := cwv;
   while (lpos > 0) and (card[lpos] = ' ') do lpos := lpos - 1;
   (* текст карты значим до 72-й позиции; остальное - только для *D *)
@@ -3872,6 +3882,8 @@ begin
   stpend := false;
   rgon := false;
   rln := 0;
+  rlnnew := 0;
+  rlnpend := false;
   rcn := 0;
   fillon := true;
   indon := false;
