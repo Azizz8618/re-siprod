@@ -1,21 +1,17 @@
 #!/usr/bin/env python3
-"""Обрезка зоны ПЕРСО тома: оставляем только модули задачи.
+"""Подготовка зоны ПЕРСО тома: обнулить библиотеку зоны.
 
-После мониторной записи (`pascal/запись-2348.sh`) в зоне 0o2150 тома 2348
-лежит вся библиотека задачи: копия библиотеки компилятора (из зоны 0o2570 -
-она грузится оттуда и дублировать её не нужно) + новые модули РЕДАКТ и
-DRАКОН.  Копия занимает ~95 зон; её обнуляем (`besmtool zero`), остаются
-каталог и два модуля задачи.
+Мониторная запись (`pascal/запись-2348.sh`) переносит в зону 0o2150 всю
+библиотеку задачи - вместе с копией библиотеки компилятора из зоны 0o2570.
+Копия не нужна: компилятор берётся оттуда же.
 
-Граница ищется по тексту зон: модули задачи (редактор, транслятор ДРАКОН)
-записаны последними, их исходный текст виден в зоне; дубликат компилятора
-видно раньше.  Код модуля может начинаться зоной раньше исходника, поэтому
-зона с началом кода остаётся.
+Порядок работы (см. `pascal/запись-2348.sh`):
 
-Нумерация: `besmtool view --start=N` задаёт индекс зоны в файле копии
-тома, а в тексте печатается номер зоны тома (восьмерично) - номера томов
-и индексы файла не совпадают (пустые зоны в выдаче не видны), поэтому
-соответствие ищется просмотром зон по одной.
+1. `tools/perso_trim.py` обнуляет библиотеку зоны 0o2150 (`besmtool zero`),
+   освобождая место под модули задачи;
+2. мониторная запись кладёт в зону только РЕДАКТ и ДРАКОН: для этого личная
+   библиотека задачи подменяется пустой (только что обнулённой) зоной
+   0o2150, а компилятор грузится из 0o2570 на время трансляции.
 
 Использование:
     tools/perso_trim.py [--volume=2348] [--zone=2150] [--dry]
@@ -25,31 +21,22 @@ from __future__ import annotations
 
 import argparse
 import os
-import re
 import subprocess
 import sys
 
-# маркеры в текстовой части зоны: кодировка монитора, часть букв -
-# кириллические «заменители», поэтому ищем по шаблону
-ED_RE = re.compile("LIS.САRD")          # символ редактора (исходник/символы)
-COMP_RE = re.compile("РАSСОМРL")        # компилятор Паскаля (только в дубликате)
-ADDR_RE = re.compile(r"^(\d+)\.\d+:")
+ZONE_BYTES = 8256            # зона тома в байтах
 
 
-def view(vol: str, index: int) -> str:
-    """Текст зоны с индексом index в файле копии тома."""
-    return subprocess.run(["besmtool", "view", vol, "--start=%d" % index,
-                           "--length=1", "--encoding=t"],
-                          capture_output=True, text=True).stdout
-
-
-def zone_no(text: str):
-    """Номер зоны тома (восьмерично) по выдаче."""
-    for line in text.split("\n"):
-        m = ADDR_RE.match(line)
-        if m:
-            return int(m.group(1), 8)
-    return None
+def zone_index(vol: str, index: int) -> int:
+    """Номер зоны тома (восьмерично) по индексу зоны в файле копии тома."""
+    out = subprocess.run(["besmtool", "view", vol, "--start=%d" % index,
+                          "--length=1", "--encoding=t"],
+                         capture_output=True, text=True).stdout
+    for line in out.split("\n"):
+        head = line.split(":", 1)[0]
+        if "." in head and head.split(".")[0].isdigit():
+            return int(head.split(".")[0], 8)
+    return -1
 
 
 def main() -> int:
@@ -64,7 +51,6 @@ def main() -> int:
     ap.add_argument("--dry", action="store_true")
     args = ap.parse_args()
 
-    # besmtool сам ищет том по номеру в BESM6_PATH (первая копия)
     path = os.environ.get("BESM6_PATH", "/usr/local/share/besm6")
     vol = args.volume
     if not any(d and os.path.isfile(os.path.join(d, args.volume))
@@ -73,49 +59,34 @@ def main() -> int:
         return 1
     z0 = int(args.zone, 8)
 
+    # индекс файла зоны 0o2150 и конец библиотеки (по свободным зонам)
     base = None
     for i in range(args.start, args.start + args.length):
-        if zone_no(view(vol, i)) == z0:
+        if zone_index(vol, i) == z0:
             base = i
             break
     if base is None:
         print("зона 0o%o не найдена" % z0, file=sys.stderr)
         return 1
-
-    # номера зон тома идут подряд: индекс файла = base + (номер - z0)
-    f_cmp = f_ed = None
-    for i in range(base + 1, base + args.length):
-        text = view(vol, i)
-        if f_cmp is None and COMP_RE.search(text):
-            f_cmp = i
-        if f_ed is None and ED_RE.search(text):
-            f_ed = i
+    n = 0
+    while zone_index(vol, base + n) >= 0:
+        n += 1
+        if n > args.length:
             break
-    if f_ed is None:
-        print("модуль редактора в зоне 0o%o не найден" % z0, file=sys.stderr)
-        return 1
-    if f_cmp is None:
-        print("дубликата компилятора нет - обрезка не требуется", file=sys.stderr)
-        return 0
-
-    f_dup = base + 1                      # индекс первой зоны дубликата
-    n = f_ed - 1 - f_dup                  # код модуля может начаться зоной раньше
-    print("зона 0o%o (индекс %d): дубликат компилятора - индексы %d..%d (%d зон), "
-          "модули задачи - с %d" % (z0, base, f_dup, f_dup + n - 1, n, f_ed - 1))
+    print("зона 0o%o: индекс %d, библиотека занимает %d зон (индексы %d..%d)"
+          % (z0, base, n, base, base + n - 1))
     if n <= 0:
-        print("дубликата нет", file=sys.stderr)
+        print("зона пуста", file=sys.stderr)
         return 1
     if args.dry:
         return 0
     subprocess.run(["besmtool", "zero", args.volume,
-                    "--start=%d" % f_dup, "--length=%d" % n], check=True)
-    if not ED_RE.search(view(vol, f_ed)):
-        print("ОШИБКА: после обрезки пропал модуль редактора", file=sys.stderr)
+                    "--start=%d" % base, "--length=%d" % n], check=True)
+    # контроль: зона пуста
+    if zone_index(vol, base) >= 0:
+        print("ОШИБКА: зона не обнулена", file=sys.stderr)
         return 1
-    if COMP_RE.search(view(vol, f_dup)):
-        print("ОШИБКА: дубликат компилятора не обнулён", file=sys.stderr)
-        return 1
-    print("   дубликат обнулён, модули задачи на месте")
+    print("   библиотека зоны 0o%o обнулена" % z0)
     return 0
 
 
