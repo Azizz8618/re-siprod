@@ -5,12 +5,12 @@
 #   секция same   - *DRK = разметка (все схемы: корневые + pascal/схемы)
 # usage: секции-регресса.sh red|drk6|same
 set -u
-REPO="/home/z/my-project/work/re-siprod"
+REPO="${REPO:-$(cd "$(dirname "$0")/.." && pwd)}"
 HERE="$REPO/pascal"
 CASES="$REPO/tests/siprod/cases"
 SCHEMES="$REPO/drakon/schemes"
 export DISPAK="${DISPAK:-/home/z/my-project/work/dispak/build/dispak/dispak}"
-export BESM6_PATH="${BESM6_PATH:-/home/z/my-project/work/vol:$HOME/.besm6:/tmp}"
+export BESM6_PATH="${BESM6_PATH:-$HOME/.besm6:/usr/local/share/besm6:/tmp}"
 ok=0; diff_=0
 sec="${1:-all}"
 
