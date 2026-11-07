@@ -392,7 +392,7 @@ begin
     rowbase := 4; tmax := TRN;
     defl := 6; defw := 56
   end else if f = 1 then begin
-    rowbase := 5; tmax := TRN;
+    rowbase := 6; tmax := TRN;
     defl := 6; defw := 120
   end else begin
     rowbase := 5; tmax := TRA;
@@ -1591,7 +1591,9 @@ begin
   if (rowno > 0) or (curpos > curflda) or dop then begin
     commit(true);
     hused[side] := true;
-    sheetprint(false)
+    sheetprint(false);
+    (* пустая правая половина листа всё равно считается страницей *)
+    if (not hused[1]) and (fmt = 0) then pageno := pageno + 1
   end else
     (* лист не печатался - номер страницы не тратим *)
     pnext := pageno;
@@ -1605,7 +1607,8 @@ begin
     (* смена формата в середине текста - с новой страницы:
        формат применит очередной pagestart *)
     fmpending := f;
-    freshpg := true
+    freshpg := true;
+    pagestart
   end
 end;
 
