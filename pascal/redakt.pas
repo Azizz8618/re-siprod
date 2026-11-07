@@ -82,7 +82,6 @@ var
 
   (* формат страницы *)
   fmt: integer;           (* 0 обычный, 1 широкий, 2 формат А *)
-  shrows: integer;        (* строк в листе *)
   rowbase: integer;       (* листовая строка первой текстовой минус 1 *)
   tmax: integer;          (* текстовых строк на странице *)
   defl, defw: integer;    (* поле по умолчанию: центровка и номера *)
@@ -90,10 +89,10 @@ var
   mcsa, mcsw: integer;    (* параметры *MCS *)
 
   (* лист и страницы *)
-  (* строки листа в хранении - упакованы (6 литер/слово):
-     1152 слова вместо 9216, чтобы поместились вместе со схемой
-     ДРАКОН; на печать выдаются через распакованную копию *)
-  sheet: array [1..72] of prow;
+  (* страницы листа: упакованные строки (6 литер/слово); левая
+     страница занимает позиции 1..64 строки, правая - 65..128
+     (широкий формат и формат А - всю строку 1..128); печатаются
+     напрямую, без сборки листа *)
   htxt: array [0..1] of array [1..66] of prow;
   hused: array [0..1] of boolean;
   hpno: array [0..1] of integer;
@@ -372,13 +371,13 @@ procedure setfmt(f: integer);
 begin
   fmt := f;
   if f = 0 then begin
-    shrows := 67; rowbase := 4; tmax := TRN;
+    rowbase := 4; tmax := TRN;
     defl := 6; defw := 56
   end else if f = 1 then begin
-    shrows := 68; rowbase := 5; tmax := TRN;
+    rowbase := 5; tmax := TRN;
     defl := 6; defw := 120
   end else begin
-    shrows := 72; rowbase := 5; tmax := TRA;
+    rowbase := 5; tmax := TRA;
     defl := 12; defw := 67
   end;
   mcsa := 1; mcsw := defw;
@@ -400,104 +399,28 @@ begin
   else curflda := flda
 end;
 
-(* ---------------- лист ---------------- *)
-
-(* очистка упакованной строки листа: присваивание целиком
-   (в двадцать раз дешевле цикла по литерам) *)
-procedure clrsh(i: integer);
-begin
-  sheet[i] := бланкp
-end;
-
-(* строка листа -> распакованная копия и обратно:
-   putnum и outline работают с неупакованными строками *)
-procedure sheetrow(i: integer; var r: rowty);
-var
-  j: integer;
-begin
-  for j := 1 to 128 do r[j] := sheet[i][j]
-end;
-
-procedure setsheetrow(i: integer; var r: rowty);
-var
-  j: integer;
-begin
-  for j := 1 to 128 do sheet[i][j] := r[j]
-end;
-
 (* ---------------- печать листа ---------------- *)
 
-(* печать собранного листа; final - окончание текста (*E) *)
+(* печать листа без сборки: массив sheet упразднён, строка листа
+   составляется прямо при печати - левая страница даёт позиции 1..64,
+   правая 65..128 (широкий формат и формат А занимают все 128 позиций
+   левой страницы); рамка, номера страниц и подвал рисуются в печатной
+   строке поверх текста, как раньше поверх собранного листа.  Строки
+   шапки и незанятые строки страниц чисты.  final - окончание текста
+   (*E) *)
 procedure sheetprint(final: boolean);
 var
-  rows, top, bot, i, s, np, k2, st2, lim: integer;
+  top, bot, i, s, np, k2, st2: integer;
   rw: rowty;
   sideon: array [0..1] of boolean;
 begin
-  (* при окончании текста лист печатается до последней занятой строки
-     (эталон red-fill); с рамкой и в широком формате лист печатается
-     целиком - эталоны red-frame/red-header/red-wide *)
   if fmt = 0 then begin
-    top := 2; rows := 67
+    top := 2; bot := 67
   end else if fmt = 1 then begin
-    top := 3; rows := 68
+    top := 3; bot := 68
   end else begin
-    top := 3; rows := 72
+    top := 3; bot := 72
   end;
-  (* чистые строки листа: верх листа и незанятый низ; занятые строки
-     обеих страниц переписываются копированием целиком *)
-  lim := rowbase + hrows[0];
-  if (fmt = 0) and (hrows[1] < hrows[0]) then lim := rowbase + hrows[1];
-  if lim > rows then lim := rows;
-  for i := 1 to rowbase do clrsh(i);
-  for i := lim + 1 to rows do clrsh(i);
-  (* строки страниц - только занятые *)
-  for i := 1 to tmax do
-    if fmt = 0 then begin
-      if i <= hrows[0] then
-        for k2 := 1 to 64 do sheet[rowbase + i][k2] := htxt[0][i][k2];
-      if i <= hrows[1] then
-        for k2 := 65 to 128 do sheet[rowbase + i][k2] := htxt[1][i][k2]
-    end else
-      if i <= hrows[0] then
-        for k2 := 1 to 128 do sheet[rowbase + i][k2] := htxt[0][i][k2];
-  (* рамка *)
-  bot := rows;
-  if rgon then begin
-    for i := top + 1 to bot - 1 do begin
-      if fmt = 2 then begin
-        sheet[i][1] := 'I'; sheet[i][84] := 'I'
-      end else if fmt = 1 then begin
-        sheet[i][2] := 'I'; sheet[i][128] := 'I'
-      end else begin
-        sheet[i][2] := 'I'; sheet[i][64] := 'I';
-        sheet[i][66] := 'I'; sheet[i][128] := 'I'
-      end
-    end;
-    if fmt = 2 then begin
-      sheet[top][1] := '.'; sheet[top][84] := '.';
-      sheet[bot][1] := '.'; sheet[bot][84] := '.';
-      for i := 2 to 83 do begin
-        sheet[top][i] := '-'; sheet[bot][i] := '-'
-      end
-    end else if fmt = 1 then begin
-      sheet[top][2] := '.'; sheet[top][128] := '.';
-      sheet[bot][2] := '.'; sheet[bot][128] := '.';
-      for i := 3 to 127 do begin
-        sheet[top][i] := '-'; sheet[bot][i] := '-'
-      end
-    end else begin
-      sheet[top][2] := '.'; sheet[top][64] := '.';
-      sheet[top][66] := '.'; sheet[top][128] := '.';
-      sheet[bot][2] := '.'; sheet[bot][64] := '.';
-      sheet[bot][66] := '.'; sheet[bot][128] := '.';
-      for i := 3 to 63 do sheet[top][i] := '-';
-      for i := 67 to 127 do sheet[top][i] := '-';
-      for i := 3 to 63 do sheet[bot][i] := '-';
-      for i := 67 to 127 do sheet[bot][i] := '-'
-    end
-  end;
-  (* строка номеров страниц *)
   sideon[0] := hused[0];
   sideon[1] := hused[1];
   np := hpno[1];
@@ -505,76 +428,94 @@ begin
     sideon[1] := true;
     np := hpno[0] + 1
   end;
-  if numon then begin
-    if fmt = 0 then begin
-      if sideon[0] then begin
-        sheet[3][31] := '-';
-        sheet[3][35] := ' ';
-        sheet[3][36] := '-';
-        sheetrow(3, rw);
-        putnum(rw, 32, hpno[0], 3);
-        setsheetrow(3, rw)
-      end;
-      if sideon[1] then begin
-        sheet[3][95] := '-';
-        sheet[3][99] := ' ';
-        sheet[3][100] := '-';
-        sheetrow(3, rw);
-        putnum(rw, 96, np, 3);
-        setsheetrow(3, rw)
-      end
-    end else if fmt = 1 then begin
-      if hused[0] or final then begin
-        sheet[4][63] := '-';
-        sheet[4][67] := ' ';
-        sheet[4][68] := '-';
-        sheetrow(4, rw);
-        putnum(rw, 64, hpno[0], 3);
-        setsheetrow(4, rw)
-      end
-    end else begin
-      if hused[0] or final then begin
-        sheet[4][42] := '-';
-        sheet[4][46] := ' ';
-        sheet[4][47] := '-';
-        sheetrow(4, rw);
-        putnum(rw, 43, hpno[0], 3);
-        setsheetrow(4, rw)
-      end
-    end
-  end;
-  (* подвал STG: строка внизу страницы, над нижним полем *)
-  if stgon and (stgl > 0) and ((not stgonly) or pgfirst) then begin
-    if fmt = 0 then begin
-      if sideon[0] then begin
-        st2 := (64 - stgl) div 2 + 1;
-        for i := 1 to stgl do sheet[bot - 2][st2 + i - 1] := stg[i]
-      end;
-      if sideon[1] then begin
-        st2 := 64 + (64 - stgl) div 2 + 1;
-        for i := 1 to stgl do sheet[bot - 2][st2 + i - 1] := stg[i]
-      end
-    end else begin
-      if fmt = 1 then
-        st2 := (128 - stgl) div 2 + 1
-      else
-        st2 := (84 - stgl) div 2 + 1;
-      for i := 1 to stgl do sheet[bot - 2][st2 + i - 1] := stg[i]
-    end
-  end;
   (* прогон страницы (в оригинале - строки прогона 1-2 АЦПУ в начале
      листа): экстракод 64, строка с прогоном перед строками листа *)
   прогон;
-  (* выдача листа *)
-  for i := 1 to rows do
-    if (i > 1) and ((fmt = 0) or (i > 2)) then begin
-      sheetrow(i, rw);
-      outline(rw)
+  for i := top to bot do begin
+    (* текст строки: распаковка строки страницы прямо в печатную
+       строку; левая (или единственная) страница - из htxt[0] *)
+    s := i - rowbase;
+    if (s >= 1) and (s <= hrows[0]) then
+      for k2 := 1 to 128 do rw[k2] := htxt[0][s][k2]
+    else
+      clrrow(rw);
+    if fmt = 0 then begin
+      (* правая страница: позиции 65..128 из htxt[1] *)
+      if (s >= 1) and (s <= hrows[1]) then
+        for k2 := 65 to 128 do rw[k2] := htxt[1][s][k2]
+      else
+        for k2 := 65 to 128 do rw[k2] := ' '
     end;
+    (* рамка: на граних листа - точки по углам и штрихи между ними,
+       на остальных строках - стойки; поверх текста, как и раньше *)
+    if rgon then begin
+      if (i = top) or (i = bot) then begin
+        if fmt = 2 then begin
+          rw[1] := '.'; rw[84] := '.';
+          for k2 := 2 to 83 do rw[k2] := '-'
+        end else if fmt = 1 then begin
+          rw[2] := '.'; rw[128] := '.';
+          for k2 := 3 to 127 do rw[k2] := '-'
+        end else begin
+          rw[2] := '.'; rw[64] := '.'; rw[66] := '.'; rw[128] := '.';
+          for k2 := 3 to 63 do rw[k2] := '-';
+          for k2 := 67 to 127 do rw[k2] := '-'
+        end
+      end else if fmt = 2 then begin
+        rw[1] := 'I'; rw[84] := 'I'
+      end else if fmt = 1 then begin
+        rw[2] := 'I'; rw[128] := 'I'
+      end else begin
+        rw[2] := 'I'; rw[64] := 'I'; rw[66] := 'I'; rw[128] := 'I'
+      end
+    end;
+    (* строка номеров страниц *)
+    if numon then begin
+      if fmt = 0 then begin
+        if (i = 3) and sideon[0] then begin
+          rw[31] := '-';
+          putnum(rw, 32, hpno[0], 3);
+          rw[35] := ' '; rw[36] := '-'
+        end;
+        if (i = 3) and sideon[1] then begin
+          rw[95] := '-';
+          putnum(rw, 96, np, 3);
+          rw[99] := ' '; rw[100] := '-'
+        end
+      end else if (fmt = 1) and (i = 4) and (hused[0] or final) then begin
+        rw[63] := '-';
+        putnum(rw, 64, hpno[0], 3);
+        rw[67] := ' '; rw[68] := '-'
+      end else if (fmt = 2) and (i = 4) and (hused[0] or final) then begin
+        rw[42] := '-';
+        putnum(rw, 43, hpno[0], 3);
+        rw[46] := ' '; rw[47] := '-'
+      end
+    end;
+    (* подвал STG: строка внизу страницы, над нижним полем *)
+    if stgon and (stgl > 0) and ((not stgonly) or pgfirst)
+       and (i = bot - 2) then begin
+      if fmt = 0 then begin
+        if sideon[0] then begin
+          st2 := (64 - stgl) div 2 + 1;
+          for k2 := 1 to stgl do rw[st2 + k2 - 1] := stg[k2]
+        end;
+        if sideon[1] then begin
+          st2 := 64 + (64 - stgl) div 2 + 1;
+          for k2 := 1 to stgl do rw[st2 + k2 - 1] := stg[k2]
+        end
+      end else begin
+        if fmt = 1 then
+          st2 := (128 - stgl) div 2 + 1
+        else
+          st2 := (84 - stgl) div 2 + 1;
+        for k2 := 1 to stgl do rw[st2 + k2 - 1] := stg[k2]
+      end
+    end;
+    outline(rw)
+  end;
   pgfirst := false
 end;
-
-(* очистка листа *)
 procedure newsheet;
 var
   i, s, k2: integer;
