@@ -14,8 +14,9 @@
 #               запись-2348.sh) и служебные тома dispak
 #   REPO        репозиторий re-siprod (по умолчанию - родитель pascal/)
 #
-# Схема прогона (как в прогнать-с-тома.sh): Монитор-80, PERSO-библиотека
-# Паскаля с тома (402150), редактор картой *call - без компиляции.
+# Схема прогона (как в прогнать-с-тома.sh): Монитор-80, библиотека
+# редактора с тома (402150) и run-time (402570,cont), редактор картой
+# *call - без компиляции.
 # Компиляция меряется отдельно (колода с *call *pascal без *execute).
 set -u
 HERE="$(cd "$(dirname "$0")" && pwd)"
@@ -44,6 +45,7 @@ runfromvol() { # <модуль> <файл-данных> <журнал>
         echo "*name"
         echo "*call yesmemory"
         echo "*perso:402150"
+        echo "*perso:402570,cont"
         echo "*call $mod"
         cat "$W/text.gost"
         echo "*end file"
@@ -142,6 +144,7 @@ sed 's/[ёЁ]/Е/g' "$CASES/red-fill.txt" > "$W/text.gost"
     echo "*name"
     echo "*call yesmemory"
     echo "*perso:402150"
+    echo "*perso:402570,cont"
     echo "*call redakt"
     cat "$W/text.gost"
     echo "*end file"
