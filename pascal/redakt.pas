@@ -125,6 +125,7 @@ var
   qsp: array [1..MRW] of integer;   (* пробелов перед словом *)
   nw: integer;
   natq: integer;          (* естественная ширина очереди слов *)
+  wbrk: boolean;          (* длинное слово уже записано строкой *)
   spcnt: integer;         (* накопленных пробелов перед словом *)
   word: pwty;             (* накопитель слова *)
   wleng: integer;
@@ -1258,6 +1259,11 @@ end;
 (* сдвиг текущей строки на лист *)
 procedure commit(withrl: boolean);
 begin
+  if wbrk then begin
+    (* строка с частью длинного слова уже записана *)
+    wbrk := false;
+    exit
+  end;
   commitrow(cur, withrl);
   clrrow(cur);
   curpos := curflda;
@@ -1297,6 +1303,7 @@ begin
     (* слово длиннее строки: разорвать, хвост остаётся в очереди *)
     for i := 1 to effw do cur[curflda + i - 1] := wt[1][i];
     commit(true);
+    wbrk := true;
     sh := effw;
     for i := sh + 1 to wl[1] do wt[1][i - sh] := wt[1][i];
     wl[1] := wl[1] - sh;
@@ -3803,6 +3810,8 @@ begin
      сдвигали бы позицию набора *)
   lpos := cwv;
   while (lpos > 0) and (card[lpos] = ' ') do lpos := lpos - 1;
+  (* текст карты значим до 72-й позиции; остальное - только для *D *)
+  if lpos > CW then lpos := CW;
   while cpos <= lpos do begin
     c := card[cpos];
     cpos := cpos + 1;
@@ -3873,6 +3882,7 @@ begin
   nw := 0;
   natq := 0;
   spcnt := 0;
+  wbrk := false;
   wleng := 0;
   wrcl := 0;
   cwv := 72;
