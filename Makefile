@@ -23,7 +23,8 @@
 # wiki (WIKI=...), and is skipped if it is absent.  The disassembly needs
 # disbesm6; recording a library into PERSO needs besmtool.
 
-WIKI ?= $(HOME)/git/besm6.github.io/wiki
+WIKI ?= $(firstword $(wildcard $(HOME)/git/besm6.github.io/wiki \
+                          $(HOME)/besm6.github.io/wiki))
 PYTHON ?= python3
 DISBESM6 ?= disbesm6
 VOL ?= 2348

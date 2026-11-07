@@ -7,7 +7,8 @@
 #   OUTDIR   keep the raw printouts there (default: a temporary directory)
 set -u
 D=$(cd "$(dirname "$0")" && pwd)
-W=${1:-$HOME/git/besm6.github.io/wiki}
+W=${1:-$(ls -d "$HOME"/git/besm6.github.io/wiki "$HOME"/besm6.github.io/wiki 2>/dev/null | head -1)}
+[ -n "$W" ] && [ -d "$W" ] || { echo "corpus: нет wiki-корпуса (~/git/besm6.github.io/wiki или ~/besm6.github.io/wiki)" >&2; exit 1; }
 out=${2:-}
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
