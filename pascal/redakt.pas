@@ -83,6 +83,7 @@ var
   (* формат страницы *)
   fmt: integer;           (* 0 обычный, 1 широкий, 2 формат А *)
   rowbase: integer;       (* листовая строка первой текстовой минус 1 *)
+  txtrow: integer;        (* строка листа, с которой начинается текст *)
   tmax: integer;          (* текстовых строк на странице *)
   defl, defw: integer;    (* поле по умолчанию: центровка и номера *)
   flda, fldw: integer;    (* текущее поле левой страницы *)
@@ -90,6 +91,8 @@ var
                               следующей строки *)
   mcsset: boolean;        (* поле изменено, ждёт следующей строки *)
   mcsa, mcsw: integer;    (* параметры *MCS *)
+  mcson: boolean;         (* поле задано *MCS - при смене формата
+                             остаётся прежним *)
 
   (* лист и страницы *)
   (* страницы листа: упакованные строки (6 литер/слово); левая
@@ -100,7 +103,9 @@ var
   hused: array [0..1] of boolean;
   tabused: boolean;        (* на странице строки таблицы *)
   hfr: array [0..1] of boolean;   (* на странице рисуется рамка *)
+  hfrf: boolean;           (* рамка на полноширинной странице *)
   hnum: array [0..1] of boolean;  (* на странице печатается номер *)
+  hnumf: boolean;          (* номер на полноширинной странице *)
   hpno: array [0..1] of integer;
   hrows: array [0..1] of integer;   (* занятых текстовых строк *)
   пстрок: rowty;          (* печатная строка листа *)
@@ -117,7 +122,8 @@ var
   posmode: boolean;       (* позиционный набор после G/C/K/F/RF/D *)
   indon: boolean;         (* абзацный отступ *)
   rln, rcn: integer;      (* интервал и разрядка *)
-  stpshift: boolean;       (* штамп занял строку текста *)
+  stpok: array [0..1] of boolean;  (* штамп печатается на странице *)
+  stpokf: boolean;         (* штамп на полноширинной странице *)
   rlnnew: integer;        (* новый интервал строк: действует со
                               следующей строки *)
   rlnpend: boolean;
@@ -140,12 +146,13 @@ var
   listing: boolean;       (* *MF *)
   endtxt: boolean;        (* *E *)
   stpon, stgon: boolean;
-  stpend: boolean;        (* штамп задан на свежей странице - поставить *)
   pgfirst: boolean;       (* ещё не напечатан первый лист (для *1STP/*1STG) *)
   freshpg: boolean;       (* страница начата, но текста на ней нет *)
   fmpending: integer;     (* сменa формата, ждущая следующей страницы *)
+  fmtkeep: boolean;       (* при смене формата строка текста не меняется *)
   fir: boolean;           (* первая карта блока *RED - разбор FIRCAR *)
   stponly, stgonly: boolean;
+  stsp: boolean;           (* команда ST оставила лишний пробел *)
   stp, stg: carty;
   stpl, stgl: integer;
 
@@ -391,20 +398,38 @@ end;
 
 (* установить параметры формата; f: 0 обычный, 1 широкий, 2 А *)
 procedure setfmt(f: integer);
+var
+  t: integer;
 begin
   fmt := f;
   if f = 0 then begin
-    rowbase := 4; tmax := TRN;
+    t := 2; tmax := TRN;
     defl := 6; defw := 56
   end else if f = 1 then begin
-    rowbase := 6; tmax := TRN;
+    t := 3; tmax := TRN;
     defl := 6; defw := 120
   end else begin
-    rowbase := 8; tmax := TRA;
+    t := 3; tmax := TRA;
     defl := 12; defw := 67
   end;
-  mcsa := 1; mcsw := defw;
-  flda := defl; fldw := defw
+  if not fmtkeep then begin
+    if f = 0 then txtrow := 4
+    else if f = 1 then txtrow := 5
+    else txtrow := 7
+  end;
+  fmtkeep := false;
+  rowbase := t + txtrow - 2;
+  if not mcson then begin
+    mcsa := 1; mcsw := defw;
+    flda := defl; fldw := defw
+  end
+end;
+
+(* поле текущей страницы: правая сдвинута на 64 позиции *)
+function curflda: integer;
+begin
+  if fmt = 0 then curflda := flda + 64 * side
+  else curflda := flda
 end;
 
 (* применить *MCS a w; ошибка 30 - поле или ширина за страницей *)
@@ -413,18 +438,18 @@ begin
   if (w <= 0) or (a <= 0) then klaida(30);
   if defl + a - 1 + w - 1 > defl + defw - 1 then klaida(30);
   mcsa := a; mcsw := w;
+  mcson := true;
   (* новое поле действует со следующей строки: строка, на которой
      команда встретилась, набирается по старому полю *)
   mcflda := defl + a - 1; mcfldw := w;
-  mcsset := true
+  mcsset := true;
+  (* если строка ещё пуста, новое поле действует сразу *)
+  if (curpos = curflda) and (nw = 0) then begin
+    flda := mcflda;
+    fldw := mcfldw;
+    mcsset := false
+  end
 end;
-(* поле текущей страницы: правая сдвинута на 64 позиции *)
-function curflda: integer;
-begin
-  if fmt = 0 then curflda := flda + 64 * side
-  else curflda := flda
-end;
-
 (* развёртка слов 0..5 копстр в пстрок (машинные
    вставки: около 4.4 команды на литеру против 10-12
    у компилятора; REF и М-регистры - только над
@@ -1005,16 +1030,22 @@ end;
    (*E) *)
 procedure sheetprint(final: boolean);
 var
-  top, bot, i, s, np, k2, st2: integer;
+  top, bot, i, s, np, k2, st2, stprow, flde, strow: integer;
   sideon: array [0..1] of boolean;
+  tleft, tright: boolean;
 begin
   if fmt = 0 then begin
-    top := 2; bot := 67
+    top := 2; bot := 67; stprow := 4
   end else if fmt = 1 then begin
-    top := 3; bot := 69
+    top := 3; bot := 68; stprow := 5
   end else begin
-    top := 3; bot := 72
+    top := 3; bot := 72; stprow := 6
   end;
+  (* в формате А на последней странице штамп на две строки ниже *)
+  if (fmt = 2) and final then stprow := 8;
+  (* строка подвала: в формате А - на две строки выше нижнего края *)
+  strow := bot - 1;
+  if fmt = 2 then strow := bot - 2;
   sideon[0] := hused[0];
   sideon[1] := hused[1];
   np := hpno[1];
@@ -1031,24 +1062,32 @@ begin
     (* текст строки: распаковка строки страницы прямо в печатную
        строку; левая (или единственная) страница - из htxt[0] *)
     s := i - rowbase;
-    if stpshift then s := s - 1;
+    (* конец поля страницы: если поле накрывает край страницы,
+       рамка на этом краю не рисуется (в оригинале текст затирает
+       стойку рамки) *)
+    flde := flda + fldw - 1;
     if (s >= 1) and (s <= hrows[0]) then begin
       (* левая/полная страница: копия строки распаковывается
          машинной развёрткой (константные пары - вне циклов) *)
       копстр := htxt[0][s];
-      развпак1; развпак2; развпак3; развпак4
-    end else
+      развпак1; развпак2; развпак3; развпак4;
+      tleft := true
+    end else begin
       clrrow(пстрок);
+      tleft := false
+    end;
+    tright := false;
     if fmt = 0 then begin
       (* правая страница: позиции 65..128 из htxt[1] *)
-      if (s >= 1) and (s <= hrows[1]) then
-        for k2 := 65 to 128 do пстрок[k2] := htxt[1][s][k2]
-      else
+      if (s >= 1) and (s <= hrows[1]) then begin
+        for k2 := 65 to 128 do пстрок[k2] := htxt[1][s][k2];
+        tright := true
+      end else
         for k2 := 65 to 128 do пстрок[k2] := ' '
     end;
     (* рамка: на граних листа - точки по углам и штрихи между ними,
        на остальных строках - стойки; поверх текста, как и раньше *)
-    if rgon then begin
+    if (fmt = 0) or hfrf then begin
       if (i = top) or (i = bot) then begin
         if fmt = 2 then begin
           пстрок[1] := '.'; пстрок[84] := '.';
@@ -1070,21 +1109,29 @@ begin
           end
         end
       end else if fmt = 2 then begin
-        пстрок[1] := 'I'; пстрок[84] := 'I'
+        пстрок[1] := 'I';
+        if not (tleft and (flde >= 84)) then
+          пстрок[84] := 'I'
       end else if fmt = 1 then begin
-        пстрок[2] := 'I'; пстрок[128] := 'I'
+        пстрок[2] := 'I';
+        if not (tleft and (flde >= 128)) then
+          пстрок[128] := 'I'
       end else begin
         if hfr[0] then begin
-          пстрок[2] := 'I'; пстрок[64] := 'I'
+          пстрок[2] := 'I';
+          if not (tleft and (flde >= 64)) then
+            пстрок[64] := 'I'
         end;
         if hfr[1] then begin
-          пстрок[66] := 'I'; пстрок[128] := 'I'
+          пстрок[66] := 'I';
+          if not (tright and (flde >= 64)) then
+            пстрок[128] := 'I'
         end
       end
     end;
     (* строка номеров страниц: номер печатается, если он не выключен
        был при начале страницы (номер задаётся *nN, снимается *NN) *)
-    if hnum[0] or hnum[1] then begin
+    if hnum[0] or hnum[1] or hnumf then begin
       if fmt = 0 then begin
         if (i = 3) and sideon[0] and hnum[0] then begin
           пстрок[31] := '-';
@@ -1096,34 +1143,42 @@ begin
           putnum(пстрок, 96, np, 3);
           пстрок[99] := ' '; пстрок[100] := '-'
         end
-      end else if (fmt = 1) and (i = 4) and hnum[0] and
+      end else if (fmt = 1) and (i = 4) and hnumf and
               (hused[0] or final) then begin
         пстрок[63] := '-';
         putnum(пстрок, 64, hpno[0], 3);
         пстрок[67] := ' '; пстрок[68] := '-'
-      end else if (fmt = 2) and (i = 4) and hnum[0] and hused[0] then begin
+      end else if (fmt = 2) and (i = 4) and hnumf and hused[0] then begin
         пстрок[42] := '-';
         putnum(пстрок, 43, hpno[0], 3);
         пстрок[46] := ' '; пстрок[47] := '-'
       end
     end;
+    (* штамп STP: строка под номером страницы, по центру поля *)
+    if (i = stprow) and stpon and (stpl > 0) then begin
+      st2 := defl + (defw - stpl) div 2;
+      if fmt = 0 then begin
+        if stpok[0] and ((not stponly) or pgfirst) then
+          for k2 := 1 to stpl do пстрок[st2 + k2 - 1] := stp[k2];
+        if stpok[1] and (not stponly) then
+          for k2 := 1 to stpl do пстрок[64 + st2 + k2 - 1] := stp[k2]
+      end else if stpokf and ((not stponly) or pgfirst) then
+        for k2 := 1 to stpl do пстрок[st2 + k2 - 1] := stp[k2]
+    end;
     (* подвал STG: строка внизу страницы, над нижним полем *)
     if stgon and (stgl > 0) and ((not stgonly) or pgfirst)
-       and (i = bot - 2) then begin
+       and (i = strow) then begin
       if fmt = 0 then begin
         if sideon[0] then begin
-          st2 := (64 - stgl) div 2 + 1;
+          st2 := defl + (defw - stgl) div 2;
           for k2 := 1 to stgl do пстрок[st2 + k2 - 1] := stg[k2]
         end;
         if sideon[1] then begin
-          st2 := 64 + (64 - stgl) div 2 + 1;
+          st2 := 64 + defl + (defw - stgl) div 2;
           for k2 := 1 to stgl do пстрок[st2 + k2 - 1] := stg[k2]
         end
       end else begin
-        if fmt = 1 then
-          st2 := (128 - stgl) div 2 + 1
-        else
-          st2 := (84 - stgl) div 2 + 1;
+        st2 := defl + (defw - stgl) div 2;
         for k2 := 1 to stgl do пстрок[st2 + k2 - 1] := stg[k2]
       end
     end;
@@ -1151,31 +1206,15 @@ begin
   curpos := 1
 end;
 
-(* штамп STP в первую текстовую строку страницы *)
-procedure putstp;
-var
-  r: rowty;
-  st: integer;
-  i: integer;
-begin
-  stpshift := false;
-  if (not stpon) or (stpl = 0) then exit;
-  if stponly and (pageno <> 1) then exit;
-  clrrow(r);
-  st := defl + (defw - stpl) div 2;
-  for i := 1 to stpl do r[st + i - 1] := stp[i];
-  (* штамп занимает первую строку текста, текст сдвигается на строку *)
-  st := rowbase;
-  if st < 1 then st := 1;
-  for i := 1 to 128 do htxt[side][st][i] := r[i];
-  rowno := st;
-  if hrows[side] < st then hrows[side] := st;
-  stpshift := true
-end;
-
 (* начало новой страницы: номер, сторона, штамп *)
 procedure pagestart;
 begin
+  (* отложенная смена формата: текущий лист печатается до смены *)
+  if (fmpending >= 0) and (fmpending <> fmt) and
+     (hused[0] or hused[1]) then begin
+    sheetprint(false);
+    newsheet
+  end;
   (* отложенная смена формата применяется к новой странице *)
   if fmpending >= 0 then begin
     setfmt(fmpending);
@@ -1184,9 +1223,9 @@ begin
   if pnext <> 0 then pageno := pnext
   else pageno := pageno + 1;
   pnext := 0;
-  if fmt = 1 then begin
-    (* широкий формат: лист - одна страница во всю ширину,
-       очередная страница печатает предыдущий лист целиком *)
+  if (fmt = 1) or (fmt = 2) then begin
+    (* широкий формат и формат А: лист - одна страница во всю
+       ширину, очередная страница печатает предыдущий лист целиком *)
     if hused[0] then begin
       sheetprint(false);
       newsheet
@@ -1203,13 +1242,23 @@ begin
   tabused := false;
   hpno[side] := pageno;
   (* рамка *RG в середине текста действует со следующей страницы *)
-  hfr[side] := rgon;
   (* номер страницы печатается, если он не был выключен (*NN) к
      началу страницы *)
-  hnum[side] := numon;
+  if fmt = 0 then begin
+    hfr[side] := rgon;
+    hnum[side] := numon
+  end else begin
+    hfrf := rgon;
+    hnumf := numon
+  end;
   rowno := 0;
   freshpg := true;
-  putstp
+  curpos := curflda;
+  (* штамп печатается на странице, если он задан *)
+  if fmt = 0 then
+    stpok[side] := stpon and (stpl > 0)
+  else
+    stpokf := stpon and (stpl > 0)
 end;
 
 (* конец текущей страницы, начало следующей *)
@@ -3626,10 +3675,15 @@ begin
         if cpos > cwv then klaida(10);
         c2 := card[cpos];
         cpos := cpos + 1;
-        if c2 = 'A' then
-          newfmt(2, hasnum and (nn1 = 1))
-        else if c2 = 'O' then
-          newfmt(0, hasnum and (nn1 = 1))
+        if c2 = 'A' then begin
+          newfmt(2, hasnum and (nn1 = 1));
+          stsp := true
+        end else if c2 = 'O' then begin
+          (* обычный формат - со следующей страницы; текущая страница
+             не прерывается *)
+          fmpending := 0;
+          stsp := true
+        end
         else if c2 = 'P' then begin
           stpon := true;
           stponly := (nn1 = 1);
@@ -3638,9 +3692,13 @@ begin
             if card[i] <> ' ' then stpl := i - cpos + 1;
           for i := 1 to stpl do stp[i] := card[cpos + i - 1];
           cpos := cwv + 1;
-          (* страница ещё пуста - штамп ставится сразу, иначе он
-             появился бы только со следующей *)
-          stpend := true
+          (* штамп печатается и на текущей странице *)
+          if stpl > 0 then begin
+            if fmt = 0 then
+              stpok[side] := true
+            else
+              stpokf := true
+          end
         end else if c2 = 'G' then begin
           stgon := true;
           stgonly := (nn1 = 1);
@@ -3651,6 +3709,7 @@ begin
           cpos := cwv + 1
         end else if c2 = 'N' then begin
           (* сдвиг штампа - принимается без действия *)
+          stsp := true
         end else
           klaida(10)
       end
@@ -3736,6 +3795,13 @@ begin
         end;
         if c2 = 'N' then begin
           numon := false;
+          (* на пустой странице номер снимается сразу *)
+          if (rowno = 0) and (nw = 0) and (curpos = curflda) then begin
+            if fmt = 0 then
+              hnum[side] := false
+            else
+              hnumf := false
+          end;
           cpos := cpos + 1
         end else if (c2 = 'L') or (c2 = 'R') or (c2 = 'U') or (c2 =
            'D') then begin
@@ -3771,6 +3837,8 @@ begin
         fillon := false
       end else if c2 = 'R' then begin
         if (cpos <= cwv) and (card[cpos] = 'U') then cpos := cpos + 1;
+        (* возврат из широкого формата: строка текста остаётся *)
+        fmtkeep := true;
         newfmt(0, hasnum and (nn1 = 1))
       end else
         klaida(10)
@@ -3793,9 +3861,24 @@ begin
       end else if c2 = 'C' then begin
         rcn := nn1
       end else if c2 = 'G' then begin
-        rgon := true
+        rgon := true;
+        (* рамка на текущей странице, если страница ещё пуста *)
+        if (rowno = 0) and (nw = 0) and (curpos = curflda) then begin
+          if fmt = 0 then
+            hfr[side] := true
+          else
+            hfrf := true
+        end
       end else if c2 = 'U' then begin
-        newfmt(1, hasnum and (nn1 = 1))
+        (* на первой карте блока широкий формат с числовым префиксом
+           начинается с нового листа: текущий лист дописывается *)
+        if fir and hasnum then begin
+          (* на первой карте широкий формат: номер страницы и поле
+             как в широком формате, строка текста - прежняя *)
+          fmtkeep := true;
+          newfmt(1, true)
+        end else
+          newfmt(1, hasnum and (nn1 = 1))
       end else if c2 = 'F' then begin
         if cpos <= cwv then begin
           c2 := card[cpos];
@@ -3862,8 +3945,13 @@ begin
     else if card[CW] = ' ' then
       addword
   end;
-  (* хвостовые пробелы карты отбрасываются, граница карты - один пробел *)
-  spcnt := 1
+  (* хвостовые пробелы карты отбрасываются, граница карты - один
+     пробел; после команды ST - два *)
+  spcnt := 1;
+  if stsp then begin
+    spcnt := 2;
+    stsp := false
+  end
 end;
 
 (* ---------------- главная программа ---------------- *)
@@ -3885,9 +3973,15 @@ begin
   numon := true;
   hnum[0] := true;
   hnum[1] := true;
+  hnumf := true;
+  hfrf := false;
+  stpok[0] := false;
+  stpok[1] := false;
+  stpokf := false;
+  mcson := false;
+  fmtkeep := false;
   mcsset := false;
   pgfirst := true;
-  stpend := false;
   rgon := false;
   rln := 0;
   rlnnew := 0;
@@ -3899,6 +3993,7 @@ begin
   endtxt := false;
   stpon := false;
   stgon := false;
+  stsp := false;
   stponly := false;
   stgonly := false;
   stpl := 0;
@@ -3942,11 +4037,6 @@ begin
         scancard;
         while mksp > 0 do
           macstep;
-        if stpend then begin
-          stpend := false;
-          if rowno = 0 then
-            putstp
-        end;
         (* FIRCAR действует только на первую карту блока *)
         fir := false
       end
