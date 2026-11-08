@@ -3717,6 +3717,11 @@ begin
         end else if c2 = 'N' then begin
           (* сдвиг штампа - принимается без действия *)
           stsp := true
+        end else if c2 = ' ' then begin
+          (* ST с числами после пробела: колонки без линеек парами
+             начало-конец (SIPROD.md, 4.9); tabledef пропустит пробел *)
+          cpos := cpos - 1;
+          tabledef(false)
         end else
           klaida(10)
       end
