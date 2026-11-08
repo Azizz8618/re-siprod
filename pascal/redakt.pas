@@ -1926,6 +1926,65 @@ begin
   tcol := 0
 end;
 
+(* маркер ячейки в середине карты: пробел, цифры, скобка; значение
+   не больше числа колонок таблицы (иначе это текст ячейки).
+   Возврат - позиция пробела перед маркером или 0 *)
+function cellmark: integer;
+var
+  p, q, v: integer;
+begin
+  cellmark := 0;
+  p := cpos;
+  while p < cwv do begin
+    if (card[p] = ' ') and (card[p + 1] >= '1') and
+       (card[p + 1] <= '9') then begin
+      v := ord(card[p + 1]) - 48;
+      q := p + 2;
+      if (q <= cwv) and (card[q] >= '0') and
+         (card[q] <= '9') then begin
+        v := v * 10 + ord(card[q]) - 48;
+        q := q + 1
+      end;
+      if (q <= cwv) and (card[q] = ')') and (v <= tbn2) then begin
+        cellmark := p;
+        exit
+      end
+    end;
+    p := p + 1
+  end
+end;
+
+(* хвост карты в режиме таблицы: текст до серединного маркера
+   " k)" идет в текущую ячейку, затем смена колонки (титульный
+   лист записки: " 1)РУКОВОДИТЕЛЬ РАБОТЫ 2)ИСПОЛНИТЕЛЬ"); макро в
+   ячейке раскрываются после смены колонки - таких ячеек в
+   документе нет *)
+procedure tailcells;
+var
+  mp, q, v, sv: integer;
+begin
+  mp := cellmark;
+  while mp <> 0 do begin
+    (* текст до маркера - текущая ячейка *)
+    sv := cwv;
+    cwv := mp - 1;
+    scancard;
+    cwv := sv;
+    (* маркер: цифры и скобка с позиции mp + 1 *)
+    q := mp + 1;
+    v := 0;
+    while (q <= cwv) and (card[q] >= '0') and
+          (card[q] <= '9') do begin
+      v := v * 10 + (ord(card[q]) - 48);
+      q := q + 1
+    end;
+    cpos := q + 1;
+    cellstart(v);
+    mp := cellmark
+  end;
+  scancard
+end;
+
 (* карта в режиме таблицы: ячейка k), продолжение или доллар *)
 procedure tablecard;
 var
@@ -1957,11 +2016,11 @@ begin
   if iscell then begin
     cpos := pp + 1;
     cellstart(k2);
-    scancard
+    tailcells
   end else if incell then begin
     (* продолжение ячейки *)
     cpos := 1;
-    scancard
+    tailcells
   end else
     klaida(66)
 end;
