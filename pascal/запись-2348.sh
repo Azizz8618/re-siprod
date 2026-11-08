@@ -1,28 +1,39 @@
 #!/bin/sh
-# Запись РЕДАКТОРА *RED СИПРОД-П (РЕДÀКТ; режим *DRK встроен) и транслятора
-# схем ДРАКОН (DRАКОН) на том 2348, зона 2150(8) - ТОЛЬКО модули редактора,
-# без библиотеки компилятора Паскаля.
+# Двухфазная запись редактора СИПРОД-П на том 2348, зона 2150(8):
+# ТОЛЬКО РЕДÀКТ и DRАКОН (режим *DRK встроен в редактор), без библиотеки
+# компилятора.  Трансляция - именно компилятором PASCOMPL 15.1 из зоны
+# 2570(8); библиотека 2570 в зону 2150 НЕ попадает.
 #
-# ПОЧЕМУ ПРЕЖНИЙ СПОСОБ ПИСАЛ ВСЮ БИБЛИОТЕКУ 2570 (исправлено 08.11.2026):
-#   колода загружала PERSO-библиотеку компилятора (*perso:402570) во
-#   временный каталог задачи; карта *to perso пишет ВЕСЬ временный каталог,
-#   поэтому вместе с РЕДÀКТ/DRАКОН в зону 2150 попадали PASCOMPL и все
-#   модули run-time (0o126 зон вместо 0o24).  Загрузка 2570 для компиляции
-#   и не нужна: карта *call *pascal без *stand запускает штатный системный
-#   компилятор 15.0 из постоянной библиотеки (без *stand монитор игнорирует
-#   PASCOMPL из временного каталога).  Собранный этим компилятором редактор
-#   совпадает с оригинальным СИПРОДом по всем 16 эталонам red-*
-#   (подробности и опыты - в ЗАПИСЬ-2150.md).
+# ПОЧЕМУ СХЕМА ДВУХФАЗНАЯ.  Карта *perso читает библиотеку ЦЕЛИКОМ во
+# временный каталог задачи (LIBDRUM копирует и каталог, и тела модулей),
+# а *to perso пишет весь временный каталог: одна колода «*perso:402570 +
+# трансляции + *to perso:402150» таскала в зону 2150 все ~100 зон
+# библиотеки 2570 (компилятор и весь run-time).  Вычистить временный
+# каталог штатно нечем:
+#   - приказ Y программы pashelp убирает только имена «P/», «PAS» и TIME;
+#     модули 2570 с прочими именами (PRO203, ZAP203, ARFALIB, OBPROG...)
+#     остаются;
+#   - карта *EXCLUDE - не средство правки каталога: она отвязывает модули
+#     от памяти задачи, каталог на диске не трогает, а в системе без
+#     работника EXCLUDE (монитор Дубны из dispak) ещё и завершает задание
+#     (активный тест LIBDELET 08.11.2026 - ЗАПИСЬ-2150.md, п. 2.3).
 #
-# Метод:
-#   задача Монитора-80 монтирует том с правом записи (лен 40(2348-wr)^),
-#   штатно транслирует redakt.pas и drakon.pas (*call *pascal) и записывает
-#   временный каталог задачи на том (*to perso:402150^).  Временный каталог
-#   содержит только что скомпилированные модули, поэтому монитором печатается
-#   «ДЛИНА LIBRARY 024 ЗОН» (октально, включая 2 зонных каталога).
+# СХЕМА (каждое задание - отдельный прогон монитора):
+#   фаза 1а: *perso:402570, *stand, *call *pascal <redakt.pas>,
+#            *call libsub + карта 402570 (вычитание библиотеки 2570 из
+#            временного каталога), *to perso:40<ЧЕРНОВИК_А>
+#            -> черновик А: только РЕДÀКТ (наблюдалось 0o16 зон);
+#   фаза 1б: то же для drakon.pas -> черновик Б: только DRАКОН (0o11);
+#   фаза 2:  *perso:40<ЧЕРНОВИК_А> + *perso:40<ЧЕРНОВИК_Б>,cont (слияние
+#            в временном каталоге) + *to perso:402150 - каталог и
+#            размещение модулей строит сам монитор (0o24 зон).
+#   По опытам с LIBSUB (ЗАПИСЬ-2150.md, п. 2.1) в каталоге выживает
+#   последний скомпилированный модуль, поэтому программы собираются по
+#   одной, а слияние вынесено в отдельное задание.  Черновые зоны после
+#   записи стираются сценарием (том возвращается к виду до работы).
 #
-# После записи редактор запускается с тома вместе с библиотекой Паскаля
-# (run-time), как в прогнать-с-тома.sh:
+# Пуск редактора - с тома, run-time из библиотеки Паскаля (том монтируется
+# только на чтение):
 #
 #   лен 40(2348)^
 #   *perso:402150
@@ -30,28 +41,38 @@
 #   *call redakt
 #   <текст режима *RED>
 #
-# Этапы:
-#   1) резерв тома рядом с ним (<том>.bak-pascal-<дата>, идемпотентно);
-#   2) предпроверка зоны 0o2150: свободна либо занята нашей же библиотекой
-#      (перезапись); чужие данные - СТОП;
-#   3) предпроверка источника run-time: в зоне 0o2570 должен быть PASCOMPL
-#      (нужен для smoke-прогона; на саму запись не влияет);
-#   4) колода: исходники к ГОСТ-10859 (верхний регистр, Ё->Е), трансляция
-#      обоих источников штатным компилятором, *to perso:402150; контроль
-#      «ДЛИНА LIBRARY» - библиотека обязана уложиться до зоны 0o2300;
-#   5) контроль: каталог зоны 0o2150 содержит RЕДÀКТ и DRАКОН и НЕ содержит
-#      PASCOMPL (вся соль исправления); хвост прежней библиотеки за новой
-#      длиной стирается свободным паттерном; занятые зоны вне области
-#      записи не изменились (против резерва);
-#   6) smoke: редактор запускается С ТОМА (*perso:402150 + *perso:402570,cont
-#      + *call redakt) на demo/demo1-текст.txt; выдача побайтно равна
-#      redakt.out;
-#   7) md5 до/после (штамп монитора в шапках зон меняется между
-#      сессиями - повторный прогон безопасен и обновляет штампы).
+# Переключатели (переменные окружения):
+#   TOLKO_REDAKT=1              - собрать и записать только редактор,
+#                                 без drakon.pas (сценариям, берущим
+#                                 ДРАКОН с тома, тогда нужен повтор
+#                                 записи без этого флага);
+#   CHERNOVIK_A=5000            - зона черновика А (восьмеричная);
+#   CHERNOVIK_B=5100            - зона черновика Б (восьмеричная).
 #
-# Окружение: DISPAK, BESMTOOL, BESM6_PATH (как в прогнать.sh).  Том 2348
-# берётся из BESM6_PATH; запись ведётся в ПЕРВУЮ найденную копию - держите
-# рабочую копию впереди боевого тома (см. PERSO.md проекта pascal-re).
+# Этапы:
+#   1) резерв тома (<том>.bak-pascal-<ГГГГММДД>, идемпотентно);
+#   2) предпроверки: в 0o2570 есть РАSСОМРЛ (иначе трансляции не будет);
+#      зона 0o2150 свободна либо занята нашей библиотекой (перезапись);
+#      черновые зоны свободны;
+#   3) три задания: контроль баннера компилятора («15.0 (15.02.82)»
+#      запрещён - трансляция обязана идти PASCOMPL 15.1 из 2570),
+#      «ДЛИНА LIBRARY» каждого задания не выше 0o30 зон, признаков
+#      «ИСПОРЧ» в журналах быть не должно;
+#   4) контроль каталога 0o2150: RЕДÀКТ и DRАКОН есть, РАSСОМРL и
+#      модули «P/» (run-time) отсутствуют;
+#   5) стирание хвоста прежней записи за новой длиной и черновых зон
+#      свободным паттерном; контроль: вне области записи занятые зоны
+#      не изменились (против резерва);
+#   6) smoke: редактор запускается С ТОМА (*perso:402150 +
+#      *perso:402570,cont + *call redakt) на demo/demo1-текст.txt,
+#      выдача побайтно равна redakt.out.
+#
+# Окружение: DISPAK, BESMTOOL, BESM6_PATH (как в прогнать.sh).  В
+# BESM6_PATH, кроме копии тома 2348, должны лежать и системные тома
+# Монитора-80 (2048, 2053, 2099) - без них монитор не пускает задачу
+# («disk_open: no 2053 image found»).  Том 2348 берётся из ПЕРВОЙ
+# найденной копии в BESM6_PATH - держите рабочую копию впереди боевого
+# тома.  Первый прогон - на рабочей копии.
 #
 # Запуск:  sh pascal/запись-2348.sh
 set -eu
@@ -64,9 +85,11 @@ HERE=$(cd "$(dirname "$0")" && pwd)
 
 VOL=2348
 LU=40
-ZONE=2150          # восьмеричная зона библиотеки редактора на томе
-RT=2570            # PERSO-библиотека Паскаля (источник run-time, только чтение)
-LIMIT=130          # свободный промежуток: 0o2150 + 0o130 = 0o2300
+ZONE=2150                 # восьмеричная зона библиотеки связки на томе
+SRC=2570                  # PERSO-библиотека компилятора (только чтение)
+ALIM=30                   # потолок «ДЛИНА LIBRARY» каждого задания (дес.)
+CA=${CHERNOVIK_A:-5000}   # зона черновика А (РЕДÀКТ)
+CB=${CHERNOVIK_B:-5100}   # зона черновика Б (DRАКОН)
 DEMO=demo/demo1-текст.txt
 ETALON=redakt.out
 
@@ -95,25 +118,30 @@ volpath=$(printf '%s\n' "$BESM6_PATH" | tr ':' '\n' | while IFS= read -r d; do
 done)
 [ -n "${volpath:-}" ] || { echo "СТОП: том $VOL не найден в BESM6_PATH" >&2; exit 1; }
 echo "том: $volpath"
-for t in "$DISPAK" "$BESMTOOL"; do
+for t in "$DISPAK" python3; do
     command -v "$t" >/dev/null || { echo "СТОП: нет $t в PATH" >&2; exit 1; }
 done
-command -v python3 >/dev/null || { echo "СТОП: нет python3 в PATH" >&2; exit 1; }
-for f in redakt.pas drakon.pas "$DEMO" "$ETALON"; do
+for f in redakt.pas "$DEMO" "$ETALON"; do
     [ -f "$HERE/$f" ] || { echo "СТОП: нет $HERE/$f" >&2; exit 1; }
 done
+if [ -z "${TOLKO_REDAKT:-}" ]; then
+    [ -f "$HERE/drakon.pas" ] || { echo "СТОП: нет $HERE/drakon.pas" >&2; exit 1; }
+fi
+if [ "$CB" -le "$((CA + 40))" ]; then
+    echo "СТОП: черновик Б (0o$CB) должен быть минимум на 0o40 зон правее" \
+         "черновика А (0o$CA)" >&2
+    exit 1
+fi
 
 before=$(md5f "$volpath")
 echo "том до: md5 $before"
 
-# 1) Резерв (идемпотентно).  Каталог боевого тома принадлежит root:
-#    нового файла резерва там не создать (sudo недоступен), поэтому для
-#    неподдающегося каталогу резерв снимается в ~/.besm6, как требует
-#    README re-siprod (2348.bak-<цель>-<ГГГГММДД>; прецедент
-#    tools/catchup2348_monitor.sh - bak-prod-).  Для каталога
-#    пользователя резерв остаётся рядом с томом.
+# 1) Резерв (идемпотентно).  Если каталог тома недоступен на запись
+#    (боевой том), резерв уходит в ~/.besm6, как требует README re-siprod
+#    (2348.bak-<цель>-<ГГГГММДД>).
 BAK="$volpath.bak-pascal-$(date +%Y%m%d)"
 if [ ! -w "$(dirname "$volpath")" ]; then
+    mkdir -p "$U/.besm6"
     BAK="$U/.besm6/2348.bak-pascal-prod-$(date +%Y%m%d)"
 fi
 if [ ! -f "$BAK" ]; then
@@ -123,138 +151,281 @@ else
     echo "резерв уже есть: $BAK"
 fi
 
-# 2) Предпроверка зоны.
-ZDEC=$(oct $ZONE)
-LMIT=$(oct $LIMIT)
-view=$("$BESMTOOL" view "$VOL" --start=$ZDEC --length=1 --encoding=t 2>/dev/null || true)
-if printf '%s\n' "$view" | grep -q "$ZONE\."; then
-    if printf '%s\n' "$view" | grep -q 'ЕDАК'; then
-        echo "зона $ZONE уже занята нашей библиотекой - перезаписываем"
-    else
-        echo "СТОП: зона $ZONE занята чужими данными:" >&2
-        printf '%s\n' "$view" | head -3 >&2
-        exit 1
-    fi
-else
-    echo "зона $ZONE свободна - записываем"
-fi
+# 2) Предпроверки тома (на стороне python: зона = 8256 байт - шапка 64
+#    байта + 1024 слова по 8; логическая зона = файл-зона - 4).
+python3 - "$volpath" "$ZONE" "$SRC" "$CA" "$CB" <<'PYEOF'
+import sys
+Z = 8256
+vol = sys.argv[1]
+z2150, z2570 = int(sys.argv[2], 8), int(sys.argv[3], 8)
+ca, cb = int(sys.argv[4], 8), int(sys.argv[5], 8)
+data = open(vol, 'rb').read()
+nz = len(data) // Z
+TEXT = [" ", ".", "Б", "Ц", "Д", "Ф", "Г", "И", "(", ")", "*", "Й",
+        "Л", "Я", "Ж", "/", "0", "1", "2", "3", "4", "5", "6", "7",
+        "8", "9", "Ь", ",", "П", "-", "+", "Ы", "З", "A", "B", "C",
+        "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O",
+        "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "Ш",
+        "Э", "Щ", "Ч", "Ю"]
+def word(z, i):
+    off = (z + 4) * Z + 64 + 8 * i
+    return int.from_bytes(data[off:off + 8], 'little') & ((1 << 48) - 1)
+def txt(w):
+    return ''.join(TEXT[(w >> (42 - 6 * i)) & 0x3F] for i in range(8))
+def isfree(z):
+    # свободная зона двух видов: с сигнатурой в шапке или целиком нулевая
+    off = (z + 4) * Z
+    h = data[off:off + 64]
+    if h[0:4] == b'\0\0\0\0' and h[10:14] == b'\x80\xc7\xf1\x05':
+        return True
+    return data[off:off + Z] == b'\0' * Z
+def catalog_names(z):
+    names = []
+    for zc in (z, z + 1):
+        for i in range(2, 1022, 2):
+            w = word(zc, i)
+            if w == 0:
+                return names
+            names.append(txt(w).rstrip())
+    return names
+def fail(msg):
+    sys.exit('СТОП: ' + msg)
 
-# 3) Предпроверка источника run-time (нужен только для smoke).
-rtok=0
-if "$BESMTOOL" view "$VOL" --start=$(oct $RT) --length=1 --encoding=t 2>/dev/null \
-        | grep -q 'СОМРL'; then
-    rtok=1
-    echo "run-time: библиотека 0o$RT на месте (РАSСОМРL есть)"
-else
-    echo "ВНИМАНИЕ: в зоне 0o$RT нет РАSСОМРL - smoke-прогон будет пропущен;" >&2
-    echo "          редактору при запуске нужна библиотека Паскаля (*perso:40$RT,cont)" >&2
-fi
+# 2а. Компилятор на месте?
+if 'PASCOMPL' not in catalog_names(z2570):
+    fail('в зоне 0o%o нет РАSСОМРL - трансляция компилятором 2570 '
+         'невозможна' % z2570)
+print('   зона 0o%o: РАSСОМРЛ на месте' % z2570)
 
-# 4) Колода: трансляция двух источников штатным компилятором и запись
-#    каталога задачи.  Карты *perso:402570 и *stand НЕ ставятся: именно
-#    *perso:402570 вызывала дозапись всей библиотеки 2570 (см. шапку).
+# 2б. Зона связки: свободна либо наша (есть RЕДÀКТ).
+n = catalog_names(z2150)
+if not n:
+    print('   зона 0o%o свободна - записываем' % z2150)
+elif any(x.upper().startswith('RED') or x.upper().startswith('РЕД')
+         for x in n):
+    print('   зона 0o%o занята нашей библиотекой - перезаписываем' % z2150)
+else:
+    fail('зона 0o%o занята чужими данными (%s...)' % (z2150, n[0]))
+
+# 2в. Черновые зоны свободны?
+for nm, z in (('А', ca), ('Б', cb)):
+    if not isfree(z):
+        fail('черновая зона 0o%o занята - задайте другую переменной '
+             'CHERNOVIK_%s' % (z, nm))
+    print('   черновик %s: зона 0o%o свободна' % (nm, z))
+PYEOF
+
+# 3) Колода фазы 1: трансляция одного исходника компилятором 2570
+#    (*perso:402570 + *stand), вычитание библиотеки 2570 из временного
+#    каталога (LIBSUB), запись каталога задачи в черновую зону.
 W=$(mktemp -d)
 trap 'rm -rf "$W"' EXIT
+
+compile_deck() { # $1 имя колоды, $2 исходник, $3 зона черновика
+    {
+        echo "user 419900 зс5^"
+        echo "лен $LU($VOL-wr)^"
+        echo "ЕЕВ1А3"
+        echo "*name"
+        echo "*call yesmemory"
+        echo "*perso:$LU$SRC"
+        echo "*stand"
+        echo "*call *pascal"
+        gost "$HERE/$2"
+        echo "*call libsub"
+        echo "$LU$SRC"
+        echo "*to perso:$LU$3"
+        echo "*end file"
+        echo '``````'
+        echo 'ЕКОНЕЦ'
+    } > "$W/$1.b6"
+}
+
+run_deck() { # $1 имя колоды
+    echo "--- прогон $1"
+    timeout 1800 "$DISPAK" "$W/$1.b6" > "$W/$1.log" 2>&1 || {
+        echo "СТОП: прогон $1 не удался (код $?), журнал: $W/$1.log" >&2
+        tail -15 "$W/$1.log" >&2; exit 1; }
+    if grep -aq 'СПОРЧ' "$W/$1.log"; then
+        echo "СТОП: в журнале $1 есть «ИСПОРЧ...»:" >&2
+        grep -a -B1 -A2 'СПОРЧ' "$W/$1.log" | head -12 >&2
+        exit 1
+    fi
+    if grep -aq '15\.0 (15\.02\.82)' "$W/$1.log"; then
+        echo "СТОП: $1 - трансляция штатным компилятором 15.0 (15.02.82);" >&2
+        echo "      нужен PASCOMPL из зоны 0o$SRC (карты *perso + *stand)" >&2
+        exit 1
+    fi
+    grep -a '1[0-9]\.[0-9]* (' "$W/$1.log" | head -1 || true
+    dlina=$(grep -a 'ДЛИНА' "$W/$1.log" | grep -a 'ЗОН' | tail -1 \
+            | sed 's/.*[^0-7]\([0-7][0-7]*\)[ \t]*ЗОН.*/\1/')
+    case "$dlina" in
+        ''|*[!0-7]*) echo "СТОП: $1: не понял «ДЛИНА LIBRARY»: '$dlina'" >&2
+                     tail -15 "$W/$1.log" >&2; exit 1 ;;
+    esac
+    DL=$(oct "$dlina")
+    echo "    ДЛИНА LIBRARY $dlina ЗОН ($DL)"
+    if [ "$DL" -gt "$ALIM" ]; then
+        echo "СТОП: $1: библиотека $DL зон - выше потолка $ALIM;" >&2
+        echo "      похоже, вычитание 2570 (LIBSUB) не сработало; журнал:" >&2
+        echo "      $W/$1.log" >&2
+        exit 1
+    fi
+    echo "$DL" > "$W/$1.длина"
+}
+
+echo '=== ФАЗА 1а: РЕДÀКТ -> черновик 0o'"$CA"
+compile_deck deck1-редакт redakt.pas "$CA"
+run_deck deck1-редакт
+
+if [ -z "${TOLKO_REDAKT:-}" ]; then
+    echo '=== ФАЗА 1б: DRАКОН -> черновик 0o'"$CB"
+    compile_deck deck2-дракон drakon.pas "$CB"
+    run_deck deck2-дракон
+fi
+
+# 4) Колода фазы 2: слияние черновиков и запись в зону 2150.
+#    Карты *perso читают черновики в один временный каталог (вторая - с
+#    дозаписью, cont), *to perso пишет каталог задачи на том: каталог и
+#    размещение модулей строит монитор.
+echo '=== ФАЗА 2: слияние черновиков -> зона 0o'"$ZONE"
 {
     echo "user 419900 зс5^"
     echo "лен $LU($VOL-wr)^"
     echo "ЕЕВ1А3"
     echo "*name"
     echo "*call yesmemory"
-    echo "*call *pascal"
-    gost "$HERE/redakt.pas"
-    echo "*call *pascal"
-    gost "$HERE/drakon.pas"
+    echo "*perso:$LU$CA"
+    if [ -z "${TOLKO_REDAKT:-}" ]; then
+        echo "*perso:$LU$CB,cont"
+    fi
     echo "*to perso:$LU$ZONE"
     echo "*end file"
     echo '``````'
     echo 'ЕКОНЕЦ'
-} > "$W/write.b6"
+} > "$W/deck3-слияние.b6"
+run_deck deck3-слияние
+DL=$(cat "$W/deck3-слияние.длина")
 
-out=$(timeout 1800 "$DISPAK" "$W/write.b6" 2>&1) || {
-    echo "СТОП: прогон записи не удался (код $?)" >&2
-    printf '%s\n' "$out" | tail -15 >&2
-    exit 1
-}
-printf '%s\n' "$out" | grep -a 'ДЛИНА' || true
-
-dlina=$(printf '%s\n' "$out" | grep -a 'ДЛИНА' | grep -a 'ЗОН' | tail -1 \
-        | sed 's/.*[^0-7]\([0-7][0-7]*\)[ \t]*ЗОН.*/\1/')
-case "$dlina" in
-    ''|*[!0-7]*) echo "СТОП: не понял «ДЛИНА LIBRARY ... ЗОН»: '$dlina'" >&2
-                 printf '%s\n' "$out" | tail -15 >&2; exit 1 ;;
-esac
-DL=$(oct "$dlina")
-echo "ДЛИНА LIBRARY $dlina ЗОН ($DL зон)"
-if [ "$DL" -gt "$LMIT" ]; then
-    echo "СТОП: библиотека $DL зон не укладывается в промежуток" \
-         "0o$ZONE..$(printf '%o' $((ZDEC + LMIT))); том восстановим из резерва:" >&2
-    echo "  cp '$BAK' '$volpath'" >&2
-    exit 1
+# 5) Контроль каталога 2150, стирание хвостов, контроль тома.
+DL1=$(cat "$W/deck1-редакт.длина")
+DL2=0
+if [ -z "${TOLKO_REDAKT:-}" ]; then
+    DL2=$(cat "$W/deck2-дракон.длина")
 fi
-
-# 5) Контроль каталога: редактор на месте, компилятора быть не должно.
-v2150=$("$BESMTOOL" view "$VOL" --start=$ZDEC --length=2 --encoding=t 2>/dev/null || true)
-if printf '%s\n' "$v2150" | grep -q 'ЕDАК' \
-   && printf '%s\n' "$v2150" | grep -q 'АКОN' \
-   && ! printf '%s\n' "$v2150" | grep -q 'СОМРL'; then
-    echo "каталог зоны 0o$ZONE: RЕДÀКТ и DRАКОН на месте, PASCOMPL не записан"
-else
-    echo "СТОП: в каталоге зоны 0o$ZONE не то, что ожидалось" \
-         "(нужны RЕДÀКТ и DRАКОН, лишним - PASCOMPL):" >&2
-    printf '%s\n' "$v2150" | head -5 >&2
-    exit 1
-fi
-
-# Стирание хвоста прежней библиотеки за новой длиной и контроль
-# неизменности тома - на стороне python (формат зоны: 8256 байт =
-# 64-байтовая шапка + 1024 слова по 8 байт; логическая зона = файл-зона - 4).
-python3 - "$volpath" "$BAK" "$ZDEC" "$DL" <<'PYEOF'
+python3 - "$volpath" "$BAK" "$ZONE" "$DL" "$CA" "$DL1" "$CB" "$DL2" <<'PYEOF'
 import sys
 Z = 8256
-vol, bak, z0, n = sys.argv[1], sys.argv[2], int(sys.argv[3]), int(sys.argv[4])
-def zones(p):
-    return open(p, 'rb').read()
-v, b = zones(vol), zones(bak)
-def isfree(z):   # свободная зона: 4 нулевых байта и сигнатура 80c7 f105
-    return z[0:4] == b'\0\0\0\0' and z[10:14] == b'\x80\xc7\xf1\x05'
-F0 = z0 + 4                       # файл-зона начала библиотеки
-# протяжённость ПРЕЖНЕЙ библиотеки в резерве (подряд занятые зоны от F0)
+vol, bak = sys.argv[1], sys.argv[2]
+z0, n = int(sys.argv[3], 8), int(sys.argv[4])
+ca, dl1 = int(sys.argv[5], 8), int(sys.argv[6])
+cb, dl2 = int(sys.argv[7], 8), int(sys.argv[8])
+raw_v = open(vol, 'rb').read()
+raw_b = open(bak, 'rb').read()
+TEXT = [" ", ".", "Б", "Ц", "Д", "Ф", "Г", "И", "(", ")", "*", "Й",
+        "Л", "Я", "Ж", "/", "0", "1", "2", "3", "4", "5", "6", "7",
+        "8", "9", "Ь", ",", "П", "-", "+", "Ы", "З", "A", "B", "C",
+        "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O",
+        "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "Ш",
+        "Э", "Щ", "Ч", "Ю"]
+def txt(w):
+    return ''.join(TEXT[(w >> (42 - 6 * i)) & 0x3F] for i in range(8))
+def zone_words(d, fz):
+    off = fz * Z + 64
+    ch = d[off:off + 8192]
+    return [int.from_bytes(ch[i*8:i*8+8], 'little') & ((1 << 48) - 1)
+            for i in range(1024)]
+def isfree(d, fz):
+    # свободная зона - двух видов: со стандартной сигнатурой в шапке
+    # (4 нулевых байта + 80 c7 f1 05) или целиком нулевая
+    off = fz * Z
+    h = d[off:off + 64]
+    if h[0:4] == b'\0\0\0\0' and h[10:14] == b'\x80\xc7\xf1\x05':
+        return True
+    return d[off:off + Z] == b'\0' * Z
+F0 = z0 + 4
+
+# 5а. Каталог зоны связки.
+names, info = [], []
+w0 = zone_words(raw_v, F0)
+for i in range(2, 1022, 2):
+    if w0[i] == 0:
+        break
+    names.append(txt(w0[i]).rstrip())
+    info.append(w0[i + 1])
+for nm, e in zip(names, info):
+    print('   %-9s %012o' % (nm, e))
+up = [x.upper() for x in names]
+if not any(x.startswith('RED') or x.startswith('РЕД') for x in up):
+    raise SystemExit('СТОП: в каталоге 0o%o нет РЕДÀКТ' % z0)
+if not any(x.startswith('DRA') or x.startswith('ДРА') for x in up):
+    raise SystemExit('СТОП: в каталоге 0o%o нет DRАКОН' % z0)
+if 'PASCOMPL' in up:
+    raise SystemExit('СТОП: в каталоге 0o%o есть РАSСОМРL' % z0)
+if any(x.startswith('P/') for x in up):
+    raise SystemExit('СТОП: в каталоге 0o%o есть модули P/ (run-time)' % z0)
+print('   каталог 0o%o: РЕДÀКТ и DRАКОН на месте, библиотеки 2570 нет' % z0)
+
+# 5б. Стирание: хвост прежней записи за новой длиной и черновые зоны.
 old_end = F0
-if not isfree(b[Z*F0:Z*(F0+1)]):
+if not isfree(raw_b, F0):
     fz = F0
-    while fz < len(b) // Z and not isfree(b[Z*fz:Z*(fz+1)]):
+    while fz < len(raw_b) // Z and not isfree(raw_b, fz):
         fz += 1
-    old_end = fz                  # первая свободная за прежней библиотекой
+    old_end = fz
 new_end = F0 + n
-# шаблон свободной зоны - из ближайшей свободной зоны резерва за old_end
-tmpl = bytes(b[Z*old_end:Z*old_end+64]) if old_end < len(b) // Z \
-       and isfree(b[Z*old_end:Z*(old_end+1)]) else b'\0'*64
-free = tmpl + b'\0' * (Z - 64)
-f = open(vol, 'r+b')
-for fz in range(new_end, old_end):    # хвост прежней библиотеки
-    f.seek(Z * fz)
-    f.write(free)
-f.seek(0)
-v = f.read()
-# контроль: вне [F0, old_end) том равен резерву (либо обе зоны свободны)
+# шаблон свободной зоны - ЦЕЛАЯ зона из резерва; счётчик в байтах 4/36
+# корректируется по номеру зоны (на томе он растёт на 0x10 от зоны к зоне)
+tpl, anchor = None, None
+for fz in range(old_end, len(raw_b) // Z):
+    if isfree(raw_b, fz) and raw_b[Z*fz+10:Z*fz+14] == b'\x80\xc7\xf1\x05':
+        tpl = raw_b[Z*fz:Z*fz+Z]        # полная зона - 8256 байт
+        anchor = fz
+        break
+out = bytearray(raw_v)
+wiped = 0
+def put_free(fz):
+    global wiped
+    if isfree(out, fz):
+        return          # уже свободна - не трогаем
+    if tpl is None:
+        blk = b'\0' * Z
+    else:
+        blk = bytearray(tpl)
+        blk[4] = (tpl[4] + 0x10 * (fz - anchor)) & 0xFF
+        blk[36] = (blk[4] + 0x10) & 0xFF
+        blk = bytes(blk)
+    assert len(blk) == Z
+    out[Z*fz:Z*(fz+1)] = blk
+    wiped += 1
+for fz in range(new_end, old_end):      # хвост прежней библиотеки
+    put_free(fz)
+for cz, dln in ((ca, dl1), (cb, dl2)):  # черновые зоны
+    if dln <= 0:
+        continue            # TOLKO_REDAKT: черновика Б нет
+    for fz in range(cz + 4, cz + 4 + dln):
+        put_free(fz)
+open(vol, 'wb').write(bytes(out))
+print('   стёрто свободным паттерном зон: %d (хвост прежней записи и черновики)'
+      % wiped)
+
+# 5в. Контроль: вне области записи ([F0, max(old_end,new_end))) том равен
+#     резерву; пары «свободная зона - свободная зона» тоже допустимы.
 bad = []
-for fz in range(4, len(v) // Z):
-    if F0 <= fz < old_end:
+for fz in range(4, len(out) // Z):
+    if F0 <= fz < max(old_end, new_end):
         continue
-    a, c = v[Z*fz:Z*(fz+1)], b[Z*fz:Z*(fz+1)]
-    if a != c and not (isfree(a) and isfree(c)):
+    a = bytes(out[Z*fz:Z*(fz+1)])
+    c = raw_b[Z*fz:Z*(fz+1)]
+    if a != c and not (isfree(out, fz) and isfree(raw_b, fz)):
         bad.append('%o' % (fz - 4))
-f.close()
 if bad:
-    raise SystemExit('КРИТИЧНО: изменённые занятые зоны вне записи: %s' % bad[:8])
-print('   хвост прежней библиотеки за 0o%04o стёрт (%d зон);' % (old_end - 5, max(0, old_end - new_end)))
+    raise SystemExit('КРИТИЧНО: изменённые занятые зоны вне записи: %s'
+                     % bad[:8])
 print('   вне области записи занятые зоны не изменены: OK')
 PYEOF
 
-# 6) Smoke: редактор запускается С ТОМА вместе с run-time из 0o2570,
-#    выдача равна эталону.
-if [ "$rtok" -eq 1 ]; then
+# 6) Smoke: редактор запускается С ТОМА, выдача равна эталону.
 gost "$HERE/$DEMO" > "$W/demo.gost"
 {
     echo "user 419999 зс5^"
@@ -263,7 +434,7 @@ gost "$HERE/$DEMO" > "$W/demo.gost"
     echo "*name"
     echo "*call yesmemory"
     echo "*perso:$LU$ZONE"
-    echo "*perso:$LU$RT,cont"
+    echo "*perso:$LU$SRC,cont"
     echo "*call redakt"
     cat "$W/demo.gost"
     echo "*end file"
@@ -275,21 +446,22 @@ timeout 600 "$DISPAK" "$W/smoke.b6" > "$W/smoke.log" 2>&1 || true
 python3 - "$W/smoke.log" "$HERE/$ETALON" <<'PYEOF' && SMOKE=ok || SMOKE=нет
 import sys
 log = open(sys.argv[1], encoding='utf-8').read().split('\n')
-# выдача начинается после эха карты *call (последней *-карты) и кончается
-# КОНЕЦ ЗАДАЧИ; строка-прогон \x0c значима
-end = next((i for i, l in enumerate(log) if 'КОНЕЦ ЗАДАЧИ' in l), None)
-if end is None:
-    print('   smoke: в журнале нет КОНЕЦ ЗАДАЧИ; начало журнала:')
+perso = next((i for i, l in enumerate(log) if ':402150' in l), None)
+if perso is None:
+    print('   smoke: в журнале нет карты *perso:402150; начало журнала:')
     for l in log[:6]:
         print('     |', l)
     raise SystemExit(1)
-stars = [i for i in range(end) if log[i].lstrip().startswith('*')]
-if not stars:
+call = next((i for i, l in enumerate(log[perso+1:], perso+1)
+             if l.lstrip().startswith('*') and 'LL' in l.replace('Л', 'L')),
+            None)
+if call is None:
     raise SystemExit(1)
-call = max(stars)
 out = []
-for l in log[call+1:end]:
+for l in log[call+1:]:
     s = l if l == chr(12) else l.rstrip()
+    if 'КОНЕЦ ЗАДАЧИ' in s:
+        break
     out.append(s)
 while out and not out[0]:
     out.pop(0)
@@ -313,18 +485,18 @@ for a, b in zip(out, ref):
         break
 raise SystemExit(1)
 PYEOF
-else
-    SMOKE=пропущен
-fi
 
 # 7) Итог.
 after=$(md5f "$volpath")
 echo "том после: md5 $after"
-echo "ГОТОВО: редактор записан на том $VOL, зона 0o$ZONE (только РЕДÀКТ и DRАКОН)"
-echo "        запуск:  лен $LU($VOL)^ / *perso:$LU$ZONE / *perso:$LU$RT,cont / *call redakt"
+if [ -n "${TOLKO_REDAKT:-}" ]; then
+    echo "ГОТОВО: редактор записан на том $VOL, зона 0o$ZONE (только РЕДÀКТ, без библиотеки 2570)"
+else
+    echo "ГОТОВО: связка редактора записана на том $VOL, зона 0o$ZONE (РЕДÀКТ + DRАКОН, без библиотеки 2570)"
+fi
+echo "        пуск:  лен $LU($VOL)^ / *perso:$LU$ZONE / *perso:$LU$SRC,cont / *call redakt"
 case "$SMOKE" in
-    ok)        echo "        smoke-проверка пройдена" ;;
-    пропущен)  echo "        smoke-проверка пропущена (нет run-time в 0o$RT)" ;;
-    *)         echo "        ВНИМАНИЕ: smoke-проверка НЕ пройдена - см. журнал выше" >&2
-               exit 1 ;;
+    ok) echo "        smoke-проверка пройдена" ;;
+    *)  echo "        ВНИМАНИЕ: smoke-проверка НЕ пройдена - см. журнал выше" >&2
+        exit 1 ;;
 esac
