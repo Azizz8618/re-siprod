@@ -24,6 +24,8 @@
 #   -z ZONE PERSO zone of the library (default 1088 = 2100 octal;
 #           695 = 01267 octal is the restored ORIGINAL, only explicitly)
 #   -l LIB  library image to write into the PERSO (default siprod.bin)
+# Environment: SIPROD_LIB selects the library card (default '*perso:672702',
+#   the personal library on disk 2248; '*libra:20' is the copy on disk 2048)
 set -eu
 ROOT=$(cd "$(dirname "$0")/../.." && pwd)
 usage() { sed -n '2,20s/^# \{0,1\}//p' "$0" >&2; exit 2; }
@@ -63,7 +65,12 @@ z=$(printf '%o' "$ZONE")
     echo "ШИФР 419900ЗС5^ОЗУ 32^ТРА 100^АЦП 64^ЛЕН 67($VOL)^ЕЕВ1А3"
     echo '*name'
     [ -n "$nolo" ] && echo "$nolo"
-    echo "*perso:67$z"
+    # библиотечная карта: SIPROD_LIB='*libra:20' (карта ссылок, начинается
+    # с *); иначе PERSO с зоной из -z (записывается неявно сценарием)
+    case "${SIPROD_LIB:-}" in
+        \**) echo "$SIPROD_LIB" ;;
+        *)   echo "*perso:67$z" ;;
+    esac
     echo '*call yesmemory'
     echo '*main schema'
     echo '*execute'

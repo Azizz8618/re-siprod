@@ -17,6 +17,7 @@
 #   make madlen-texts  collect the commented MADLEN texts into madlen/
 #   make madlen-check   assemble the modules with the MADLEN compiler and
 #                   check the program
+#   make compare-libs  compare with the older copy on disk 2048 (*LIBRARY:20)
 #   make clean      remove build/
 #
 # Needs dubna and dispak on PATH; the corpus test needs the besm6.github.io
@@ -41,7 +42,7 @@ DTRAN := $(patsubst dtr/%.dtr,build/%.dtran,$(DTR))
 
 .PHONY: all dtran dis be build check loadmaps test regress corpus test-perso \
 	coverage bemsh rvs libs madlen madlen-texts madlen-labels \
-	madlen-check record clean
+	madlen-check compare-libs record clean
 
 all: dis be build loadmaps
 
@@ -124,6 +125,9 @@ madlen-labels:
 # сборка модулей компилятором МАДЛЕН и проверка программы
 madlen-check:
 	$(PYTHON) tools/siprod_madlen.py --check
+
+compare-libs:
+	tests/siprod/compare-libs.sh
 
 clean:
 	rm -rf build
