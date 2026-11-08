@@ -146,6 +146,9 @@ var
   endtxt: boolean;        (* *E *)
   stpon, stgon: boolean;
   pgfirst: boolean;       (* ещё не напечатан первый лист (для *1STP/*1STG) *)
+  pgspent: boolean;       (* номер pageno напечатан: на свежем листе после
+     печатанного листа номер не используется повторно - нумерация
+     идёт сквозь все блоки задания, как в оригинальном СИПРОДе *)
   freshpg: boolean;       (* страница начата, но текста на ней нет *)
   fmpending: integer;     (* сменa формата, ждущая следующей страницы *)
   fmtkeep: boolean;       (* при смене формата строка текста не меняется *)
@@ -1183,7 +1186,8 @@ begin
     end;
     outline(пстрок)
   end;
-  pgfirst := false
+  pgfirst := false;
+  pgspent := true
 end;
 procedure newsheet;
 var
@@ -1222,6 +1226,8 @@ begin
   if pnext <> 0 then pageno := pnext
   else pageno := pageno + 1;
   pnext := 0;
+  (* свежий номер ещё не напечатан *)
+  pgspent := false;
   if (fmt = 1) or (fmt = 2) then begin
     (* широкий формат и формат А: лист - одна страница во всю
        ширину, очередная страница печатает предыдущий лист целиком *)
@@ -1665,8 +1671,10 @@ begin
     sheetprint(false);
     (* пустая правая половина листа всё равно считается страницей *)
     if (not hused[1]) and (fmt = 0) then pageno := pageno + 1
-  end else
-    (* лист не печатался - номер страницы не тратим *)
+  end else if not pgspent then
+    (* лист не печатался и его номер не напечатан - номер страницы
+       не тратим (*P перед сменой формата); после печатанного листа
+       нумерация продолжается (границы блоков задания) *)
     pnext := pageno;
   newsheet;
   if fir then begin
@@ -3778,7 +3786,8 @@ begin
       if c2 = ' ' then begin
         if rowno = 0 then begin
           pageno := nn1;
-          hpno[side] := nn1
+          hpno[side] := nn1;
+          pgspent := false   (* свежий номер ещё не напечатан *)
         end else
           pnext := nn1;
         cpos := cpos + 1
@@ -3788,7 +3797,8 @@ begin
         if hasnum and fir then begin
           if rowno = 0 then begin
             pageno := nn1;
-            hpno[side] := nn1
+            hpno[side] := nn1;
+            pgspent := false   (* свежий номер ещё не напечатан *)
           end else
             pnext := nn1
         end;
@@ -3822,7 +3832,8 @@ begin
     end else if hasnum and fir then begin
       if rowno = 0 then begin
         pageno := nn1;
-        hpno[side] := nn1
+        hpno[side] := nn1;
+        pgspent := false   (* свежий номер ещё не напечатан *)
       end else
         pnext := nn1
     end
@@ -3969,6 +3980,7 @@ begin
   newsheet;
   pageno := 0;
   pnext := 0;
+  pgspent := false;
   numon := true;
   hnum[0] := true;
   hnum[1] := true;
