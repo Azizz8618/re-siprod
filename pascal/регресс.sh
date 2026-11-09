@@ -24,7 +24,10 @@ echo "=== редактор *RED: 21 эталон ==="
 for t in "$CASES"/red-*.txt; do
     base=$(basename "$t" .txt)
     out=$(mktemp)
-    "$HERE/прогнать.sh" "$HERE/redakt.pas" "$t" > "$out" 2>/dev/null
+    # перфорация ГОСТ-10859: Ё -> Е (как на пуске с тома и в секции ДРАКОН;
+    # эталоны редактора сняты с этой заменой - см. red-эталоны/README)
+    sed 's/[ёЁ]/Е/g' "$t" > "$out.dat"
+    "$HERE/прогнать.sh" "$HERE/redakt.pas" "$out.dat" > "$out" 2>/dev/null
     ref="$CASES/$base.out"
     etazn=""
     if [ -f "$ETA/$base.out" ]; then
@@ -74,7 +77,7 @@ PYEOF
             ok=$((ok+1))
             ;;
     esac
-    rm -f "$out"
+    rm -f "$out" "$out.dat"
 done
 
 echo "=== ДРАКОН: 6 эталонных схем ==="
