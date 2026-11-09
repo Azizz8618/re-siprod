@@ -14,7 +14,7 @@ CASES="$REPO/tests/siprod/cases"
 SCHEMES="$REPO/drakon/schemes"
 ok=0; diff_=0
 
-echo "=== редактор *RED: 19 эталонов ==="
+echo "=== редактор *RED: 21 эталон ==="
 for t in "$CASES"/red-*.txt; do
     base=$(basename "$t" .txt)
     out=$(mktemp)
