@@ -3,11 +3,11 @@
    Реализовано: заполнение и выравнивание строк; команды
    *nS *n/ *nP *E *D *nH *nG *nCc *Knc *nFc *nRFc *n(...), *nW...),
    *T *MD *nRL *nRC *OLR *RT *RU *ORU *nMCS *nMCP *nN *NN *RG,
-   *nSTA *nSTO *nSTP *nSTG *STN, таблицы *ST *SL (*NL *NR *NU *ND),
+   *nSTA *nSTO *nSTP *nSTG *nSTN, таблицы *ST *SL (*NL *NR *NU *ND),
    макроопределения *nM=...$ и вставки *nM, листинг *MF и ///,
    печать на АЦПУ-128 (две страницы по 64 поз., формат А 84,
-   широкий формат), рамки, номера страниц, штамп ЕСПД,
-   ошибки 10 20 30 40 61 62 64 66 80 91 100.
+   широкий формат, узкая страница *MCP w h), рамки, номера страниц,
+   штамп ЕСПД, ошибки 10 20 30 40 60 61 62 64 66 80 91 100.
    Блок *DRK - свой режим схем ДРАКОН на верхнем уровне (наравне с
    *RED в таблице диспетчера): исходник схемы до *E транслируется и
    печатается средствами самого редактора, без карт разметки * /*D.
@@ -56,6 +56,9 @@ type
   carty = array [1..80] of char;
   prow = packed array [1..128] of char; (* строка в хранении, 6
   * литер/слово *)
+  prowh = packed array [65..128] of char; (* правая половина строки,
+  * 64 литеры - 11 слов вместо 22: правая страница хранит только
+  * позиции 65..128, чтение и запись ведутся теми же индексами *)
   pwty = packed array [1..100] of char; (* слово в хранении *)
   mkty = packed array [1..MKLEN] of char; (* тело макроопределения *)
   p80 = packed array [1..80] of char;  (* строка в хранении,
@@ -93,12 +96,36 @@ var
   mcson: boolean;         (* поле задано *MCS - при смене формата
                              остаётся прежним *)
 
+  (* счётчики страниц и узкая страница *)
+  standcnt: integer;      (* счётчик страниц формата А (в оригинале -
+                             слово STAND): >0 - осталось страниц,
+                             0 - счётчик не активен; уменьшается в pageend *)
+  standinf: boolean;      (* формат А до отмены (*0STA) *)
+  mcpon: boolean;         (* задана узкая страница *MCP *)
+  mcpinf: boolean;        (* узкая страница до отмены (*0MCP) *)
+  mcpw, mcph: integer;    (* размеры страницы *MCP: ширина и высота *)
+  mcpcnt: integer;        (* счётчик страниц *MCP (в оригинале - слово
+                             STANN); уменьшается в pageend *)
+  hmcp: array [0..1] of boolean;  (* страница набрана в геометрии *MCP
+                             (захватывается в pagestart) *)
+  mcwp: array [0..1] of integer;  (* ширина страницы *MCP на листе *)
+  mchp: array [0..1] of integer;  (* высота страницы *MCP на листе *)
+  mrow: array [0..1] of integer;  (* строка листа, с которой начинается
+                             страница *MCP (верхняя рамка) *)
+  mfl: array [0..1] of integer;   (* колонка левой стойки рамки *MCP,
+                             абсолютно *)
+
   (* лист и страницы *)
   (* страницы листа: упакованные строки (6 литер/слово); левая
      страница занимает позиции 1..64 строки, правая - 65..128
      (широкий формат и формат А - всю строку 1..128); печатаются
-     напрямую, без сборки листа *)
-  htxt: array [0..1] of array [1..66] of prow;
+     напрямую, без сборки листа.  Левая хранится строками целиком
+     (нужны все 128 позиций в широком формате и формате А), правая -
+     только позициями 65..128: экономит 66*11 = 726 слов статики -
+     модуль снова входит в потолок памяти пуска с тома (см.
+     ЗАПИСЬ-2150.md) *)
+  htxt0: array [1..66] of prow;
+  htxt1: array [1..66] of prowh;
   hused: array [0..1] of boolean;
   tabused: boolean;        (* на странице строки таблицы *)
   hfr: array [0..1] of boolean;   (* на странице рисуется рамка *)
@@ -216,6 +243,7 @@ var
      (компилятор копирует слова, а не упаковывает каждую литеру);
      неупакованный бланк не заведён ради памяти задачи *)
   бланкp: prow;           (* 128 пробелов, упакованно *)
+  бланкh: prowh;          (* пробелы 65..128 для правой страницы *)
 
   (* ---- схема ДРАКОН, блок *DRK (имена как в drakon.pas) ---- *)
   kw: array [1..DTKW] of packed array [1..12] of char;
@@ -1023,6 +1051,28 @@ end;
 
 (* ---------------- печать листа ---------------- *)
 
+(* рамка страницы *MCP: охватывает узкую страницу (строки
+   mrow..mrow+mchp-1, колонки mfl..mfl+mcwp-1); i - строка листа;
+   на граних страницы - точки по углам и штрихи, между ними - стойки *)
+procedure mcpframe(i, sd: integer);
+var
+  fl, fr2, pr, ph, k3: integer;
+begin
+  fl := mfl[sd];
+  fr2 := fl + mcwp[sd] - 1;
+  pr := mrow[sd];
+  ph := mchp[sd];
+  if (i = pr) or (i = pr + ph - 1) then begin
+    пстрок[fl] := '.';
+    пстрок[fr2] := '.';
+    for k3 := fl + 1 to fr2 - 1 do
+      пстрок[k3] := '-'
+  end else if (i > pr) and (i < pr + ph - 1) then begin
+    пстрок[fl] := 'I';
+    пстрок[fr2] := 'I'
+  end
+end;
+
 (* печать листа без сборки: массив sheet упразднён, строка листа
    составляется прямо при печати - левая страница даёт позиции 1..64,
    правая 65..128 (широкий формат и формат А занимают все 128 позиций
@@ -1035,6 +1085,7 @@ var
   top, bot, i, s, np, k2, st2, stprow, flde, strow: integer;
   sideon: array [0..1] of boolean;
   tleft, tright: boolean;
+  s1, nb: integer;
 begin
   if fmt = 0 then begin
     top := 2; bot := 67; stprow := 4
@@ -1057,13 +1108,18 @@ begin
     sideon[1] := true;
     np := hpno[0] + 1
   end;
-  (* прогон страницы (в оригинале - строки прогона 1-2 АЦПУ в начале
-     листа): экстракод 64, строка с прогоном перед строками листа *)
-  прогон;
+  (* строки прогона 1-2 АЦПУ: лист начинается со строки top, прогон-
+     ных строк перед ним top-1 (в широком формате и формате А - две,
+     в обычном - одна; сверено с эталонами) *)
+  for i := 1 to top - 1 do
+    прогон;
   for i := top to bot do begin
     (* текст строки: распаковка строки страницы прямо в печатную
-       строку; левая (или единственная) страница - из htxt[0] *)
+       строку; левая (или единственная) страница - из htxt[0]; у
+       страницы *MCP текст начинается на mrow+3 *)
     s := i - rowbase;
+    if hmcp[0] then
+      s := i - (mrow[0] + 2);
     (* конец поля страницы: если поле накрывает край страницы,
        рамка на этом краю не рисуется (в оригинале текст затирает
        стойку рамки) *)
@@ -1071,7 +1127,7 @@ begin
     if (s >= 1) and (s <= hrows[0]) then begin
       (* левая/полная страница: копия строки распаковывается
          машинной развёрткой (константные пары - вне циклов) *)
-      копстр := htxt[0][s];
+      копстр := htxt0[s];
       развпак1; развпак2; развпак3; развпак4;
       tleft := true
     end else begin
@@ -1080,108 +1136,205 @@ begin
     end;
     tright := false;
     if fmt = 0 then begin
-      (* правая страница: позиции 65..128 из htxt[1] *)
-      if (s >= 1) and (s <= hrows[1]) then begin
-        for k2 := 65 to 128 do пстрок[k2] := htxt[1][s][k2];
+      (* правая страница: позиции 65..128 из htxt[1]; на смешанном
+         листе (обычная страница и *MCP) строки страниц не совпадают *)
+      s1 := s;
+      if hmcp[1] then
+        s1 := i - (mrow[1] + 2);
+      if (s1 >= 1) and (s1 <= hrows[1]) then begin
+        for k2 := 65 to 128 do пстрок[k2] := htxt1[s1][k2];
         tright := true
       end else
         for k2 := 65 to 128 do пстрок[k2] := ' '
     end;
-    (* рамка: на граних листа - точки по углам и штрихи между ними,
-       на остальных строках - стойки; поверх текста, как и раньше *)
-    if (fmt = 0) or hfrf then begin
-      if (i = top) or (i = bot) then begin
-        if fmt = 2 then begin
-          пстрок[1] := '.'; пстрок[84] := '.';
-          for k2 := 2 to 83 do пстрок[k2] := '-'
-        end else if fmt = 1 then begin
-          пстрок[2] := '.'; пстрок[128] := '.';
-          for k2 := 3 to 127 do пстрок[k2] := '-'
+    (* рамка: у страницы *MCP рамка охватывает узкую страницу (если
+       *RG был включён при её начале), у обычных страниц - штатная
+       рамка формата; на граних листа - точки по углам и штрихи между
+       ними, на остальных строках - стойки; поверх текста *)
+    if fmt = 0 then begin
+      if hmcp[0] then begin
+        if hfr[0] then
+          mcpframe(i, 0)
+      end else if hfr[0] then begin
+        if (i = top) or (i = bot) then begin
+          пстрок[2] := '.'; пстрок[64] := '.';
+          for k2 := 3 to 63 do пстрок[k2] := '-'
         end else begin
-          (* рамка рисуется на той половине, для которой она включена
-             при начале страницы: *RG в середине текста действует со
-             следующей страницы *)
-          if hfr[0] then begin
-            пстрок[2] := '.'; пстрок[64] := '.';
-            for k2 := 3 to 63 do пстрок[k2] := '-'
-          end;
-          if hfr[1] then begin
-            пстрок[66] := '.'; пстрок[128] := '.';
-            for k2 := 67 to 127 do пстрок[k2] := '-'
-          end
-        end
-      end else if fmt = 2 then begin
-        пстрок[1] := 'I';
-        if not (tleft and (flde >= 84)) then
-          пстрок[84] := 'I'
-      end else if fmt = 1 then begin
-        пстрок[2] := 'I';
-        if not (tleft and (flde >= 128)) then
-          пстрок[128] := 'I'
-      end else begin
-        if hfr[0] then begin
           пстрок[2] := 'I';
           if not (tleft and (flde >= 64)) then
             пстрок[64] := 'I'
-        end;
-        if hfr[1] then begin
+        end
+      end;
+      if hmcp[1] then begin
+        if hfr[1] then
+          mcpframe(i, 1)
+      end else if hfr[1] then begin
+        if (i = top) or (i = bot) then begin
+          пстрок[66] := '.'; пстрок[128] := '.';
+          for k2 := 67 to 127 do пстрок[k2] := '-'
+        end else begin
           пстрок[66] := 'I';
           if not (tright and (flde >= 64)) then
             пстрок[128] := 'I'
         end
       end
+    end else if fmt = 1 then begin
+      if hmcp[0] then begin
+        if hfrf then
+          mcpframe(i, 0)
+      end else if hfrf then begin
+        if (i = top) or (i = bot) then begin
+          пстрок[2] := '.'; пстрок[128] := '.';
+          for k2 := 3 to 127 do пстрок[k2] := '-'
+        end else begin
+          пстрок[2] := 'I';
+          if not (tleft and (flde >= 128)) then
+            пстрок[128] := 'I'
+        end
+      end
+    end else begin
+      (* формат А: рамка без изменений (узкая страница не действует) *)
+      if hfrf then begin
+        if (i = top) or (i = bot) then begin
+          пстрок[1] := '.'; пстрок[84] := '.';
+          for k2 := 2 to 83 do пстрок[k2] := '-'
+        end else begin
+          пстрок[1] := 'I';
+          if not (tleft and (flde >= 84)) then
+            пстрок[84] := 'I'
+        end
+      end
     end;
     (* строка номеров страниц: номер печатается, если он не выключен
-       был при начале страницы (номер задаётся *nN, снимается *NN) *)
+       был при начале страницы (номер задаётся *nN, снимается *NN);
+       у страницы *MCP номер - в строке верхней рамки + 1, по центру
+       поля страницы *)
     if hnum[0] or hnum[1] or hnumf then begin
       if fmt = 0 then begin
-        if (i = 3) and sideon[0] and hnum[0] then begin
+        if (i = 3) and sideon[0] and hnum[0] and (not hmcp[0]) then begin
           пстрок[31] := '-';
           putnum(пстрок, 32, hpno[0], 3);
           пстрок[35] := ' '; пстрок[36] := '-'
         end;
-        if (i = 3) and sideon[1] and hnum[1] then begin
+        if (i = 3) and sideon[1] and hnum[1] and (not hmcp[1]) then begin
           пстрок[95] := '-';
           putnum(пстрок, 96, np, 3);
           пстрок[99] := ' '; пстрок[100] := '-'
+        end;
+        if hmcp[0] and (i = mrow[0] + 1) and sideon[0] and hnum[0] then
+        begin
+          nb := mfl[0] + 4 + (mcwp[0] - 13) div 2;
+          пстрок[nb] := '-';
+          putnum(пстрок, nb + 1, hpno[0], 3);
+          пстрок[nb + 4] := ' '; пстрок[nb + 5] := '-'
+        end;
+        if hmcp[1] and (i = mrow[1] + 1) and sideon[1] and hnum[1] then
+        begin
+          nb := mfl[1] + 4 + (mcwp[1] - 13) div 2;
+          пстрок[nb] := '-';
+          putnum(пстрок, nb + 1, np, 3);
+          пстрок[nb + 4] := ' '; пстрок[nb + 5] := '-'
         end
-      end else if (fmt = 1) and (i = 4) and hnumf and
-              (hused[0] or final) then begin
-        пстрок[63] := '-';
-        putnum(пстрок, 64, hpno[0], 3);
-        пстрок[67] := ' '; пстрок[68] := '-'
-      end else if (fmt = 2) and (i = 4) and hnumf and hused[0] then begin
+      end else if fmt = 1 then begin
+        if hmcp[0] then begin
+          if (i = mrow[0] + 1) and hnumf and (hused[0] or final) then
+          begin
+            nb := mfl[0] + 4 + (mcwp[0] - 13) div 2;
+            пстрок[nb] := '-';
+            putnum(пстрок, nb + 1, hpno[0], 3);
+            пстрок[nb + 4] := ' '; пстрок[nb + 5] := '-'
+          end
+        end else if (i = 4) and hnumf and (hused[0] or final) then begin
+          пстрок[63] := '-';
+          putnum(пстрок, 64, hpno[0], 3);
+          пстрок[67] := ' '; пстрок[68] := '-'
+        end
+      end else if (i = 4) and hnumf and hused[0] then begin
         пстрок[42] := '-';
         putnum(пстрок, 43, hpno[0], 3);
         пстрок[46] := ' '; пстрок[47] := '-'
       end
     end;
-    (* штамп STP: строка под номером страницы, по центру поля *)
-    if (i = stprow) and stpon and (stpl > 0) then begin
-      st2 := defl + (defw - stpl) div 2;
+    (* штамп STP: строка под номером страницы, по центру поля; у
+       страницы *MCP - на строке верхней рамки + 2, по центру поля
+       узкой страницы *)
+    if stpon and (stpl > 0) then begin
       if fmt = 0 then begin
-        if stpok[0] and ((not stponly) or pgfirst) then
-          for k2 := 1 to stpl do пстрок[st2 + k2 - 1] := stp[k2];
-        if stpok[1] and (not stponly) then
-          for k2 := 1 to stpl do пстрок[64 + st2 + k2 - 1] := stp[k2]
-      end else if stpokf and ((not stponly) or pgfirst) then
-        for k2 := 1 to stpl do пстрок[st2 + k2 - 1] := stp[k2]
+        if stpok[0] and ((not stponly) or pgfirst) then begin
+          if hmcp[0] then begin
+            if i = mrow[0] + 2 then begin
+              st2 := mfl[0] + 4 + (mcwp[0] - 7 - stpl) div 2;
+              for k2 := 1 to stpl do пстрок[st2 + k2 - 1] := stp[k2]
+            end
+          end else if i = stprow then begin
+            st2 := defl + (defw - stpl) div 2;
+            for k2 := 1 to stpl do пстрок[st2 + k2 - 1] := stp[k2]
+          end
+        end;
+        if stpok[1] and (not stponly) then begin
+          if hmcp[1] then begin
+            if i = mrow[1] + 2 then begin
+              st2 := mfl[1] + 4 + (mcwp[1] - 7 - stpl) div 2;
+              for k2 := 1 to stpl do пстрок[st2 + k2 - 1] := stp[k2]
+            end
+          end else if i = stprow then begin
+            st2 := 64 + defl + (defw - stpl) div 2;
+            for k2 := 1 to stpl do пстрок[st2 + k2 - 1] := stp[k2]
+          end
+        end
+      end else if stpokf and ((not stponly) or pgfirst) then begin
+        if fmt = 2 then begin
+          if i = stprow then begin
+            st2 := defl + (defw - stpl) div 2;
+            for k2 := 1 to stpl do пстрок[st2 + k2 - 1] := stp[k2]
+          end
+        end else if hmcp[0] then begin
+          if i = mrow[0] + 2 then begin
+            st2 := mfl[0] + 4 + (mcwp[0] - 7 - stpl) div 2;
+            for k2 := 1 to stpl do пстрок[st2 + k2 - 1] := stp[k2]
+          end
+        end else if i = stprow then begin
+          st2 := defl + (defw - stpl) div 2;
+          for k2 := 1 to stpl do пстрок[st2 + k2 - 1] := stp[k2]
+        end
+      end
     end;
-    (* подвал STG: строка внизу страницы, над нижним полем *)
-    if stgon and (stgl > 0) and ((not stgonly) or pgfirst)
-       and (i = strow) then begin
+    (* подвал STG: строка внизу страницы, над нижним полем; у страницы
+       *MCP - на строке верхней рамки + высота - 2 *)
+    if stgon and (stgl > 0) and ((not stgonly) or pgfirst) then begin
       if fmt = 0 then begin
         if sideon[0] then begin
-          st2 := defl + (defw - stgl) div 2;
-          for k2 := 1 to stgl do пстрок[st2 + k2 - 1] := stg[k2]
+          if hmcp[0] then begin
+            if i = mrow[0] + mchp[0] - 2 then begin
+              st2 := mfl[0] + 4 + (mcwp[0] - 7 - stgl) div 2;
+              for k2 := 1 to stgl do пстрок[st2 + k2 - 1] := stg[k2]
+            end
+          end else if i = strow then begin
+            st2 := defl + (defw - stgl) div 2;
+            for k2 := 1 to stgl do пстрок[st2 + k2 - 1] := stg[k2]
+          end
         end;
         if sideon[1] then begin
-          st2 := 64 + defl + (defw - stgl) div 2;
-          for k2 := 1 to stgl do пстрок[st2 + k2 - 1] := stg[k2]
+          if hmcp[1] then begin
+            if i = mrow[1] + mchp[1] - 2 then begin
+              st2 := mfl[1] + 4 + (mcwp[1] - 7 - stgl) div 2;
+              for k2 := 1 to stgl do пстрок[st2 + k2 - 1] := stg[k2]
+            end
+          end else if i = strow then begin
+            st2 := 64 + defl + (defw - stgl) div 2;
+            for k2 := 1 to stgl do пстрок[st2 + k2 - 1] := stg[k2]
+          end
         end
       end else begin
-        st2 := defl + (defw - stgl) div 2;
-        for k2 := 1 to stgl do пстрок[st2 + k2 - 1] := stg[k2]
+        if hmcp[0] then begin
+          if i = mrow[0] + mchp[0] - 2 then begin
+            st2 := mfl[0] + 4 + (mcwp[0] - 7 - stgl) div 2;
+            for k2 := 1 to stgl do пстрок[st2 + k2 - 1] := stg[k2]
+          end
+        end else if i = strow then begin
+          st2 := defl + (defw - stgl) div 2;
+          for k2 := 1 to stgl do пстрок[st2 + k2 - 1] := stg[k2]
+        end
       end
     end;
     outline(пстрок)
@@ -1198,15 +1351,41 @@ begin
   k2 := hrows[0];
   if hrows[1] > k2 then k2 := hrows[1];
   (* чистка занятых строк присваиванием целой строки (дешевле цикла) *)
-  for s := 0 to 1 do
-    for i := 1 to k2 do
-      htxt[s][i] := бланкp;
+  for i := 1 to k2 do begin
+    htxt0[i] := бланкp;
+    htxt1[i] := бланкh
+  end;
   hused[0] := false; hused[1] := false;
   hpno[0] := 0; hpno[1] := 0;
   hrows[0] := 0; hrows[1] := 0;
   rowno := 0;
   clrrow(cur);
   curpos := 1
+end;
+
+(* применить геометрию узкой страницы *MCP к текущей странице:
+   рамка шириной mcpw по центру места страницы (полулиста в обычном
+   формате, всего листа в широком), высотой mcph по центру листа;
+   поле текста - внутри рамки (сверено с оригиналом и эталоном
+   red-mcp) *)
+procedure setmcpage;
+begin
+  hmcp[side] := true;
+  mcwp[side] := mcpw;
+  mchp[side] := mcph;
+  if fmt = 0 then begin
+    mrow[side] := 2 + (66 - mcph) div 2;
+    mfl[side] := 64 * side + (64 - mcpw) div 2 + 1;
+    flda := (64 - mcpw) div 2 + 5
+  end else begin
+    mrow[side] := 3 + (66 - mcph) div 2;
+    mfl[side] := (128 - mcpw) div 2 + 1;
+    flda := mfl[side] + 4
+  end;
+  fldw := mcpw - 7;
+  tmax := mcph - 6;
+  (* поле *MCS на узкой странице не действует *)
+  mcsset := false
 end;
 
 (* начало новой страницы: номер, сторона, штамп *)
@@ -1258,6 +1437,26 @@ begin
   end;
   rowno := 0;
   freshpg := true;
+  (* геометрия страницы: поле и число строк; узкая страница *MCP
+     заменяет поле и высоту (в формате А не действует); поле *MCS
+     при смене формата остаётся прежним - берётся зафиксированным
+     на момент команды (mcflda), а не от текущего поля формата *)
+  if (fmt <> 2) and mcpon then
+    setmcpage
+  else begin
+    hmcp[side] := false;
+    if mcson then begin
+      flda := mcflda;
+      fldw := mcfldw
+    end else begin
+      flda := defl;
+      fldw := defw
+    end;
+    if fmt = 2 then
+      tmax := TRA
+    else
+      tmax := TRN
+  end;
   curpos := curflda;
   (* штамп печатается на странице, если он задан *)
   if fmt = 0 then
@@ -1270,6 +1469,29 @@ end;
 procedure pageend;
 begin
   if (rowno > 0) and (not tabused) then hused[side] := true;
+  (* счётчик страниц формата А (аналог *STAND* в ENDPG): исчерпан -
+     отложенный возврат к обычному формату; текущий лист ещё не
+     напечатан, его допечатает pagestart перед сменой формата *)
+  if fmt = 2 then
+    if not standinf then
+      if standcnt > 0 then begin
+        standcnt := standcnt - 1;
+        if standcnt = 0 then
+          fmpending := 0
+      end;
+  (* счётчик страниц *MCP (в оригинале - слово STANN): исчерпан -
+     обычная геометрия со следующей страницы; широкий формат
+     заканчивается вместе с узкими страницами (по эталону red-mcp
+     после *RU*2MCP идут страницы обычного формата) *)
+  if hmcp[side] then
+    if not mcpinf then
+      if mcpcnt > 0 then begin
+        mcpcnt := mcpcnt - 1;
+        if mcpcnt = 0 then begin
+          mcpon := false;
+          fmpending := 0
+        end
+      end;
   pagestart
 end;
 
@@ -1315,8 +1537,13 @@ begin
   (* строка листа чиста от очистки листа и пишется один раз, поэтому
      достаточно записать непробельные литеры - доступ к упакованной
      строке htxt дорог, а пробел там уже стоит *)
-  for k2 := 1 to 128 do
-    if r[k2] <> ' ' then htxt[side][rowno + 1][k2] := r[k2];
+  if side = 0 then begin
+    for k2 := 1 to 128 do
+      if r[k2] <> ' ' then htxt0[rowno + 1][k2] := r[k2]
+  end else begin
+    for k2 := 65 to 128 do
+      if r[k2] <> ' ' then htxt1[rowno + 1][k2] := r[k2]
+  end;
   rowno := rowno + 1;
   freshpg := false;
   if rowno > hrows[side] then hrows[side] := rowno
@@ -1700,6 +1927,8 @@ var
   nnums, i, v, a, b: integer;
   loop: boolean;
 begin
+  (* таблица внутри ячейки таблицы - ошибка 60 *)
+  if incell then klaida(60);
   flushq(false);
   commit(true);
   if not withline then
@@ -3546,6 +3775,10 @@ begin
       dmem.pic[i][j] := ' ';
   fir := true;
   rgon := true;
+  (* широкий формат с первой страницы, строка текста - прежняя:
+     как *RU на первой карте блока, чтобы печать *DRK совпадала
+     с печатью разметки * /*D *)
+  fmtkeep := true;
   newfmt(1, false);
   fir := false;
   posmode := false
@@ -3714,9 +3947,36 @@ begin
         setmcs(a, b)
       end else if (cpos <= cwv) and (card[cpos] = 'P') then begin
         cpos := cpos + 1;
+        (* узкая страница внутри ячейки таблицы - ошибка 60 *)
+        if incell then klaida(60);
         if not readnum(a) then klaida(20);
         if not readnum(b) then klaida(20);
-        if (a > 127) or (b > 127) then klaida(40)
+        (* размеры за пределами листа - ошибка 40; в обычном формате
+           страница не шире полу листа, высота не больше листа
+           (проверено на живом оригинале) *)
+        if (a > 127) or (b > 127) then klaida(40);
+        if (fmt = 0) and (a > 64) then klaida(40);
+        if b > 66 then klaida(40);
+        mcpon := true;
+        mcpw := a;
+        mcph := b;
+        if hasnum and (nn1 = 0) then begin
+          (* *0MCP - до отмены *)
+          mcpcnt := 0;
+          mcpinf := true
+        end else begin
+          mcpcnt := nn1;
+          mcpinf := false
+        end;
+        (* на первой карте блока страница ещё не набрана - геометрия
+           действует на неё сразу; в середине текста - со следующей
+           страницы (pagestart); в формате А не действует *)
+        if fir and (fmt <> 2) then begin
+          kk := curflda;
+          setmcpage;
+          if (nw = 0) and (not posmode) and (curpos = kk) then
+            curpos := curflda
+        end
       end else
         klaida(10)
     end else if (cpos <= cwv) and (card[cpos] = 'D') then begin
@@ -3743,11 +4003,23 @@ begin
         cpos := cpos + 1;
         if c2 = 'A' then begin
           newfmt(2, hasnum and (nn1 = 1));
+          (* счётчик страниц формата А (в оригинале - слово STAND):
+             n страниц, затем обычный формат; *0STA - до отмены;
+             без числа n=1; повторная *STA перезапускает счётчик *)
+          if hasnum and (nn1 = 0) then begin
+            standcnt := 0;
+            standinf := true
+          end else begin
+            standcnt := nn1;
+            standinf := false
+          end;
           stsp := true
         end else if c2 = 'O' then begin
           (* обычный формат - со следующей страницы; текущая страница
-             не прерывается *)
+             не прерывается; счётчик формата А снимается *)
           fmpending := 0;
+          standcnt := 0;
+          standinf := false;
           stsp := true
         end
         else if c2 = 'P' then begin
@@ -3774,8 +4046,16 @@ begin
           for i := 1 to stgl do stg[i] := card[cpos + i - 1];
           cpos := cwv + 1
         end else if c2 = 'N' then begin
-          (* сдвиг штампа - принимается без действия *)
-          stsp := true
+          (* отмена штампа/подвала с текущей страницы (SIPROD.md, 4.8):
+             страница собирается целиком до печати, лист ещё не
+             напечатан и флаги читаются в момент sheetprint, поэтому
+             отмена действует на текущую страницу; *1STN (и *STN) -
+             шапка STP, *2STN - подвал STG, *0STN - ничего; хвост
+             карты после STN остаётся текстом (проверено на оригинале) *)
+          if nn1 = 1 then
+            stpon := false
+          else if nn1 = 2 then
+            stgon := false
         end else if c2 = ' ' then begin
           (* ST с числами после пробела: колонки без линеек парами
              начало-конец (SIPROD.md, 4.9); tabledef пропустит пробел *)
@@ -3944,14 +4224,14 @@ begin
             hfrf := true
         end
       end else if c2 = 'U' then begin
-        (* на первой карте блока широкий формат с числовым префиксом
-           начинается с нового листа: текущий лист дописывается *)
-        if fir and hasnum then begin
-          (* на первой карте широкий формат: номер страницы и поле
-             как в широком формате, строка текста - прежняя *)
+        (* на первой карте блока широкий формат начинается с первой
+           страницы, строка текста остаётся (проверено на живом
+           оригинале); с числовым префиксом текущий лист дописывается *)
+        if fir then
           fmtkeep := true;
+        if fir and hasnum then
           newfmt(1, true)
-        end else
+        else
           newfmt(1, hasnum and (nn1 = 1))
       end else if c2 = 'F' then begin
         if cpos <= cwv then begin
@@ -4004,9 +4284,14 @@ begin
     c := card[cpos];
     cpos := cpos + 1;
     if c = '*' then begin
-      if (cpos <= cwv) and (card[cpos] <> ' ') then
+      if (cpos <= cwv) and (card[cpos] <> ' ') then begin
+        (* литера * завершает слово (в том числе слово-продолжение с
+           предыдущей карты, дошедшее до 72-й позиции: карта *P после
+           такого слова печатает его на текущей странице) *)
+        if wleng > 0 then
+          addword;
         command
-      else
+      end else
         (* '*' перед пробелом или в конце карты опускается *)
         spcnt := spcnt
     end else
@@ -4035,6 +4320,7 @@ begin
   (* бланк упакованной строки: разовая заливка, дальше строки листа
      чистятся присваиванием целиком *)
   for ii := 1 to 128 do бланкp[ii] := ' ';
+  for ii := 65 to 128 do бланкh[ii] := ' ';
   рпмск.м := [40..47];    (* маска младшего байта слова *)
   (* статическая память чистых упакованных строк листа содержит нули,
      а не пробелы: первый newsheet заливает пробелами весь htxt, дальше
@@ -4056,6 +4342,15 @@ begin
   mcson := false;
   fmtkeep := false;
   mcsset := false;
+  standcnt := 0;
+  standinf := false;
+  mcpon := false;
+  mcpinf := false;
+  mcpw := 0;
+  mcph := 0;
+  mcpcnt := 0;
+  hmcp[0] := false;
+  hmcp[1] := false;
   pgfirst := true;
   rgon := false;
   rln := 0;
@@ -4119,7 +4414,12 @@ begin
     flushq(false);
     commit(true);
     if (rowno > 0) and (not tabused) then hused[side] := true;
-    sheetprint(true);
+    (* пустой лист не печатается: страница без текста в конце текста
+       не тратит номер и лист не выводит (проверено на живом
+       оригинале); номер ещё не напечатан - pgspent остаётся false и
+       номер достаётся следующему блоку *)
+    if hused[0] or hused[1] or tabused then
+      sheetprint(true);
     newsheet;
     goto 1
   end;
