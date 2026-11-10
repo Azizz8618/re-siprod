@@ -6,20 +6,35 @@
 #   по умолчанию - репозиторий, в котором лежит сама папка pascal;
 #   ожидает <re-siprod>/tests/siprod/cases/red-*.txt (+ .out) и
 #           <re-siprod>/drakon/schemes/*.drakon (+ .txt)
+# Эталон редактора перекрывается собственным: если существует
+# <re-siprod>/pascal/red-эталоны/<кейс>.out, сверка идёт с ним.
+# Так фиксируются оправданные отличия редактора от оригинала
+# (см. README «Отличия от оригинала»): например, red-literal -
+# литера Ё печатается как Е (у оригиналов автокода литера теряется).
 # Переменные окружения: DISPAK, BESM6_PATH (см. прогнать.sh)
 set -u
 REPO="${1:-$(cd "$(dirname "$0")/.." && pwd)}"
 HERE="$(cd "$(dirname "$0")" && pwd)"
 CASES="$REPO/tests/siprod/cases"
+ETA="$REPO/pascal/red-эталоны"
 SCHEMES="$REPO/drakon/schemes"
 ok=0; diff_=0
 
-echo "=== редактор *RED: 19 эталонов ==="
+echo "=== редактор *RED: 21 эталон ==="
 for t in "$CASES"/red-*.txt; do
     base=$(basename "$t" .txt)
     out=$(mktemp)
-    "$HERE/прогнать.sh" "$HERE/redakt.pas" "$t" > "$out" 2>/dev/null
-    python3 - "$base" "$out" "$CASES/$base.out" <<'PYEOF'
+    # перфорация ГОСТ-10859: Ё -> Е (как на пуске с тома и в секции ДРАКОН;
+    # эталоны редактора сняты с этой заменой - см. red-эталоны/README)
+    sed 's/[ёЁ]/Е/g' "$t" > "$out.dat"
+    "$HERE/прогнать.sh" "$HERE/redakt.pas" "$out.dat" > "$out" 2>/dev/null
+    ref="$CASES/$base.out"
+    etazn=""
+    if [ -f "$ETA/$base.out" ]; then
+        ref="$ETA/$base.out"
+        etazn="  (эталон редактора: red-эталоны/$base.out)"
+    fi
+    res=$(python3 - "$base" "$out" "$ref" <<'PYEOF'
 import sys
 base, raw, refpath = sys.argv[1], sys.argv[2], sys.argv[3]
 txt = open(raw, encoding='utf-8').read()
@@ -51,8 +66,18 @@ else:
     print('DIFF %s  (моя: %d строк, эталон: %d)' % (base, len(out), len(ref)))
     sys.exit(1)
 PYEOF
-    if [ $? -eq 0 ]; then ok=$((ok+1)); else diff_=$((diff_+1)); fi
-    rm -f "$out"
+    )
+    echo "$res"
+    case "$res" in
+        DIFF*)
+            [ -n "$etazn" ] && echo "     $etazn"
+            diff_=$((diff_+1))
+            ;;
+        *)
+            ok=$((ok+1))
+            ;;
+    esac
+    rm -f "$out" "$out.dat"
 done
 
 echo "=== ДРАКОН: 6 эталонных схем ==="

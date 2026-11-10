@@ -15,12 +15,16 @@ ok=0; diff_=0
 sec="${1:-all}"
 
 if [ "$sec" = red ] || [ "$sec" = all ]; then
-echo "=== редактор *RED: 16 эталонов ==="
+echo "=== редактор *RED с тома: 21 эталон ==="
 for t in "$CASES"/red-*.txt; do
     base=$(basename "$t" .txt)
     out=$(mktemp)
     "$HERE/прогнать-с-тома.sh" redakt "$t" > "$out" 2>/dev/null
-    python3 - "$base" "$out" "$REPO/pascal/red-эталоны/$base.out" <<'PYEOF'
+    # редакторный эталон (pascal/red-эталоны/) перекрывает оригинальный:
+    # оправданные отличия редактора - например, Ё -> Е в red-literal
+    ref="$CASES/$base.out"
+    [ -f "$REPO/pascal/red-эталоны/$base.out" ] && ref="$REPO/pascal/red-эталоны/$base.out"
+    python3 - "$base" "$out" "$ref" <<'PYEOF'
 import sys
 base, raw, refpath = sys.argv[1], sys.argv[2], sys.argv[3]
 txt = open(raw, encoding='utf-8').read()

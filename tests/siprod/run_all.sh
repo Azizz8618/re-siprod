@@ -9,6 +9,10 @@ update=0
 fail=0
 for t in "$D"/cases/*.txt; do
     exp=${t%.txt}.out
+    if [ ! -f "$exp" ] && [ $update != 1 ]; then
+        echo "skip $(basename "$t" .txt) (нет эталона)"
+        continue
+    fi
     got=$("$D/run.sh" "$t")
     if [ $update = 1 ]; then
         printf '%s\n' "$got" > "$exp"
