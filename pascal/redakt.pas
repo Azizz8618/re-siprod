@@ -128,16 +128,13 @@ var
   rlnpend: boolean;
   fillon: boolean;        (* перенос по словам *)
 
-  (* очередь слов строки *)
-  wt: array [1..MRW] of pwty;
-  wl: array [1..MRW] of integer;
-  wrc: array [1..MRW] of integer;
-  qsp: array [1..MRW] of integer;   (* пробелов перед словом *)
+  (* очередь слов строки: массивы wt/wl/wrc/qsp/word - в оверлее rmem
+     (случай 1); скаляры-стражи остаются здесь - их значения на
+     границах блоков определены (ПЛАН-ОЗУ, п. 3) *)
   nw: integer;
   natq: integer;          (* естественная ширина очереди слов *)
   wbrk: boolean;          (* длинное слово уже записано строкой *)
   spcnt: integer;         (* накопленных пробелов перед словом *)
-  word: pwty;             (* накопитель слова *)
   wleng: integer;
   wrcl: integer;          (* разрядка слова при наборе *)
 
@@ -155,7 +152,7 @@ var
   fir: boolean;           (* первая карта блока *RED - разбор FIRCAR *)
   stponly, stgonly: boolean;
   stsp: boolean;           (* команда ST оставила лишний пробел *)
-  stp, stg: carty;
+  stp, stg: p80;          (* упакованно: 28 вместо 160 слов *)
   stpl, stgl: integer;
 
   (* таблицы *)
@@ -192,19 +189,13 @@ var
   prevrows: integer;         (* ячеек в предыдущей строке (0 - нет) *)
   trows: integer;         (* колонок в текущей строке таблицы *)
 
-  (* макроопределения *)
+  (* макроопределения: mktx/mkln/mkcnt живут весь журнал - вне оверлея;
+     рабочие массивы раскрытия (mkbuf/mksav/mksl/mksq/mknest/mknum/
+     mkpp/mkres) - в оверлее rmem (случай 1); mkbl/mksp - стражи *)
   mktx: array [1..MKMAX] of mkty;
   mkln: array [1..MKMAX] of integer;
   mkcnt: integer;
-  mkbuf: mkty;
   mkbl: integer;
-  mksav: array [1..TCDEEP] of carty;
-  mksl, mksq: array [1..TCDEEP] of integer;
-  mknest: array [1..TCDEEP] of boolean;  (* вложенный макрос на уровне *)
-  mknum: array [1..TCDEEP] of integer;   (* номер макро на уровне *)
-  mkpp: array [1..TCDEEP] of integer;    (* позиция в теле макро *)
-  mkres: array [1..TCDEEP] of boolean;   (* тело исчерпано, идёт
-                                            продолжение карты *)
   mksp: integer;
 
   cwv: integer;           (* конец текущей карты или тела макро *)
@@ -217,59 +208,82 @@ var
      неупакованный бланк не заведён ради памяти задачи *)
   бланкp: prow;           (* 128 пробелов, упакованно *)
 
-  (* ---- схема ДРАКОН, блок *DRK (имена как в drakon.pas) ---- *)
-  kw: array [1..DTKW] of packed array [1..12] of char;
-  kwl: array [1..DTKW] of integer;
-
-  nkind: array [1..NDMAX] of integer;
-  ntext: array [1..NDMAX] of p80;
-  ntl: array [1..NDMAX] of integer;
-  nkid: array [1..NDMAX] of integer;
-  nbro: array [1..NDMAX] of integer;
-  ncnt: integer;
-  nroot: integer;
-
-  ix, iy, iw, ih: array [1..NDMAX] of integer;
-  nxt: array [1..NDMAX] of integer;
-  mainb: array [1..NDMAX] of integer;
-  brx: array [1..NDMAX, 1..NBMAX] of integer;
-  bry: array [1..NDMAX, 1..NBMAX] of integer;
-  brb: array [1..NDMAX, 1..NBMAX] of integer;
-  nbr: array [1..NDMAX] of integer;
-
-  flat: array [1..NDMAX] of integer;
-  nfl: integer;
-  rws: integer;           (* занятых строк рисунка *)
-
-  gtail, gy: integer;
-  (* стек разбора вложенности; stl - последний узел уровня *)
-  st: array [1..DKST] of integer;
-  sti: array [1..DKST] of integer;
-  stl: array [1..DKST] of integer;
-  stn, last0: integer;
-
-  (* перенос подписи: слова, строки, ширина поля *)
-  wsp: array [1..MXW] of integer;
-  wwp: array [1..MXW] of integer;
-  nwd: integer;
-  gtxt: carty;
-  wtx: array [1..MXL] of p80;
-  wln: array [1..MXL] of integer;
-  nwl: integer;
-  wwd: integer;
-
-  (* силуэт: колонки веток рядом (рис. 9 книги) *)
-  silnb: integer;                  (* число веток *)
-  silb: array [1..SM] of integer;  (* узел-щит ветки *)
-  silf0: array [1..SM] of integer; (* первый узел ветки в flat *)
-  silf1: array [1..SM] of integer; (* последний узел ветки в flat *)
-  silax: array [1..SM] of integer; (* ось колонки ветки *)
-  siltail: array [1..SM] of integer; (* последний узел цепочки ветки *)
-  silbot: array [1..SM] of integer;  (* нижняя строка ветки *)
-  silhb: integer;                  (* строка верхней шины *)
-  silbb: integer;                  (* строка нижней шины (петли) *)
-  sillc: integer;                  (* колонка вертикали петли слева *)
-  silmd: boolean;                  (* схема - силуэт *)
+  (* ---- оверлей резидента: статика *DRK и рабочие массивы ветви
+     *RED не живут одновременно - общая память (ПЛАН-ОЗУ, п. 3;
+     образец - dmem выше). Экономия ~1.5К слов ----
+     случай 0: статика *DRK (kw..silmd) - в блоке *RED мертва, всё
+       пересоздаётся на каждом блоке (drkstart: ncnt:=0, initkw
+       перезаполняет kw);
+     случай 1: очередь слов и раскрытие макро (wt..mkres) - в блоке
+       *DRK мертвы: очередь пуста на границе блоков (flushq при nw=0
+       массивов не читает, конец *RED - flushq+commit), макро
+       раскрывается только в *RED главного цикла (карта *DRK внутри
+       *RED - команда *D, verbatim, не вход в движок).
+     Ограничение: раскрытие макро, прерванное *E с mksp>0, после *DRK
+     не продолжается (стек раскрытия затёрт); эталонами не задевается.
+     Скаляры-стражи (nw, natq, spcnt, wbrk, wleng, wrcl, mksp, mkbl) -
+     вне записи. *)
+  rmem: record
+          case integer of
+            0: (kw: array [1..DTKW] of packed array [1..12] of char;
+                kwl: array [1..DTKW] of integer;
+                nkind: array [1..NDMAX] of integer;
+                ntext: array [1..NDMAX] of p80;
+                ntl: array [1..NDMAX] of integer;
+                nkid: array [1..NDMAX] of integer;
+                nbro: array [1..NDMAX] of integer;
+                ncnt: integer;
+                nroot: integer;
+                ix, iy, iw, ih: array [1..NDMAX] of integer;
+                nxt: array [1..NDMAX] of integer;
+                mainb: array [1..NDMAX] of integer;
+                brx: array [1..NDMAX, 1..NBMAX] of integer;
+                bry: array [1..NDMAX, 1..NBMAX] of integer;
+                brb: array [1..NDMAX, 1..NBMAX] of integer;
+                nbr: array [1..NDMAX] of integer;
+                flat: array [1..NDMAX] of integer;
+                nfl: integer;
+                rws: integer;
+                gtail, gy: integer;
+                st: array [1..DKST] of integer;
+                sti: array [1..DKST] of integer;
+                stl: array [1..DKST] of integer;
+                stn: integer;
+                last0: integer;
+                wsp: array [1..MXW] of integer;
+                wwp: array [1..MXW] of integer;
+                nwd: integer;
+                gtxt: p80;              (* упакованно: 14 вместо 80 *)
+                wtx: array [1..MXL] of p80;
+                wln: array [1..MXL] of integer;
+                nwl: integer;
+                wwd: integer;
+                silnb: integer;
+                silb: array [1..SM] of integer;
+                silf0: array [1..SM] of integer;
+                silf1: array [1..SM] of integer;
+                silax: array [1..SM] of integer;
+                siltail: array [1..SM] of integer;
+                silbot: array [1..SM] of integer;
+                silhb: integer;
+                silbb: integer;
+                sillc: integer;
+                silmd: boolean);
+            1: (wt: array [1..MRW] of pwty;
+                wl: array [1..MRW] of integer;
+                wrc: array [1..MRW] of integer;
+                qsp: array [1..MRW] of integer;
+                word: pwty;
+                mkbuf: mkty;
+                mksav: array [1..TCDEEP] of carty;
+                mksl: array [1..TCDEEP] of integer;
+                mksq: array [1..TCDEEP] of integer;
+                mknest: array [1..TCDEEP] of boolean;
+                mknum: array [1..TCDEEP] of integer;
+                mkpp: array [1..TCDEEP] of integer;
+                mkres: array [1..TCDEEP] of boolean)
+        end;   (* статика *DRK (случай 0) / очередь слов + раскрытие
+                  макро (случай 1) *)
 
 procedure pasout(var a, b: char); fortran;
 
@@ -1369,17 +1383,17 @@ begin
   if indon then effw := effw - 3;
   nat := natq;
   for i := 2 to nw do
-    gap[i] := qsp[i];
-  if (nat > effw) and (wl[1] > effw) then begin
+    gap[i] := rmem.qsp[i];
+  if (nat > effw) and (rmem.wl[1] > effw) then begin
     (* слово длиннее строки: разорвать, хвост остаётся в очереди *)
-    for i := 1 to effw do cur[curflda + i - 1] := wt[1][i];
+    for i := 1 to effw do cur[curflda + i - 1] := rmem.wt[1][i];
     commit(true);
     wbrk := true;
     sh := effw;
-    for i := sh + 1 to wl[1] do wt[1][i - sh] := wt[1][i];
-    wl[1] := wl[1] - sh;
-    wrc[1] := 0;
-    natq := wl[1];
+    for i := sh + 1 to rmem.wl[1] do rmem.wt[1][i - sh] := rmem.wt[1][i];
+    rmem.wl[1] := rmem.wl[1] - sh;
+    rmem.wrc[1] := 0;
+    natq := rmem.wl[1];
     exit
   end;
   p := curflda;
@@ -1387,7 +1401,7 @@ begin
   extra := 0;
   if just and fillon and (nw > 1) then extra := effw - nat;
   for i := 1 to nw do begin
-    putword(cur, p, wt[i], wl[i]);
+    putword(cur, p, rmem.wt[i], rmem.wl[i]);
     if i < nw then begin
       g := gap[i + 1];
       (* лишние пробелы выравнивания: поровну во все промежутки и
@@ -1450,14 +1464,14 @@ begin
     commit(true)
   end;
   nw := nw + 1;
-  wt[nw] := word;
-  wl[nw] := wleng;
-  wrc[nw] := wrcl;
+  rmem.wt[nw] := rmem.word;
+  rmem.wl[nw] := wleng;
+  rmem.wrc[nw] := wrcl;
   if nw > 1 then begin
     (* число пробелов перед словом (в оригинале несколько пробелов
        сохраняются) *)
-    qsp[nw] := spcnt;
-    natq := natq + qsp[nw]
+    rmem.qsp[nw] := spcnt;
+    natq := natq + rmem.qsp[nw]
   end;
   spcnt := 0;
   natq := natq + wleng;
@@ -1499,13 +1513,13 @@ begin
   if wleng = 0 then wrcl := rcn;
   if wleng >= 99 then addword;
   wleng := wleng + 1;
-  word[wleng] := c;
+  rmem.word[wleng] := c;
   (* разрядка: n пробелов после каждой литеры слова *)
   if rcn > 0 then
     for i := 1 to rcn do begin
       if wleng >= 99 then addword;
       wleng := wleng + 1;
-      word[wleng] := ' '
+      rmem.word[wleng] := ' '
     end
 end;
 
@@ -1595,7 +1609,7 @@ begin
           for i := 1 to bn do begin
             if wleng >= 99 then addword;
             wleng := wleng + 1;
-            word[wleng] := buf[i]
+            rmem.word[wleng] := buf[i]
           end;
         wrcl := 0;
         addword
@@ -1623,7 +1637,7 @@ begin
     if cpos > cwv then exit;
     if wleng >= 99 then addword;
     wleng := wleng + 1;
-    word[wleng] := card[cpos];
+    rmem.word[wleng] := card[cpos];
     cpos := cpos + 1
   end
 end;
@@ -1645,15 +1659,15 @@ end;
 procedure centerrest(from: integer);
 var
   r: rowty;
-  ln, st, i: integer;
+  ln, stc, i: integer;   (* stc: st - поле оверлея rmem (статика *DRK) *)
 begin
   ln := 0;
   for i := from to cwv do
     if card[i] <> ' ' then ln := i - from + 1;
   if ln > 0 then begin
     clrrow(r);
-    st := curflda + (fldw - ln) div 2;
-    for i := 1 to ln do r[st + i - 1] := card[from + i - 1];
+    stc := curflda + (fldw - ln) div 2;
+    for i := 1 to ln do r[stc + i - 1] := card[from + i - 1];
     commitrow(r, true)
   end
 end;
@@ -2046,7 +2060,7 @@ begin
         done := true
       else if mkbl < MKLEN then begin
         mkbl := mkbl + 1;
-        mkbuf[mkbl] := c
+        rmem.mkbuf[mkbl] := c
       end
     end;
     if not done then begin
@@ -2055,7 +2069,7 @@ begin
     end
   end;
   for i := 1 to MKLEN do mktx[mkcnt][i] := ' ';
-  for i := 1 to mkbl do mktx[mkcnt][i] := mkbuf[i];
+  for i := 1 to mkbl do mktx[mkcnt][i] := rmem.mkbuf[i];
   mkln[mkcnt] := mkbl
 end;
 
@@ -2086,14 +2100,14 @@ begin
   mksp := mksp + 1;
   (* вложенный макрос: продолжение внешней карты после раскрытия
      теряется - как в оригинале *)
-  if mksp > 1 then mknest[mksp - 1] := true;
-  mknest[mksp] := false;
-  mksav[mksp] := card;
-  mksl[mksp] := cwv;
-  mksq[mksp] := cpos;
-  mknum[mksp] := nn1;
-  mkpp[mksp] := 1;
-  mkres[mksp] := false;
+  if mksp > 1 then rmem.mknest[mksp - 1] := true;
+  rmem.mknest[mksp] := false;
+  rmem.mksav[mksp] := card;
+  rmem.mksl[mksp] := cwv;
+  rmem.mksq[mksp] := cpos;
+  rmem.mknum[mksp] := nn1;
+  rmem.mkpp[mksp] := 1;
+  rmem.mkres[mksp] := false;
   (* первый кусок тела - в card, сканирует текущий вызов scancard *)
   ln := mkln[nn1];
   if ln > CW then ln := CW;
@@ -2101,7 +2115,7 @@ begin
   for i := 1 to ln do card[i] := mktx[nn1][i];
   cwv := ln;
   cpos := 1;
-  mkpp[mksp] := ln + 1
+  rmem.mkpp[mksp] := ln + 1
 end;
 
 (* шаг раскрытия макро из главного цикла: очередной кусок тела,
@@ -2110,31 +2124,31 @@ procedure macstep;
 var
   ln, i: integer;
 begin
-  if mkpp[mksp] <= mkln[mknum[mksp]] then begin
+  if rmem.mkpp[mksp] <= mkln[rmem.mknum[mksp]] then begin
     (* следующий кусок тела макро *)
-    ln := mkln[mknum[mksp]] - mkpp[mksp] + 1;
+    ln := mkln[rmem.mknum[mksp]] - rmem.mkpp[mksp] + 1;
     if ln > CW then ln := CW;
     for i := 1 to 80 do card[i] := ' ';
     for i := 1 to ln do
-      card[i] := mktx[mknum[mksp]][mkpp[mksp] + i - 1];
+      card[i] := mktx[rmem.mknum[mksp]][rmem.mkpp[mksp] + i - 1];
     cwv := ln;
     cpos := 1;
-    mkpp[mksp] := mkpp[mksp] + ln;
+    rmem.mkpp[mksp] := rmem.mkpp[mksp] + ln;
     scancard
-  end else if not mkres[mksp] then begin
+  end else if not rmem.mkres[mksp] then begin
     (* тело исчерпано: продолжить прерванную карту *)
-    mkres[mksp] := true;
-    card := mksav[mksp];
-    cwv := mksl[mksp];
-    cpos := mksq[mksp];
+    rmem.mkres[mksp] := true;
+    card := rmem.mksav[mksp];
+    cwv := rmem.mksl[mksp];
+    cpos := rmem.mksq[mksp];
     (* хвостовые пробелы тела макроса отбрасываются *)
     spcnt := 0;
-    if mknest[mksp] then
+    if rmem.mknest[mksp] then
       (* после вложенного макроса продолжение карты теряется *)
       cwv := cpos - 1;
     scancard
   end else begin
-    mknest[mksp] := false;
+    rmem.mknest[mksp] := false;
     mksp := mksp - 1
   end
 end;
@@ -2189,92 +2203,95 @@ end;
 
 procedure initkw;
 begin
-  kwl[1] := 9;
-  kw[1][1] := 'З'; kw[1][2] := 'А'; kw[1][3] := 'Г';
-  kw[1][4] := 'О'; kw[1][5] := 'Л'; kw[1][6] := 'О';
-  kw[1][7] := 'В'; kw[1][8] := 'О'; kw[1][9] := 'К';
-  kwl[2] := 5;
-  kw[2][1] := 'В'; kw[2][2] := 'Е'; kw[2][3] := 'Т';
-  kw[2][4] := 'К'; kw[2][5] := 'А';
-  kwl[3] := 8;
-  kw[3][1] := 'Д'; kw[3][2] := 'Е'; kw[3][3] := 'Й';
-  kw[3][4] := 'С'; kw[3][5] := 'Т'; kw[3][6] := 'В';
-  kw[3][7] := 'И'; kw[3][8] := 'Е';
-  kwl[4] := 11;
-  kw[4][1] := 'К'; kw[4][2] := 'О'; kw[4][3] := 'М';
-  kw[4][4] := 'М'; kw[4][5] := 'Е'; kw[4][6] := 'Н';
-  kw[4][7] := 'Т'; kw[4][8] := 'А'; kw[4][9] := 'Р';
-  kw[4][10] := 'И'; kw[4][11] := 'Й';
-  kwl[5] := 4;
-  kw[5][1] := 'Е'; kw[5][2] := 'С'; kw[5][3] := 'Л'; kw[5][4] := 'И';
-  kwl[6] := 4;
-  kw[6][1] := 'Ц'; kw[6][2] := 'И'; kw[6][3] := 'К'; kw[6][4] := 'Л';
-  kwl[7] := 5;
-  kw[7][1] := 'В'; kw[7][2] := 'Ы'; kw[7][3] := 'Б';
-  kw[7][4] := 'О'; kw[7][5] := 'Р';
-  kwl[8] := 7;
-  kw[8][1] := 'В'; kw[8][2] := 'А'; kw[8][3] := 'Р';
-  kw[8][4] := 'И'; kw[8][5] := 'А'; kw[8][6] := 'Н'; kw[8][7] := 'Т';
-  kwl[9] := 5;
-  kw[9][1] := 'А'; kw[9][2] := 'Д'; kw[9][3] := 'Р';
-  kw[9][4] := 'Е'; kw[9][5] := 'С';
-  kwl[10] := 5;
-  kw[10][1] := 'К'; kw[10][2] := 'О'; kw[10][3] := 'Н';
-  kw[10][4] := 'Е'; kw[10][5] := 'Ц';
-  kwl[11] := 2;
-  kw[11][1] := 'Т'; kw[11][2] := 'О';
-  kwl[12] := 5;
-  kw[12][1] := 'И'; kw[12][2] := 'Н'; kw[12][3] := 'А';
-  kw[12][4] := 'Ч'; kw[12][5] := 'Е';
+  rmem.kwl[1] := 9;
+  rmem.kw[1][1] := 'З'; rmem.kw[1][2] := 'А'; rmem.kw[1][3] := 'Г';
+  rmem.kw[1][4] := 'О'; rmem.kw[1][5] := 'Л'; rmem.kw[1][6] := 'О';
+  rmem.kw[1][7] := 'В'; rmem.kw[1][8] := 'О'; rmem.kw[1][9] := 'К';
+  rmem.kwl[2] := 5;
+  rmem.kw[2][1] := 'В'; rmem.kw[2][2] := 'Е'; rmem.kw[2][3] := 'Т';
+  rmem.kw[2][4] := 'К'; rmem.kw[2][5] := 'А';
+  rmem.kwl[3] := 8;
+  rmem.kw[3][1] := 'Д'; rmem.kw[3][2] := 'Е'; rmem.kw[3][3] := 'Й';
+  rmem.kw[3][4] := 'С'; rmem.kw[3][5] := 'Т'; rmem.kw[3][6] := 'В';
+  rmem.kw[3][7] := 'И'; rmem.kw[3][8] := 'Е';
+  rmem.kwl[4] := 11;
+  rmem.kw[4][1] := 'К'; rmem.kw[4][2] := 'О'; rmem.kw[4][3] := 'М';
+  rmem.kw[4][4] := 'М'; rmem.kw[4][5] := 'Е'; rmem.kw[4][6] := 'Н';
+  rmem.kw[4][7] := 'Т'; rmem.kw[4][8] := 'А'; rmem.kw[4][9] := 'Р';
+  rmem.kw[4][10] := 'И'; rmem.kw[4][11] := 'Й';
+  rmem.kwl[5] := 4;
+  rmem.kw[5][1] := 'Е'; rmem.kw[5][2] := 'С'; rmem.kw[5][3] := 'Л';
+  rmem.kw[5][4] := 'И';
+  rmem.kwl[6] := 4;
+  rmem.kw[6][1] := 'Ц'; rmem.kw[6][2] := 'И'; rmem.kw[6][3] := 'К';
+  rmem.kw[6][4] := 'Л';
+  rmem.kwl[7] := 5;
+  rmem.kw[7][1] := 'В'; rmem.kw[7][2] := 'Ы'; rmem.kw[7][3] := 'Б';
+  rmem.kw[7][4] := 'О'; rmem.kw[7][5] := 'Р';
+  rmem.kwl[8] := 7;
+  rmem.kw[8][1] := 'В'; rmem.kw[8][2] := 'А'; rmem.kw[8][3] := 'Р';
+  rmem.kw[8][4] := 'И'; rmem.kw[8][5] := 'А'; rmem.kw[8][6] := 'Н';
+  rmem.kw[8][7] := 'Т';
+  rmem.kwl[9] := 5;
+  rmem.kw[9][1] := 'А'; rmem.kw[9][2] := 'Д'; rmem.kw[9][3] := 'Р';
+  rmem.kw[9][4] := 'Е'; rmem.kw[9][5] := 'С';
+  rmem.kwl[10] := 5;
+  rmem.kw[10][1] := 'К'; rmem.kw[10][2] := 'О'; rmem.kw[10][3] := 'Н';
+  rmem.kw[10][4] := 'Е'; rmem.kw[10][5] := 'Ц';
+  rmem.kwl[11] := 2;
+  rmem.kw[11][1] := 'Т'; rmem.kw[11][2] := 'О';
+  rmem.kwl[12] := 5;
+  rmem.kw[12][1] := 'И'; rmem.kw[12][2] := 'Н'; rmem.kw[12][3] := 'А';
+  rmem.kw[12][4] := 'Ч'; rmem.kw[12][5] := 'Е';
   (* полный комплект икон рис. 4: ключевые слова 13-28 *)
-  kwl[13] := 5;
-  kw[13][1] := 'П'; kw[13][2] := 'О'; kw[13][3] := 'Л';
-  kw[13][4] := 'К'; kw[13][5] := 'А';
-  kwl[14] := 5;
-  kw[14][1] := 'П'; kw[14][2] := 'А'; kw[14][3] := 'Р';
-  kw[14][4] := 'А'; kw[14][5] := 'М';
-  kwl[15] := 3;
-  kw[15][1] := 'Д'; kw[15][2] := 'Л'; kw[15][3] := 'Я';
-  kwl[16] := 3;
-  kw[16][1] := 'К'; kw[16][2] := 'Д'; kw[16][3] := 'Л';
-  kwl[17] := 5;
-  kw[17][1] := 'В'; kw[17][2] := 'Ы'; kw[17][3] := 'В';
-  kw[17][4] := 'О'; kw[17][5] := 'Д';
-  kwl[18] := 4;
-  kw[18][1] := 'В'; kw[18][2] := 'В'; kw[18][3] := 'О';
-  kw[18][4] := 'Д';
-  kwl[19] := 5;
-  kw[19][1] := 'П'; kw[19][2] := 'А'; kw[19][3] := 'У';
-  kw[19][4] := 'З'; kw[19][5] := 'А';
-  kwl[20] := 6;
-  kw[20][1] := 'П'; kw[20][2] := 'Е'; kw[20][3] := 'Р';
-  kw[20][4] := 'И'; kw[20][5] := 'О'; kw[20][6] := 'Д';
-  kwl[21] := 4;
-  kw[21][1] := 'П'; kw[21][2] := 'У'; kw[21][3] := 'С';
-  kw[21][4] := 'К';
-  kwl[22] := 6;
-  kw[22][1] := 'С'; kw[22][2] := 'И'; kw[22][3] := 'Н';
-  kw[22][4] := 'Х'; kw[22][5] := 'Р'; kw[22][6] := 'О';
-  kwl[23] := 5;
-  kw[23][1] := 'П'; kw[23][2] := 'А'; kw[23][3] := 'Р';
-  kw[23][4] := 'А'; kw[23][5] := 'Л';
-  kwl[24] := 4;
-  kw[24][1] := 'П'; kw[24][2] := 'К'; kw[24][3] := 'О';
-  kw[24][4] := 'М';
-  kwl[25] := 4;
-  kw[25][1] := 'Л'; kw[25][2] := 'К'; kw[25][3] := 'О';
-  kw[25][4] := 'М';
-  kwl[26] := 5;
-  kw[26][1] := 'П'; kw[26][2] := 'Е'; kw[26][3] := 'Т';
-  kw[26][4] := 'Л'; kw[26][5] := 'Я';
-  kwl[27] := 8;
-  kw[27][1] := 'Г'; kw[27][2] := 'Р'; kw[27][3] := 'Е';
-  kw[27][4] := 'Б'; kw[27][5] := 'Е'; kw[27][6] := 'Н';
-  kw[27][7] := 'К'; kw[27][8] := 'А';
-  kwl[28] := 7;
-  kw[28][1] := 'В'; kw[28][2] := 'С'; kw[28][3] := 'Т';
-  kw[28][4] := 'А'; kw[28][5] := 'В'; kw[28][6] := 'К';
-  kw[28][7] := 'А'
+  rmem.kwl[13] := 5;
+  rmem.kw[13][1] := 'П'; rmem.kw[13][2] := 'О'; rmem.kw[13][3] := 'Л';
+  rmem.kw[13][4] := 'К'; rmem.kw[13][5] := 'А';
+  rmem.kwl[14] := 5;
+  rmem.kw[14][1] := 'П'; rmem.kw[14][2] := 'А'; rmem.kw[14][3] := 'Р';
+  rmem.kw[14][4] := 'А'; rmem.kw[14][5] := 'М';
+  rmem.kwl[15] := 3;
+  rmem.kw[15][1] := 'Д'; rmem.kw[15][2] := 'Л'; rmem.kw[15][3] := 'Я';
+  rmem.kwl[16] := 3;
+  rmem.kw[16][1] := 'К'; rmem.kw[16][2] := 'Д'; rmem.kw[16][3] := 'Л';
+  rmem.kwl[17] := 5;
+  rmem.kw[17][1] := 'В'; rmem.kw[17][2] := 'Ы'; rmem.kw[17][3] := 'В';
+  rmem.kw[17][4] := 'О'; rmem.kw[17][5] := 'Д';
+  rmem.kwl[18] := 4;
+  rmem.kw[18][1] := 'В'; rmem.kw[18][2] := 'В'; rmem.kw[18][3] := 'О';
+  rmem.kw[18][4] := 'Д';
+  rmem.kwl[19] := 5;
+  rmem.kw[19][1] := 'П'; rmem.kw[19][2] := 'А'; rmem.kw[19][3] := 'У';
+  rmem.kw[19][4] := 'З'; rmem.kw[19][5] := 'А';
+  rmem.kwl[20] := 6;
+  rmem.kw[20][1] := 'П'; rmem.kw[20][2] := 'Е'; rmem.kw[20][3] := 'Р';
+  rmem.kw[20][4] := 'И'; rmem.kw[20][5] := 'О'; rmem.kw[20][6] := 'Д';
+  rmem.kwl[21] := 4;
+  rmem.kw[21][1] := 'П'; rmem.kw[21][2] := 'У'; rmem.kw[21][3] := 'С';
+  rmem.kw[21][4] := 'К';
+  rmem.kwl[22] := 6;
+  rmem.kw[22][1] := 'С'; rmem.kw[22][2] := 'И'; rmem.kw[22][3] := 'Н';
+  rmem.kw[22][4] := 'Х'; rmem.kw[22][5] := 'Р'; rmem.kw[22][6] := 'О';
+  rmem.kwl[23] := 5;
+  rmem.kw[23][1] := 'П'; rmem.kw[23][2] := 'А'; rmem.kw[23][3] := 'Р';
+  rmem.kw[23][4] := 'А'; rmem.kw[23][5] := 'Л';
+  rmem.kwl[24] := 4;
+  rmem.kw[24][1] := 'П'; rmem.kw[24][2] := 'К'; rmem.kw[24][3] := 'О';
+  rmem.kw[24][4] := 'М';
+  rmem.kwl[25] := 4;
+  rmem.kw[25][1] := 'Л'; rmem.kw[25][2] := 'К'; rmem.kw[25][3] := 'О';
+  rmem.kw[25][4] := 'М';
+  rmem.kwl[26] := 5;
+  rmem.kw[26][1] := 'П'; rmem.kw[26][2] := 'Е'; rmem.kw[26][3] := 'Т';
+  rmem.kw[26][4] := 'Л'; rmem.kw[26][5] := 'Я';
+  rmem.kwl[27] := 8;
+  rmem.kw[27][1] := 'Г'; rmem.kw[27][2] := 'Р'; rmem.kw[27][3] := 'Е';
+  rmem.kw[27][4] := 'Б'; rmem.kw[27][5] := 'Е'; rmem.kw[27][6] := 'Н';
+  rmem.kw[27][7] := 'К'; rmem.kw[27][8] := 'А';
+  rmem.kwl[28] := 7;
+  rmem.kw[28][1] := 'В'; rmem.kw[28][2] := 'С'; rmem.kw[28][3] := 'Т';
+  rmem.kw[28][4] := 'А'; rmem.kw[28][5] := 'В'; rmem.kw[28][6] := 'К';
+  rmem.kw[28][7] := 'А'
 end;
 (* распознавание ключевого слова: индекс или 0 *)
 function detect(var s: carty; ln: integer): integer;
@@ -2285,11 +2302,11 @@ begin
   res := 0;
   i := 1;
   while (i <= DTKW) and (res = 0) do begin
-    if (ln > 0) and (ln >= kwl[i]) then begin
+    if (ln > 0) and (ln >= rmem.kwl[i]) then begin
       ok := true;
       j := 1;
-      while (j <= kwl[i]) and ok do begin
-        if s[j] <> kw[i][j] then
+      while (j <= rmem.kwl[i]) and ok do begin
+        if s[j] <> rmem.kw[i][j] then
           ok := false;
         j := j + 1
       end;
@@ -2307,42 +2324,42 @@ var
   i: integer;
   done: boolean;
 begin
-  if ncnt >= NDMAX then
-    ncnt := NDMAX;
-  ncnt := ncnt + 1;
-  nkind[ncnt] := k;
-  ntl[ncnt] := ln;
-  for i := 1 to ln do ntext[ncnt][i] := s[sl + i - 1];
-  nkid[ncnt] := 0;
-  nbro[ncnt] := 0;
-  nbr[ncnt] := 0;
-  nxt[ncnt] := 0;
+  if rmem.ncnt >= NDMAX then
+    rmem.ncnt := NDMAX;
+  rmem.ncnt := rmem.ncnt + 1;
+  rmem.nkind[rmem.ncnt] := k;
+  rmem.ntl[rmem.ncnt] := ln;
+  for i := 1 to ln do rmem.ntext[rmem.ncnt][i] := s[sl + i - 1];
+  rmem.nkid[rmem.ncnt] := 0;
+  rmem.nbro[rmem.ncnt] := 0;
+  rmem.nbr[rmem.ncnt] := 0;
+  rmem.nxt[rmem.ncnt] := 0;
   done := false;
-  while (stn > 0) and (not done) do begin
-    if sti[stn] >= ind then
-      stn := stn - 1
+  while (rmem.stn > 0) and (not done) do begin
+    if rmem.sti[rmem.stn] >= ind then
+      rmem.stn := rmem.stn - 1
     else
       done := true
   end;
-  if stn = 0 then begin
-    if nroot = 0 then
-      nroot := ncnt
+  if rmem.stn = 0 then begin
+    if rmem.nroot = 0 then
+      rmem.nroot := rmem.ncnt
     else
-      nbro[last0] := ncnt;
-    last0 := ncnt
+      rmem.nbro[rmem.last0] := rmem.ncnt;
+    rmem.last0 := rmem.ncnt
   end else begin
-    if nkid[st[stn]] = 0 then
-      nkid[st[stn]] := ncnt
+    if rmem.nkid[rmem.st[rmem.stn]] = 0 then
+      rmem.nkid[rmem.st[rmem.stn]] := rmem.ncnt
     else
-      nbro[stl[stn]] := ncnt;
-    stl[stn] := ncnt
+      rmem.nbro[rmem.stl[rmem.stn]] := rmem.ncnt;
+    rmem.stl[rmem.stn] := rmem.ncnt
   end;
   (* контейнеры: ЕСЛИ ЦИКЛ ВЫБОР ВАРИАНТ ТО ИНАЧЕ ДЛЯ *)
   if (k = 5) or (k = 6) or (k = 7) or (k = 8) or
      (k = 11) or (k = 12) or (k = 15) then begin
-    stn := stn + 1;
-    st[stn] := ncnt;
-    sti[stn] := ind
+    rmem.stn := rmem.stn + 1;
+    rmem.st[rmem.stn] := rmem.ncnt;
+    rmem.sti[rmem.stn] := ind
   end
 end;
 
@@ -2395,7 +2412,7 @@ begin
     for i := 1 to ln do txt[i] := card[ind + i];
     k := detect(txt, ln);
     if k > 0 then begin
-      p := kwl[k] + 1;
+      p := rmem.kwl[k] + 1;
       skiphead(p, ln, txt);
       tl := 0;
       for i := p to ln do
@@ -2434,7 +2451,7 @@ function kindof(n: integer): integer;
 var
   k, res: integer;
 begin
-  k := nkind[n];
+  k := rmem.nkind[n];
   res := 0;
   if k = 1 then
     res := 1
@@ -2530,33 +2547,33 @@ var
   i, j, cur: integer;
   nl: boolean;
 begin
-  nwl := 0;
+  rmem.nwl := 0;
   cur := 0;
-  for i := 1 to nwd do begin
+  for i := 1 to rmem.nwd do begin
     (* НЕ писать «(cur = 0) or (wln[cur] + ... > wwd)»: компилятор 15.1
        не гарантирует короткое замыкание, при cur = 0 читается и
        пишется wln[0]/wtx[0] вне массива - портятся соседние
        переменные, слова подписи теряются *)
     nl := true;
     if cur > 0 then
-      if wln[cur] + 1 + wwp[i] <= wwd then
+      if rmem.wln[cur] + 1 + rmem.wwp[i] <= rmem.wwd then
         nl := false;
     if nl then begin
       cur := cur + 1;
-      wln[cur] := 0
+      rmem.wln[cur] := 0
     end else begin
-      wln[cur] := wln[cur] + 1;
-      wtx[cur][wln[cur]] := ' '
+      rmem.wln[cur] := rmem.wln[cur] + 1;
+      rmem.wtx[cur][rmem.wln[cur]] := ' '
     end;
-    for j := 1 to wwp[i] do begin
-      wtx[cur][wln[cur] + j] := gtxt[wsp[i] + j - 1];
+    for j := 1 to rmem.wwp[i] do begin
+      rmem.wtx[cur][rmem.wln[cur] + j] := rmem.gtxt[rmem.wsp[i] + j - 1];
     end;
-    wln[cur] := wln[cur] + wwp[i]
+    rmem.wln[cur] := rmem.wln[cur] + rmem.wwp[i]
   end;
-  nwl := cur;
-  if nwl = 0 then begin
-    nwl := 1;
-    wln[1] := 0
+  rmem.nwl := cur;
+  if rmem.nwl = 0 then begin
+    rmem.nwl := 1;
+    rmem.wln[1] := 0
   end
 end;
 
@@ -2565,19 +2582,19 @@ procedure splitw(tl: integer);
 var
   i: integer;
 begin
-  nwd := 0;
+  rmem.nwd := 0;
   i := 1;
   while i <= tl do begin
-    while (i <= tl) and (gtxt[i] = ' ') do
+    while (i <= tl) and (rmem.gtxt[i] = ' ') do
       i := i + 1;
     if i <= tl then begin
-      nwd := nwd + 1;
-      wsp[nwd] := i;
-      while (i <= tl) and (gtxt[i] <> ' ') do
+      rmem.nwd := rmem.nwd + 1;
+      rmem.wsp[rmem.nwd] := i;
+      while (i <= tl) and (rmem.gtxt[i] <> ' ') do
         i := i + 1;
-      wwp[nwd] := i - wsp[nwd];
-      if wwp[nwd] > wwd then
-        wwd := wwp[nwd]
+      rmem.wwp[rmem.nwd] := i - rmem.wsp[rmem.nwd];
+      if rmem.wwp[rmem.nwd] > rmem.wwd then
+        rmem.wwd := rmem.wwp[rmem.nwd]
     end
   end
 end;
@@ -2592,20 +2609,20 @@ procedure settext(n: integer);
 var
   i, tl, L, tg: integer;
 begin
-  tl := ntl[n];
-  for i := 1 to tl do gtxt[i] := ntext[n][i];
-  wwd := MINW;
+  tl := rmem.ntl[n];
+  for i := 1 to tl do rmem.gtxt[i] := rmem.ntext[n][i];
+  rmem.wwd := MINW;
   splitw(tl);
   if tl > WMAXLINE then begin
     (* длинная подпись: строки равных долей *)
     L := (tl + WMAXLINE - 1) div WMAXLINE;
     tg := (tl + L - 1) div L;
-    if tg > wwd then
-      wwd := tg
-  end else if tl > wwd then
-    wwd := tl;
-  if (wwd mod 2) = 0 then
-    wwd := wwd + 1
+    if tg > rmem.wwd then
+      rmem.wwd := tg
+  end else if tl > rmem.wwd then
+    rmem.wwd := tl;
+  if (rmem.wwd mod 2) = 0 then
+    rmem.wwd := rmem.wwd + 1
 end;
 
 (* подогнать поле под подпись: слова могут не упаковаться в
@@ -2615,13 +2632,13 @@ var
   tl, L: integer;
 begin
   settext(n);
-  tl := ntl[n];
+  tl := rmem.ntl[n];
   L := 1;
   if tl > WMAXLINE then
     L := (tl + WMAXLINE - 1) div WMAXLINE;
   wraptl(tl);
-  while (nwl > L) and (wwd < WMAXLINE + 12) do begin
-    wwd := wwd + 2;
+  while (rmem.nwl > L) and (rmem.wwd < WMAXLINE + 12) do begin
+    rmem.wwd := rmem.wwd + 2;
     wraptl(tl)
   end
 end;
@@ -2632,7 +2649,7 @@ var
   k, tl, wd: integer;
 begin
   k := kindof(n);
-  tl := ntl[n];
+  tl := rmem.ntl[n];
   if k = 4 then begin
     (* конец: маленький полуовал *)
     wd := tl + 2;
@@ -2648,22 +2665,22 @@ begin
   else begin
     fittext(n);
     if k = 3 then
-      wd := wwd + 4
+      wd := rmem.wwd + 4
     else if k = 6 then
       (* параллелограмм: сдвиг верха равен числу строк + 1 *)
-      wd := wwd + 3 + nwl
+      wd := rmem.wwd + 3 + rmem.nwl
     else if (k = 8) or (k = 17) or (k = 21) or (k = 24) then
-      wd := wwd + 4
+      wd := rmem.wwd + 4
     else if (k = 10) or (k = 16) or (k = 18) then
-      wd := wwd + 6
+      wd := rmem.wwd + 6
     else if (k = 13) or (k = 14) then
-      wd := wwd + 10
+      wd := rmem.wwd + 10
     else if k = 19 then
-      wd := wwd + 12
+      wd := rmem.wwd + 12
     else if k = 20 then
-      wd := wwd + 3
+      wd := rmem.wwd + 3
     else
-      wd := wwd + 2;
+      wd := rmem.wwd + 2;
     iconw := wd
   end
 end;
@@ -2675,48 +2692,48 @@ var
 begin
   if k = 0 then begin
     (* ДЕЙСТВИЕ: прямоугольник *)
-    ih[n] := nwl + 2;
+    rmem.ih[n] := rmem.nwl + 2;
     hrun(x, y, w, '+', '+');
-    for i := 1 to nwl do begin
+    for i := 1 to rmem.nwl do begin
       r := y + i;
       put(x, r, '|');
-      ctext(x + 1, wwd, r, wtx[i], wln[i]);
+      ctext(x + 1, rmem.wwd, r, rmem.wtx[i], rmem.wln[i]);
       put(x + w - 1, r, '|')
     end;
-    hrun(x, y + nwl + 1, w, '+', '+')
+    hrun(x, y + rmem.nwl + 1, w, '+', '+')
   end else if k = 1 then begin
     (* ЗАГОЛОВОК: полуовал И1 *)
-    ih[n] := nwl + 2;
+    rmem.ih[n] := rmem.nwl + 2;
     hrun(x, y, w, '.', '.');
-    for i := 1 to nwl do begin
+    for i := 1 to rmem.nwl do begin
       r := y + i;
       put(x, r, '(');
-      ctext(x + 1, wwd, r, wtx[i], wln[i]);
+      ctext(x + 1, rmem.wwd, r, rmem.wtx[i], rmem.wln[i]);
       put(x + w - 1, r, ')')
     end;
-    hrun(x, y + nwl + 1, w, '''', '''')
+    hrun(x, y + rmem.nwl + 1, w, '''', '''')
   end else if k = 3 then begin
     (* ВОПРОС: шестиугольник И4, валентная точка справа -
        линия плеча примыкает к стене на середине высоты *)
-    ih[n] := nwl + 4;
-    hrun(x + 2, y, wwd, '+', '+');
+    rmem.ih[n] := rmem.nwl + 4;
+    hrun(x + 2, y, rmem.wwd, '+', '+');
     put(x + 1, y + 1, '/');
     put(x + w - 2, y + 1, '(');
-    for i := 1 to nwl do begin
+    for i := 1 to rmem.nwl do begin
       r := y + 1 + i;
       put(x, r, '|');
-      ctext(x + 1, wwd + 2, r, wtx[i], wln[i]);
+      ctext(x + 1, rmem.wwd + 2, r, rmem.wtx[i], rmem.wln[i]);
       put(x + w - 1, r, '|')
     end;
-    put(x + 1, y + nwl + 2, '(');
-    put(x + w - 2, y + nwl + 2, ')');
-    hrun(x + 2, y + nwl + 3, wwd, '+', '+')
+    put(x + 1, y + rmem.nwl + 2, '(');
+    put(x + w - 2, y + rmem.nwl + 2, ')');
+    hrun(x + 2, y + rmem.nwl + 3, rmem.wwd, '+', '+')
   end else if k = 4 then begin
     (* КОНЕЦ: малый полуовал И2 *)
-    ih[n] := 3;
+    rmem.ih[n] := 3;
     hrun(x, y, w, '.', '.');
     put(x, y + 1, '(');
-    ctext(x + 1, w - 2, y + 1, wtx[1], wln[1]);
+    ctext(x + 1, w - 2, y + 1, rmem.wtx[1], rmem.wln[1]);
     put(x + w - 1, y + 1, ')');
     hrun(x, y + 2, w, '''', '''')
   end
@@ -2729,48 +2746,48 @@ var
 begin
   if k = 2 then begin
     (* ИМЯ ВЕТКИ: щит И7 - стены сходятся к нижней вершине *)
-    ih[n] := nwl + 3;
+    rmem.ih[n] := rmem.nwl + 3;
     hrun(x, y, w, '+', '+');
-    for i := 1 to nwl do begin
+    for i := 1 to rmem.nwl do begin
       r := y + i;
       put(x, r, '|');
-      ctext(x + 1, wwd, r, wtx[i], wln[i]);
+      ctext(x + 1, rmem.wwd, r, rmem.wtx[i], rmem.wln[i]);
       put(x + w - 1, r, '|')
     end;
-    put(x + 1, y + nwl + 1, '(');
-    put(x + w - 2, y + nwl + 1, ')');
-    put(x + 2, y + nwl + 2, '(');
-    put(x + w - 3, y + nwl + 2, ')');
-    dash(x + 3, y + nwl + 2, w - 6, '_')
+    put(x + 1, y + rmem.nwl + 1, '(');
+    put(x + w - 2, y + rmem.nwl + 1, ')');
+    put(x + 2, y + rmem.nwl + 2, '(');
+    put(x + w - 3, y + rmem.nwl + 2, ')');
+    dash(x + 3, y + rmem.nwl + 2, w - 6, '_')
   end else if k = 6 then begin
     (* ВЫБОР: параллелограмм И5, верх сдвинут вправо *)
-    s := nwl + 1;
-    ih[n] := nwl + 2;
-    hrun(x + s, y, wwd + 2, '+', '+');
-    for i := 1 to nwl do begin
+    s := rmem.nwl + 1;
+    rmem.ih[n] := rmem.nwl + 2;
+    hrun(x + s, y, rmem.wwd + 2, '+', '+');
+    for i := 1 to rmem.nwl do begin
       r := y + i;
       f := s - i;
       put(x + f, r, '/');
-      ctext(x + f + 1, wwd, r, wtx[i], wln[i]);
-      put(x + f + wwd + 1, r, '/')
+      ctext(x + f + 1, rmem.wwd, r, rmem.wtx[i], rmem.wln[i]);
+      put(x + f + rmem.wwd + 1, r, '/')
     end;
-    hrun(x, y + nwl + 1, wwd + 2, '+', '+')
+    hrun(x, y + rmem.nwl + 1, rmem.wwd + 2, '+', '+')
   end else if k = 7 then begin
     (* ВАРИАНТ: прямоугольник с клином И6 *)
-    ih[n] := nwl + 4;
+    rmem.ih[n] := rmem.nwl + 4;
     hrun(x, y, w, '+', '+');
-    for i := 1 to nwl do begin
+    for i := 1 to rmem.nwl do begin
       r := y + i;
       put(x, r, '|');
-      ctext(x + 1, wwd, r, wtx[i], wln[i]);
+      ctext(x + 1, rmem.wwd, r, rmem.wtx[i], rmem.wln[i]);
       put(x + w - 1, r, '|')
     end;
-    hrun(x, y + nwl + 1, w, '+', '+');
-    put(x + 1, y + nwl + 2, '(');
-    put(x + w - 2, y + nwl + 2, ')');
-    put(x + 2, y + nwl + 3, '(');
-    put(x + w - 3, y + nwl + 3, ')');
-    dash(x + 3, y + nwl + 3, w - 6, '_')
+    hrun(x, y + rmem.nwl + 1, w, '+', '+');
+    put(x + 1, y + rmem.nwl + 2, '(');
+    put(x + w - 2, y + rmem.nwl + 2, ')');
+    put(x + 2, y + rmem.nwl + 3, '(');
+    put(x + w - 3, y + rmem.nwl + 3, ')');
+    dash(x + 3, y + rmem.nwl + 3, w - 6, '_')
   end
 end;
 
@@ -2782,70 +2799,70 @@ begin
   if k = 5 then begin
     (* АДРЕС: домик И8 с треугольной крышей *)
     m := w div 2;
-    ih[n] := nwl + 4;
+    rmem.ih[n] := rmem.nwl + 4;
     put(x + m - 1, y, '/');
     put(x + m, y, '(');
     put(x + m - 2, y + 1, '/');
     put(x + m + 1, y + 1, '(');
     hrun(x, y + 2, w, '+', '+');
-    for i := 1 to nwl do begin
+    for i := 1 to rmem.nwl do begin
       r := y + 2 + i;
       put(x, r, '|');
-      ctext(x + 1, wwd, r, wtx[i], wln[i]);
+      ctext(x + 1, rmem.wwd, r, rmem.wtx[i], rmem.wln[i]);
       put(x + w - 1, r, '|')
     end;
-    hrun(x, y + nwl + 3, w, '+', '+')
+    hrun(x, y + rmem.nwl + 3, w, '+', '+')
   end else if k = 8 then begin
     (* КОММЕНТАРИЙ И21: двойная рамка, внутри полуовал *)
-    ih[n] := nwl + 4;
+    rmem.ih[n] := rmem.nwl + 4;
     hrun(x, y, w, '+', '+');
     put(x, y + 1, '|');
     put(x + 1, y + 1, '.');
-    dash(x + 2, y + 1, wwd, '-');
-    put(x + wwd + 2, y + 1, '.');
+    dash(x + 2, y + 1, rmem.wwd, '-');
+    put(x + rmem.wwd + 2, y + 1, '.');
     put(x + w - 1, y + 1, '|');
-    for i := 1 to nwl do begin
+    for i := 1 to rmem.nwl do begin
       r := y + 1 + i;
       put(x, r, '|');
       put(x + 1, r, '(');
-      ctext(x + 2, wwd, r, wtx[i], wln[i]);
-      put(x + wwd + 2, r, ')');
+      ctext(x + 2, rmem.wwd, r, rmem.wtx[i], rmem.wln[i]);
+      put(x + rmem.wwd + 2, r, ')');
       put(x + w - 1, r, '|')
     end;
-    put(x, y + nwl + 2, '|');
-    put(x + 1, y + nwl + 2, '''');
-    dash(x + 2, y + nwl + 2, wwd, '-');
-    put(x + wwd + 2, y + nwl + 2, '''');
-    put(x + w - 1, y + nwl + 2, '|');
-    hrun(x, y + nwl + 3, w, '+', '+')
+    put(x, y + rmem.nwl + 2, '|');
+    put(x + 1, y + rmem.nwl + 2, '''');
+    dash(x + 2, y + rmem.nwl + 2, rmem.wwd, '-');
+    put(x + rmem.wwd + 2, y + rmem.nwl + 2, '''');
+    put(x + w - 1, y + rmem.nwl + 2, '|');
+    hrun(x, y + rmem.nwl + 3, w, '+', '+')
   end else if k = 10 then begin
     (* ФОРМАЛЬНЫЕ ПАРАМЕТРЫ И11: прямоугольник, точка слева *)
-    ih[n] := nwl + 2;
-    hrun(x + 2, y, wwd + 2, '+', '+');
-    for i := 1 to nwl do begin
+    rmem.ih[n] := rmem.nwl + 2;
+    hrun(x + 2, y, rmem.wwd + 2, '+', '+');
+    for i := 1 to rmem.nwl do begin
       r := y + i;
       put(x + 2, r, '|');
-      ctext(x + 3, wwd, r, wtx[i], wln[i]);
-      put(x + wwd + 3, r, '|')
+      ctext(x + 3, rmem.wwd, r, rmem.wtx[i], rmem.wln[i]);
+      put(x + rmem.wwd + 3, r, '|')
     end;
-    hrun(x + 2, y + nwl + 1, wwd + 2, '+', '+');
-    r := y + (nwl + 2) div 2;
+    hrun(x + 2, y + rmem.nwl + 1, rmem.wwd + 2, '+', '+');
+    r := y + (rmem.nwl + 2) div 2;
     put(x, r, '-');
     put(x + 1, r, '-')
   end else if k = 9 then begin
     (* ПОЛКА И10: прямоугольник с горизонтальной серединой *)
-    ih[n] := nwl + 4;
+    rmem.ih[n] := rmem.nwl + 4;
     hrun(x, y, w, '+', '+');
-    for i := 1 to nwl do begin
+    for i := 1 to rmem.nwl do begin
       r := y + i;
       put(x, r, '|');
-      ctext(x + 1, wwd, r, wtx[i], wln[i]);
+      ctext(x + 1, rmem.wwd, r, rmem.wtx[i], rmem.wln[i]);
       put(x + w - 1, r, '|')
     end;
-    hrun(x, y + nwl + 1, w, '+', '+');
-    put(x, y + nwl + 2, '|');
-    put(x + w - 1, y + nwl + 2, '|');
-    hrun(x, y + nwl + 3, w, '+', '+')
+    hrun(x, y + rmem.nwl + 1, w, '+', '+');
+    put(x, y + rmem.nwl + 2, '|');
+    put(x + w - 1, y + rmem.nwl + 2, '|');
+    hrun(x, y + rmem.nwl + 3, w, '+', '+')
   end
 end;
 
@@ -2856,9 +2873,9 @@ var
 begin
   if k = 11 then begin
     (* НАЧАЛО ЦИКЛА ДЛЯ И12: срезаны верхние угла *)
-    ih[n] := nwl + 2;
-    hrun(x + 1, y, wwd, '+', '+');
-    for i := 1 to nwl do begin
+    rmem.ih[n] := rmem.nwl + 2;
+    hrun(x + 1, y, rmem.wwd, '+', '+');
+    for i := 1 to rmem.nwl do begin
       r := y + i;
       if i = 1 then begin
         put(x, r, '/');
@@ -2867,53 +2884,53 @@ begin
         put(x, r, '|');
         put(x + w - 1, r, '|')
       end;
-      ctext(x + 1, wwd, r, wtx[i], wln[i])
+      ctext(x + 1, rmem.wwd, r, rmem.wtx[i], rmem.wln[i])
     end;
-    hrun(x, y + nwl + 1, w, '+', '+')
+    hrun(x, y + rmem.nwl + 1, w, '+', '+')
   end else if k = 12 then begin
     (* КОНЕЦ ЦИКЛА ДЛЯ И13: срезаны нижние угла *)
-    ih[n] := nwl + 2;
+    rmem.ih[n] := rmem.nwl + 2;
     hrun(x, y, w, '+', '+');
-    for i := 1 to nwl do begin
+    for i := 1 to rmem.nwl do begin
       r := y + i;
-      if i = nwl then begin
+      if i = rmem.nwl then begin
         put(x, r, '(');
         put(x + w - 1, r, ')')
       end else begin
         put(x, r, '|');
         put(x + w - 1, r, '|')
       end;
-      ctext(x + 1, wwd, r, wtx[i], wln[i])
+      ctext(x + 1, rmem.wwd, r, rmem.wtx[i], rmem.wln[i])
     end;
-    hrun(x + 1, y + nwl + 1, wwd, '+', '+')
+    hrun(x + 1, y + rmem.nwl + 1, rmem.wwd, '+', '+')
   end else if k = 13 then begin
     (* ВЫВОД И14: прямоугольник, справа полая стрелка наружу *)
-    ih[n] := nwl + 2;
-    hrun(x + 4, y, wwd + 2, '+', '+');
-    for i := 1 to nwl do begin
+    rmem.ih[n] := rmem.nwl + 2;
+    hrun(x + 4, y, rmem.wwd + 2, '+', '+');
+    for i := 1 to rmem.nwl do begin
       r := y + i;
       put(x + 4, r, '|');
-      ctext(x + 5, wwd, r, wtx[i], wln[i]);
-      put(x + wwd + 5, r, '|')
+      ctext(x + 5, rmem.wwd, r, rmem.wtx[i], rmem.wln[i]);
+      put(x + rmem.wwd + 5, r, '|')
     end;
-    hrun(x + 4, y + nwl + 1, wwd + 2, '+', '+');
-    r := y + (nwl + 2) div 2;
-    dash(x + wwd + 6, r, 3, '=');
-    put(x + wwd + 9, r, '>')
+    hrun(x + 4, y + rmem.nwl + 1, rmem.wwd + 2, '+', '+');
+    r := y + (rmem.nwl + 2) div 2;
+    dash(x + rmem.wwd + 6, r, 3, '=');
+    put(x + rmem.wwd + 9, r, '>')
   end else if k = 14 then begin
     (* ВВОД И15: прямоугольник, справа стрелка внутрь *)
-    ih[n] := nwl + 2;
-    hrun(x + 4, y, wwd + 2, '+', '+');
-    for i := 1 to nwl do begin
+    rmem.ih[n] := rmem.nwl + 2;
+    hrun(x + 4, y, rmem.wwd + 2, '+', '+');
+    for i := 1 to rmem.nwl do begin
       r := y + i;
       put(x + 4, r, '|');
-      ctext(x + 5, wwd, r, wtx[i], wln[i]);
-      put(x + wwd + 5, r, '|')
+      ctext(x + 5, rmem.wwd, r, rmem.wtx[i], rmem.wln[i]);
+      put(x + rmem.wwd + 5, r, '|')
     end;
-    hrun(x + 4, y + nwl + 1, wwd + 2, '+', '+');
-    r := y + (nwl + 2) div 2;
-    put(x + wwd + 6, r, '<');
-    dash(x + wwd + 7, r, 3, '=')
+    hrun(x + 4, y + rmem.nwl + 1, rmem.wwd + 2, '+', '+');
+    r := y + (rmem.nwl + 2) div 2;
+    put(x + rmem.wwd + 6, r, '<');
+    dash(x + rmem.wwd + 7, r, 3, '=')
   end
 end;
 
@@ -2924,68 +2941,68 @@ var
 begin
   if k = 15 then begin
     (* ПАУЗА И16: трапеция, сужающаяся вниз *)
-    ih[n] := nwl + 3;
+    rmem.ih[n] := rmem.nwl + 3;
     hrun(x, y, w, '+', '+');
-    for i := 1 to nwl do begin
+    for i := 1 to rmem.nwl do begin
       r := y + i;
       put(x, r, '|');
-      ctext(x + 1, wwd, r, wtx[i], wln[i]);
+      ctext(x + 1, rmem.wwd, r, rmem.wtx[i], rmem.wln[i]);
       put(x + w - 1, r, '|')
     end;
-    put(x + 1, y + nwl + 1, '(');
-    put(x + w - 2, y + nwl + 1, ')');
-    hrun(x + 2, y + nwl + 2, wwd - 2, '+', '+')
+    put(x + 1, y + rmem.nwl + 1, '(');
+    put(x + w - 2, y + rmem.nwl + 1, ')');
+    hrun(x + 2, y + rmem.nwl + 2, rmem.wwd - 2, '+', '+')
   end else if k = 16 then begin
     (* ПЕРИОД И17: трапеция вниз, валентные точки по бокам *)
-    ih[n] := nwl + 3;
-    hrun(x + 2, y, wwd + 2, '+', '+');
-    for i := 1 to nwl do begin
+    rmem.ih[n] := rmem.nwl + 3;
+    hrun(x + 2, y, rmem.wwd + 2, '+', '+');
+    for i := 1 to rmem.nwl do begin
       r := y + i;
       put(x + 2, r, '|');
-      ctext(x + 3, wwd, r, wtx[i], wln[i]);
-      put(x + wwd + 3, r, '|')
+      ctext(x + 3, rmem.wwd, r, rmem.wtx[i], rmem.wln[i]);
+      put(x + rmem.wwd + 3, r, '|')
     end;
-    put(x + 3, y + nwl + 1, '(');
-    put(x + wwd + 2, y + nwl + 1, ')');
-    hrun(x + 4, y + nwl + 2, wwd - 2, '+', '+');
-    r := y + (nwl + 3) div 2;
+    put(x + 3, y + rmem.nwl + 1, '(');
+    put(x + rmem.wwd + 2, y + rmem.nwl + 1, ')');
+    hrun(x + 4, y + rmem.nwl + 2, rmem.wwd - 2, '+', '+');
+    r := y + (rmem.nwl + 3) div 2;
     put(x, r, '-');
     put(x + 1, r, '-');
-    put(x + wwd + 4, r, '-');
-    put(x + wwd + 5, r, '-')
+    put(x + rmem.wwd + 4, r, '-');
+    put(x + rmem.wwd + 5, r, '-')
   end else if k = 17 then begin
     (* ПУСК ТАЙМЕРА И18: трапеция вниз с двойными стенками *)
-    ih[n] := nwl + 3;
+    rmem.ih[n] := rmem.nwl + 3;
     hrun(x, y, w, '+', '+');
-    for i := 1 to nwl do begin
+    for i := 1 to rmem.nwl do begin
       r := y + i;
       put(x, r, '|');
       put(x + 1, r, '|');
-      ctext(x + 2, wwd, r, wtx[i], wln[i]);
-      put(x + wwd + 2, r, '|');
-      put(x + wwd + 3, r, '|')
+      ctext(x + 2, rmem.wwd, r, rmem.wtx[i], rmem.wln[i]);
+      put(x + rmem.wwd + 2, r, '|');
+      put(x + rmem.wwd + 3, r, '|')
     end;
-    put(x + 1, y + nwl + 1, '(');
-    put(x + 2, y + nwl + 1, '(');
-    put(x + wwd + 1, y + nwl + 1, ')');
-    put(x + wwd + 2, y + nwl + 1, ')');
-    hrun(x + 3, y + nwl + 2, wwd - 2, '+', '+')
+    put(x + 1, y + rmem.nwl + 1, '(');
+    put(x + 2, y + rmem.nwl + 1, '(');
+    put(x + rmem.wwd + 1, y + rmem.nwl + 1, ')');
+    put(x + rmem.wwd + 2, y + rmem.nwl + 1, ')');
+    hrun(x + 3, y + rmem.nwl + 2, rmem.wwd - 2, '+', '+')
   end else if k = 18 then begin
     (* СИНХРОНИЗАТОР И19: трапеция вниз, точка справа *)
-    ih[n] := nwl + 3;
-    hrun(x + 2, y, wwd + 2, '+', '+');
-    for i := 1 to nwl do begin
+    rmem.ih[n] := rmem.nwl + 3;
+    hrun(x + 2, y, rmem.wwd + 2, '+', '+');
+    for i := 1 to rmem.nwl do begin
       r := y + i;
       put(x + 2, r, '|');
-      ctext(x + 3, wwd, r, wtx[i], wln[i]);
-      put(x + wwd + 3, r, '|')
+      ctext(x + 3, rmem.wwd, r, rmem.wtx[i], rmem.wln[i]);
+      put(x + rmem.wwd + 3, r, '|')
     end;
-    put(x + 3, y + nwl + 1, '(');
-    put(x + wwd + 2, y + nwl + 1, ')');
-    hrun(x + 4, y + nwl + 2, wwd - 2, '+', '+');
-    r := y + (nwl + 3) div 2;
-    put(x + wwd + 4, r, '-');
-    put(x + wwd + 5, r, '-')
+    put(x + 3, y + rmem.nwl + 1, '(');
+    put(x + rmem.wwd + 2, y + rmem.nwl + 1, ')');
+    hrun(x + 4, y + rmem.nwl + 2, rmem.wwd - 2, '+', '+');
+    r := y + (rmem.nwl + 3) div 2;
+    put(x + rmem.wwd + 4, r, '-');
+    put(x + rmem.wwd + 5, r, '-')
   end
 end;
 
@@ -2997,38 +3014,38 @@ begin
   if k = 19 then begin
     (* ПАРАЛЛЕЛЬНЫЙ ПРОЦЕСС И20: прямоугольник со сдвинутым
        вверх-вправо вторым *)
-    ih[n] := nwl + 3;
-    hrun(x + wwd + 8, y, 4, '+', '+');
-    hrun(x + 5, y + 1, wwd + 2, '+', '+');
+    rmem.ih[n] := rmem.nwl + 3;
+    hrun(x + rmem.wwd + 8, y, 4, '+', '+');
+    hrun(x + 5, y + 1, rmem.wwd + 2, '+', '+');
     put(x + w - 1, y + 1, '|');
-    for i := 1 to nwl do begin
+    for i := 1 to rmem.nwl do begin
       r := y + 1 + i;
       put(x + 5, r, '|');
-      ctext(x + 6, wwd, r, wtx[i], wln[i]);
-      put(x + wwd + 6, r, '|')
+      ctext(x + 6, rmem.wwd, r, rmem.wtx[i], rmem.wln[i]);
+      put(x + rmem.wwd + 6, r, '|')
     end;
     put(x + w - 1, y + 2, '+');
-    dash(x + wwd + 7, y + 2, 4, '-');
-    hrun(x + 5, y + nwl + 2, wwd + 2, '+', '+')
+    dash(x + rmem.wwd + 7, y + 2, 4, '-');
+    hrun(x + 5, y + rmem.nwl + 2, rmem.wwd + 2, '+', '+')
   end else if k = 20 then begin
     (* ПРАВЫЙ КОММЕНТАРИЙ И22: скобка слева от текста *)
-    ih[n] := nwl;
-    for i := 1 to nwl do begin
+    rmem.ih[n] := rmem.nwl;
+    for i := 1 to rmem.nwl do begin
       r := y + i - 1;
       put(x, r, '(');
-      ctext(x + 2, wwd, r, wtx[i], wln[i])
+      ctext(x + 2, rmem.wwd, r, rmem.wtx[i], rmem.wln[i])
     end
   end else if k = 21 then begin
     (* ЛЕВЫЙ КОММЕНТАРИЙ И23: текст, скобка справа *)
-    ih[n] := nwl;
-    for i := 1 to nwl do begin
+    rmem.ih[n] := rmem.nwl;
+    for i := 1 to rmem.nwl do begin
       r := y + i - 1;
-      ctext(x + 2, wwd, r, wtx[i], wln[i]);
-      put(x + wwd + 2, r, ')')
+      ctext(x + 2, rmem.wwd, r, rmem.wtx[i], rmem.wln[i]);
+      put(x + rmem.wwd + 2, r, ')')
     end
   end else if k = 22 then begin
     (* ПЕТЛЯ ЦИКЛА И24: остриё упирается в вертикаль *)
-    ih[n] := 2;
+    rmem.ih[n] := 2;
     put(x + 9, y, '|');
     put(x + 10, y, '<');
     dash(x + 11, y, 7, '-');
@@ -3037,7 +3054,7 @@ begin
     put(x + w - 1, y + 1, '|')
   end else if k = 23 then begin
     (* ПЕТЛЯ СИЛУЭТА И25: остриё в вертикаль, зубцы гребёнки *)
-    ih[n] := 2;
+    rmem.ih[n] := 2;
     put(x + 15, y, '|');
     put(x + 16, y, '<');
     dash(x + 17, y, 13, '-');
@@ -3048,17 +3065,17 @@ begin
     put(x + 29, y + 1, '|')
   end else if k = 24 then begin
     (* ВСТАВКА И9: прямоугольник с двойными стенками *)
-    ih[n] := nwl + 2;
+    rmem.ih[n] := rmem.nwl + 2;
     hrun(x, y, w, '+', '+');
-    for i := 1 to nwl do begin
+    for i := 1 to rmem.nwl do begin
       r := y + i;
       put(x, r, '|');
       put(x + 1, r, '|');
-      ctext(x + 2, wwd, r, wtx[i], wln[i]);
-      put(x + wwd + 2, r, '|');
-      put(x + wwd + 3, r, '|')
+      ctext(x + 2, rmem.wwd, r, rmem.wtx[i], rmem.wln[i]);
+      put(x + rmem.wwd + 2, r, '|');
+      put(x + rmem.wwd + 3, r, '|')
     end;
-    hrun(x, y + nwl + 1, w, '+', '+')
+    hrun(x, y + rmem.nwl + 1, w, '+', '+')
   end
 end;
 
@@ -3070,27 +3087,27 @@ var
   k, w, tl, i, x, y: integer;
 begin
   k := kindof(n);
-  tl := ntl[n];
+  tl := rmem.ntl[n];
   if (k = 4) and (tl = 0) then begin
     (* конец без подписи печатает слово КОНЕЦ *)
-    gtxt[1] := 'к'; gtxt[2] := 'о'; gtxt[3] := 'н';
-    gtxt[4] := 'е'; gtxt[5] := 'ц'
+    rmem.gtxt[1] := 'к'; rmem.gtxt[2] := 'о'; rmem.gtxt[3] := 'н';
+    rmem.gtxt[4] := 'е'; rmem.gtxt[5] := 'ц'
   end;
   w := iconw(n);
   (* строки подписи: поле и перенос подогнаны в iconw/fittext;
      у конца - одна строка *)
   if k = 4 then begin
-    tl := ntl[n];
+    tl := rmem.ntl[n];
     if tl = 0 then
       tl := 5;
-    nwl := 1;
-    wln[1] := tl;
-    for i := 1 to tl do wtx[1][i] := gtxt[i]
+    rmem.nwl := 1;
+    rmem.wln[1] := tl;
+    for i := 1 to tl do rmem.wtx[1][i] := rmem.gtxt[i]
   end;
   x := col - w div 2;
-  ix[n] := x;
-  iw[n] := w;
-  iy[n] := row;
+  rmem.ix[n] := x;
+  rmem.iw[n] := w;
+  rmem.iy[n] := row;
   y := row;
   if (k = 2) or (k = 6) or (k = 7) then
     picon2(k, n, x, y, w)
@@ -3113,17 +3130,17 @@ var
 begin
   res := 0;
   ch := 0;
-  if (nkind[n] = 6) or (nkind[n] = 15) then
-    res := nkid[n]
+  if (rmem.nkind[n] = 6) or (rmem.nkind[n] = 15) then
+    res := rmem.nkid[n]
   else
-    ch := nkid[n];
+    ch := rmem.nkid[n];
   done := false;
   while (ch <> 0) and (not done) do begin
-    if nkind[ch] = 11 then begin
-      res := nkid[ch];
+    if rmem.nkind[ch] = 11 then begin
+      res := rmem.nkid[ch];
       done := true
     end else
-      ch := nbro[ch]
+      ch := rmem.nbro[ch]
   end;
   mainkids := res
 end;
@@ -3134,9 +3151,9 @@ function exrow(n: integer): integer;
 var
   r: integer;
 begin
-  r := iy[n] + ih[n] - 1;
-  if (nkind[n] = 5) or (nkind[n] = 6) then
-    r := iy[n] + ih[n] div 2;
+  r := rmem.iy[n] + rmem.ih[n] - 1;
+  if (rmem.nkind[n] = 5) or (rmem.nkind[n] = 6) then
+    r := rmem.iy[n] + rmem.ih[n] div 2;
   exrow := r
 end;
 
@@ -3146,21 +3163,21 @@ procedure sidebranches(n: integer);
 var
   ch: integer;
 begin
-  nbr[n] := 0;
-  ch := nkid[n];
+  rmem.nbr[n] := 0;
+  ch := rmem.nkid[n];
   while ch <> 0 do begin
-    if nkind[ch] = 12 then begin
-      if nkid[ch] <> 0 then begin
-        nbr[n] := nbr[n] + 1;
-        brx[n, nbr[n]] := -nkid[ch]
+    if rmem.nkind[ch] = 12 then begin
+      if rmem.nkid[ch] <> 0 then begin
+        rmem.nbr[n] := rmem.nbr[n] + 1;
+        rmem.brx[n, rmem.nbr[n]] := -rmem.nkid[ch]
       end
-    end else if nkind[ch] = 8 then begin
-      if (ntl[ch] > 0) or (nkid[ch] <> 0) then begin
-        nbr[n] := nbr[n] + 1;
-        brx[n, nbr[n]] := ch
+    end else if rmem.nkind[ch] = 8 then begin
+      if (rmem.ntl[ch] > 0) or (rmem.nkid[ch] <> 0) then begin
+        rmem.nbr[n] := rmem.nbr[n] + 1;
+        rmem.brx[n, rmem.nbr[n]] := ch
       end
     end;
-    ch := nbro[ch]
+    ch := rmem.nbro[ch]
   end
 end;
 
@@ -3175,7 +3192,7 @@ begin
     w := iconw(ch);
     if w > mw then
       mw := w;
-    ch := nbro[ch]
+    ch := rmem.nbro[ch]
   end;
   chainw := mw
 end;
@@ -3193,63 +3210,63 @@ begin
   node := first;
   while node <> 0 do begin
     if tail <> 0 then
-      nxt[tail] := node;
-    nfl := nfl + 1;
-    flat[nfl] := node;
+      rmem.nxt[tail] := node;
+    rmem.nfl := rmem.nfl + 1;
+    rmem.flat[rmem.nfl] := node;
     makeicon(node, col, y);
-    y := y + ih[node] + GAPR;
+    y := y + rmem.ih[node] + GAPR;
     mk := mainkids(node);
     if mk <> 0 then begin
       layout(mk, col, y, node, 0);
-      if gy > y then
-        y := gy;
-      mainb[node] := gy - GAPR;
-      tail := gtail
+      if rmem.gy > y then
+        y := rmem.gy;
+      rmem.mainb[node] := rmem.gy - GAPR;
+      tail := rmem.gtail
     end else begin
-      mainb[node] := iy[node] + ih[node];
+      rmem.mainb[node] := rmem.iy[node] + rmem.ih[node];
       tail := node
     end;
     sidebranches(node);
-    if nbr[node] > 0 then begin
+    if rmem.nbr[node] > 0 then begin
       row0 := exrow(node);
-      rx := col + iw[node] div 2 + GAPS;
+      rx := col + rmem.iw[node] div 2 + GAPS;
       ry := row0 + 1;
-      for b := 1 to nbr[node] do begin
-        if brx[node, b] < 0 then begin
-          f0 := -brx[node, b];
+      for b := 1 to rmem.nbr[node] do begin
+        if rmem.brx[node, b] < 0 then begin
+          f0 := -rmem.brx[node, b];
           wmax := chainw(f0)
         end else begin
-          f0 := brx[node, b];
+          f0 := rmem.brx[node, b];
           wmax := iconw(f0);
-          if nkid[f0] <> 0 then begin
-            k := chainw(nkid[f0]);
+          if rmem.nkid[f0] <> 0 then begin
+            k := chainw(rmem.nkid[f0]);
             if k > wmax then
               wmax := k
           end
         end;
         rail := rx + wmax div 2;
-        if brx[node, b] < 0 then
+        if rmem.brx[node, b] < 0 then
           layout(f0, rail, ry, 0, 0)
         else begin
           layout(f0, rail, ry, 0, 1);
-          if nkid[f0] <> 0 then
-            layout(nkid[f0], rail, gy, f0, 0)
+          if rmem.nkid[f0] <> 0 then
+            layout(rmem.nkid[f0], rail, rmem.gy, f0, 0)
         end;
-        brx[node, b] := rail;
-        bry[node, b] := ry;
-        yb := gy - GAPR;
-        brb[node, b] := yb;
+        rmem.brx[node, b] := rail;
+        rmem.bry[node, b] := ry;
+        yb := rmem.gy - GAPR;
+        rmem.brb[node, b] := yb;
         if yb + GAPR > y then
           y := yb + GAPR;
         rx := rail + (wmax + 1) div 2 + GAPS
       end
     end;
-    node := nbro[node];
+    node := rmem.nbro[node];
     if one <> 0 then
       node := 0
   end;
-  gtail := tail;
-  gy := y
+  rmem.gtail := tail;
+  rmem.gy := y
 end;
 
 (* ---------------- рисунок ---------------- *)
@@ -3259,12 +3276,12 @@ procedure connectors;
 var
   i, a, b, cl, r: integer;
 begin
-  for i := 1 to nfl do begin
-    a := flat[i];
-    if nxt[a] <> 0 then begin
-      b := nxt[a];
-      cl := ix[a] + iw[a] div 2;
-      for r := iy[a] + ih[a] to iy[b] - 1 do
+  for i := 1 to rmem.nfl do begin
+    a := rmem.flat[i];
+    if rmem.nxt[a] <> 0 then begin
+      b := rmem.nxt[a];
+      cl := rmem.ix[a] + rmem.iw[a] div 2;
+      for r := rmem.iy[a] + rmem.ih[a] to rmem.iy[b] - 1 do
         put(cl, r, '|')
     end
   end
@@ -3277,25 +3294,25 @@ procedure busout;
 var
   i, a, b, r, cl, x, row0, lastr, wx: integer;
 begin
-  for i := 1 to nfl do begin
-    a := flat[i];
-    if nbr[a] > 0 then begin
-      cl := ix[a] + iw[a] div 2;
+  for i := 1 to rmem.nfl do begin
+    a := rmem.flat[i];
+    if rmem.nbr[a] > 0 then begin
+      cl := rmem.ix[a] + rmem.iw[a] div 2;
       row0 := exrow(a);
-      lastr := brx[a, 1];
-      for b := 2 to nbr[a] do
-        if brx[a, b] > lastr then
-          lastr := brx[a, b];
-      wx := ix[a];
-      for x := ix[a] to ix[a] + iw[a] - 1 do
+      lastr := rmem.brx[a, 1];
+      for b := 2 to rmem.nbr[a] do
+        if rmem.brx[a, b] > lastr then
+          lastr := rmem.brx[a, b];
+      wx := rmem.ix[a];
+      for x := rmem.ix[a] to rmem.ix[a] + rmem.iw[a] - 1 do
         if dmem.pic[row0][x] <> ' ' then
           wx := x;
       for x := wx + 1 to lastr - 1 do
         put(x, row0, '-');
-      for b := 1 to nbr[a] do begin
-        put(brx[a, b], row0, '+');
-        for r := row0 + 1 to bry[a, b] - 1 do
-          put(brx[a, b], r, '|')
+      for b := 1 to rmem.nbr[a] do begin
+        put(rmem.brx[a, b], row0, '+');
+        for r := row0 + 1 to rmem.bry[a, b] - 1 do
+          put(rmem.brx[a, b], r, '|')
       end
     end
   end
@@ -3306,34 +3323,34 @@ var
   i, a, b, r, x, cl, base, mr: integer;
   stop: boolean;
 begin
-  for i := 1 to nfl do begin
-    a := flat[i];
-    if nbr[a] > 0 then begin
-      cl := ix[a] + iw[a] div 2;
-      base := mainb[a];
-      for b := 1 to nbr[a] do
-        if brb[a, b] > base then
-          base := brb[a, b];
+  for i := 1 to rmem.nfl do begin
+    a := rmem.flat[i];
+    if rmem.nbr[a] > 0 then begin
+      cl := rmem.ix[a] + rmem.iw[a] div 2;
+      base := rmem.mainb[a];
+      for b := 1 to rmem.nbr[a] do
+        if rmem.brb[a, b] > base then
+          base := rmem.brb[a, b];
       (* слияние не рисуется, если икона основной цепочки
          начинается ровно на строке base *)
       stop := false;
-      for r := 1 to nfl do
-        if flat[r] <> a then
-          if (ix[flat[r]] + iw[flat[r]] div 2 = cl) and
-             (iy[flat[r]] = base) then
+      for r := 1 to rmem.nfl do
+        if rmem.flat[r] <> a then
+          if (rmem.ix[rmem.flat[r]] + rmem.iw[rmem.flat[r]] div 2 = cl) and
+             (rmem.iy[rmem.flat[r]] = base) then
             stop := true;
       if not stop then begin
-        for b := 1 to nbr[a] do
-          for r := brb[a, b] to base - 1 do
-            put(brx[a, b], r, '|');
-        mr := brx[a, 1];
-        for b := 2 to nbr[a] do
-          if brx[a, b] > mr then
-            mr := brx[a, b];
+        for b := 1 to rmem.nbr[a] do
+          for r := rmem.brb[a, b] to base - 1 do
+            put(rmem.brx[a, b], r, '|');
+        mr := rmem.brx[a, 1];
+        for b := 2 to rmem.nbr[a] do
+          if rmem.brx[a, b] > mr then
+            mr := rmem.brx[a, b];
         for x := cl + 1 to mr - 1 do
           put(x, base, '-');
-        for b := 1 to nbr[a] do
-          put(brx[a, b], base, '+');
+        for b := 1 to rmem.nbr[a] do
+          put(rmem.brx[a, b], base, '+');
         put(cl, base, '+')
       end
     end
@@ -3351,32 +3368,32 @@ procedure forloop;
 var
   i, nd, kd, ch, cl, ax, r1, r2, wx, xx, rr: integer;
 begin
-  for i := 1 to nfl do
-    if nkind[flat[i]] = 15 then begin
-      nd := flat[i];
+  for i := 1 to rmem.nfl do
+    if rmem.nkind[rmem.flat[i]] = 15 then begin
+      nd := rmem.flat[i];
       (* последний ребёнок-КДЛ *)
       kd := 0;
-      ch := nkid[nd];
+      ch := rmem.nkid[nd];
       while ch <> 0 do begin
-        if nkind[ch] = 16 then
+        if rmem.nkind[ch] = 16 then
           kd := ch;
-        ch := nbro[ch]
+        ch := rmem.nbro[ch]
       end;
       if kd <> 0 then begin
-        cl := ix[nd] + iw[nd] div 2;
+        cl := rmem.ix[nd] + rmem.iw[nd] div 2;
         (* ось правее всех икон тела (от первого ребёнка до КДЛ) *)
         ax := cl;
-        ch := nkid[nd];
+        ch := rmem.nkid[nd];
         while ch <> 0 do begin
-          if ix[ch] + iw[ch] > ax then
-            ax := ix[ch] + iw[ch];
-          ch := nbro[ch]
+          if rmem.ix[ch] + rmem.iw[ch] > ax then
+            ax := rmem.ix[ch] + rmem.iw[ch];
+          ch := rmem.nbro[ch]
         end;
         ax := ax + 2;
-        r1 := iy[nd] + ih[nd] + 1;
-        r2 := iy[kd] + ih[kd] div 2;
-        wx := ix[kd];
-        for xx := ix[kd] to ix[kd] + iw[kd] - 1 do
+        r1 := rmem.iy[nd] + rmem.ih[nd] + 1;
+        r2 := rmem.iy[kd] + rmem.ih[kd] div 2;
+        wx := rmem.ix[kd];
+        for xx := rmem.ix[kd] to rmem.ix[kd] + rmem.iw[kd] - 1 do
           if dmem.pic[r2][xx] <> ' ' then
             wx := xx;
         put(cl + 1, r1, '<');
@@ -3403,85 +3420,85 @@ var
   h, b, p, sav, f0, j, nn1, kk, mn, mx, bot, prevr, d,
   minall, gsh: integer;
 begin
-  silnb := 0;
-  h := nroot;
+  rmem.silnb := 0;
+  h := rmem.nroot;
   layout(h, 1, 1, 0, 1);
-  silhb := iy[h] + ih[h] + 1;
-  b := nbro[h];
+  rmem.silhb := rmem.iy[h] + rmem.ih[h] + 1;
+  b := rmem.nbro[h];
   while b <> 0 do begin
     p := b;
-    while (nbro[p] <> 0) and (nkind[nbro[p]] <> 2) do
-      p := nbro[p];
-    sav := nbro[p];
-    nbro[p] := 0;
-    silnb := silnb + 1;
-    silb[silnb] := b;
-    f0 := nfl + 1;
-    silf0[silnb] := f0;
-    layout(b, 1, silhb + 2, 0, 0);
-    silf1[silnb] := nfl;
-    siltail[silnb] := gtail;
-    nbro[p] := sav;
-    mn := ix[b];
-    mx := ix[b] + iw[b] - 1;
-    bot := iy[b] + ih[b] - 1;
-    for j := f0 to nfl do begin
-      nn1 := flat[j];
-      if ix[nn1] < mn then
-        mn := ix[nn1];
-      if ix[nn1] + iw[nn1] - 1 > mx then
-        mx := ix[nn1] + iw[nn1] - 1;
-      if iy[nn1] + ih[nn1] - 1 > bot then
-        bot := iy[nn1] + ih[nn1] - 1
+    while (rmem.nbro[p] <> 0) and (rmem.nkind[rmem.nbro[p]] <> 2) do
+      p := rmem.nbro[p];
+    sav := rmem.nbro[p];
+    rmem.nbro[p] := 0;
+    rmem.silnb := rmem.silnb + 1;
+    rmem.silb[rmem.silnb] := b;
+    f0 := rmem.nfl + 1;
+    rmem.silf0[rmem.silnb] := f0;
+    layout(b, 1, rmem.silhb + 2, 0, 0);
+    rmem.silf1[rmem.silnb] := rmem.nfl;
+    rmem.siltail[rmem.silnb] := rmem.gtail;
+    rmem.nbro[p] := sav;
+    mn := rmem.ix[b];
+    mx := rmem.ix[b] + rmem.iw[b] - 1;
+    bot := rmem.iy[b] + rmem.ih[b] - 1;
+    for j := f0 to rmem.nfl do begin
+      nn1 := rmem.flat[j];
+      if rmem.ix[nn1] < mn then
+        mn := rmem.ix[nn1];
+      if rmem.ix[nn1] + rmem.iw[nn1] - 1 > mx then
+        mx := rmem.ix[nn1] + rmem.iw[nn1] - 1;
+      if rmem.iy[nn1] + rmem.ih[nn1] - 1 > bot then
+        bot := rmem.iy[nn1] + rmem.ih[nn1] - 1
     end;
-    if silnb > 1 then begin
+    if rmem.silnb > 1 then begin
       d := prevr + GAPB + 1 - mn;
-      for j := silf0[silnb] to nfl do begin
-        nn1 := flat[j];
-        ix[nn1] := ix[nn1] + d;
-        for kk := 1 to nbr[nn1] do
-          brx[nn1, kk] := brx[nn1, kk] + d
+      for j := rmem.silf0[rmem.silnb] to rmem.nfl do begin
+        nn1 := rmem.flat[j];
+        rmem.ix[nn1] := rmem.ix[nn1] + d;
+        for kk := 1 to rmem.nbr[nn1] do
+          rmem.brx[nn1, kk] := rmem.brx[nn1, kk] + d
       end;
       mx := mx + d
     end;
     prevr := mx;
-    silbot[silnb] := bot;
+    rmem.silbot[rmem.silnb] := bot;
     b := sav
   end;
-  for j := 1 to silnb do
-    silax[j] := ix[silb[j]] + iw[silb[j]] div 2;
-  ix[h] := silax[1] - iw[h] div 2;
-  minall := ix[h];
-  for j := 1 to nfl do
-    if ix[flat[j]] < minall then
-      minall := ix[flat[j]];
-  sillc := minall - 2;
+  for j := 1 to rmem.silnb do
+    rmem.silax[j] := rmem.ix[rmem.silb[j]] + rmem.iw[rmem.silb[j]] div 2;
+  rmem.ix[h] := rmem.silax[1] - rmem.iw[h] div 2;
+  minall := rmem.ix[h];
+  for j := 1 to rmem.nfl do
+    if rmem.ix[rmem.flat[j]] < minall then
+      minall := rmem.ix[rmem.flat[j]];
+  rmem.sillc := minall - 2;
   gsh := 0;
-  if sillc < 1 then
-    gsh := 1 - sillc;
+  if rmem.sillc < 1 then
+    gsh := 1 - rmem.sillc;
   if prevr + gsh > DCMAX - 1 then begin
-    silmd := false;
-    for j := 1 to nfl do
-      nxt[flat[j]] := 0;
-    nfl := 0
+    rmem.silmd := false;
+    for j := 1 to rmem.nfl do
+      rmem.nxt[rmem.flat[j]] := 0;
+    rmem.nfl := 0
   end else if gsh > 0 then begin
-    for j := 1 to nfl do begin
-      nn1 := flat[j];
-      ix[nn1] := ix[nn1] + gsh;
-      for kk := 1 to nbr[nn1] do
-        brx[nn1, kk] := brx[nn1, kk] + gsh
+    for j := 1 to rmem.nfl do begin
+      nn1 := rmem.flat[j];
+      rmem.ix[nn1] := rmem.ix[nn1] + gsh;
+      for kk := 1 to rmem.nbr[nn1] do
+        rmem.brx[nn1, kk] := rmem.brx[nn1, kk] + gsh
     end;
-    for j := 1 to silnb do
-      silax[j] := silax[j] + gsh;
-    sillc := 1
+    for j := 1 to rmem.silnb do
+      rmem.silax[j] := rmem.silax[j] + gsh;
+    rmem.sillc := 1
   end;
-  if not silmd then
+  if not rmem.silmd then
     exit;
   bot := 0;
-  for j := 1 to silnb do
-    if silbot[j] > bot then
-      bot := silbot[j];
-  silbb := bot + 2
+  for j := 1 to rmem.silnb do
+    if rmem.silbot[j] > bot then
+      bot := rmem.silbot[j];
+  rmem.silbb := bot + 2
 end;
 
 (* линии силуэта, верхняя часть: вертикаль заголовка, верхняя
@@ -3491,18 +3508,18 @@ procedure silconnect;
 var
   i, r, x, lasta: integer;
 begin
-  for r := iy[nroot] + ih[nroot] to silhb - 1 do
-    put(silax[1], r, '|');
-  lasta := silax[silnb];
-  put(sillc, silhb, '+');
-  for x := sillc + 1 to lasta - 1 do
-    put(x, silhb, '-');
-  for i := 1 to silnb do
-    put(silax[i], silhb, '+');
-  if silax[1] - 1 > sillc then
-    put(silax[1] - 1, silhb, '>');
-  for i := 1 to silnb do
-    put(silax[i], silhb + 1, '|')
+  for r := rmem.iy[rmem.nroot] + rmem.ih[rmem.nroot] to rmem.silhb - 1 do
+    put(rmem.silax[1], r, '|');
+  lasta := rmem.silax[rmem.silnb];
+  put(rmem.sillc, rmem.silhb, '+');
+  for x := rmem.sillc + 1 to lasta - 1 do
+    put(x, rmem.silhb, '-');
+  for i := 1 to rmem.silnb do
+    put(rmem.silax[i], rmem.silhb, '+');
+  if rmem.silax[1] - 1 > rmem.sillc then
+    put(rmem.silax[1] - 1, rmem.silhb, '>');
+  for i := 1 to rmem.silnb do
+    put(rmem.silax[i], rmem.silhb + 1, '|')
 end;
 
 (* линии силуэта, нижняя часть: вертикаль петли слева и нижняя
@@ -3511,22 +3528,23 @@ procedure silloop;
 var
   i, r, x, lasta: integer;
 begin
-  for r := silhb + 1 to silbb - 1 do
-    put(sillc, r, '|');
-  put(sillc, silbb, '+');
-  lasta := sillc;
-  for i := 1 to silnb do
-    if nkind[siltail[i]] <> 10 then begin
-      if silax[i] > lasta then
-        lasta := silax[i]
+  for r := rmem.silhb + 1 to rmem.silbb - 1 do
+    put(rmem.sillc, r, '|');
+  put(rmem.sillc, rmem.silbb, '+');
+  lasta := rmem.sillc;
+  for i := 1 to rmem.silnb do
+    if rmem.nkind[rmem.siltail[i]] <> 10 then begin
+      if rmem.silax[i] > lasta then
+        lasta := rmem.silax[i]
     end;
-  for x := sillc + 1 to lasta - 1 do
-    put(x, silbb, '-');
-  for i := 1 to silnb do
-    if nkind[siltail[i]] <> 10 then begin
-      for r := iy[siltail[i]] + ih[siltail[i]] to silbb - 1 do
-        put(silax[i], r, '|');
-      put(silax[i], silbb, '+')
+  for x := rmem.sillc + 1 to lasta - 1 do
+    put(x, rmem.silbb, '-');
+  for i := 1 to rmem.silnb do
+    if rmem.nkind[rmem.siltail[i]] <> 10 then begin
+      for r := rmem.iy[rmem.siltail[i]] + rmem.ih[rmem.siltail[i]]
+          to rmem.silbb - 1 do
+        put(rmem.silax[i], r, '|');
+      put(rmem.silax[i], rmem.silbb, '+')
     end
 end;
 
@@ -3535,12 +3553,12 @@ var
   i, j: integer;
 begin
   initkw;
-  ncnt := 0;
-  nroot := 0;
-  nfl := 0;
-  gtail := 0;
-  stn := 0;
-  last0 := 0;
+  rmem.ncnt := 0;
+  rmem.nroot := 0;
+  rmem.nfl := 0;
+  rmem.gtail := 0;
+  rmem.stn := 0;
+  rmem.last0 := 0;
   for i := 1 to DRMAX do
     for j := 1 to DCMAX do
       dmem.pic[i][j] := ' ';
@@ -3559,90 +3577,90 @@ procedure drkemit;
 var
   i, j, ln, m2, q2: integer;
 begin
-  if ncnt = 0 then
+  if rmem.ncnt = 0 then
     exit;
   (* силуэт: корневая цепочка - заголовок, за ним ветки-щиты;
      веток больше SM - общий шампур *)
-  silmd := (nkind[nroot] = 1) and (nbro[nroot] <> 0) and
-           (nkind[nbro[nroot]] = 2);
-  if silmd then begin
+  rmem.silmd := (rmem.nkind[rmem.nroot] = 1) and
+    (rmem.nbro[rmem.nroot] <> 0) and (rmem.nkind[rmem.nbro[rmem.nroot]] = 2);
+  if rmem.silmd then begin
     qq := 0;
-    nn1 := nbro[nroot];
+    nn1 := rmem.nbro[rmem.nroot];
     while nn1 <> 0 do begin
-      if nkind[nn1] = 2 then
+      if rmem.nkind[nn1] = 2 then
         qq := qq + 1;
-      nn1 := nbro[nn1]
+      nn1 := rmem.nbro[nn1]
     end;
     if qq > SM then
-      silmd := false
+      rmem.silmd := false
   end;
-  if silmd then
+  if rmem.silmd then
     silout;
   (* silout может отменить силуэт: колонки не уместились *)
-  if not silmd then
-    layout(nroot, 1, 1, 0, 0);
+  if not rmem.silmd then
+    layout(rmem.nroot, 1, 1, 0, 0);
   (* сдвиг рисунка: левый край икон к колонке 1; оси плеч
      не сдвигаются - они уже отсчитаны от шампура *)
   m2 := 1;
-  for i := 1 to nfl do
-    if ix[flat[i]] < m2 then
-      m2 := ix[flat[i]];
+  for i := 1 to rmem.nfl do
+    if rmem.ix[rmem.flat[i]] < m2 then
+      m2 := rmem.ix[rmem.flat[i]];
   if m2 < 1 then begin
     q2 := 1 - m2;
-    for i := 1 to nfl do
-      ix[flat[i]] := ix[flat[i]] + q2;
+    for i := 1 to rmem.nfl do
+      rmem.ix[rmem.flat[i]] := rmem.ix[rmem.flat[i]] + q2;
     (* оси плеч - те же абсолютные колонки рисунка *)
-    for i := 1 to ncnt do
+    for i := 1 to rmem.ncnt do
       for j := 1 to NBMAX do
-        if brx[i, j] <> 0 then
-          brx[i, j] := brx[i, j] + q2
+        if rmem.brx[i, j] <> 0 then
+          rmem.brx[i, j] := rmem.brx[i, j] + q2
   end;
   (* число строк рисунка: самая низкая занятая строка; выше DRMAX
      строки не рисовались (put обрезает) - не читать и их *)
-  rws := 0;
-  for i := 1 to nfl do
-    if iy[flat[i]] + ih[flat[i]] - 1 > rws then
-      rws := iy[flat[i]] + ih[flat[i]] - 1;
-  if rws > DRMAX then
-    rws := DRMAX;
+  rmem.rws := 0;
+  for i := 1 to rmem.nfl do
+    if rmem.iy[rmem.flat[i]] + rmem.ih[rmem.flat[i]] - 1 > rmem.rws then
+      rmem.rws := rmem.iy[rmem.flat[i]] + rmem.ih[rmem.flat[i]] - 1;
+  if rmem.rws > DRMAX then
+    rmem.rws := DRMAX;
   j := 0;
-  while (rws > 0) and (j = 0) do begin
+  while (rmem.rws > 0) and (j = 0) do begin
     ln := 0;
     for i := 1 to DCMAX do
-      if dmem.pic[rws][i] <> ' ' then
+      if dmem.pic[rmem.rws][i] <> ' ' then
         ln := i;
     if ln > 0 then
       j := 1
     else
-      rws := rws - 1
+      rmem.rws := rmem.rws - 1
   end;
   (* у силуэта ниже икон ещё нижняя шина петли; выше DRMAX
      строки не рисовались (put обрезает) *)
-  if silmd then begin
-    if silbb > rws then
-      rws := silbb;
-    if rws > DRMAX then
-      rws := DRMAX
+  if rmem.silmd then begin
+    if rmem.silbb > rmem.rws then
+      rmem.rws := rmem.silbb;
+    if rmem.rws > DRMAX then
+      rmem.rws := DRMAX
   end;
   (* перерисовка со сдвигом *)
   for i := 1 to DRMAX do
     for j := 1 to DCMAX do
       dmem.pic[i][j] := ' ';
-  for i := 1 to nfl do
-    makeicon(flat[i], ix[flat[i]] + iw[flat[i]] div 2,
-             iy[flat[i]]);
+  for i := 1 to rmem.nfl do
+    makeicon(rmem.flat[i], rmem.ix[rmem.flat[i]] + rmem.iw[rmem.flat[i]] div 2,
+             rmem.iy[rmem.flat[i]]);
   connectors;
   busout;
   mergeback;
   forloop;
-  if silmd then begin
+  if rmem.silmd then begin
     silconnect;
     silloop
   end;
   (* строки рисунка - в текущую строку как есть и на лист; за
      128-й позицией литеры теряются, как на АЦПУ и в разметке *)
   posmode := false;
-  for i := 1 to rws do begin
+  for i := 1 to rmem.rws do begin
     flushq(false);
     clrrow(cur);
     curpos := curflda;
@@ -4079,7 +4097,7 @@ begin
   tcol := 0;
   mkcnt := 0;
   mksp := 0;
-  for ii := 1 to TCDEEP do mknest[ii] := false;
+  for ii := 1 to TCDEEP do rmem.mknest[ii] := false;
   fmpending := -1;
   fir := false;
   nw := 0;
