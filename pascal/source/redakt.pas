@@ -2831,9 +2831,13 @@ end;
 (* подпись узла в gtxt, разбор на слова, ширина поля wwd:
    АДАПТИВНО к количеству текста - короткая подпись даёт узкую
    икону (поле от 5 знаков), подпись до WMAXLINE держится в одну
-   строку, длинная делится на равные доли; поле всегда нечётное:
-   у каждой иконы одна средняя колонка, вершины клиньев и острия
-   прилегают к оси шампура ровно *)
+   строку, длинная делится на равные доли.  Поле однострочной
+   подписи той же чётности, что и подпись: пробелов слева и
+   справа от надписи поровну (ctext при нечётном остатке кладёт
+   лишний пробел влево - при нечётном поле неравенство было бы
+   в каждой второй иконе).  Поле многострочной подписи нечётное:
+   одна средняя колонка, вершины клиньев и острия прилегают к
+   оси шампура ровно *)
 procedure settext(n: integer);
 var
   i, tl, L, tg: integer;
@@ -2850,7 +2854,10 @@ begin
       rmem.wwd := tg
   end else if tl > rmem.wwd then
     rmem.wwd := tl;
-  if (rmem.wwd mod 2) = 0 then
+  if tl <= WMAXLINE then begin
+    if odd(rmem.wwd - tl) then
+      rmem.wwd := rmem.wwd + 1
+  end else if (rmem.wwd mod 2) = 0 then
     rmem.wwd := rmem.wwd + 1
 end;
 
@@ -2880,11 +2887,15 @@ begin
   k := kindof(n);
   tl := rmem.ntl[n];
   if k = 4 then begin
-    (* конец: маленький полуовал *)
+    (* конец: маленький полуовал; без подписи печатается слово
+       КОНЕЦ - мерим его 5 литер.  Поле той же чётности, что и
+       подпись: пробелов слева и справа поровну *)
+    if tl = 0 then
+      tl := 5;
     wd := tl + 2;
     if wd < 7 then
       wd := 7;
-    if (wd mod 2) = 0 then
+    if odd(wd - tl) then
       wd := wd + 1;
     iconw := wd
   end else if k = 22 then
@@ -2946,8 +2957,8 @@ begin
        линия плеча примыкает к стене на середине высоты *)
     rmem.ih[n] := rmem.nwl + 4;
     hrun(x + 2, y, rmem.wwd, '+', '+');
-    put(x + 1, y + 1, '/');
-    put(x + w - 2, y + 1, '(');
+    put(x + 1, y + 1, '(');
+    put(x + w - 2, y + 1, ')');
     for i := 1 to rmem.nwl do begin
       r := y + 1 + i;
       put(x, r, '|');
@@ -3029,10 +3040,10 @@ begin
     (* АДРЕС: домик И8 с треугольной крышей *)
     m := w div 2;
     rmem.ih[n] := rmem.nwl + 4;
-    put(x + m - 1, y, '/');
-    put(x + m, y, '(');
-    put(x + m - 2, y + 1, '/');
-    put(x + m + 1, y + 1, '(');
+    put(x + m - 1, y, '(');
+    put(x + m + 1, y, ')');
+    put(x + m - 2, y + 1, '(');
+    put(x + m + 2, y + 1, ')');
     hrun(x, y + 2, w, '+', '+');
     for i := 1 to rmem.nwl do begin
       r := y + 2 + i;
@@ -3107,8 +3118,8 @@ begin
     for i := 1 to rmem.nwl do begin
       r := y + i;
       if i = 1 then begin
-        put(x, r, '/');
-        put(x + w - 1, r, '(')
+        put(x, r, '(');
+        put(x + w - 1, r, ')')
       end else begin
         put(x, r, '|');
         put(x + w - 1, r, '|')
@@ -3808,7 +3819,8 @@ end;
    на лист commit'ом - рамки и границы страниц ведёт редактор *)
 procedure drkemit;
 var
-  i, j, ln, m2, q2: integer;
+  i, j, ln, m2, q2, e, need: integer;
+  keep: array [1..DRMAX] of boolean;
 begin
   if rmem.ncnt = 0 then
     exit;
@@ -3891,20 +3903,46 @@ begin
     silloop
   end;
   (* строки рисунка - в текущую строку как есть и на лист; за
-     128-й позицией литеры теряются, как на АЦПУ и в разметке *)
+     128-й позицией литеры теряются, как на АЦПУ и в разметке.
+     Икона переносится на новую страницу только целиком: строки,
+     накрытые одной иконой, связаны в пробег (keep); пробег, не
+     умещающийся на текущей странице, начинается на новой -
+     страница обрывается перед ним тем же pageend, что и в
+     commitrow.  Пробег длиннее страницы рвётся: икона бывает
+     выше листа.  Маршрут разметки делает то же командой *P
+     (emit drakon.pas) - печать *DRK совпадает с разметкой *)
   posmode := false;
-  for i := 1 to rmem.rws do begin
-    flushq(false);
-    clrrow(cur);
-    curpos := curflda;
-    ln := 0;
-    for j := 1 to DCMAX do
-      if dmem.pic[i][j] <> ' ' then
-        ln := j;
-    for j := 1 to ln do
-      if curflda + j - 1 <= 128 then
-        cur[curflda + j - 1] := dmem.pic[i][j];
-    commit(true)
+  for i := 1 to rmem.rws do
+    keep[i] := false;
+  for i := 1 to rmem.nfl do
+    for j := rmem.iy[rmem.flat[i]] + 1 to
+             rmem.iy[rmem.flat[i]] + rmem.ih[rmem.flat[i]] - 1 do
+      if j <= rmem.rws then
+        keep[j] := true;
+  i := 1;
+  while i <= rmem.rws do begin
+    e := i;
+    while (e < rmem.rws) and keep[e + 1] do
+      e := e + 1;
+    if (e > i) and (rowno > 0) then begin
+      need := (e - i + 1) * (rln + 1);
+      if rowno + need > tmax then
+        pageend
+    end;
+    for j := i to e do begin
+      flushq(false);
+      clrrow(cur);
+      curpos := curflda;
+      ln := 0;
+      for m2 := 1 to DCMAX do
+        if dmem.pic[j][m2] <> ' ' then
+          ln := m2;
+      for m2 := 1 to ln do
+        if curflda + m2 - 1 <= 128 then
+          cur[curflda + m2 - 1] := dmem.pic[j][m2];
+      commit(true)
+    end;
+    i := e + 1
   end
 end;
 

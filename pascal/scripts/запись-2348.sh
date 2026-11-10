@@ -97,7 +97,9 @@ CB=${CHERNOVIK_B:-5100}   # зона черновика Б (DRАКОН)
 # По умолчанию записывается ТОЛЬКО редактор: транслятор схем ДРАКОН
 # встроен в РЕДÀКТ (режим *DRK), отдельный модуль на том не нужен.
 # Вернуть DRАКОН в зону можно, задав пустую переменную: TOLKO_REDAKT=
-TOLKO_REDAKT=${TOLKO_REDAKT:-1}
+# (${TOLKO_REDAKT-1}, а не :-1: пустое значение должно остаться
+# пустым - иначе задокументированный пуск «TOLKO_REDAKT=» недостижим)
+TOLKO_REDAKT=${TOLKO_REDAKT-1}
 export TOLKO_REDAKT
 DEMO="$HERE/../demo/demo1-текст.txt"
 ETALON="$HERE/../redakt.out"

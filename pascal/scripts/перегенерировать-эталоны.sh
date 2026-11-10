@@ -30,7 +30,8 @@ open(sys.argv[2], 'w').write('\n'.join(r.rstrip() for r in out) + '\n')
 PYEOF
 }
 
-run() {  # run <путь-к-scheme.drakon> <путь-к-эталону.txt>    local s="$1" t="$2"
+run() {  # run <путь-к-scheme.drakon> <путь-к-эталону.txt>
+    local s="$1" t="$2"
     "$HERE/прогнать-с-тома.sh" drakon "$s" > /tmp/regen.out 2>/tmp/regen.err
     if ! grep -q '/\*D' /tmp/regen.out; then
         echo "ОШИБКА $s:"; head -5 /tmp/regen.out /tmp/regen.err
@@ -73,8 +74,8 @@ if [ $# -gt 0 ]; then
         case "$s" in
             red) for f in "$REPO"/tests/siprod/cases/red-*.txt; do red "$f"; done; exit 0 ;;
             0[1-6]-*) run "$REPO/drakon/schemes/$s.drakon" "$REPO/drakon/schemes/${s%.drakon}.txt" ;;
-            demo*) run "demo/$s.drakon" "demo/${s%-*}-разметка.txt" ;;
-            *) run "схемы/$s.drakon" "схемы/${s%.drakon}.txt" ;;
+            demo*) run "$HERE/../demo/$s.drakon" "$HERE/../demo/${s%-*}-разметка.txt" ;;
+            *) run "$HERE/../схемы/$s.drakon" "$HERE/../схемы/${s%.drakon}.txt" ;;
         esac
     done
     exit 0
@@ -83,9 +84,9 @@ for s in "$REPO"/drakon/schemes/0*.drakon; do
     b=$(basename "$s" .drakon)
     run "$s" "$REPO/drakon/schemes/$b.txt"
 done
-for s in схемы/0*.drakon схемы/1*.drakon схемы/2*.drakon; do
+for s in "$HERE"/../схемы/0*.drakon "$HERE"/../схемы/1*.drakon "$HERE"/../схемы/2*.drakon; do
     b=$(basename "$s" .drakon)
-    run "$s" "схемы/$b.txt"
+    run "$s" "$HERE/../схемы/$b.txt"
 done
-run demo/demo5-дракон.txt demo/demo5-разметка.txt
-run demo/demo6-силуэт.drakon demo/demo6-разметка.txt
+run "$HERE/../demo/demo5-дракон.txt" "$HERE/../demo/demo5-разметка.txt"
+run "$HERE/../demo/demo6-силуэт.drakon" "$HERE/../demo/demo6-разметка.txt"
