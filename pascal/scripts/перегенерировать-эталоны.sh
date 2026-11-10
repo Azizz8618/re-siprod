@@ -10,7 +10,7 @@ set -u
 HERE="$(cd "$(dirname "$0")" && pwd)"
 export DISPAK="${DISPAK:-dispak}"
 export BESM6_PATH="${BESM6_PATH:-$HOME/.besm6:/usr/local/share/besm6:/tmp}"
-REPO="$(cd "$HERE/.." && pwd)"
+REPO="$(cd "$HERE/../.." && pwd)"
 
 glue() {
     # выдача программы -> строки рисунка

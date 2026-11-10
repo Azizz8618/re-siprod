@@ -13,7 +13,7 @@
 # литера Ё печатается как Е (у оригиналов автокода литера теряется).
 # Переменные окружения: DISPAK, BESM6_PATH (см. прогнать.sh)
 set -u
-REPO="${1:-$(cd "$(dirname "$0")/.." && pwd)}"
+REPO="${1:-$(cd "$(dirname "$0")/../.." && pwd)}"
 HERE="$(cd "$(dirname "$0")" && pwd)"
 CASES="$REPO/tests/siprod/cases"
 ETA="$REPO/pascal/red-эталоны"
@@ -27,7 +27,7 @@ for t in "$CASES"/red-*.txt; do
     # перфорация ГОСТ-10859: Ё -> Е (как на пуске с тома и в секции ДРАКОН;
     # эталоны редактора сняты с этой заменой - см. red-эталоны/README)
     sed 's/[ёЁ]/Е/g' "$t" > "$out.dat"
-    "$HERE/прогнать.sh" "$HERE/redakt.pas" "$out.dat" > "$out" 2>/dev/null
+    "$HERE/прогнать.sh" "$HERE/../source/redakt.pas" "$out.dat" > "$out" 2>/dev/null
     ref="$CASES/$base.out"
     etazn=""
     if [ -f "$ETA/$base.out" ]; then
@@ -86,7 +86,7 @@ for s in "$SCHEMES"/*.drakon; do
     out=$(mktemp)
     # в наборе ГОСТ-10859 нет Ё: заменяем Е, иначе слово распадается
     sed 's/[ёЁ]/Е/g' "$s" > "$out.dat"
-    "$HERE/прогнать.sh" "$HERE/drakon.pas" "$out.dat" > "$out" 2>/dev/null
+    "$HERE/прогнать.sh" "$HERE/../source/drakon.pas" "$out.dat" > "$out" 2>/dev/null
     if python3 "$HERE/сверить-дракон.py" "$out" "$SCHEMES/$base.txt" > "$out.log" 2>&1; then
         echo "OK   $base  $(head -1 "$out.log")"
         ok=$((ok+1))
@@ -99,17 +99,17 @@ for s in "$SCHEMES"/*.drakon; do
 done
 
 echo "=== ДРАКОН встроенным режимом *DRK: печать = разметке ==="
-for s in "$SCHEMES"/*.drakon "$HERE/схемы"/*.drakon; do
+for s in "$SCHEMES"/*.drakon "$HERE/../схемы"/*.drakon; do
     base=$(basename "$s" .drakon)
     out=$(mktemp)
     # в наборе ГОСТ-10859 нет Ё: заменяем Е, иначе слово распадается
     sed 's/[ёЁ]/Е/g' "$s" > "$out.dat"
     # маршрут 1: разметка drakon.pas -> печать редактором
-    "$HERE/прогнать.sh" "$HERE/drakon.pas" "$out.dat" > "$out.mk" 2>/dev/null
-    "$HERE/прогнать.sh" "$HERE/redakt.pas" "$out.mk" > "$out.red" 2>/dev/null
+    "$HERE/прогнать.sh" "$HERE/../source/drakon.pas" "$out.dat" > "$out.mk" 2>/dev/null
+    "$HERE/прогнать.sh" "$HERE/../source/redakt.pas" "$out.mk" > "$out.red" 2>/dev/null
     # маршрут 2: исходник напрямую блоком *DRK того же редактора
     { echo '*DRK'; cat "$out.dat"; echo '*E'; } > "$out.drk"
-    "$HERE/прогнать.sh" "$HERE/redakt.pas" "$out.drk" > "$out.drko" 2>/dev/null
+    "$HERE/прогнать.sh" "$HERE/../source/redakt.pas" "$out.drk" > "$out.drko" 2>/dev/null
     if diff -q "$out.red" "$out.drko" >/dev/null; then
         echo "OK   $base  (*DRK = разметка, $(wc -l < "$out.drko") строк)"
         ok=$((ok+1))

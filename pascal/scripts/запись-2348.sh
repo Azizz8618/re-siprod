@@ -78,7 +78,7 @@
 # найденной копии в BESM6_PATH - держите рабочую копию впереди боевого
 # тома.  Первый прогон - на рабочей копии.
 #
-# Запуск:  sh pascal/запись-2348.sh
+# Запуск:  sh pascal/scripts/запись-2348.sh
 set -eu
 
 DISPAK=${DISPAK:-dispak}
@@ -99,8 +99,8 @@ CB=${CHERNOVIK_B:-5100}   # зона черновика Б (DRАКОН)
 # Вернуть DRАКОН в зону можно, задав пустую переменную: TOLKO_REDAKT=
 TOLKO_REDAKT=${TOLKO_REDAKT:-1}
 export TOLKO_REDAKT
-DEMO=demo/demo1-текст.txt
-ETALON=redakt.out
+DEMO="$HERE/../demo/demo1-текст.txt"
+ETALON="$HERE/../redakt.out"
 
 md5f() { md5sum "$1" | cut -d' ' -f1; }
 oct() {
@@ -130,11 +130,11 @@ echo "том: $volpath"
 for t in "$DISPAK" python3; do
     command -v "$t" >/dev/null || { echo "СТОП: нет $t в PATH" >&2; exit 1; }
 done
-for f in redakt.pas "$DEMO" "$ETALON"; do
-    [ -f "$HERE/$f" ] || { echo "СТОП: нет $HERE/$f" >&2; exit 1; }
+for f in "$HERE/../source/redakt.pas" "$DEMO" "$ETALON"; do
+    [ -f "$f" ] || { echo "СТОП: нет $f" >&2; exit 1; }
 done
 if [ -z "${TOLKO_REDAKT:-}" ]; then
-    [ -f "$HERE/drakon.pas" ] || { echo "СТОП: нет $HERE/drakon.pas" >&2; exit 1; }
+    [ -f "$HERE/../source/drakon.pas" ] || { echo "СТОП: нет $HERE/../source/drakon.pas" >&2; exit 1; }
 fi
 if [ "$CB" -le "$((CA + 40))" ]; then
     echo "СТОП: черновик Б (0o$CB) должен быть минимум на 0o40 зон правее" \
@@ -268,7 +268,7 @@ compile_deck() { # $1 имя колоды, $2 исходник, $3 зона че
         echo "*perso:$LU$SRC"
         echo "*stand"
         echo "*call *pascal"
-        gost "$HERE/$2"
+        gost "$HERE/../source/$2"
         echo "*call libsub"
         echo "$LU$SRC"
         echo "*to perso:$LU$3"
@@ -469,7 +469,7 @@ print('   вне области записи занятые зоны не изм
 PYEOF
 
 # 6) Smoke: редактор запускается С ТОМА, выдача равна эталону.
-gost "$HERE/$DEMO" > "$W/demo.gost"
+gost "$DEMO" > "$W/demo.gost"
 {
     echo "user 419999 зс5^"
     echo "лен $LU($VOL)^"
@@ -486,7 +486,7 @@ gost "$HERE/$DEMO" > "$W/demo.gost"
 } > "$W/smoke.b6"
 timeout 600 "$DISPAK" "$W/smoke.b6" > "$W/smoke.log" 2>&1 || true
 
-python3 - "$W/smoke.log" "$HERE/$ETALON" <<'PYEOF' && SMOKE=ok || SMOKE=нет
+python3 - "$W/smoke.log" "$ETALON" <<'PYEOF' && SMOKE=ok || SMOKE=нет
 import sys
 log = open(sys.argv[1], encoding='utf-8').read().split('\n')
 perso = next((i for i, l in enumerate(log) if ':402150' in l), None)

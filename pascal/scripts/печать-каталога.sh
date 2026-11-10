@@ -13,7 +13,7 @@
 # Результат: pascal/схемы/печать-каталог.txt
 set -u
 HERE="$(cd "$(dirname "$0")" && pwd)"
-cd "$HERE" || exit 1
+cd "$HERE/.." || exit 1
 export DISPAK="${DISPAK:-/home/z/my-project/work/dispak/build/dispak/dispak}"
 export BESM6_PATH="${BESM6_PATH:-/home/z/my-project/work/vol:$HOME/.besm6:/tmp}"
 
@@ -27,5 +27,5 @@ for f in схемы/0*.drakon схемы/1*.drakon схемы/2*.drakon; do
 done
 echo '*END' >> /tmp/каталог-drk.txt
 
-./прогнать-с-тома.sh redakt /tmp/каталог-drk.txt > схемы/печать-каталог.txt
+./scripts/прогнать-с-тома.sh redakt /tmp/каталог-drk.txt > схемы/печать-каталог.txt
 echo "печать-каталог.txt: $(wc -l < схемы/печать-каталог.txt) строк"

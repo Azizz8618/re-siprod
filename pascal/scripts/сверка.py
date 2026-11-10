@@ -6,12 +6,12 @@ import sys, os, subprocess
 
 case = sys.argv[1]
 HERE = os.path.dirname(os.path.abspath(__file__))
-REPO = os.path.dirname(HERE)
+REPO = os.path.dirname(os.path.dirname(HERE))
 casef = f"{REPO}/tests/siprod/cases/{case}.txt"
 env = dict(os.environ)
 env.setdefault("DISPAK", "/home/z/my-project/dispak/build/dispak/dispak")
 env.setdefault("BESM6_PATH", os.path.expanduser("~/.besm6:/tmp"))
-raw = subprocess.run([f"{HERE}/прогнать.sh", f"{HERE}/redakt.pas", casef],
+raw = subprocess.run([f"{HERE}/прогнать.sh", f"{HERE}/../source/redakt.pas", casef],
                      env=env, capture_output=True, text=True).stdout
 
 def filtr(txt):

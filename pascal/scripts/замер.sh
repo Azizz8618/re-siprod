@@ -20,7 +20,7 @@
 # Компиляция меряется отдельно (колода с *call *pascal без *execute).
 set -u
 HERE="$(cd "$(dirname "$0")" && pwd)"
-REPO="${REPO:-$(cd "$HERE/.." && pwd)}"
+REPO="${REPO:-$(cd "$HERE/../.." && pwd)}"
 DISPAK="${DISPAK:-dispak}"
 export BESM6_PATH="${BESM6_PATH:-/usr/local/share/besm6}"
 CASES="$REPO/tests/siprod/cases"
@@ -83,9 +83,9 @@ note() { printf '%b\n' "$*" | tee -a "$OUT/сводка.tsv"; }
 note "этап\tкоманд\tжурнал"
 
 # ---- 1. компиляция ----
-compileonly "$HERE/redakt.pas" "$W/compile-redakt.log"
+compileonly "$REPO/pascal/source/redakt.pas" "$W/compile-redakt.log"
 note "компиляция redakt.pas\t$(instr "$W/compile-redakt.log")\tcompile-redakt.log"
-compileonly "$HERE/drakon.pas" "$W/compile-drakon.log"
+compileonly "$REPO/pascal/source/drakon.pas" "$W/compile-drakon.log"
 note "компиляция drakon.pas\t$(instr "$W/compile-drakon.log")\tcompile-drakon.log"
 
 # ---- 2. база: Монитор + загрузка библиотеки + запуск, текст только *END ----

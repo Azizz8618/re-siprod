@@ -5,7 +5,7 @@
 #   секция same   - *DRK = разметка (все схемы: корневые + pascal/схемы)
 # usage: секции-регресса.sh red|drk6|same
 set -u
-REPO="${REPO:-$(cd "$(dirname "$0")/.." && pwd)}"
+REPO="${REPO:-$(cd "$(dirname "$0")/../.." && pwd)}"
 HERE="$REPO/pascal"
 CASES="$REPO/tests/siprod/cases"
 SCHEMES="$REPO/drakon/schemes"
@@ -19,7 +19,7 @@ echo "=== редактор *RED с тома: 21 эталон ==="
 for t in "$CASES"/red-*.txt; do
     base=$(basename "$t" .txt)
     out=$(mktemp)
-    "$HERE/прогнать-с-тома.sh" redakt "$t" > "$out" 2>/dev/null
+    "$HERE/scripts/прогнать-с-тома.sh" redakt "$t" > "$out" 2>/dev/null
     # редакторный эталон (pascal/red-эталоны/) перекрывает оригинальный:
     # оправданные отличия редактора - например, Ё -> Е в red-literal
     ref="$CASES/$base.out"
