@@ -2533,29 +2533,29 @@ begin
      форма всегда понимается как полная; код не должен быть началом
      чужого слова (проверено программно); ТО ДЛЯ КДЛ ПКОМ ЛКОМ -
      уже короткие *)
-rmem.almap[1] := 1;   rmem.ali[1][1] := 'З'; rmem.ali[1][2] := 'Г';  (* ЗГ ЗАГОЛОВОК *)
-rmem.almap[2] := 2;   rmem.ali[2][1] := 'В'; rmem.ali[2][2] := 'Т';  (* ВТ ВЕТКА *)
-rmem.almap[3] := 3;   rmem.ali[3][1] := 'Д'; rmem.ali[3][2] := 'С';  (* ДС ДЕЙСТВИЕ *)
-rmem.almap[4] := 4;   rmem.ali[4][1] := 'К'; rmem.ali[4][2] := 'М';  (* КМ КОММЕНТАРИЙ *)
-rmem.almap[5] := 5;   rmem.ali[5][1] := 'Е'; rmem.ali[5][2] := 'С';  (* ЕС ЕСЛИ *)
-rmem.almap[6] := 6;   rmem.ali[6][1] := 'Ц'; rmem.ali[6][2] := 'И';  (* ЦИ ЦИКЛ *)
-rmem.almap[7] := 7;   rmem.ali[7][1] := 'В'; rmem.ali[7][2] := 'Б';  (* ВБ ВЫБОР *)
-rmem.almap[8] := 8;   rmem.ali[8][1] := 'В'; rmem.ali[8][2] := 'А';  (* ВА ВАРИАНТ *)
-rmem.almap[9] := 9;   rmem.ali[9][1] := 'А'; rmem.ali[9][2] := 'Д';  (* АД АДРЕС *)
-rmem.almap[10] := 10; rmem.ali[10][1] := 'К'; rmem.ali[10][2] := 'Ц'; (* КЦ КОНЕЦ *)
-rmem.almap[11] := 12; rmem.ali[11][1] := 'И'; rmem.ali[11][2] := 'Н'; (* ИН ИНАЧЕ *)
-rmem.almap[12] := 13; rmem.ali[12][1] := 'П'; rmem.ali[12][2] := 'Л'; (* ПЛ ПОЛКА *)
-rmem.almap[13] := 14; rmem.ali[13][1] := 'П'; rmem.ali[13][2] := 'М'; (* ПМ ПАРАМ *)
-rmem.almap[14] := 17; rmem.ali[14][1] := 'В'; rmem.ali[14][2] := 'Д'; (* ВД ВЫВОД *)
-rmem.almap[15] := 18; rmem.ali[15][1] := 'В'; rmem.ali[15][2] := 'В'; (* ВВ ВВОД *)
-rmem.almap[16] := 19; rmem.ali[16][1] := 'П'; rmem.ali[16][2] := 'З'; (* ПЗ ПАУЗА *)
-rmem.almap[17] := 20; rmem.ali[17][1] := 'П'; rmem.ali[17][2] := 'Р'; (* ПР ПЕРИОД *)
-rmem.almap[18] := 21; rmem.ali[18][1] := 'П'; rmem.ali[18][2] := 'У'; (* ПУ ПУСК *)
-rmem.almap[19] := 22; rmem.ali[19][1] := 'С'; rmem.ali[19][2] := 'Н'; (* СН СИНХРО *)
-rmem.almap[20] := 23; rmem.ali[20][1] := 'П'; rmem.ali[20][2] := 'П'; (* ПП ПАРАЛ *)
-rmem.almap[21] := 26; rmem.ali[21][1] := 'П'; rmem.ali[21][2] := 'Т'; (* ПТ ПЕТЛЯ *)
-rmem.almap[22] := 27; rmem.ali[22][1] := 'Г'; rmem.ali[22][2] := 'Р'; (* ГР ГРЕБЕНКА *)
-rmem.almap[23] := 28; rmem.ali[23][1] := 'В'; rmem.ali[23][2] := 'С'  (* ВС ВСТАВКА *)
+rmem.almap[1] := 1;   rmem.ali[1][1] := 'З'; rmem.ali[1][2] := 'Г';
+rmem.almap[2] := 2;   rmem.ali[2][1] := 'В'; rmem.ali[2][2] := 'Т';
+rmem.almap[3] := 3;   rmem.ali[3][1] := 'Д'; rmem.ali[3][2] := 'С';
+rmem.almap[4] := 4;   rmem.ali[4][1] := 'К'; rmem.ali[4][2] := 'М';
+rmem.almap[5] := 5;   rmem.ali[5][1] := 'Е'; rmem.ali[5][2] := 'С';
+rmem.almap[6] := 6;   rmem.ali[6][1] := 'Ц'; rmem.ali[6][2] := 'И';
+rmem.almap[7] := 7;   rmem.ali[7][1] := 'В'; rmem.ali[7][2] := 'Б';
+rmem.almap[8] := 8;   rmem.ali[8][1] := 'В'; rmem.ali[8][2] := 'А';
+rmem.almap[9] := 9;   rmem.ali[9][1] := 'А'; rmem.ali[9][2] := 'Д';
+rmem.almap[10] := 10; rmem.ali[10][1] := 'К'; rmem.ali[10][2] := 'Ц';
+rmem.almap[11] := 12; rmem.ali[11][1] := 'И'; rmem.ali[11][2] := 'Н';
+rmem.almap[12] := 13; rmem.ali[12][1] := 'П'; rmem.ali[12][2] := 'Л';
+rmem.almap[13] := 14; rmem.ali[13][1] := 'П'; rmem.ali[13][2] := 'М';
+rmem.almap[14] := 17; rmem.ali[14][1] := 'В'; rmem.ali[14][2] := 'Д';
+rmem.almap[15] := 18; rmem.ali[15][1] := 'В'; rmem.ali[15][2] := 'В';
+rmem.almap[16] := 19; rmem.ali[16][1] := 'П'; rmem.ali[16][2] := 'З';
+rmem.almap[17] := 20; rmem.ali[17][1] := 'П'; rmem.ali[17][2] := 'Р';
+rmem.almap[18] := 21; rmem.ali[18][1] := 'П'; rmem.ali[18][2] := 'У';
+rmem.almap[19] := 22; rmem.ali[19][1] := 'С'; rmem.ali[19][2] := 'Н';
+rmem.almap[20] := 23; rmem.ali[20][1] := 'П'; rmem.ali[20][2] := 'П';
+rmem.almap[21] := 26; rmem.ali[21][1] := 'П'; rmem.ali[21][2] := 'Т';
+rmem.almap[22] := 27; rmem.ali[22][1] := 'Г'; rmem.ali[22][2] := 'Р';
+rmem.almap[23] := 28; rmem.ali[23][1] := 'В'; rmem.ali[23][2] := 'С'
 end;
 (* распознавание ключевого слова: индекс или 0; ml - длина
    совпавшего слова (полного или краткого) - по ней отрезается
