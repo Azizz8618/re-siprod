@@ -11,6 +11,8 @@
    Блок *DRK - свой режим схем ДРАКОН на верхнем уровне (наравне с
    *RED в таблице диспетчера): исходник схемы до *E транслируется и
    печатается средствами самого редактора, без карт разметки * /*D.
+   Ключевые слова схемы понимаются и в краткой форме (2 литеры -
+   см. initkw), краткие распознаются после полных.
    Вход: карты после *EXECUTE (*RED ... *E, *DRK ... *E, *END).
    Выход: АЦПУ.
    Прогон страницы (код 0201) выполняется прямым вызовом экстракода
@@ -37,6 +39,7 @@ const
      экстракодный прогон страницы добавил ~15 слов кода) *)
   NDMAX = 55;     (* узлов схемы *)
   DTKW = 28;      (* число ключевых слов *)
+  NAK = 23;       (* кратких форм ключевых слов (2 литеры) *)
   DRMAX = 240;    (* строк рисунка *)
   NBMAX = 4;      (* плеч у узла (ВАРИАНТ + ИНАЧЕ) *)
   DKST = 24;      (* глубина стека разбора *)
@@ -255,6 +258,8 @@ var
           case integer of
             0: (kw: array [1..DTKW] of packed array [1..12] of char;
                 kwl: array [1..DTKW] of integer;
+                ali: array [1..NAK] of packed array [1..2] of char;
+                almap: array [1..NAK] of 1..DTKW;
                 nkind: array [1..NDMAX] of integer;
                 ntext: array [1..NDMAX] of p80;
                 ntl: array [1..NDMAX] of integer;
@@ -2520,10 +2525,40 @@ begin
   rmem.kwl[28] := 7;
   rmem.kw[28][1] := 'В'; rmem.kw[28][2] := 'С'; rmem.kw[28][3] := 'Т';
   rmem.kw[28][4] := 'А'; rmem.kw[28][5] := 'В'; rmem.kw[28][6] := 'К';
-  rmem.kw[28][7] := 'А'
+  rmem.kw[28][7] := 'А';
+  (* краткие формы ключевых слов: код из 2 литер -> канонический
+     номер; распознаются в detect ПОСЛЕ полных слов, поэтому полная
+     форма всегда понимается как полная; код не должен быть началом
+     чужого слова (проверено программно); ТО ДЛЯ КДЛ ПКОМ ЛКОМ -
+     уже короткие *)
+rmem.almap[1] := 1;   rmem.ali[1][1] := 'З'; rmem.ali[1][2] := 'Г';  (* ЗГ ЗАГОЛОВОК *)
+rmem.almap[2] := 2;   rmem.ali[2][1] := 'В'; rmem.ali[2][2] := 'Т';  (* ВТ ВЕТКА *)
+rmem.almap[3] := 3;   rmem.ali[3][1] := 'Д'; rmem.ali[3][2] := 'С';  (* ДС ДЕЙСТВИЕ *)
+rmem.almap[4] := 4;   rmem.ali[4][1] := 'К'; rmem.ali[4][2] := 'М';  (* КМ КОММЕНТАРИЙ *)
+rmem.almap[5] := 5;   rmem.ali[5][1] := 'Е'; rmem.ali[5][2] := 'С';  (* ЕС ЕСЛИ *)
+rmem.almap[6] := 6;   rmem.ali[6][1] := 'Ц'; rmem.ali[6][2] := 'И';  (* ЦИ ЦИКЛ *)
+rmem.almap[7] := 7;   rmem.ali[7][1] := 'В'; rmem.ali[7][2] := 'Б';  (* ВБ ВЫБОР *)
+rmem.almap[8] := 8;   rmem.ali[8][1] := 'В'; rmem.ali[8][2] := 'А';  (* ВА ВАРИАНТ *)
+rmem.almap[9] := 9;   rmem.ali[9][1] := 'А'; rmem.ali[9][2] := 'Д';  (* АД АДРЕС *)
+rmem.almap[10] := 10; rmem.ali[10][1] := 'К'; rmem.ali[10][2] := 'Ц'; (* КЦ КОНЕЦ *)
+rmem.almap[11] := 12; rmem.ali[11][1] := 'И'; rmem.ali[11][2] := 'Н'; (* ИН ИНАЧЕ *)
+rmem.almap[12] := 13; rmem.ali[12][1] := 'П'; rmem.ali[12][2] := 'Л'; (* ПЛ ПОЛКА *)
+rmem.almap[13] := 14; rmem.ali[13][1] := 'П'; rmem.ali[13][2] := 'М'; (* ПМ ПАРАМ *)
+rmem.almap[14] := 17; rmem.ali[14][1] := 'В'; rmem.ali[14][2] := 'Д'; (* ВД ВЫВОД *)
+rmem.almap[15] := 18; rmem.ali[15][1] := 'В'; rmem.ali[15][2] := 'В'; (* ВВ ВВОД *)
+rmem.almap[16] := 19; rmem.ali[16][1] := 'П'; rmem.ali[16][2] := 'З'; (* ПЗ ПАУЗА *)
+rmem.almap[17] := 20; rmem.ali[17][1] := 'П'; rmem.ali[17][2] := 'Р'; (* ПР ПЕРИОД *)
+rmem.almap[18] := 21; rmem.ali[18][1] := 'П'; rmem.ali[18][2] := 'У'; (* ПУ ПУСК *)
+rmem.almap[19] := 22; rmem.ali[19][1] := 'С'; rmem.ali[19][2] := 'Н'; (* СН СИНХРО *)
+rmem.almap[20] := 23; rmem.ali[20][1] := 'П'; rmem.ali[20][2] := 'П'; (* ПП ПАРАЛ *)
+rmem.almap[21] := 26; rmem.ali[21][1] := 'П'; rmem.ali[21][2] := 'Т'; (* ПТ ПЕТЛЯ *)
+rmem.almap[22] := 27; rmem.ali[22][1] := 'Г'; rmem.ali[22][2] := 'Р'; (* ГР ГРЕБЕНКА *)
+rmem.almap[23] := 28; rmem.ali[23][1] := 'В'; rmem.ali[23][2] := 'С'  (* ВС ВСТАВКА *)
 end;
-(* распознавание ключевого слова: индекс или 0 *)
-function detect(var s: carty; ln: integer): integer;
+(* распознавание ключевого слова: индекс или 0; ml - длина
+   совпавшего слова (полного или краткого) - по ней отрезается
+   подпись, для краткой формы она не равна kwl[индекса] *)
+function detect(var s: carty; ln: integer; var ml: integer): integer;
 var
   i, j, res: integer;
   ok: boolean;
@@ -2539,8 +2574,21 @@ begin
           ok := false;
         j := j + 1
       end;
-      if ok then
-        res := i
+      if ok then begin
+        res := i;
+        ml := rmem.kwl[i]
+      end
+    end;
+    i := i + 1
+  end;
+  (* краткие формы - после полных: полная форма всегда понимается
+     как полная *)
+  i := 1;
+  while (i <= NAK) and (res = 0) do begin
+    if (ln >= 2) and (s[1] = rmem.ali[i][1]) and
+       (s[2] = rmem.ali[i][2]) then begin
+      res := rmem.almap[i];
+      ml := 2
     end;
     i := i + 1
   end;
@@ -2632,16 +2680,16 @@ end;
    одна карта: карты подаёт главный цикл блока *DRK) *)
 procedure drkcard;
 var
-  i, ind, k, p, ln, tl: integer;
+  i, ind, k, p, ln, tl, ml: integer;
   txt: carty;
 begin
   ind := indent;
   ln := linelen;
   if (ln > 0) and (card[ind + 1] <> '*') then begin
     for i := 1 to ln do txt[i] := card[ind + i];
-    k := detect(txt, ln);
+    k := detect(txt, ln, ml);
     if k > 0 then begin
-      p := rmem.kwl[k] + 1;
+      p := ml + 1;
       skiphead(p, ln, txt);
       tl := 0;
       for i := p to ln do
