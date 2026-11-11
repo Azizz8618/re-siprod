@@ -110,7 +110,7 @@ var
   nwl: integer;
   wwd: integer;
 
-  ii, jj, kk, nn1, mm, pp, qq: integer;
+  ii, jj, kk, nn1, mm, qq: integer;
 
   (* силуэт: колонки веток рядом (рис. 9 книги) *)
   silnb: integer;                  (* число веток *)

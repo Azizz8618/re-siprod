@@ -66,6 +66,8 @@ type
   mkty = packed array [1..MKLEN] of char; (* тело макроопределения *)
   p80 = packed array [1..80] of char;  (* строка в хранении,
   * 6 литер/слово *)
+  p72 = packed array [1..72] of char;  (* подпись узла *DRK: не длиннее
+  * значимой части карты (CW) - 12 слов вместо 14 *)
   (* машинное слово для прямого вызова экстракодов: элемент i
      множества м соответствует биту 47-i слова; ц - тот же word
      как целое *)
@@ -229,7 +231,7 @@ var
   mksp: integer;
 
   cwv: integer;           (* конец текущей карты или тела макро *)
-  ii, jj, kk, nn1, mm, pp, qq: integer;
+  ii, jj, kk, nn1, pp, qq: integer;
   c2, c3: char;
 
   (* бланк упакованной строки для целостного присваивания: заливка
@@ -261,7 +263,7 @@ var
                 ali: array [1..NAK] of packed array [1..2] of char;
                 almap: array [1..NAK] of 1..DTKW;
                 nkind: array [1..NDMAX] of integer;
-                ntext: array [1..NDMAX] of p80;
+                ntext: array [1..NDMAX] of p72;
                 ntl: array [1..NDMAX] of integer;
                 nkid: array [1..NDMAX] of integer;
                 nbro: array [1..NDMAX] of integer;
