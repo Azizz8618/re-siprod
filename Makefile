@@ -8,7 +8,7 @@
 #   make build      build/siprod.bin - the library compiled by MAKRO-BEMSH
 #   make check      round-trip check: disassemble + assemble == original words
 #   make loadmaps   tests/siprod/loadmap-{dispak,dubna}.txt
-#   make test       regression cases, wiki corpus
+#   make test       regression cases, drakon tests, wiki corpus
 #   make test-perso SIPROD run from a re-recorded PERSO library
 #   make record     write the compiled library into the PERSO of volume 2348
 #   make coverage   labels of static modules no regression case executes
@@ -40,7 +40,7 @@ HASH := \#
 DTR := $(wildcard dtr/*.dtr)
 DTRAN := $(patsubst dtr/%.dtr,build/%.dtran,$(DTR))
 
-.PHONY: all dtran dis be build check loadmaps test regress corpus test-perso \
+.PHONY: all dtran dis be build check loadmaps test regress drakon corpus test-perso \
 	coverage bemsh rvs libs madlen madlen-texts madlen-labels \
 	madlen-check compare-libs record clean
 
@@ -82,10 +82,13 @@ loadmaps: tests/siprod/loadmap-dispak.txt
 tests/siprod/loadmap-dispak.txt: tests/siprod/loadmap.sh tests/siprod/run.sh siprod.bin
 	tests/siprod/loadmap.sh
 
-test: regress corpus
+test: regress drakon corpus
 
 regress:
 	tests/siprod/run_all.sh
+
+drakon:
+	tests/drakon/run.sh
 
 corpus:
 	@if [ -d '$(WIKI)' ]; then tests/siprod/corpus.sh '$(WIKI)'; \
