@@ -2086,9 +2086,18 @@ begin
   for i := 1 to h do begin
     clrrow(r);
     for k2 := 1 to trows do
-      if i <= tcnt[k2] then
+      if i <= tcnt[k2] then begin
         for j := 1 to tbdw[k2] do
           r[tbda[k2] + j - 1] := dmem.tline[k2][i][tbda[k2] + j - 1];
+        (* в таблице без линеек длинный текст соседних ячеек слипался,
+           если обе колонки заполнены до края; оставляем разрыв только
+           когда следующая колонка начинается с первой позиции *)
+        if (not tabline) and (k2 < trows) and
+           (tbda[k2 + 1] = tbda[k2] + tbdw[k2]) and
+           (dmem.tline[k2 + 1][i][tbda[k2 + 1]] <> ' ') and
+           (dmem.tline[k2][i][tbda[k2] + tbdw[k2] - 1] <> ' ') then
+          r[tbda[k2] + tbdw[k2] - 1] := ' '
+      end;
     if tabline then
       for j := 1 to trows + 1 do begin
         vis := true;
@@ -4014,7 +4023,7 @@ procedure command;
 var
   c, c2, c3: char;
   hasnum: boolean;
-  a, b, i: integer;
+  a, b, i, svpos: integer;
 begin
   nn1 := 1;
   hasnum := false;
@@ -4109,6 +4118,10 @@ begin
     end else
       macins
   end else if c = 'S' then begin
+    (* позиция после S: если далее T - это может быть не *ST, а слово
+       на кириллическую Т (в наборе ГОСТ-10859 она совпадает с латинской
+       T); при нераспознанном подкоде ST возвращаемся к абзацу *)
+    svpos := cpos;
     if (cpos <= cwv) and (card[cpos] = 'T') then begin
       if (cpos + 1 <= cwv) and (card[cpos + 1] >= '0') and
          (card[cpos + 1] <= '9') then
@@ -4178,8 +4191,16 @@ begin
              начало-конец (SIPROD.md, 4.9); tabledef пропустит пробел *)
           cpos := cpos - 1;
           tabledef(false)
-        end else
-          klaida(10)
+        end else begin
+          (* *S + слово, начинающееся на Т, - абзац, а не таблица *)
+          cpos := svpos;
+          if (nw > 0) or (curpos > curflda) then begin
+            flushq(false);
+            commit(true)
+          end;
+          if nn1 > 1 then empties(nn1 - 1);
+          indon := true
+        end
       end
     end else if (cpos <= cwv) and (card[cpos] = 'L') then begin
       cpos := cpos + 1;
@@ -4214,7 +4235,10 @@ begin
     if (not freshpg) or (curpos > curflda) then
       commit(true);
     posmode := false;
-    for i := 1 to nn1 do pageend
+    (* после таблицы строки уже зафиксированы на странице; pageend
+       внутри таблицы перемешивает их с последующим текстом *)
+    if not tabused then
+      for i := 1 to nn1 do pageend
   end else if c = 'E' then begin
     endtxt := true;
     posmode := false;
@@ -4510,6 +4534,11 @@ begin
      (card[4] = 'D') then begin
     endtxt := false;
     fir := true;
+    (* новый блок *RED начинается с обычного междустрочного интервала:
+       *1RL предыдущего блока не должен наследоваться в таблицу *)
+    rln := 0;
+    rlnnew := 0;
+    rlnpend := false;
     while not endtxt do begin
       getcard;
       if eofin then
