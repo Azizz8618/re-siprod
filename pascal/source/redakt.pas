@@ -1723,6 +1723,10 @@ var
   i: integer;
 begin
   if posmode or not fillon then begin
+    (* в книжном формате поле страницы фиксировано (84 позиции, текст
+       12..78); выход за него - ошибка, а не молчаливый перенос на
+       полный лист, как в обычном и широком форматах *)
+    if (fmt = 2) and (curpos > curflda + fldw - 1) then klaida(80);
     if (curpos > 128) or
        ((not posmode) and (curpos > curflda + fldw - 1)) then begin
       (* строка полна: *OLR переходит при заполнении поля, позиционный
@@ -1822,6 +1826,8 @@ var
 begin
   flushq(false);
   fe := curflda + fldw - 1;
+  (* в книжном формате повтор сверх поля - ошибка 80 *)
+  if (fmt = 2) and (curpos + n - 1 > fe) then klaida(80);
   for i := 1 to n do begin
     if curpos > fe then exit;
     cur[curpos] := c;
@@ -1895,6 +1901,8 @@ begin
     commit(true);
   for i := cpos to cwv do begin
     if curpos > 128 then exit;
+    (* книжный формат: литеры сверх поля - ошибка 80 *)
+    if (fmt = 2) and (curpos > curflda + fldw - 1) then klaida(80);
     cur[curpos] := card[i];
     curpos := curpos + 1
   end
@@ -4247,6 +4255,7 @@ begin
     flushq(false);
     posmode := true;
     pp := curflda + nn1 - 1;
+    if (fmt = 2) and (pp > curflda + fldw - 1) then klaida(80);
     if pp > curpos then curpos := pp
   end else if c = 'C' then begin
     if cpos <= cwv then begin
