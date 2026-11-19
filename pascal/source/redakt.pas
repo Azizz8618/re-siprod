@@ -4278,6 +4278,10 @@ begin
     if cpos <= cwv then begin
       c2 := card[cpos];
       if c2 = ' ' then begin
+        (* явный номер включает нумерацию обратно после *NN
+           (титульный лист без номера, дальше - с номерами) *)
+        numon := true;
+        if fmt = 0 then hnum[side] := true else hnumf := true;
         if rowno = 0 then begin
           pageno := nn1;
           hpno[side] := nn1;
@@ -4289,6 +4293,8 @@ begin
         (* номер регистрируется в первой карте блока (FIRCAR) или
            перед пробелом; *7N*P номер не задаёт *)
         if hasnum and fir then begin
+          numon := true;
+          if fmt = 0 then hnum[side] := true else hnumf := true;
           if rowno = 0 then begin
             pageno := nn1;
             hpno[side] := nn1;
@@ -4324,6 +4330,8 @@ begin
         (* перед не-буквой N просто опускается *)
       end
     end else if hasnum and fir then begin
+      numon := true;
+      if fmt = 0 then hnum[side] := true else hnumf := true;
       if rowno = 0 then begin
         pageno := nn1;
         hpno[side] := nn1;
